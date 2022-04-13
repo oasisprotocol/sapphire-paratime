@@ -1,3 +1,4 @@
+use jsonrpsee_types::request::Request as Web3Req;
 use memchr::memmem;
 
 pub(crate) struct RequestTester {
@@ -40,10 +41,10 @@ impl RequestTester {
     }
 
     /// Checks whether the method is confidentiality-requiring.
-    pub(crate) fn test(&self, req_method: &str) -> RequestClass {
-        if Self::C10L_METHODS.iter().any(|&m| m == req_method) {
+    pub(crate) fn test(&self, req: &Web3Req<'_>) -> RequestClass {
+        if Self::C10L_METHODS.iter().any(|&m| m == &*req.method) {
             RequestClass::Confidential
-        } else if Self::DISALLOWED_METHODS.iter().any(|&m| m == req_method) {
+        } else if Self::DISALLOWED_METHODS.iter().any(|&m| m == &*req.method) {
             RequestClass::Disallowed
         } else {
             RequestClass::NonConfidential

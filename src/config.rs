@@ -6,6 +6,9 @@ pub(crate) struct Config {
 
     #[serde(default)]
     pub(crate) tls: bool,
+
+    /// The URL of the upstream Web3 gateway (TLS optional).
+    pub(crate) upstream: url::Url,
 }
 
 impl Config {
