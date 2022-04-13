@@ -1,0 +1,36 @@
+[package]
+name = "sapphire-encrypting-proxy"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.fortanix-sgx]
+heap-size = 134217728 # 128 MiB
+stack-size = 8388608 # 8 MiB
+threads = 16
+
+[dependencies]
+anyhow = "1.0.56"
+bytes = "1.1.0"
+config = "0.12.0"
+jsonrpsee-types = "0.10.1"
+memchr = "2.4.1"
+oasis-core-runtime-crypto = { path = "/Users/nhynes/Projects/oasis-core/runtime-crypto"}
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.79"
+thiserror = "1.0.30"
+tiny_http = { version = "0.11.0", features = ["ssl-rustls"] }
+tracing = "0.1.32"
+tracing-subscriber = { version = "0.3.9", features = ["env-filter", "json"] }
+ureq = { version = "2.4.0", features = ["json"] }
+
+[build-dependencies]
+cargo_toml = "0.11.5"
+serde = { version = "1.0.136", features = ["derive"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+
+[patch.crates-io]
+ring = { git = "https://github.com/crypto-com/ring", rev = "4d42cc1f" }
