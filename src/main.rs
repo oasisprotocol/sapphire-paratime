@@ -1,9 +1,10 @@
-#![deny(rust_2018_idioms)]
-#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, unsafe_code)]
 
+mod cipher;
 mod config;
 mod req_tester;
 mod server;
+mod utils;
 
 #[allow(clippy::expect_used)]
 fn main() {
