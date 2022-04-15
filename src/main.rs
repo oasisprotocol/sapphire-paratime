@@ -1,12 +1,12 @@
 #![deny(rust_2018_idioms, unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::expect_used, clippy::unwrap_used))]
 
 mod cipher;
 mod config;
-mod req_tester;
 mod server;
 mod utils;
 
-#[allow(clippy::expect_used)]
+#[allow(clippy::expect_used, clippy::unwrap_used)]
 fn main() {
     init_tracing();
 
@@ -18,9 +18,9 @@ fn main() {
     let num_extra_threads = if num_threads == 1 { 0 } else { num_threads - 1 };
     for _ in 0..num_extra_threads {
         let server = server.clone();
-        std::thread::spawn(move || server.listen());
+        std::thread::spawn(move || server.serve());
     }
-    server.listen();
+    server.serve();
 }
 
 fn init_tracing() {

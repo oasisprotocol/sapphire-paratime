@@ -750,7 +750,6 @@ dependencies = [
  "hex",
  "hmac",
  "jsonrpsee-types",
- "memchr",
  "rand",
  "serde",
  "serde_json",

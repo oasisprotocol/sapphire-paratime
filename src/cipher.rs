@@ -66,10 +66,11 @@ impl SessionCipher {
             let mut tagged_ct = buf.split_off(metadata_size);
             // `buf` now contains just the associated data (public key and rx nonce).
 
+            #[allow(clippy::unwrap_used)]
             let bytes_written = self
                 .deoxysii
                 .seal_into(&tx_nonce, pt, &buf, &mut tagged_ct)
-                .unwrap();
+                .unwrap(); // OOM?
             debug_assert!(bytes_written == tagged_ct.len());
 
             buf.unsplit(tagged_ct);
@@ -112,8 +113,8 @@ impl SessionCipher {
     ) -> [u8; deoxysii::KEY_SIZE] {
         let pmk = secret_key.diffie_hellman(peer_public_key);
 
-        let mut kdf =
-            Kdf::new_from_slice(b"MRAE_Box_Deoxys-II-256-128").expect("Hmac::new_from_slice");
+        #[allow(clippy::unwrap_used)]
+        let mut kdf = Kdf::new_from_slice(b"MRAE_Box_Deoxys-II-256-128").unwrap();
         kdf.update(pmk.as_bytes());
         drop(pmk);
 
