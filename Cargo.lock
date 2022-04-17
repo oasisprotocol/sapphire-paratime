@@ -743,6 +743,7 @@ dependencies = [
  "anyhow",
  "arrayref",
  "beef",
+ "bumpalo",
  "bytes",
  "cargo_toml",
  "config",

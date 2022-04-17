@@ -31,11 +31,11 @@ pub(crate) struct SessionCipher {
 }
 
 impl SessionCipher {
-    pub(crate) fn new(peer_public_key: [u8; PUBLIC_KEY_SIZE]) -> Self {
-        let peer_public_key = x25519_dalek::PublicKey::from(peer_public_key);
+    pub(crate) fn from_runtime_public_key(runtime_public_key: [u8; PUBLIC_KEY_SIZE]) -> Self {
+        let runtime_public_key = x25519_dalek::PublicKey::from(runtime_public_key);
         let keypair = KeyPair::generate();
         let deoxysii = DeoxysII::new(&Self::derive_symmetric_key(
-            &peer_public_key,
+            &runtime_public_key,
             &keypair.secret,
         ));
         Self {
@@ -108,10 +108,10 @@ impl SessionCipher {
     /// Derives a MRAE AEAD symmetric key suitable for use with the asymmetric
     /// box primitives from the provided X25519 public and private keys.
     fn derive_symmetric_key(
-        peer_public_key: &x25519_dalek::PublicKey,
+        runtime_public_key: &x25519_dalek::PublicKey,
         secret_key: &x25519_dalek::StaticSecret,
     ) -> [u8; deoxysii::KEY_SIZE] {
-        let pmk = secret_key.diffie_hellman(peer_public_key);
+        let pmk = secret_key.diffie_hellman(runtime_public_key);
 
         #[allow(clippy::unwrap_used)]
         let mut kdf = Kdf::new_from_slice(b"MRAE_Box_Deoxys-II-256-128").unwrap();

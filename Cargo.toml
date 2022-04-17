@@ -12,6 +12,7 @@ threads = 16
 anyhow = "1.0.56"
 arrayref = "0.3.6"
 beef = "0.5.1"
+bumpalo = { version = "3.9.1", features = ["allocator_api"] }
 bytes = "1.1.0"
 config = "0.12.0"
 deoxysii = "0.2.3"

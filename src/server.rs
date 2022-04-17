@@ -1,11 +1,7 @@
-use std::{
-    cell::{RefCell, RefMut},
-    io::Read,
-    sync::Arc,
-};
+use std::{alloc::Allocator, io::Read, sync::Arc};
 
+use bumpalo::Bump;
 use jsonrpsee_types as jrpc;
-use serde_json::value::RawValue as RawJsonValue;
 use thiserror::Error;
 use tiny_http::StatusCode;
 
@@ -23,7 +19,7 @@ pub(crate) struct Server {
 impl Server {
     pub(crate) fn new(
         config: crate::config::Config,
-    ) -> Result<Arc<Self>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<Arc<Self>, std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>> {
         let server_cfg = tiny_http::ServerConfig {
             addr: &config.listen_addr,
             ssl: None, // TODO: fetch from letsencrypt or other provider
@@ -34,7 +30,7 @@ impl Server {
             http_agent: ureq::AgentBuilder::new()
                 .timeout(std::time::Duration::from_secs(30))
                 .build(),
-            cipher: SessionCipher::new([0u8; 32]), // TODO
+            cipher: SessionCipher::from_runtime_public_key([0u8; 32]), // TODO: fetch runtime public key
         }))
     }
 
@@ -80,36 +76,39 @@ impl Server {
 
             let res = with_headers!(res, { "content-type": "application/json" });
 
-            thread_local! {
-                // Buffers preserved between requests to avoid allocation.
-                // The req and res buffers cannot be combined as the response
-                // may borrow from the request body.
-                static REQ_BUFS: RefCell<(Vec<u8>, Vec<u8>)> = Default::default();
-            }
-            REQ_BUFS.with(|bufs| {
-                let (mut req_buf, mut res_buf) =
-                    RefMut::map_split(bufs.borrow_mut(), |(req_buf, res_buf)| (req_buf, res_buf));
-                req_buf.clear();
-                res_buf.clear();
-                #[allow(clippy::unwrap_used)]
-                match self.handle_req(&mut req, &mut req_buf).as_ref() {
-                    Ok(res_data) => serde_json::to_writer(&mut *res_buf, res_data),
-                    Err(res_data) => serde_json::to_writer(&mut *res_buf, res_data),
+            thread_local!(static BUMP: std::cell::RefCell<Bump> = Default::default());
+            BUMP.with(|bump_cell| {
+                let mut bump = bump_cell.borrow_mut();
+                {
+                    let mut proxy_res_buf = Vec::new_in(&*bump);
+                    let mut req_buf = Vec::new_in(&*bump);
+                    let mut res_buf = Vec::new_in(&*bump);
+                    #[allow(clippy::unwrap_used)]
+                    match self
+                        .handle_req(&mut req, &mut req_buf, &mut proxy_res_buf, &*bump)
+                        .as_ref()
+                    {
+                        Ok(res_data) => serde_json::to_writer(&mut *res_buf, res_data),
+                        Err(res_data) => serde_json::to_writer(&mut *res_buf, res_data),
+                    }
+                    .unwrap(); // OOM or something bad
+                    let res = res.with_data(res_buf.as_slice(), Some(res_buf.len()));
+                    if let Err(e) = req.respond(res) {
+                        tracing::error!(error=%e, "error responding to request");
+                    }
                 }
-                .unwrap(); // OOM or something bad
-                let res = res.with_data(res_buf.as_slice(), Some(res_buf.len()));
-                if let Err(e) = req.respond(res) {
-                    tracing::error!(error=%e, "error responding to request");
-                }
+                bump.reset();
             });
         }
     }
 
-    fn handle_req<'a>(
-        &'a self,
-        req: &'a mut tiny_http::Request,
-        req_body: &'a mut Vec<u8>,
-    ) -> Result<jrpc::Response<'a, Box<RawJsonValue>>, jrpc::ErrorResponse<'a>> {
+    fn handle_req<'a, A: Allocator>(
+        &self,
+        req: &'a mut tiny_http::Request, // Will have its body consumed into `req_buf` after validation.
+        req_buf: &'a mut Vec<u8, A>, // Holds the deserialized request body. Early-returned errors borrow their id and method from here.
+        proxy_res_buf: &'a mut Vec<u8, A>, // Holds the proxy response body. The response borrows its data, id, and method from here.
+        bump: &'a Bump,
+    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a>>, jrpc::ErrorResponse<'a>> {
         macro_rules! jrpc_err {
             ($code:ident) => {
                 jrpc_err!($code, jrpc::error::ErrorCode::$code.message())
@@ -127,30 +126,25 @@ impl Server {
         }
 
         let content_length = match req.body_length() {
-            Some(content_length) if content_length < MAX_REQUEST_SIZE_BYTES => content_length,
+            Some(content_length) if content_length <= MAX_REQUEST_SIZE_BYTES => content_length,
             Some(_) => return Err(jrpc_err!(OversizedRequest)),
             None => {
                 return Err(jrpc_err!(InternalError, "missing content-length header"));
             }
         };
+        req_buf.reserve_exact(content_length);
 
-        if std::io::copy(&mut req.as_reader().take(content_length as u64), req_body).is_err() {
+        if std::io::copy(&mut req.as_reader().take(content_length as u64), req_buf).is_err() {
             return Err(jrpc_err!(ParseError));
         }
 
-        let web3_req: jrpc::Request<'_> = serde_json::from_slice(req_body)
+        let web3_req: jrpc::Request<'a> = serde_json::from_slice(req_buf)
             .map_err(|e| jrpc_err!(ParseError, format!("parse error: {e}")))?;
+        let req_id = web3_req.id.clone();
 
         match &*web3_req.method {
             "eth_sendRawTransaction" | "eth_call" | "eth_estimateGas" => {
-                self.handle_c10l_web3_req(web3_req).map(|res| {
-                    #[allow(clippy::unwrap_used)]
-                    jrpc::Response::new(
-                        RawJsonValue::from_string(serde_json::to_string(&res.result).unwrap())
-                            .unwrap(),
-                        res.id,
-                    )
-                })
+                self.handle_c10l_web3_req(web3_req, proxy_res_buf, bump)
             }
             "eth_sendTransaction" => {
                 return Err(jrpc::ErrorResponse::new(
@@ -159,31 +153,24 @@ impl Server {
                 ))
             }
             _ => self
-                .proxy_pass(req_body)
-                .map_err(|e| e.into_rpc_error(web3_req.id)),
+                .proxy::<&'a serde_json::value::RawValue, _>(req_buf, proxy_res_buf)
+                .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
         }
+        .map_err(move |e| e.into_rpc_error(req_id.into_owned()))
     }
 
-    fn handle_c10l_web3_req<'a>(
+    fn handle_c10l_web3_req<'a, A: Allocator>(
         &self,
         req: jrpc::Request<'a>,
-    ) -> Result<jrpc::Response<'a, serde_json::Value>, jrpc::ErrorResponse<'a>> {
-        let mut params: smallvec::SmallVec<[serde_json::Value; 2]> = serde_json::from_str(
-            req.params.map(|rv| rv.get()).unwrap_or_default(),
-        )
-        .map_err(|e| {
-            let code = jrpc::error::ErrorCode::InvalidParams;
-            jrpc::ErrorResponse::new(
-                jrpc::error::ErrorObject {
-                    code,
-                    message: format!("{} {}", code.message(), e).into(),
-                    data: None,
-                },
-                req.id.clone(),
-            )
-        })?;
+        proxy_res_buf: &'a mut Vec<u8, A>,
+        bump: &'a Bump,
+    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a>>, ProxyError> {
+        // TODO: wait for https://github.com/fitzgen/bumpalo/issues/63
+        let mut params: smallvec::SmallVec<[serde_json::Value; 2]> =
+            serde_json::from_str(req.params.map(|rv| rv.get()).unwrap_or_default())
+                .map_err(ProxyError::InvalidParams)?;
 
-        let data_value = match &*req.method {
+        let data_value: Option<&mut serde_json::Value> = match &*req.method {
             "eth_sendRawTransaction" => params.get_mut(0),
             "eth_call" | "eth_estimateGas" => params
                 .get_mut(0)
@@ -193,84 +180,87 @@ impl Server {
         };
 
         if let Some(data_value) = data_value {
-            let data = match data_value
-                .as_str()
-                .and_then(|data_hex| hex::decode(data_hex).ok()) // TODO: decode_to_slice into REQ_BUF
-            {
-                Some(data) => data,
-                None => {
-                    return Err(jrpc::ErrorResponse::new(
-                            jrpc::error::ErrorObject::new(jrpc::error::ErrorCode::InvalidParams, None),
-                            req.id.clone()
-                    ))
-                }
-            };
+            let data_hex = data_value.as_str().unwrap_or_default();
+            let data_hex = data_hex.strip_prefix("0x").unwrap_or(data_hex);
+            let mut data = Vec::with_capacity_in(data_hex.len() / 2, bump);
+            hex::decode_to_slice(data_hex, &mut data).map_err(ProxyError::InvalidRequestData)?;
             *data_value = hex::encode(self.cipher.encrypt(&data)).into();
         }
 
-        todo!()
+        let req_ser = jrpc::RequestSer::new(
+            &req.id,
+            &req.method,
+            Some(jrpc::ParamsSer::ArrayRef(&params)),
+        );
 
-        // self.proxy_pass(req.headers(), &serde_json::to_vec(&web3_req).unwrap())
+        let mut req_bytes = Vec::new_in(bump);
+        #[allow(clippy::unwrap_used)]
+        serde_json::to_writer(&mut req_bytes, &req_ser).unwrap();
+
+        match &*req.method {
+            // The responses of these two are not confidential.
+            "eth_sendRawTransaction" | "eth_estimateGas" => self
+                .proxy::<&'a serde_json::value::RawValue, _>(&req_bytes, proxy_res_buf)
+                .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
+            "eth_call" => {
+                let call_res = self.proxy::<&'a str, _>(&req_bytes, proxy_res_buf)?;
+                let enc_res_hex = call_res
+                    .result
+                    .strip_prefix("0x")
+                    .unwrap_or(call_res.result);
+                let mut enc_res_bytes = Vec::new_in(bump);
+                hex::decode_to_slice(enc_res_hex, &mut enc_res_bytes)
+                    .map_err(ProxyError::InvalidResponseData)?;
+                let res_data = self.cipher.decrypt(&mut enc_res_bytes).unwrap_or_default();
+                let mut res_hex = Vec::with_capacity_in(res_data.len() * 2 + 2, bump);
+                res_hex.resize(res_hex.capacity(), 0);
+                res_hex[0..2].copy_from_slice(b"0x");
+                #[allow(clippy::unwrap_used)]
+                hex::encode_to_slice(res_data, &mut res_hex[2..]).unwrap(); // OOM or other catastrophic error
+                Ok(jrpc::Response::new(
+                    Web3ResponseParams::CallResult(res_hex),
+                    call_res.id,
+                ))
+            }
+            _ => unreachable!("not a confidential method"),
+        }
     }
 
-    fn proxy(
+    fn proxy<'a, T: serde::de::Deserialize<'a>, A: Allocator>(
         &self,
-        req: jrpc::RequestSer<'_>,
-    ) -> Result<jrpc::Response<'_, serde_json::Value>, ProxyError> {
-        todo!()
+        req_body: &[u8],
+        res_buf: &'a mut Vec<u8, A>, // jrpc::Response borrows from here (the response body).
+    ) -> Result<jrpc::Response<'a, T>, ProxyError> {
+        let proxy_req = self.http_agent.request_url("POST", &self.config.upstream);
+        let res = match proxy_req.send_bytes(req_body) {
+            Ok(res) => res,
+            Err(ureq::Error::Status(_, res)) => res,
+            Err(ureq::Error::Transport(te)) => match te.kind() {
+                ureq::ErrorKind::Io => return Err(ProxyError::Timeout),
+                _ => return Err(ProxyError::BadGateway(Box::new(ureq::Error::Transport(te)))),
+            },
+        };
+        std::io::copy(&mut res.into_reader(), res_buf).map_err(|_| ProxyError::Internal)?;
+        serde_json::from_slice(res_buf).map_err(ProxyError::UnexpectedRepsonse)
     }
+}
 
-    fn proxy_pass(
-        &self,
-        proxy_req_body: &[u8],
-    ) -> Result<jrpc::Response<'_, Box<RawJsonValue>>, ProxyError> {
-        todo!()
-        // let res = self.proxy(headers, proxy_req_body)?;
-        // let headers: Vec<tiny_http::Header> = res
-        //     .headers_names()
-        //     .into_iter()
-        //     .filter_map(|field| {
-        //         let value = res.header(&field)?;
-        //         tiny_http::Header::from_bytes(field.into_bytes(), value).ok()
-        //     })
-        //     .collect();
-        // let status_code = if (200..500).contains(&res.status()) {
-        //     StatusCode(res.status())
-        // } else {
-        //     StatusCode(502)
-        // };
-        // Ok(Response::new(
-        //     status_code,
-        //     headers,
-        //     res.into_reader(),
-        //     None, // data_length
-        //     None, // additional_headers
-        // ))
+enum Web3ResponseParams<'a> {
+    RawValue(&'a serde_json::value::RawValue),
+    CallResult(Vec<u8, &'a Bump>), // `String::from_utf8` requires the vec be in the global allocator
+}
+
+impl serde::Serialize for Web3ResponseParams<'_> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::RawValue(rv) => rv.serialize(serializer),
+            Self::CallResult(hex_bytes) => {
+                #[allow(unsafe_code)]
+                let hex_str = unsafe { std::str::from_utf8_unchecked(hex_bytes) };
+                hex_str.serialize(serializer)
+            }
+        }
     }
-
-    // fn proxy(
-    //     &self,
-    //     headers: &[tiny_http::Header],
-    //     body: &[u8],
-    // ) -> Result<ureq::Response, ProxyError> {
-    //     let mut proxy_req = self.http_agent.request_url("POST", &self.config.upstream);
-    //     for tiny_http::Header { field, value } in headers {
-    //         proxy_req = proxy_req.set(field.as_str().as_str(), value.as_str());
-    //     }
-    //     match proxy_req.send_bytes(body) {
-    //         Ok(res) => Ok(res),
-    //         Err(ureq::Error::Status(_, res)) => Ok(res),
-    //         Err(ureq::Error::Transport(te)) => match te.kind() {
-    //             ureq::ErrorKind::BadStatus
-    //             | ureq::ErrorKind::BadHeader
-    //             | ureq::ErrorKind::TooManyRedirects => {
-    //                 Err(ProxyError::BadGateway(ureq::Error::Transport(te)))
-    //             }
-    //             ureq::ErrorKind::Io => Err(ProxyError::Timeout),
-    //             _ => Err(ProxyError::Internal(ureq::Error::Transport(te))),
-    //         },
-    //     }
-    // }
 }
 
 #[derive(Debug, Error)]
@@ -279,24 +269,38 @@ enum ProxyError {
     Timeout,
 
     #[error(transparent)]
-    BadGateway(ureq::Error),
+    BadGateway(#[from] Box<ureq::Error>),
+
+    #[error(transparent)]
+    InvalidParams(serde_json::Error),
+
+    #[error("invalid hex data in request: {0}")]
+    InvalidRequestData(hex::FromHexError),
+
+    #[error("invalid hex data in upstream response: {0}")]
+    InvalidResponseData(hex::FromHexError),
 
     #[error("invalid response from the upstream gateway: {0}")]
     UnexpectedRepsonse(#[source] serde_json::Error),
 
-    #[error(transparent)]
-    Internal(ureq::Error),
+    #[error("an unexpected error occured")]
+    Internal,
 }
 
 impl ProxyError {
     fn into_rpc_error(self, req_id: jrpc::Id<'_>) -> jrpc::error::ErrorResponse<'_> {
         let code = match self {
             Self::Timeout => jrpc::error::ErrorCode::ServerIsBusy,
+            Self::InvalidParams(_) | Self::InvalidRequestData(_) => {
+                jrpc::error::ErrorCode::InvalidParams
+            }
+            Self::UnexpectedRepsonse(_) | Self::InvalidResponseData(_) => {
+                jrpc::error::ErrorCode::InternalError
+            }
             Self::BadGateway(_) => jrpc::error::ErrorCode::ServerError(-1),
-            Self::UnexpectedRepsonse(_) => jrpc::error::ErrorCode::InternalError,
-            Self::Internal(_) => jrpc::error::ErrorCode::ServerError(-2),
+            Self::Internal => jrpc::error::ErrorCode::ServerError(-2),
         };
-        let message = format!("{} {}", code.message(), self);
+        let message = format!("{}. {}", code.message(), self);
         jrpc::ErrorResponse::new(
             jrpc::error::ErrorObject {
                 code,
