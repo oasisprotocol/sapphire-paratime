@@ -746,7 +746,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "smallvec",
  "thiserror",
  "tiny_http",
  "tracing",
@@ -834,9 +833,6 @@ name = "smallvec"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2dd574626839106c320a323308629dcb1acfc96e32a8cba364ddc61ac23ee83"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "spin"

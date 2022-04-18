@@ -2,6 +2,7 @@ use std::{alloc::Allocator, io::Read, sync::Arc};
 
 use bumpalo::Bump;
 use jsonrpsee_types as jrpc;
+use serde_json::value::RawValue;
 use thiserror::Error;
 use tiny_http::StatusCode;
 
@@ -153,7 +154,7 @@ impl Server {
                 ))
             }
             _ => self
-                .proxy::<&'a serde_json::value::RawValue, _>(req_buf, proxy_res_buf)
+                .proxy::<&'a RawValue, _>(req_buf, proxy_res_buf)
                 .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
         }
         .map_err(move |e| e.into_rpc_error(req_id.into_owned()))
@@ -165,52 +166,131 @@ impl Server {
         proxy_res_buf: &'a mut Vec<u8, A>,
         bump: &'a Bump,
     ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a>>, ProxyError> {
-        // TODO: wait for https://github.com/fitzgen/bumpalo/issues/63
-        let mut params: smallvec::SmallVec<[serde_json::Value; 2]> =
-            serde_json::from_str(req.params.map(|rv| rv.get()).unwrap_or_default())
-                .map_err(ProxyError::InvalidParams)?;
+        let params_str = req
+            .params
+            .map(|rv| rv.get())
+            .ok_or(ProxyError::MissingParams)?;
 
-        let data_value: Option<&mut serde_json::Value> = match &*req.method {
-            "eth_sendRawTransaction" => params.get_mut(0),
-            "eth_call" | "eth_estimateGas" => params
-                .get_mut(0)
-                .and_then(|p0| p0.as_object_mut())
-                .and_then(|tx| tx.get_mut("data")),
+        // A replacement for [`jsonrpsee_types::RequestSer`], which requires owned params.
+        #[derive(serde::Serialize)]
+        struct Web3Request<'a> {
+            jsonrpc: jrpc::TwoPointZero,
+            id: &'a jrpc::Id<'a>,
+            method: &'a str,
+            params: Web3RequestParams<'a>,
+        }
+
+        #[derive(serde::Serialize)]
+        #[serde(untagged)]
+        enum Web3RequestParams<'a> {
+            SendRawTx(#[serde(borrow)] EthSendRawTxParams<'a>),
+            Call(#[serde(borrow)] EthCallParams<'a>),
+        }
+
+        type EthSendRawTxParams<'a> = (&'a str,);
+        type EthCallParams<'a> = (EthTx<'a>, Option<&'a RawValue>);
+
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct EthTx<'a> {
+            #[serde(borrow)]
+            from: Option<&'a RawValue>,
+            #[serde(borrow)]
+            to: Option<&'a RawValue>,
+            #[serde(borrow)]
+            gas: Option<&'a RawValue>,
+            #[serde(borrow)]
+            gas_price: Option<&'a RawValue>,
+            #[serde(borrow)]
+            value: Option<&'a RawValue>,
+            #[serde(borrow)]
+            data: Option<&'a str>,
+        }
+
+        macro_rules! encrypt {
+            ($data_hex:expr => $ct_hex:ident) => {{
+                let data_hex = $data_hex.strip_prefix("0x").unwrap_or($data_hex);
+
+                let data_len = data_hex.len() / 2;
+                let ct_len = SessionCipher::ct_len(data_len);
+                let ct_hex_len = 2 * ct_len + 2;
+
+                $ct_hex = Vec::with_capacity_in(ct_hex_len, bump);
+                unsafe { $ct_hex.set_len($ct_hex.capacity()) };
+                let data = &mut $ct_hex[..data_len]; // plaintext is unused after encryption
+
+                // Allocate this in reverse drop order so that its space can be reused after drop
+                // ([`bumpalo::Bump`] allows re-using the last allocation).
+                let mut ct_bytes = Vec::with_capacity_in(ct_len, bump);
+                unsafe { ct_bytes.set_len(ct_bytes.capacity()) };
+
+                hex::decode_to_slice(data_hex, data).map_err(ProxyError::InvalidRequestData)?;
+                self.cipher.encrypt_into(&data, &mut ct_bytes);
+
+                $ct_hex[0..2].copy_from_slice(b"0x");
+                #[allow(clippy::unwrap_used)]
+                hex::encode_to_slice(&ct_bytes, &mut $ct_hex[2..]).unwrap(); // infallible
+            }};
+        }
+
+        let pt_data_len: usize;
+        let enc_data_hex_len;
+        let mut enc_data_hex: Vec<u8, &'a Bump>;
+
+        let req_params: Web3RequestParams<'_> = match &*req.method {
+            "eth_sendRawTransaction" => {
+                let params: EthSendRawTxParams<'a> =
+                    serde_json::from_str(params_str).map_err(ProxyError::InvalidParams)?;
+                pt_data_len = params.0.len();
+                encrypt!(params.0 => enc_data_hex);
+                enc_data_hex_len = enc_data_hex.len();
+                Web3RequestParams::SendRawTx((from_utf8(&enc_data_hex),))
+            }
+            "eth_call" | "eth_estimateGas" => {
+                let params: EthCallParams<'a> =
+                    serde_json::from_str(params_str).map_err(ProxyError::InvalidParams)?;
+                match params.0.data.as_ref() {
+                    Some(data) => {
+                        pt_data_len = data.len();
+                        encrypt!(data => enc_data_hex);
+                        enc_data_hex_len = enc_data_hex.len()
+                    }
+                    None => {
+                        pt_data_len = 0;
+                        enc_data_hex = Vec::new_in(bump); // doesn't allocate
+                        enc_data_hex_len = 0;
+                    }
+                }
+                Web3RequestParams::Call((
+                    EthTx {
+                        data: Some(from_utf8(&enc_data_hex)),
+                        ..params.0
+                    },
+                    params.1,
+                ))
+            }
             _ => unreachable!("not a confidential method"),
         };
 
-        let mut proxy_req_body_len = 0;
-
-        if let Some(data_value) = data_value {
-            let data_hex = data_value.as_str().unwrap_or_default();
-            let data_hex = data_hex.strip_prefix("0x").unwrap_or(data_hex);
-
-            let mut data = Vec::with_capacity_in(data_hex.len() / 2, bump);
-            unsafe { data.set_len(data.capacity()) };
-            hex::decode_to_slice(data_hex, &mut data).map_err(ProxyError::InvalidRequestData)?;
-
-            let mut enc_data = Vec::with_capacity_in(SessionCipher::ct_len(&data), bump);
-            self.cipher.encrypt_into(&data, &mut enc_data);
-
-            let enc_data_hex = hex::encode(&enc_data);
-            proxy_req_body_len = enc_data_hex.len();
-            *data_value = enc_data_hex.into();
-        }
-
-        let req_ser = jrpc::RequestSer::new(
-            &req.id,
-            &req.method,
-            Some(jrpc::ParamsSer::ArrayRef(&params)),
+        let mut req_bytes = Vec::with_capacity_in(
+            enc_data_hex_len - pt_data_len + params_str.len() + 100,
+            bump,
         );
-
-        let mut req_bytes = Vec::with_capacity_in(proxy_req_body_len, bump);
         #[allow(clippy::unwrap_used)]
-        serde_json::to_writer(&mut req_bytes, &req_ser).unwrap(); // infallible
+        serde_json::to_writer(
+            &mut req_bytes,
+            &Web3Request {
+                jsonrpc: jrpc::TwoPointZero,
+                id: &req.id,
+                method: &req.method,
+                params: req_params,
+            },
+        )
+        .unwrap(); // infallible, assuming correct allocation
 
         match &*req.method {
             // The responses of these two are not confidential.
             "eth_sendRawTransaction" | "eth_estimateGas" => self
-                .proxy::<&'a serde_json::value::RawValue, _>(&req_bytes, proxy_res_buf)
+                .proxy::<&'a RawValue, _>(&req_bytes, proxy_res_buf)
                 .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
             "eth_call" => {
                 let call_res = self.proxy::<&'a str, _>(&req_bytes, proxy_res_buf)?;
@@ -225,7 +305,7 @@ impl Server {
                     .map_err(ProxyError::InvalidResponseData)?;
 
                 let mut res_bytes =
-                    Vec::with_capacity_in(SessionCipher::pt_len(&enc_res_bytes), bump);
+                    Vec::with_capacity_in(SessionCipher::pt_len(enc_res_bytes.len()), bump);
                 if self
                     .cipher
                     .decrypt_into(enc_res_bytes, &mut res_bytes)
@@ -275,7 +355,7 @@ impl Server {
 }
 
 enum Web3ResponseParams<'a> {
-    RawValue(&'a serde_json::value::RawValue),
+    RawValue(&'a RawValue),
     CallResult(Vec<u8, &'a Bump>), // `String::from_utf8` requires the vec be in the global allocator
 }
 
@@ -284,12 +364,7 @@ impl serde::Serialize for Web3ResponseParams<'_> {
         match self {
             Self::RawValue(rv) => rv.serialize(serializer),
             Self::CallResult(hex_bytes) => {
-                let hex_str = if cfg!(debug_assertions) {
-                    #[allow(clippy::expect_used)]
-                    std::str::from_utf8(hex_bytes).expect("re-encoded call result was not hex")
-                } else {
-                    unsafe { std::str::from_utf8_unchecked(hex_bytes) }
-                };
+                let hex_str = from_utf8(hex_bytes);
                 hex_str.serialize(serializer)
             }
         }
@@ -303,6 +378,9 @@ enum ProxyError {
 
     #[error(transparent)]
     BadGateway(#[from] Box<ureq::Error>),
+
+    #[error("request missing required params")]
+    MissingParams,
 
     #[error(transparent)]
     InvalidParams(serde_json::Error),
@@ -324,7 +402,7 @@ impl ProxyError {
     fn into_rpc_error(self, req_id: jrpc::Id<'_>) -> jrpc::error::ErrorResponse<'_> {
         let code = match self {
             Self::Timeout => jrpc::error::ErrorCode::ServerIsBusy,
-            Self::InvalidParams(_) | Self::InvalidRequestData(_) => {
+            Self::MissingParams | Self::InvalidParams(_) | Self::InvalidRequestData(_) => {
                 jrpc::error::ErrorCode::InvalidParams
             }
             Self::UnexpectedRepsonse(_) | Self::InvalidResponseData(_) => {
@@ -342,5 +420,14 @@ impl ProxyError {
             },
             req_id,
         )
+    }
+}
+
+fn from_utf8(bytes: &'_ [u8]) -> &'_ str {
+    if cfg!(debug_assertions) {
+        #[allow(clippy::expect_used)]
+        std::str::from_utf8(bytes).expect("re-encoded call result was not hex")
+    } else {
+        unsafe { std::str::from_utf8_unchecked(bytes) }
     }
 }

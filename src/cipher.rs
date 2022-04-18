@@ -51,12 +51,12 @@ impl SessionCipher {
             .deoxysii
             .seal_into(&tx_nonce, pt, metadata, tagged_ct)
             .unwrap(); // OOM?
-        debug_assert_eq!(bytes_written, Self::ct_len(pt));
+        debug_assert_eq!(bytes_written, Self::ct_len(pt.len()));
         bytes_written
     }
 
-    pub(crate) fn ct_len(pt: &[u8]) -> usize {
-        pt.len() + ENC_OVERHEAD
+    pub(crate) fn ct_len(pt_len: usize) -> usize {
+        pt_len + ENC_OVERHEAD
     }
 
     /// Decrypts `versioned_nonced_tagged_ct` into `pt`. The latter must be at least as large as
@@ -72,7 +72,7 @@ impl SessionCipher {
         if versioned_nonced_tagged_ct.len() < DEC_OVERHEAD {
             return None;
         }
-        let expected_pt_len = Self::pt_len(&versioned_nonced_tagged_ct);
+        let expected_pt_len = Self::pt_len(versioned_nonced_tagged_ct.len());
 
         let (version_and_nonce, tagged_ct) =
             versioned_nonced_tagged_ct.split_at_mut(1 + NONCE_SIZE);
@@ -87,10 +87,8 @@ impl SessionCipher {
         Some(bytes_written)
     }
 
-    pub(crate) fn pt_len(versioned_nonced_tagged_ct: &[u8]) -> usize {
-        versioned_nonced_tagged_ct
-            .len()
-            .saturating_sub(DEC_OVERHEAD)
+    pub(crate) fn pt_len(versioned_nonced_tagged_ct_len: usize) -> usize {
+        versioned_nonced_tagged_ct_len.saturating_sub(DEC_OVERHEAD)
     }
 
     /// Derives a MRAE AEAD symmetric key suitable for use with the asymmetric
