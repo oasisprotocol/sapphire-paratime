@@ -80,9 +80,9 @@ impl Server {
             BUMP.with(|bump_cell| {
                 let mut bump = bump_cell.borrow_mut();
                 {
-                    let mut proxy_res_buf = Vec::new_in(&*bump);
-                    let mut req_buf = Vec::new_in(&*bump);
-                    let mut res_buf = Vec::new_in(&*bump);
+                    let mut proxy_res_buf = Vec::new_in(&*bump); // will be resized in `fn proxy`
+                    let mut req_buf = Vec::new_in(&*bump); // will be resized in `fn handle_req`
+                    let mut res_buf = Vec::with_capacity_in(1024 /* rough estimate */, &*bump);
                     #[allow(clippy::unwrap_used)]
                     match self
                         .handle_req(&mut req, &mut req_buf, &mut proxy_res_buf, &*bump)
@@ -179,11 +179,13 @@ impl Server {
             _ => unreachable!("not a confidential method"),
         };
 
+        let mut enc_data_len = 0;
         if let Some(data_value) = data_value {
             let data_hex = data_value.as_str().unwrap_or_default();
             let data_hex = data_hex.strip_prefix("0x").unwrap_or(data_hex);
             let mut data = Vec::with_capacity_in(data_hex.len() / 2, bump);
             hex::decode_to_slice(data_hex, &mut data).map_err(ProxyError::InvalidRequestData)?;
+            enc_data_len = data_hex.len();
             *data_value = hex::encode(self.cipher.encrypt(&data)).into();
         }
 
@@ -193,7 +195,7 @@ impl Server {
             Some(jrpc::ParamsSer::ArrayRef(&params)),
         );
 
-        let mut req_bytes = Vec::new_in(bump);
+        let mut req_bytes = Vec::with_capacity_in(enc_data_len, bump);
         #[allow(clippy::unwrap_used)]
         serde_json::to_writer(&mut req_bytes, &req_ser).unwrap();
 
@@ -208,7 +210,7 @@ impl Server {
                     .result
                     .strip_prefix("0x")
                     .unwrap_or(call_res.result);
-                let mut enc_res_bytes = Vec::new_in(bump);
+                let mut enc_res_bytes = Vec::with_capacity_in(enc_res_hex.len() / 2, bump);
                 hex::decode_to_slice(enc_res_hex, &mut enc_res_bytes)
                     .map_err(ProxyError::InvalidResponseData)?;
                 let res_data = self.cipher.decrypt(&mut enc_res_bytes).unwrap_or_default();
@@ -240,6 +242,11 @@ impl Server {
                 _ => return Err(ProxyError::BadGateway(Box::new(ureq::Error::Transport(te)))),
             },
         };
+        res_buf.reserve_exact(
+            res.header("content-length")
+                .and_then(|l| l.parse::<usize>().ok())
+                .unwrap_or_default(),
+        );
         std::io::copy(&mut res.into_reader(), res_buf).map_err(|_| ProxyError::Internal)?;
         serde_json::from_slice(res_buf).map_err(ProxyError::UnexpectedRepsonse)
     }
