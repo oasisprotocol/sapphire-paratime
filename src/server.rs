@@ -12,9 +12,8 @@ const MAX_REQUEST_SIZE_BYTES: usize = 1024 * 1024; // 1 MiB
 
 pub(crate) struct Server {
     server: tiny_http::Server,
-    cipher: SessionCipher,
-    http_agent: ureq::Agent,
-    config: crate::config::Config,
+    handler: RequestHandler,
+    is_tls: bool,
 }
 
 impl Server {
@@ -27,11 +26,14 @@ impl Server {
         };
         Ok(Arc::new(Self {
             server: tiny_http::Server::new(server_cfg)?,
-            cipher: SessionCipher::from_runtime_public_key(config.runtime_public_key),
-            http_agent: ureq::AgentBuilder::new()
-                .timeout(std::time::Duration::from_secs(30))
-                .build(),
-            config,
+            is_tls: config.tls,
+            handler: RequestHandler {
+                cipher: SessionCipher::from_runtime_public_key(config.runtime_public_key),
+                http_agent: ureq::AgentBuilder::new()
+                    .timeout(std::time::Duration::from_secs(30))
+                    .build(),
+                upstream: config.upstream,
+            },
         }))
     }
 
@@ -58,7 +60,7 @@ impl Server {
                 "access-control-max-age": "86400",
             });
 
-            if self.config.tls && !req.secure() {
+            if self.is_tls && !req.secure() {
                 req.respond(res.with_status_code(StatusCode(421))).ok();
                 continue;
             }
@@ -86,6 +88,7 @@ impl Server {
                     let mut res_buf = Vec::with_capacity_in(1024 /* rough estimate */, &*bump);
                     #[allow(clippy::unwrap_used)]
                     match self
+                        .handler
                         .handle_req(&mut req, &mut req_buf, &mut proxy_res_buf, &*bump)
                         .as_ref()
                     {
@@ -102,14 +105,22 @@ impl Server {
             });
         }
     }
+}
 
+struct RequestHandler {
+    cipher: SessionCipher,
+    http_agent: ureq::Agent,
+    upstream: url::Url,
+}
+
+impl RequestHandler {
     fn handle_req<'a, A: Allocator>(
         &self,
         req: &'a mut tiny_http::Request, // Will have its body consumed into `req_buf` after validation.
         req_buf: &'a mut Vec<u8, A>, // Holds the deserialized request body. Early-returned errors borrow their id and method from here.
         proxy_res_buf: &'a mut Vec<u8, A>, // Holds the proxy response body. The response borrows its data, id, and method from here.
         bump: &'a Bump,
-    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a>>, jrpc::ErrorResponse<'a>> {
+    ) -> HandlerResult<'a> {
         macro_rules! jrpc_err {
             ($code:ident) => {
                 jrpc_err!($code, jrpc::error::ErrorCode::$code.message())
@@ -341,7 +352,7 @@ impl Server {
         req_body: &[u8],
         res_buf: &'a mut Vec<u8, A>, // jrpc::Response borrows from here (the response body).
     ) -> Result<jrpc::Response<'a, T>, ProxyError> {
-        let proxy_req = self.http_agent.request_url("POST", &self.config.upstream);
+        let proxy_req = self.http_agent.request_url("POST", &self.upstream);
         let res = match proxy_req.send_bytes(req_body) {
             Ok(res) => res,
             Err(ureq::Error::Status(_, res)) => res,
@@ -360,6 +371,10 @@ impl Server {
     }
 }
 
+type HandlerResult<'a> =
+    Result<jrpc::Response<'a, Web3ResponseParams<'a>>, jrpc::ErrorResponse<'a>>;
+
+#[cfg_attr(test, derive(Debug))]
 enum Web3ResponseParams<'a> {
     RawValue(&'a RawValue),
     CallResult(Vec<u8, &'a Bump>), // `String::from_utf8` requires the vec be in the global allocator
@@ -435,5 +450,235 @@ fn from_utf8(bytes: &'_ [u8]) -> &'_ str {
         std::str::from_utf8(bytes).expect("re-encoded call result was not hex")
     } else {
         unsafe { std::str::from_utf8_unchecked(bytes) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use jsonrpsee_types as jrpc;
+    use serde_json::json;
+    use tiny_http::{Method, TestRequest};
+
+    struct TestServer {
+        handler: RequestHandler,
+        alloc: Bump,
+    }
+
+    impl Default for TestServer {
+        fn default() -> Self {
+            Self {
+                handler: RequestHandler {
+                    cipher: SessionCipher::from_runtime_public_key([0; 32]),
+                    http_agent: ureq::Agent::new(),
+                    upstream: "http://localhost:8545".parse().unwrap(),
+                },
+                alloc: Bump::new(),
+            }
+        }
+    }
+
+    impl TestServer {
+        fn new() -> Self {
+            Self::default()
+        }
+
+        fn request<T>(
+            &mut self,
+            req: TestRequest,
+            res_handler: impl FnOnce(HandlerResult<'_>) -> T,
+        ) -> T {
+            let outcome = {
+                let mut proxy_res_buf = Vec::new_in(&self.alloc);
+                let mut req_buf = Vec::new_in(&self.alloc);
+                let mut req = req.into();
+                let res_result = self.handler.handle_req(
+                    &mut req,
+                    &mut req_buf,
+                    &mut proxy_res_buf,
+                    &self.alloc,
+                );
+                res_handler(res_result)
+            };
+            self.alloc.reset();
+            outcome
+        }
+    }
+
+    // `tiny_http` has an unfortunate `TestRequest::with_body` api.
+    fn to_static_str(s: &str) -> &'static str {
+        unsafe { std::mem::transmute::<_, &'static str>(s) }
+    }
+
+    #[test]
+    fn test_err_req_no_content_len() {
+        let mut server = TestServer::new();
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_header(
+                    tiny_http::Header::from_bytes("content-length".as_bytes(), "".as_bytes())
+                        .unwrap(),
+                )
+                .with_body("jsonrpc"),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::InternalError
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_err_req_malformed_jsonrpc() {
+        let mut server = TestServer::new();
+        server.request(
+            TestRequest::new().with_method(Method::Post).with_body("{}"),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::ParseError
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_err_req_oversized() {
+        let mut server = TestServer::new();
+        let body = vec![0u8; MAX_REQUEST_SIZE_BYTES + 1];
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_body(to_static_str(from_utf8(&body))),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::OversizedRequest
+                );
+            },
+        );
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_header(
+                    tiny_http::Header::from_bytes("content-length".as_bytes(), "1".as_bytes())
+                        .unwrap(),
+                )
+                .with_body(to_static_str(from_utf8(&body))),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::ParseError
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_err_req_invalid_params() {
+        let mut server = TestServer::new();
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_body(to_static_str(
+                    &json!({
+                        "jsonrpc": "2.0",
+                        "id": "123",
+                        "method": "eth_sendRawTransaction",
+                        "params": "0x1234",
+                    })
+                    .to_string(),
+                )),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::InvalidParams
+                );
+            },
+        );
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_body(to_static_str(
+                    &json!({
+                        "jsonrpc": "2.0",
+                        "id": "123",
+                        "method": "eth_call",
+                        "params": ["{}"],
+                    })
+                    .to_string(),
+                )),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::InvalidParams
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_err_req_invalid_data() {
+        let mut server = TestServer::new();
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_body(to_static_str(
+                    &json!({
+                        "jsonrpc": "2.0",
+                        "id": "123",
+                        "method": "eth_sendRawTransaction",
+                        "params": ["0x1"],
+                    })
+                    .to_string(),
+                )),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::InvalidParams
+                );
+            },
+        );
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_body(to_static_str(
+                    &json!({
+                        "jsonrpc": "2.0",
+                        "id": "123",
+                        "method": "eth_sendRawTransaction",
+                        "params": ["0xgg"],
+                    })
+                    .to_string(),
+                )),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::InvalidParams
+                );
+            },
+        );
+        server.request(
+            TestRequest::new()
+                .with_method(Method::Post)
+                .with_body(to_static_str(
+                    &json!({
+                        "jsonrpc": "2.0",
+                        "id": "123",
+                        "method": "eth_call",
+                        "params": ["{\"data\": \"0x123\"}", "latest"],
+                    })
+                    .to_string(),
+                )),
+            |res| {
+                assert_eq!(
+                    res.unwrap_err().error.code,
+                    jrpc::error::ErrorCode::InvalidParams
+                );
+            },
+        );
     }
 }

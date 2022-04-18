@@ -1,4 +1,4 @@
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub(crate) struct Config {
     /// The server listener `ip:port`.
     #[serde(default = "default_listen_addr")]
@@ -8,6 +8,7 @@ pub(crate) struct Config {
     pub(crate) tls: bool,
 
     /// The URL of the upstream Web3 gateway (TLS optional).
+    #[serde(default = "default_upstream")]
     pub(crate) upstream: url::Url,
 
     /// The public key of the Sapphire ParaTime.
@@ -16,6 +17,17 @@ pub(crate) struct Config {
         deserialize_with = "hex::serde::deserialize"
     )]
     pub(crate) runtime_public_key: [u8; 32],
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            listen_addr: default_listen_addr(),
+            tls: false,
+            upstream: default_upstream(),
+            runtime_public_key: [0; 32],
+        }
+    }
 }
 
 impl Config {
@@ -29,4 +41,9 @@ impl Config {
 
 fn default_listen_addr() -> String {
     "127.0.0.1:23294".into()
+}
+
+fn default_upstream() -> url::Url {
+    #[allow(clippy::unwrap_used)]
+    "http://127.0.0.1:8545".parse().unwrap()
 }
