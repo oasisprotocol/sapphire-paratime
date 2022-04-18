@@ -300,23 +300,29 @@ impl Server {
                     .strip_prefix("0x")
                     .unwrap_or(call_res.result);
 
-                let mut enc_res_bytes = Vec::with_capacity_in(enc_res_hex.len() / 2, bump);
+                let enc_res_len = enc_data_hex.len() / 2;
+                let res_len = SessionCipher::pt_len(enc_res_len);
+                let res_hex_len = 2 * res_len + 2;
+
+                let mut enc_res_bytes = Vec::with_capacity_in(enc_res_len / 2, bump); // will also hold res hex after decryption
+                unsafe { enc_res_bytes.set_len(enc_res_bytes.capacity()) };
                 hex::decode_to_slice(enc_res_hex, &mut enc_res_bytes)
                     .map_err(ProxyError::InvalidResponseData)?;
 
-                let mut res_bytes =
-                    Vec::with_capacity_in(SessionCipher::pt_len(enc_res_bytes.len()), bump);
+                let mut res_bytes = Vec::with_capacity_in(res_len, bump);
+                unsafe { res_bytes.set_len(res_bytes.capacity()) };
                 if self
                     .cipher
-                    .decrypt_into(enc_res_bytes, &mut res_bytes)
+                    .decrypt_into(&mut enc_res_bytes, &mut res_bytes)
                     .is_none()
                 {
                     tracing::error!("failed to decrypt response");
                     return Err(ProxyError::Internal);
                 }
 
-                let mut res_hex = Vec::with_capacity_in(res_bytes.len() * 2 + 2, bump);
-                unsafe { res_hex.set_len(res_hex.capacity()) };
+                let mut res_hex = enc_res_bytes;
+                res_hex.truncate(res_hex_len);
+                debug_assert_eq!(res_hex.len(), res_hex_len);
                 res_hex[0..2].copy_from_slice(b"0x");
                 #[allow(clippy::unwrap_used)]
                 hex::encode_to_slice(res_bytes, &mut res_hex[2..]).unwrap(); // infallible

@@ -64,9 +64,9 @@ impl SessionCipher {
     /// successful decryption.
     /// Returns the number of bytes written if successful.
     #[must_use]
-    pub(crate) fn decrypt_into<A: std::alloc::Allocator>(
+    pub(crate) fn decrypt_into(
         &self,
-        mut versioned_nonced_tagged_ct: Vec<u8, A>,
+        versioned_nonced_tagged_ct: &mut [u8],
         pt: &mut [u8],
     ) -> Option<usize> {
         if versioned_nonced_tagged_ct.len() < DEC_OVERHEAD {
