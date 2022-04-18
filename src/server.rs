@@ -12,9 +12,9 @@ const MAX_REQUEST_SIZE_BYTES: usize = 1024 * 1024; // 1 MiB
 
 pub(crate) struct Server {
     server: tiny_http::Server,
-    config: crate::config::Config,
-    http_agent: ureq::Agent,
     cipher: SessionCipher,
+    http_agent: ureq::Agent,
+    config: crate::config::Config,
 }
 
 impl Server {
@@ -27,11 +27,11 @@ impl Server {
         };
         Ok(Arc::new(Self {
             server: tiny_http::Server::new(server_cfg)?,
-            config,
+            cipher: SessionCipher::from_runtime_public_key(config.runtime_public_key),
             http_agent: ureq::AgentBuilder::new()
                 .timeout(std::time::Duration::from_secs(30))
                 .build(),
-            cipher: SessionCipher::from_runtime_public_key([0u8; 32]), // TODO: fetch runtime public key
+            config,
         }))
     }
 

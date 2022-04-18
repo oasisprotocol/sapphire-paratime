@@ -9,6 +9,13 @@ pub(crate) struct Config {
 
     /// The URL of the upstream Web3 gateway (TLS optional).
     pub(crate) upstream: url::Url,
+
+    /// The public key of the Sapphire ParaTime.
+    #[serde(
+        alias = "paratime_public_key",
+        deserialize_with = "hex::serde::deserialize"
+    )]
+    pub(crate) runtime_public_key: [u8; 32],
 }
 
 impl Config {
