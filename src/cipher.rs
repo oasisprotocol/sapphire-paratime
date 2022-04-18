@@ -1,28 +1,16 @@
-use std::{
-    cell::RefCell,
-    sync::atomic::{AtomicU64, Ordering::SeqCst},
-};
+use std::sync::atomic::{AtomicU64, Ordering::SeqCst};
 
-use bytes::{BufMut, Bytes, BytesMut};
 use deoxysii::{DeoxysII, NONCE_SIZE, TAG_SIZE};
 use hmac::Mac;
-
-use crate::utils::prepare_buf;
 
 type Kdf = hmac::Hmac<sha2::Sha512_256>;
 type Nonce = [u8; deoxysii::NONCE_SIZE];
 
 const PUBLIC_KEY_SIZE: usize = 32;
+/// The size of the additional items sent to the runtime.
 const ENC_OVERHEAD: usize = 2 * NONCE_SIZE + TAG_SIZE + PUBLIC_KEY_SIZE + 1 /* version byte */;
+/// The size of the additional items returned from the runtime.
 const DEC_OVERHEAD: usize = NONCE_SIZE + TAG_SIZE + 1 /* version byte */;
-
-thread_local! {
-    /// A per-thread buffer that holds ciphertext/plaintext resulting from encrypt/decrypt.
-    /// The idea here is to avoid allocation because that's really slow. Using a shared buf
-    /// is safe since each reference gets its own capacity, but the returned `Bytes` must be
-    /// dropped before another call to encrypt/decrypt to prevent additional allocation.
-    static ENC_BUF: RefCell<BytesMut> = RefCell::new(BytesMut::new());
-}
 
 pub(crate) struct SessionCipher {
     keypair: KeyPair,
@@ -45,64 +33,64 @@ impl SessionCipher {
         }
     }
 
-    pub(crate) fn encrypt(&self, pt: &[u8]) -> Bytes {
-        ENC_BUF.with(|buf| {
-            let mut buf = buf.borrow_mut();
-            let required_size = pt.len() + ENC_OVERHEAD;
-            prepare_buf(&mut buf, required_size);
-            let (tx_nonce, rx_nonce) = self.next_nonce();
+    /// Encrypts `pt` into `versioned_nonced_tagged_ct`. The latter must be at least as large as
+    /// `ct_len(pt)` or else this function will panic.
+    /// Returns the number of bytes written.
+    // `enveloped_tagged_ct` has format: version:u8 || rx_pub_key:[u8;32] || rx_nonce[u8;15]
+    pub(crate) fn encrypt_into(&self, pt: &[u8], enveloped_tagged_ct: &mut [u8]) -> usize {
+        let (tx_nonce, rx_nonce) = self.next_nonce();
 
-            // These will form the additional data.
-            buf.put_u8(0); // version
-            buf.put_slice(self.keypair.public.as_bytes());
-            buf.put_slice(&rx_nonce);
-            let metadata_size = 1 + PUBLIC_KEY_SIZE + NONCE_SIZE;
-            #[allow(unsafe_code)]
-            unsafe {
-                // Capacity is already reserved.
-                buf.set_len(required_size);
-            }
+        let metadata_size = 1 + PUBLIC_KEY_SIZE + NONCE_SIZE;
+        let (metadata, tagged_ct) = enveloped_tagged_ct.split_at_mut(metadata_size);
+        metadata[0] = 0; // version
+        metadata[1..(PUBLIC_KEY_SIZE + 1)].copy_from_slice(self.keypair.public.as_bytes());
+        metadata[(PUBLIC_KEY_SIZE + 1)..].copy_from_slice(&rx_nonce);
 
-            let mut tagged_ct = buf.split_off(metadata_size);
-            // `buf` now contains just the associated data (public key and rx nonce).
-
-            #[allow(clippy::unwrap_used)]
-            let bytes_written = self
-                .deoxysii
-                .seal_into(&tx_nonce, pt, &buf, &mut tagged_ct)
-                .unwrap(); // OOM?
-            debug_assert!(bytes_written == tagged_ct.len());
-
-            buf.unsplit(tagged_ct);
-            buf.split().freeze()
-        })
+        #[allow(clippy::unwrap_used)]
+        let bytes_written = self
+            .deoxysii
+            .seal_into(&tx_nonce, pt, metadata, tagged_ct)
+            .unwrap(); // OOM?
+        debug_assert_eq!(bytes_written, Self::ct_len(pt));
+        bytes_written
     }
 
-    pub(crate) fn decrypt(&self, versioned_nonced_tagged_ct: &mut [u8]) -> Option<Bytes> {
+    pub(crate) fn ct_len(pt: &[u8]) -> usize {
+        pt.len() + ENC_OVERHEAD
+    }
+
+    /// Decrypts `versioned_nonced_tagged_ct` into `pt`. The latter must be at least as large as
+    /// to `pt_len(versioned_nonced_tagged_ct)` or else this function will panic.
+    /// successful decryption.
+    /// Returns the number of bytes written if successful.
+    #[must_use]
+    pub(crate) fn decrypt_into<A: std::alloc::Allocator>(
+        &self,
+        mut versioned_nonced_tagged_ct: Vec<u8, A>,
+        pt: &mut [u8],
+    ) -> Option<usize> {
         if versioned_nonced_tagged_ct.len() < DEC_OVERHEAD {
             return None;
         }
-        ENC_BUF.with(|buf| {
-            let mut buf = buf.borrow_mut();
-            let pt_size = versioned_nonced_tagged_ct.len() - DEC_OVERHEAD;
-            prepare_buf(&mut buf, pt_size);
-            #[allow(unsafe_code)]
-            unsafe {
-                buf.set_len(pt_size);
-            }
+        let expected_pt_len = Self::pt_len(&versioned_nonced_tagged_ct);
 
-            let (version_and_nonce, tagged_ct) =
-                versioned_nonced_tagged_ct.split_at_mut(1 + NONCE_SIZE);
-            let _version = version_and_nonce[0];
-            let nonce = arrayref::array_ref![version_and_nonce, 1, NONCE_SIZE];
+        let (version_and_nonce, tagged_ct) =
+            versioned_nonced_tagged_ct.split_at_mut(1 + NONCE_SIZE);
+        let _version = version_and_nonce[0];
+        let nonce = arrayref::array_ref![version_and_nonce, 1, NONCE_SIZE];
 
-            let bytes_written = self
-                .deoxysii
-                .open_into(nonce, tagged_ct, version_and_nonce /* ad */, &mut buf)
-                .ok()?;
-            debug_assert!(bytes_written == buf.len());
-            Some(buf.split().freeze())
-        })
+        let bytes_written = self
+            .deoxysii
+            .open_into(nonce, tagged_ct, version_and_nonce /* ad */, pt)
+            .ok()?;
+        debug_assert_eq!(bytes_written, expected_pt_len);
+        Some(bytes_written)
+    }
+
+    pub(crate) fn pt_len(versioned_nonced_tagged_ct: &[u8]) -> usize {
+        versioned_nonced_tagged_ct
+            .len()
+            .saturating_sub(DEC_OVERHEAD)
     }
 
     /// Derives a MRAE AEAD symmetric key suitable for use with the asymmetric

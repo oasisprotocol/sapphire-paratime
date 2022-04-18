@@ -179,14 +179,22 @@ impl Server {
             _ => unreachable!("not a confidential method"),
         };
 
-        let mut enc_data_len = 0;
+        let mut proxy_req_body_len = 0;
+
         if let Some(data_value) = data_value {
             let data_hex = data_value.as_str().unwrap_or_default();
             let data_hex = data_hex.strip_prefix("0x").unwrap_or(data_hex);
+
             let mut data = Vec::with_capacity_in(data_hex.len() / 2, bump);
+            unsafe { data.set_len(data.capacity()) };
             hex::decode_to_slice(data_hex, &mut data).map_err(ProxyError::InvalidRequestData)?;
-            enc_data_len = data_hex.len();
-            *data_value = hex::encode(self.cipher.encrypt(&data)).into();
+
+            let mut enc_data = Vec::with_capacity_in(SessionCipher::ct_len(&data), bump);
+            self.cipher.encrypt_into(&data, &mut enc_data);
+
+            let enc_data_hex = hex::encode(&enc_data);
+            proxy_req_body_len = enc_data_hex.len();
+            *data_value = enc_data_hex.into();
         }
 
         let req_ser = jrpc::RequestSer::new(
@@ -195,9 +203,9 @@ impl Server {
             Some(jrpc::ParamsSer::ArrayRef(&params)),
         );
 
-        let mut req_bytes = Vec::with_capacity_in(enc_data_len, bump);
+        let mut req_bytes = Vec::with_capacity_in(proxy_req_body_len, bump);
         #[allow(clippy::unwrap_used)]
-        serde_json::to_writer(&mut req_bytes, &req_ser).unwrap();
+        serde_json::to_writer(&mut req_bytes, &req_ser).unwrap(); // infallible
 
         match &*req.method {
             // The responses of these two are not confidential.
@@ -206,19 +214,33 @@ impl Server {
                 .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
             "eth_call" => {
                 let call_res = self.proxy::<&'a str, _>(&req_bytes, proxy_res_buf)?;
+
                 let enc_res_hex = call_res
                     .result
                     .strip_prefix("0x")
                     .unwrap_or(call_res.result);
+
                 let mut enc_res_bytes = Vec::with_capacity_in(enc_res_hex.len() / 2, bump);
                 hex::decode_to_slice(enc_res_hex, &mut enc_res_bytes)
                     .map_err(ProxyError::InvalidResponseData)?;
-                let res_data = self.cipher.decrypt(&mut enc_res_bytes).unwrap_or_default();
-                let mut res_hex = Vec::with_capacity_in(res_data.len() * 2 + 2, bump);
-                res_hex.resize(res_hex.capacity(), 0);
+
+                let mut res_bytes =
+                    Vec::with_capacity_in(SessionCipher::pt_len(&enc_res_bytes), bump);
+                if self
+                    .cipher
+                    .decrypt_into(enc_res_bytes, &mut res_bytes)
+                    .is_none()
+                {
+                    tracing::error!("failed to decrypt response");
+                    return Err(ProxyError::Internal);
+                }
+
+                let mut res_hex = Vec::with_capacity_in(res_bytes.len() * 2 + 2, bump);
+                unsafe { res_hex.set_len(res_hex.capacity()) };
                 res_hex[0..2].copy_from_slice(b"0x");
                 #[allow(clippy::unwrap_used)]
-                hex::encode_to_slice(res_data, &mut res_hex[2..]).unwrap(); // OOM or other catastrophic error
+                hex::encode_to_slice(res_bytes, &mut res_hex[2..]).unwrap(); // infallible
+
                 Ok(jrpc::Response::new(
                     Web3ResponseParams::CallResult(res_hex),
                     call_res.id,
@@ -262,8 +284,12 @@ impl serde::Serialize for Web3ResponseParams<'_> {
         match self {
             Self::RawValue(rv) => rv.serialize(serializer),
             Self::CallResult(hex_bytes) => {
-                #[allow(unsafe_code)]
-                let hex_str = unsafe { std::str::from_utf8_unchecked(hex_bytes) };
+                let hex_str = if cfg!(debug_assertions) {
+                    #[allow(clippy::expect_used)]
+                    std::str::from_utf8(hex_bytes).expect("re-encoded call result was not hex")
+                } else {
+                    unsafe { std::str::from_utf8_unchecked(hex_bytes) }
+                };
                 hex_str.serialize(serializer)
             }
         }
