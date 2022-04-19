@@ -1,7 +1,7 @@
 use jsonrpsee_types as jrpc;
 
 #[derive(Debug, thiserror::Error)]
-pub(crate) enum ProxyError {
+pub(crate) enum Error {
     #[error("request timed out")]
     Timeout,
 
@@ -30,7 +30,7 @@ pub(crate) enum ProxyError {
     Internal,
 }
 
-impl ProxyError {
+impl Error {
     pub(super) fn into_rpc_error(self, req_id: jrpc::Id<'_>) -> jrpc::error::ErrorResponse<'_> {
         let code = match self {
             Self::Timeout => jrpc::error::ErrorCode::ServerIsBusy,

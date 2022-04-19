@@ -1,8 +1,8 @@
-use super::proxy_error::ProxyError;
+use super::error::Error;
 
 #[cfg_attr(test, mockall::automock)]
 pub(crate) trait Upstream {
-    fn request(&self, body: &[u8]) -> Result<ureq::Response, ProxyError>;
+    fn request(&self, body: &[u8]) -> Result<ureq::Response, Error>;
 }
 
 pub(crate) struct Web3GatewayUpstream {
@@ -22,15 +22,15 @@ impl Web3GatewayUpstream {
 }
 
 impl Upstream for Web3GatewayUpstream {
-    fn request(&self, body: &[u8]) -> Result<ureq::Response, ProxyError> {
+    fn request(&self, body: &[u8]) -> Result<ureq::Response, Error> {
         self.agent
             .request_url("POST", &self.url)
             .send_bytes(body)
             .map_err(|e| match e {
-                ureq::Error::Status(code, _) => ProxyError::ErrorResponse(code),
+                ureq::Error::Status(code, _) => Error::ErrorResponse(code),
                 ureq::Error::Transport(te) => match te.kind() {
-                    ureq::ErrorKind::Io => ProxyError::Timeout,
-                    _ => ProxyError::BadGateway(Box::new(ureq::Error::Transport(te))),
+                    ureq::ErrorKind::Io => Error::Timeout,
+                    _ => Error::BadGateway(Box::new(ureq::Error::Transport(te))),
                 },
             })
     }

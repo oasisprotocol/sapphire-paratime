@@ -1,4 +1,4 @@
-mod proxy_error;
+mod error;
 #[cfg(test)]
 mod tests;
 mod types;
@@ -13,7 +13,7 @@ use crate::cipher::Cipher;
 
 use upstream::Upstream;
 
-use proxy_error::ProxyError;
+use error::Error;
 use types::*;
 
 #[derive(derive_builder::Builder)]
@@ -92,11 +92,11 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         req: jrpc::Request<'a>,
         proxy_res_buf: &'a mut Vec<u8, A>,
         bump: A,
-    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, ProxyError> {
+    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, Error> {
         let params_str = req
             .params
             .map(|rv| rv.get())
-            .ok_or(ProxyError::MissingParams)?;
+            .ok_or(Error::MissingParams)?;
 
         macro_rules! encrypt {
             ($data_hex:expr => $ct_hex:ident) => {{
@@ -115,7 +115,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 let mut ct_bytes = Vec::with_capacity_in(ct_len, bump);
                 unsafe { ct_bytes.set_len(ct_bytes.capacity()) };
 
-                hex::decode_to_slice(data_hex, data).map_err(ProxyError::InvalidRequestData)?;
+                hex::decode_to_slice(data_hex, data).map_err(Error::InvalidRequestData)?;
                 self.cipher.encrypt_into(&data, &mut ct_bytes);
 
                 $ct_hex[0..2].copy_from_slice(b"0x");
@@ -131,7 +131,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         let req_params: Web3RequestParams<'_> = match &*req.method {
             "eth_sendRawTransaction" => {
                 let params: EthSendRawTxParams<'a> =
-                    serde_json::from_str(params_str).map_err(ProxyError::InvalidParams)?;
+                    serde_json::from_str(params_str).map_err(Error::InvalidParams)?;
                 pt_data_len = params.0.len();
                 encrypt!(params.0 => enc_data_hex);
                 enc_data_hex_len = enc_data_hex.len();
@@ -139,7 +139,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             }
             "eth_call" | "eth_estimateGas" => {
                 let params: EthCallParams<'a> =
-                    serde_json::from_str(params_str).map_err(ProxyError::InvalidParams)?;
+                    serde_json::from_str(params_str).map_err(Error::InvalidParams)?;
                 match params.0.data.as_ref() {
                     Some(data) => {
                         pt_data_len = data.len();
@@ -199,7 +199,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 let mut enc_res_bytes = Vec::with_capacity_in(enc_res_len / 2, bump); // will also hold res hex after decryption
                 unsafe { enc_res_bytes.set_len(enc_res_bytes.capacity()) };
                 hex::decode_to_slice(enc_res_hex, &mut enc_res_bytes)
-                    .map_err(ProxyError::InvalidResponseData)?;
+                    .map_err(Error::InvalidResponseData)?;
 
                 let mut res_bytes = Vec::with_capacity_in(res_len, bump);
                 unsafe { res_bytes.set_len(res_bytes.capacity()) };
@@ -209,7 +209,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                     .is_none()
                 {
                     tracing::error!("failed to decrypt response");
-                    return Err(ProxyError::Internal);
+                    return Err(Error::Internal);
                 }
 
                 let mut res_hex = enc_res_bytes;
@@ -232,14 +232,14 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         &self,
         req_body: &[u8],
         res_buf: &'a mut Vec<u8, A>, // jrpc::Response borrows from here (the response body).
-    ) -> Result<jrpc::Response<'a, T>, ProxyError> {
+    ) -> Result<jrpc::Response<'a, T>, Error> {
         let res = self.upstream.request(req_body)?;
         res_buf.reserve_exact(
             res.header("content-length")
                 .and_then(|l| l.parse::<usize>().ok())
                 .unwrap_or_default(),
         );
-        std::io::copy(&mut res.into_reader(), res_buf).map_err(|_| ProxyError::Internal)?;
-        serde_json::from_slice(res_buf).map_err(ProxyError::UnexpectedRepsonse)
+        std::io::copy(&mut res.into_reader(), res_buf).map_err(|_| Error::Internal)?;
+        serde_json::from_slice(res_buf).map_err(Error::UnexpectedRepsonse)
     }
 }
