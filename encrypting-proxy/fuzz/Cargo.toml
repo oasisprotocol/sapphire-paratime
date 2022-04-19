@@ -1,0 +1,25 @@
+[package]
+name = "sapphire-encrypting-proxy-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.sapphire-encrypting-proxy]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "handler"
+path = "fuzz_targets/handler.rs"
+test = false
+doc = false

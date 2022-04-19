@@ -151,7 +151,7 @@ impl KeyPair {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, fuzzing))]
 mod testing {
     use super::*;
 
@@ -179,6 +179,23 @@ mod testing {
             Some(ct.len())
         }
     }
+
+    pub(crate) struct NoopCipher;
+
+    impl Cipher for NoopCipher {
+        const TX_CT_OVERHEAD: usize = 0;
+        const RX_CT_OVERHEAD: usize = 0;
+
+        fn encrypt_into(&self, pt: &[u8], ct: &mut [u8]) -> usize {
+            ct[0..pt.len()].copy_from_slice(pt);
+            pt.len()
+        }
+
+        fn decrypt_into(&self, ct: &mut [u8], pt: &mut [u8]) -> Option<usize> {
+            pt[0..ct.len()].copy_from_slice(ct);
+            Some(ct.len())
+        }
+    }
 }
-#[cfg(test)]
-pub(crate) use testing::MockCipher;
+#[cfg(any(test, fuzzing))]
+pub(crate) use testing::*;

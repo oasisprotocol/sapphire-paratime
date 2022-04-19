@@ -1,6 +1,6 @@
 use super::error::Error;
 
-#[cfg_attr(test, mockall::automock)]
+#[cfg_attr(any(test, fuzzing), mockall::automock)]
 pub(crate) trait Upstream {
     fn request(&self, body: &[u8]) -> Result<ureq::Response, Error>;
 }

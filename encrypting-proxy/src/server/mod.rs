@@ -7,6 +7,8 @@ use tiny_http::StatusCode;
 
 use crate::cipher::SessionCipher;
 
+#[cfg(fuzzing)]
+pub(crate) use handler::upstream::MockUpstream;
 pub(crate) use handler::{upstream::Web3GatewayUpstream, RequestHandler};
 
 pub struct Server {
