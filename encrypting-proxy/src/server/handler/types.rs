@@ -1,3 +1,5 @@
+use std::alloc::Allocator;
+
 use jsonrpsee_types as jrpc;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
@@ -12,6 +14,7 @@ pub(super) struct Web3Request<'a> {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(Debug))]
 #[serde(untagged)]
 pub(super) enum Web3RequestParams<'a> {
     SendRawTx(#[serde(borrow)] EthSendRawTxParams<'a>),
@@ -22,6 +25,7 @@ pub(super) type EthSendRawTxParams<'a> = (&'a str,);
 pub(super) type EthCallParams<'a> = (EthTx<'a>, Option<&'a RawValue>);
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(test, derive(Debug))]
 pub(super) struct EthTx<'a> {
     #[serde(borrow)]
     pub(super) from: Option<&'a RawValue>,
@@ -41,9 +45,20 @@ pub(crate) type HandlerResult<'a, A> =
     Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, jrpc::ErrorResponse<'a>>;
 
 #[cfg_attr(test, derive(Debug))]
-pub(crate) enum Web3ResponseParams<'a, A: std::alloc::Allocator> {
+pub(crate) enum Web3ResponseParams<'a, A: Allocator> {
     RawValue(&'a RawValue),
     CallResult(Vec<u8, A>), // `String::from_utf8` requires the vec be in the global allocator
+}
+
+#[cfg(test)]
+impl<A: Allocator> Web3ResponseParams<'_, A> {
+    pub(crate) fn to_value(&self) -> serde_json::Value {
+        serde_json::from_str(match self {
+            Self::RawValue(r) => r.get(),
+            Self::CallResult(r) => from_utf8(r),
+        })
+        .unwrap()
+    }
 }
 
 impl<A: std::alloc::Allocator> serde::Serialize for Web3ResponseParams<'_, A> {

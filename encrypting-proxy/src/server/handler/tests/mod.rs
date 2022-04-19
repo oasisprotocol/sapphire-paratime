@@ -4,7 +4,7 @@ mod proxy;
 use super::*;
 
 use bumpalo::Bump;
-use jsonrpsee_types::{self as jrpc, error::ErrorCode};
+use jsonrpsee_types::error::ErrorCode;
 use serde_json::json;
 use tiny_http::{Method, TestRequest};
 
@@ -30,10 +30,6 @@ impl TestServer {
             handler: RequestHandler::new(MockCipher, upstream, MAX_REQUEST_SIZE_BYTES),
             alloc: Bump::new(),
         }
-    }
-
-    fn web3(&mut self, req: &jrpc::RequestSer<'_>, res_handler: impl FnOnce(HandlerResult<'_>)) {
-        self.request(test_req(serde_json::to_string(&req).unwrap()), res_handler)
     }
 
     fn request<T>(

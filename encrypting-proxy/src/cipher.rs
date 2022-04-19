@@ -164,8 +164,9 @@ mod testing {
         const RX_CT_OVERHEAD: usize = Self::RX_ENC_TAG.len();
 
         fn encrypt_into(&self, pt: &[u8], ct: &mut [u8]) -> usize {
-            ct[..Self::TX_CT_OVERHEAD].copy_from_slice(Self::TX_ENC_TAG);
-            ct[Self::TX_CT_OVERHEAD..pt.len()].copy_from_slice(pt);
+            let (enc_tag, ct) = ct.split_at_mut(Self::TX_CT_OVERHEAD);
+            enc_tag.copy_from_slice(Self::TX_ENC_TAG);
+            ct[..pt.len()].copy_from_slice(pt);
             Self::ct_len(pt.len())
         }
 
