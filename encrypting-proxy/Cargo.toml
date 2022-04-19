@@ -12,7 +12,6 @@ threads = 16
 # server
 bumpalo = { version = "3.9.1", features = ["allocator_api"] }
 config = "0.12.0"
-derive_builder = "0.11.1"
 hex = { version = "0.4.3", features = ["serde"] }
 jsonrpsee-types = "0.10.1"
 serde = { version = "1.0.136", features = ["derive"] }

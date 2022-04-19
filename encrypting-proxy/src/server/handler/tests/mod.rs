@@ -27,12 +27,7 @@ impl TestServer {
 
     fn with_upstream(upstream: MockUpstream) -> Self {
         Self {
-            handler: RequestHandler::builder()
-                .cipher(MockCipher)
-                .max_request_size_bytes(MAX_REQUEST_SIZE_BYTES)
-                .upstream(upstream)
-                .build()
-                .unwrap(),
+            handler: RequestHandler::new(MockCipher, upstream, MAX_REQUEST_SIZE_BYTES),
             alloc: Bump::new(),
         }
     }

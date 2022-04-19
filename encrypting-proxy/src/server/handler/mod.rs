@@ -16,18 +16,19 @@ use upstream::Upstream;
 use error::Error;
 use types::*;
 
-#[derive(derive_builder::Builder)]
-#[builder(pattern = "owned")]
 pub(super) struct RequestHandler<C: Cipher, U: Upstream> {
     cipher: C,
     upstream: U,
-    #[builder(default = "crate::config::default_max_request_size_bytes()")]
     max_request_size_bytes: usize,
 }
 
 impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
-    pub(super) fn builder() -> RequestHandlerBuilder<C, U> {
-        RequestHandlerBuilder::default()
+    pub(super) fn new(cipher: C, upstream: U, max_request_size_bytes: usize) -> Self {
+        Self {
+            cipher,
+            upstream,
+            max_request_size_bytes,
+        }
     }
 
     pub(super) fn handle_req<'a, A: Allocator + Copy>(
@@ -93,10 +94,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         proxy_res_buf: &'a mut Vec<u8, A>,
         bump: A,
     ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, Error> {
-        let params_str = req
-            .params
-            .map(|rv| rv.get())
-            .ok_or(Error::MissingParams)?;
+        let params_str = req.params.map(|rv| rv.get()).ok_or(Error::MissingParams)?;
 
         macro_rules! encrypt {
             ($data_hex:expr => $ct_hex:ident) => {{

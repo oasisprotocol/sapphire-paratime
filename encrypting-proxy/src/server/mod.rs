@@ -27,14 +27,11 @@ impl Server {
             server: tiny_http::Server::new(server_cfg)?,
             is_tls: config.tls,
             #[allow(clippy::unwrap_used)]
-            handler: RequestHandler::builder()
-                .cipher(SessionCipher::from_runtime_public_key(
-                    config.runtime_public_key,
-                ))
-                .upstream(Web3GatewayUpstream::new(config.upstream))
-                .max_request_size_bytes(config.max_request_size_bytes)
-                .build()
-                .unwrap(),
+            handler: RequestHandler::new(
+                SessionCipher::from_runtime_public_key(config.runtime_public_key),
+                Web3GatewayUpstream::new(config.upstream),
+                config.max_request_size_bytes,
+            ),
         }))
     }
 
