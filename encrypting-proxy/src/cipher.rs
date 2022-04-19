@@ -51,6 +51,9 @@ impl SessionCipher {
 
     /// Derives a MRAE AEAD symmetric key suitable for use with the asymmetric
     /// box primitives from the provided X25519 public and private keys.
+    // This method is taken directly without modification from
+    // `oasis_core_runtime::common::crypto::mrae::deoxysii`. Do not change it
+    // unless you want to add tests.
     fn derive_symmetric_key(
         runtime_public_key: &x25519_dalek::PublicKey,
         secret_key: &x25519_dalek::StaticSecret,

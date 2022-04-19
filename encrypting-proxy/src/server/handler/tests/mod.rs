@@ -1,5 +1,5 @@
 mod errors;
-mod proxy;
+mod roundtrip;
 
 use super::*;
 
@@ -14,6 +14,20 @@ use crate::cipher::MockCipher;
 const MAX_REQUEST_SIZE_BYTES: usize = 1024;
 
 type HandlerResult<'a> = super::HandlerResult<'a, &'a Bump>;
+
+#[macro_export]
+macro_rules! web3_req {
+    ($req_id:expr, $method:expr, [$($param:expr),* $(,)?]) => {
+        serde_json::to_string(
+            &jrpc::RequestSer::new(
+                &$req_id,
+                $method,
+                Some(jrpc::ParamsSer::Array(vec![$($param.into()),*])),
+            )
+        )
+        .unwrap()
+    };
+}
 
 struct TestServer {
     handler: RequestHandler<MockCipher, MockUpstream>,
@@ -54,6 +68,23 @@ impl TestServer {
 fn test_req(body: impl std::fmt::Display) -> TestRequest {
     TestRequest::new()
         .with_method(Method::Post)
-        // `tiny_http` has an unfortunate `TestRequest::with_body` api that requires `'static`.
+        // `tiny_http::TestRequest::with_body` unfortunately requires `body: &'static str`.
         .with_body(Box::leak(body.to_string().into_boxed_str()))
+}
+
+fn res(req_id: jrpc::Id<'_>, result: &str) -> ureq::Response {
+    ureq::Response::new(
+        200,
+        "OK",
+        &serde_json::to_string(&jrpc::Response::new(result, req_id)).unwrap(),
+    )
+    .unwrap()
+}
+
+fn tx_enc_prefix() -> String {
+    hex::encode(MockCipher::TX_ENC_TAG)
+}
+
+fn rx_enc_prefix() -> String {
+    hex::encode(MockCipher::RX_ENC_TAG)
 }

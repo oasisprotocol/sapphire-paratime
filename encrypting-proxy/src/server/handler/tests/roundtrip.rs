@@ -2,38 +2,10 @@ use super::*;
 
 use mockall::predicate::*;
 
-macro_rules! web3_req {
-    ($req_id:expr, $method:expr, [$($param:expr),* $(,)?]) => {
-        serde_json::to_string(
-            &jrpc::RequestSer::new(
-                &$req_id,
-                $method,
-                Some(jrpc::ParamsSer::Array(vec![$($param.into()),*])),
-            )
-        )
-        .unwrap()
-    };
-}
-
-fn res(req_id: jrpc::Id<'_>, result: &str) -> ureq::Response {
-    ureq::Response::new(
-        200,
-        "OK",
-        &serde_json::to_string(&jrpc::Response::new(result, req_id)).unwrap(),
-    )
-    .unwrap()
-}
-
-fn tx_enc_prefix() -> String {
-    hex::encode(MockCipher::TX_ENC_TAG)
-}
-
-fn rx_enc_prefix() -> String {
-    hex::encode(MockCipher::RX_ENC_TAG)
-}
+use crate::web3_req;
 
 #[test]
-fn roundtrip_send_transaction() {
+fn send_transaction() {
     let req_id = jrpc::Id::Number(1);
     let res_id = req_id.clone();
 
@@ -61,7 +33,7 @@ fn roundtrip_send_transaction() {
 }
 
 #[test]
-fn roundtrip_call() {
+fn call() {
     let req_id = jrpc::Id::Str("id".into());
     let res_id = req_id.clone();
 
@@ -108,7 +80,7 @@ fn roundtrip_call() {
 }
 
 #[test]
-fn roundtrip_estimate_gas() {
+fn estimate_gas() {
     let req_id = jrpc::Id::Null;
     let res_id = req_id.clone();
 
@@ -149,7 +121,7 @@ fn roundtrip_estimate_gas() {
 }
 
 #[test]
-fn roundtrip_non_confidential() {
+fn non_confidential() {
     let req_id = jrpc::Id::Str("non-confidential".into());
     let res_id = req_id.clone();
 
