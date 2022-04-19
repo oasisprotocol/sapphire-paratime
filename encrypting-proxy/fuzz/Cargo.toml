@@ -9,7 +9,7 @@ edition = "2021"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = "0.4"
+libfuzzer-sys = { version = "0.4.3", features = ["arbitrary-derive"] }
 
 [dependencies.sapphire-encrypting-proxy]
 path = ".."
@@ -21,5 +21,11 @@ members = ["."]
 [[bin]]
 name = "handler"
 path = "fuzz_targets/handler.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "session_cipher"
+path = "fuzz_targets/session_cipher.rs"
 test = false
 doc = false

@@ -52,6 +52,6 @@ fn default_upstream() -> url::Url {
     "http://127.0.0.1:8545".parse().unwrap()
 }
 
-pub(crate) fn default_max_request_size_bytes() -> usize {
+fn default_max_request_size_bytes() -> usize {
     1024 * 1024
 }
