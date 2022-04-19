@@ -6,7 +6,7 @@ use hmac::Mac;
 type Kdf = hmac::Hmac<sha2::Sha512_256>;
 type Nonce = [u8; deoxysii::NONCE_SIZE];
 
-pub(crate) trait Cipher {
+pub trait Cipher {
     /// The size of the additional items sent to the runtime.
     const TX_CT_OVERHEAD: usize;
     /// The size of the additional items returned from the runtime.
@@ -26,7 +26,7 @@ pub(crate) trait Cipher {
     }
 }
 
-pub(crate) struct SessionCipher {
+pub struct SessionCipher {
     keypair: KeyPair,
     deoxysii: DeoxysII,
     nonce: AtomicU64,
@@ -35,7 +35,7 @@ pub(crate) struct SessionCipher {
 impl SessionCipher {
     const PUBLIC_KEY_SIZE: usize = 32;
 
-    pub(crate) fn from_runtime_public_key(runtime_public_key: [u8; Self::PUBLIC_KEY_SIZE]) -> Self {
+    pub fn from_runtime_public_key(runtime_public_key: [u8; Self::PUBLIC_KEY_SIZE]) -> Self {
         let runtime_public_key = x25519_dalek::PublicKey::from(runtime_public_key);
         let keypair = KeyPair::generate();
         let deoxysii = DeoxysII::new(&Self::derive_symmetric_key(
@@ -88,49 +88,103 @@ impl Cipher for SessionCipher {
     const TX_CT_OVERHEAD: usize = 2 * NONCE_SIZE + TAG_SIZE + Self::PUBLIC_KEY_SIZE + 1 /* version byte */;
     const RX_CT_OVERHEAD: usize = NONCE_SIZE + TAG_SIZE + 1 /* version byte */;
 
-    /// Encrypts `pt` into `versioned_nonced_tagged_ct`. The latter must be at least as large as
+    /// Encrypts `pt` into `enveloped_tagged_ct`. The latter must be at least as large as
     /// `ct_len(pt)` or else this function will panic.
     /// Returns the number of bytes written.
-    // `enveloped_tagged_ct` has format: version:u8 || rx_pub_key:[u8;32] || rx_nonce[u8;15]
+    // `enveloped_tagged_ct` has format:
+    //    version:u8 || nonce:[u8;15] || rx_nonce:[u8;15] || rx_pub_key:[u8;32]
     fn encrypt_into(&self, pt: &[u8], enveloped_tagged_ct: &mut [u8]) -> usize {
         let (tx_nonce, rx_nonce) = self.next_nonce();
 
-        let metadata_size = 1 + Self::PUBLIC_KEY_SIZE + NONCE_SIZE;
+        let metadata_size = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
         let (metadata, tagged_ct) = enveloped_tagged_ct.split_at_mut(metadata_size);
-        metadata[0] = 0; // version
-        metadata[1..(Self::PUBLIC_KEY_SIZE + 1)].copy_from_slice(self.keypair.public.as_bytes());
-        metadata[(Self::PUBLIC_KEY_SIZE + 1)..].copy_from_slice(&rx_nonce);
+        #[allow(clippy::unwrap_used)]
+        let (version, nonces_and_keypair) = metadata.split_first_mut().unwrap();
+        let (nonces, keypair) = nonces_and_keypair.split_at_mut(2 * NONCE_SIZE);
+        let (tx_nonce_bytes, rx_nonce_bytes) = nonces.split_at_mut(NONCE_SIZE);
+        *version = 0;
+        tx_nonce_bytes.copy_from_slice(&tx_nonce);
+        rx_nonce_bytes.copy_from_slice(&rx_nonce);
+        keypair.copy_from_slice(self.keypair.public.as_bytes());
 
         #[allow(clippy::unwrap_used)]
-        let bytes_written = self
+        let cipher_bytes_written = self
             .deoxysii
             .seal_into(&tx_nonce, pt, metadata, tagged_ct)
             .unwrap(); // OOM?
-        debug_assert_eq!(bytes_written, Self::ct_len(pt.len()));
-        bytes_written
+
+        let total_bytes_written = Self::ct_len(pt.len());
+        debug_assert_eq!(cipher_bytes_written + metadata_size, total_bytes_written);
+        total_bytes_written
     }
 
     /// Decrypts `versioned_nonced_tagged_ct` into `pt`. The latter must be at least as large as
     /// to `pt_len(versioned_nonced_tagged_ct)` or else this function will panic.
     /// successful decryption.
     /// Returns the number of bytes written if successful.
+    #[must_use]
     fn decrypt_into(&self, versioned_nonced_tagged_ct: &mut [u8], pt: &mut [u8]) -> Option<usize> {
         if versioned_nonced_tagged_ct.len() < Self::RX_CT_OVERHEAD {
             return None;
         }
-        let expected_pt_len = Self::pt_len(versioned_nonced_tagged_ct.len());
+        let pt_len = Self::pt_len(versioned_nonced_tagged_ct.len());
 
         let (version_and_nonce, tagged_ct) =
             versioned_nonced_tagged_ct.split_at_mut(1 + NONCE_SIZE);
-        let _version = version_and_nonce[0];
+        let version = version_and_nonce[0];
+        if version != 0 {
+            return None;
+        }
         let nonce = arrayref::array_ref![version_and_nonce, 1, NONCE_SIZE];
 
-        let bytes_written = self
+        let cipher_bytes_written = self
             .deoxysii
-            .open_into(nonce, tagged_ct, version_and_nonce /* ad */, pt)
+            .open_into(
+                nonce,
+                tagged_ct,
+                version_and_nonce, /* ad */
+                &mut pt[..pt_len],
+            )
             .ok()?;
-        debug_assert_eq!(bytes_written, expected_pt_len);
-        Some(bytes_written)
+
+        debug_assert_eq!(cipher_bytes_written, pt_len);
+        Some(pt_len)
+    }
+}
+
+#[cfg(any(test, fuzzing))]
+/// [`Cipher::encrypt_into`] and [`Cipher::decrypt_into`] are not symmetric,
+/// so these are included to aid proptesting.
+impl SessionCipher {
+    pub fn encrypt_for_decrypt(&self, pt: &[u8], nonce: &[u8; NONCE_SIZE], ct: &mut [u8]) {
+        let (version_and_nonce, tagged_ct) = ct.split_at_mut(1 + NONCE_SIZE);
+        let (version, nonce_bytes) = version_and_nonce.split_first_mut().unwrap();
+        *version = 0;
+        nonce_bytes.copy_from_slice(nonce);
+
+        self.deoxysii
+            .seal_into(nonce, pt, version_and_nonce, tagged_ct)
+            .ok()
+            .unwrap();
+    }
+
+    #[must_use]
+    pub fn decrypt_encrypted(&self, ct: &mut [u8], pt: &mut [u8]) -> Option<()> {
+        let pt_len = ct.len().saturating_sub(Self::TX_CT_OVERHEAD);
+        let metadata_size = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
+        let (metadata, tagged_ct) = ct.split_at_mut(metadata_size);
+        let version = metadata[0];
+        if version != 0 {
+            return None;
+        }
+        let tx_nonce_bytes = &metadata[1..(NONCE_SIZE + 1)];
+        let nonce = arrayref::array_ref![tx_nonce_bytes, 0, NONCE_SIZE];
+
+        #[allow(clippy::unwrap_used)]
+        self.deoxysii
+            .open_into(nonce, tagged_ct, metadata, &mut pt[..pt_len])
+            .ok()?;
+        Some(())
     }
 }
 
@@ -199,3 +253,72 @@ mod testing {
 }
 #[cfg(any(test, fuzzing))]
 pub(crate) use testing::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! tx_roundtrip {
+        ($pt:expr$(, $excess_capacity:literal)?) => {{
+            let cipher = SessionCipher::from_runtime_public_key([0u8; 32]);
+            let pt: &[u8] = $pt;
+            let ct_len = SessionCipher::ct_len(pt.len());
+            let mut ct = vec![0u8; ct_len$(+ $excess_capacity)?];
+            let mut rtpt = vec![0u8; pt.len()$(+ $excess_capacity)?];
+            cipher.encrypt_into(&pt, &mut ct);
+            assert!(
+                pt.len() == 0 || !ct.windows(pt.len()).any(|w| w == pt),
+                "pt: {pt:?} | ct: {ct:?}"
+            );
+            cipher.decrypt_encrypted(&mut ct[..ct_len], &mut rtpt).unwrap();
+            assert_eq!(pt, &rtpt[..pt.len()]);
+        }};
+    }
+
+    macro_rules! rx_roundtrip {
+        ($pt:expr$(, $excess_capacity:literal)?) => {{
+            let cipher = SessionCipher::from_runtime_public_key([0u8; 32]);
+            let pt: &[u8] = $pt;
+            let ct_len = pt.len() + SessionCipher::RX_CT_OVERHEAD;
+            let mut ct = vec![0u8; ct_len$(+ $excess_capacity)?];
+            let mut rtpt = vec![0u8; pt.len()$(+ $excess_capacity)?];
+            cipher.encrypt_for_decrypt(&pt, &[0u8; NONCE_SIZE], &mut ct);
+            cipher.decrypt_into(&mut ct[..ct_len], &mut rtpt).unwrap();
+            assert_eq!(pt, &rtpt[..pt.len()]);
+        }};
+    }
+
+    #[test]
+    fn session_cipher_tx_roundtrip_empty() {
+        tx_roundtrip!(&[]);
+        tx_roundtrip!(&[], 10);
+    }
+
+    #[test]
+    fn session_cipher_tx_roundtrip_nonempty() {
+        let data = b"tx_roundtrip_nonempty".as_slice();
+        tx_roundtrip!(data);
+        tx_roundtrip!(data, 10);
+    }
+
+    #[test]
+    fn session_cipher_rx_roundtrip_empty() {
+        rx_roundtrip!(&[]);
+        rx_roundtrip!(&[], 10);
+    }
+
+    #[test]
+    fn session_cipher_rx_roundtrip_nonempty() {
+        let data = b"rx_roundtrip_nonempty".as_slice();
+        rx_roundtrip!(data);
+        rx_roundtrip!(data, 10);
+    }
+
+    #[test]
+    fn session_cipher_rx_fallible() {
+        let cipher = SessionCipher::from_runtime_public_key([0u8; 32]);
+        let mut pt = vec![];
+        let mut ct = vec![0u8; SessionCipher::RX_CT_OVERHEAD];
+        assert!(cipher.decrypt_into(&mut ct, &mut pt).is_none());
+    }
+}
