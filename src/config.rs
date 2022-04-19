@@ -43,15 +43,15 @@ impl Config {
     }
 }
 
-fn default_listen_addr() -> String {
+pub(crate) fn default_listen_addr() -> String {
     "127.0.0.1:23294".into()
 }
 
-fn default_upstream() -> url::Url {
+pub(crate) fn default_upstream() -> url::Url {
     #[allow(clippy::unwrap_used)]
     "http://127.0.0.1:8545".parse().unwrap()
 }
 
-fn default_max_request_size_bytes() -> usize {
+pub(crate) fn default_max_request_size_bytes() -> usize {
     1024 * 1024
 }

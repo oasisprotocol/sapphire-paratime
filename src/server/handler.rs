@@ -4,29 +4,28 @@ use bumpalo::Bump;
 use jsonrpsee_types as jrpc;
 use serde_json::value::RawValue;
 
-use crate::cipher::SessionCipher;
+use crate::cipher::Cipher;
 
-pub(super) struct RequestHandler {
-    cipher: SessionCipher,
+#[derive(derive_builder::Builder)]
+#[builder(pattern = "owned")]
+pub(super) struct RequestHandler<C: Cipher> {
+    cipher: C,
+
+    #[builder(default = "crate::config::default_upstream()")]
     upstream: url::Url,
-    max_request_size_bytes: usize,
+
+    #[builder(
+        default = "ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(30)).build()"
+    )]
     http_agent: ureq::Agent,
+
+    #[builder(default = "crate::config::default_max_request_size_bytes()")]
+    max_request_size_bytes: usize,
 }
 
-impl RequestHandler {
-    pub(super) fn new(
-        cipher: SessionCipher,
-        upstream: url::Url,
-        max_request_size_bytes: usize,
-    ) -> Self {
-        Self {
-            cipher,
-            upstream,
-            max_request_size_bytes,
-            http_agent: ureq::AgentBuilder::new()
-                .timeout(std::time::Duration::from_secs(30))
-                .build(),
-        }
+impl<C: Cipher> RequestHandler<C> {
+    pub(super) fn builder() -> RequestHandlerBuilder<C> {
+        RequestHandlerBuilder::default()
     }
 
     pub(super) fn handle_req<'a, A: Allocator>(
@@ -137,7 +136,7 @@ impl RequestHandler {
                 let data_hex = $data_hex.strip_prefix("0x").unwrap_or($data_hex);
 
                 let data_len = data_hex.len() / 2;
-                let ct_len = SessionCipher::ct_len(data_len);
+                let ct_len = C::ct_len(data_len);
                 let ct_hex_len = 2 * ct_len + 2;
 
                 $ct_hex = Vec::with_capacity_in(ct_hex_len, bump);
@@ -154,7 +153,7 @@ impl RequestHandler {
 
                 $ct_hex[0..2].copy_from_slice(b"0x");
                 #[allow(clippy::unwrap_used)]
-                hex::encode_to_slice(&ct_bytes, &mut $ct_hex[2..]).unwrap(); // infallible
+                hex::encode_to_slice(&ct_bytes[..ct_len], &mut $ct_hex[2..]).unwrap(); // infallible
             }};
         }
 
@@ -227,7 +226,7 @@ impl RequestHandler {
                     .unwrap_or(call_res.result);
 
                 let enc_res_len = enc_data_hex.len() / 2;
-                let res_len = SessionCipher::pt_len(enc_res_len);
+                let res_len = C::pt_len(enc_res_len);
                 let res_hex_len = 2 * res_len + 2;
 
                 let mut enc_res_bytes = Vec::with_capacity_in(enc_res_len / 2, bump); // will also hold res hex after decryption

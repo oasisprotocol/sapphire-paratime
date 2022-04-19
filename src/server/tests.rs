@@ -4,23 +4,25 @@ use jsonrpsee_types::{self as jrpc, error::ErrorCode};
 use serde_json::json;
 use tiny_http::{Method, TestRequest};
 
+use crate::cipher::MockCipher;
+
 use super::handler::HandlerResult;
 
 const MAX_REQUEST_SIZE_BYTES: usize = 1024;
 
 struct TestServer {
-    handler: RequestHandler,
+    handler: RequestHandler<MockCipher>,
     alloc: Bump,
 }
 
 impl Default for TestServer {
     fn default() -> Self {
         Self {
-            handler: RequestHandler::new(
-                SessionCipher::from_runtime_public_key([0; 32]),
-                "http://localhost:8545".parse().unwrap(),
-                MAX_REQUEST_SIZE_BYTES,
-            ),
+            handler: RequestHandler::builder()
+                .cipher(MockCipher)
+                .max_request_size_bytes(MAX_REQUEST_SIZE_BYTES)
+                .build()
+                .unwrap(),
             alloc: Bump::new(),
         }
     }

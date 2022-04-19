@@ -13,7 +13,7 @@ use handler::RequestHandler;
 
 pub(crate) struct Server {
     server: tiny_http::Server,
-    handler: RequestHandler,
+    handler: RequestHandler<SessionCipher>,
     is_tls: bool,
 }
 
@@ -28,11 +28,15 @@ impl Server {
         Ok(Arc::new(Self {
             server: tiny_http::Server::new(server_cfg)?,
             is_tls: config.tls,
-            handler: RequestHandler::new(
-                SessionCipher::from_runtime_public_key(config.runtime_public_key),
-                config.upstream,
-                config.max_request_size_bytes,
-            ),
+            #[allow(clippy::unwrap_used)]
+            handler: RequestHandler::builder()
+                .cipher(SessionCipher::from_runtime_public_key(
+                    config.runtime_public_key,
+                ))
+                .upstream(config.upstream)
+                .max_request_size_bytes(config.max_request_size_bytes)
+                .build()
+                .unwrap(),
         }))
     }
 
