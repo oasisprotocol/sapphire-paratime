@@ -6,19 +6,23 @@ use serde_json::value::RawValue;
 
 use crate::cipher::SessionCipher;
 
-pub(super) const MAX_REQUEST_SIZE_BYTES: usize = 1024 * 1024; // 1 MiB
-
 pub(super) struct RequestHandler {
     cipher: SessionCipher,
     upstream: url::Url,
+    max_request_size_bytes: usize,
     http_agent: ureq::Agent,
 }
 
 impl RequestHandler {
-    pub(super) fn new(cipher: SessionCipher, upstream: url::Url) -> Self {
+    pub(super) fn new(
+        cipher: SessionCipher,
+        upstream: url::Url,
+        max_request_size_bytes: usize,
+    ) -> Self {
         Self {
             cipher,
             upstream,
+            max_request_size_bytes,
             http_agent: ureq::AgentBuilder::new()
                 .timeout(std::time::Duration::from_secs(30))
                 .build(),
@@ -49,7 +53,7 @@ impl RequestHandler {
         }
 
         let content_length = match req.body_length() {
-            Some(content_length) if content_length <= MAX_REQUEST_SIZE_BYTES => content_length,
+            Some(content_length) if content_length <= self.max_request_size_bytes => content_length,
             Some(_) => return Err(jrpc_err!(OversizedRequest)),
             None => {
                 return Err(jrpc_err!(InternalError, "missing content-length header"));
@@ -327,10 +331,10 @@ enum ProxyError {
     InvalidParams(serde_json::Error),
 
     #[error("invalid hex data in request: {0}")]
-    InvalidRequestData(hex::FromHexError),
+    InvalidRequestData(#[source] hex::FromHexError),
 
     #[error("invalid hex data in upstream response: {0}")]
-    InvalidResponseData(hex::FromHexError),
+    InvalidResponseData(#[source] hex::FromHexError),
 
     #[error("invalid response from the upstream gateway: {0}")]
     UnexpectedRepsonse(#[source] serde_json::Error),

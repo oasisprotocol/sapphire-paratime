@@ -31,6 +31,7 @@ impl Server {
             handler: RequestHandler::new(
                 SessionCipher::from_runtime_public_key(config.runtime_public_key),
                 config.upstream,
+                config.max_request_size_bytes,
             ),
         }))
     }
