@@ -15,22 +15,30 @@ struct TestServer {
     alloc: Bump,
 }
 
-impl Default for TestServer {
-    fn default() -> Self {
+impl TestServer {
+    fn new() -> Self {
+        Self::with_interceptor(|req: ureq::Request, _next: ureq::MiddlewareNext<'_>| {
+            assert_eq!(
+                req.url(),
+                crate::config::default_upstream().to_string(),
+                "wrong upstream url: {}",
+                req.url()
+            );
+            Ok(ureq::Response::new(501, "not implemented", "").unwrap())
+        })
+    }
+
+    /// Injects a middleware that can be used to mock the upstream gateway.
+    fn with_interceptor(interceptor: impl ureq::Middleware) -> Self {
         Self {
             handler: RequestHandler::builder()
                 .cipher(MockCipher)
                 .max_request_size_bytes(MAX_REQUEST_SIZE_BYTES)
+                .http_agent(ureq::AgentBuilder::new().middleware(interceptor).build())
                 .build()
                 .unwrap(),
             alloc: Bump::new(),
         }
-    }
-}
-
-impl TestServer {
-    fn new() -> Self {
-        Self::default()
     }
 
     fn request<T>(
