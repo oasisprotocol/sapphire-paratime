@@ -190,11 +190,11 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                     .strip_prefix("0x")
                     .unwrap_or(call_res.result);
 
-                let enc_res_len = enc_data_hex.len() / 2;
+                let enc_res_len = enc_res_hex.len() / 2;
                 let res_len = C::pt_len(enc_res_len);
-                let res_hex_len = 2 * res_len + 2;
+                let res_hex_len = 2 * res_len + 2 /* 0x */;
 
-                let mut enc_res_bytes = Vec::with_capacity_in(enc_res_len / 2, bump); // will also hold res hex after decryption
+                let mut enc_res_bytes = Vec::with_capacity_in(enc_res_len, bump); // will also hold res hex after decryption
                 unsafe { enc_res_bytes.set_len(enc_res_bytes.capacity()) };
                 hex::decode_to_slice(enc_res_hex, &mut enc_res_bytes)
                     .map_err(Error::InvalidResponseData)?;

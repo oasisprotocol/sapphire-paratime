@@ -27,17 +27,17 @@ pub(super) type EthCallParams<'a> = (EthTx<'a>, Option<&'a RawValue>);
 #[derive(Serialize, Deserialize)]
 #[cfg_attr(test, derive(Debug))]
 pub(super) struct EthTx<'a> {
-    #[serde(borrow)]
+    #[serde(borrow, skip_serializing_if = "Option::is_none")]
     pub(super) from: Option<&'a RawValue>,
-    #[serde(borrow)]
+    #[serde(borrow, skip_serializing_if = "Option::is_none")]
     pub(super) to: Option<&'a RawValue>,
-    #[serde(borrow)]
+    #[serde(borrow, skip_serializing_if = "Option::is_none")]
     pub(super) gas: Option<&'a RawValue>,
-    #[serde(borrow)]
+    #[serde(borrow, skip_serializing_if = "Option::is_none")]
     pub(super) gas_price: Option<&'a RawValue>,
-    #[serde(borrow)]
+    #[serde(borrow, skip_serializing_if = "Option::is_none")]
     pub(super) value: Option<&'a RawValue>,
-    #[serde(borrow)]
+    #[serde(borrow, skip_serializing_if = "Option::is_none")]
     pub(super) data: Option<&'a str>,
 }
 
@@ -53,11 +53,10 @@ pub(crate) enum Web3ResponseParams<'a, A: Allocator> {
 #[cfg(test)]
 impl<A: Allocator> Web3ResponseParams<'_, A> {
     pub(crate) fn to_value(&self) -> serde_json::Value {
-        serde_json::from_str(match self {
-            Self::RawValue(r) => r.get(),
-            Self::CallResult(r) => from_utf8(r),
-        })
-        .unwrap()
+        match self {
+            Self::RawValue(r) => serde_json::from_str(r.get()).unwrap(),
+            Self::CallResult(r) => from_utf8(r).to_string().into(),
+        }
     }
 }
 
