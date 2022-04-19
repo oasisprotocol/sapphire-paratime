@@ -1,25 +1,25 @@
 #[derive(Debug, serde::Deserialize)]
-pub(crate) struct Config {
+pub struct Config {
     /// The server listener `ip:port`.
     #[serde(default = "default_listen_addr")]
-    pub(crate) listen_addr: String,
+    pub listen_addr: String,
 
     #[serde(default)]
-    pub(crate) tls: bool,
+    pub tls: bool,
 
     /// The URL of the upstream Web3 gateway (TLS optional).
     #[serde(default = "default_upstream")]
-    pub(crate) upstream: url::Url,
+    pub upstream: url::Url,
 
     #[serde(default = "default_max_request_size_bytes")]
-    pub(crate) max_request_size_bytes: usize,
+    pub max_request_size_bytes: usize,
 
     /// The public key of the Sapphire ParaTime.
     #[serde(
         alias = "paratime_public_key",
         deserialize_with = "hex::serde::deserialize"
     )]
-    pub(crate) runtime_public_key: [u8; 32],
+    pub runtime_public_key: [u8; 32],
 }
 
 impl Default for Config {
@@ -35,7 +35,7 @@ impl Default for Config {
 }
 
 impl Config {
-    pub(crate) fn load() -> Result<Self, config::ConfigError> {
+    pub fn load() -> Result<Self, config::ConfigError> {
         config::ConfigBuilder::<config::builder::DefaultState>::default()
             .add_source(config::Environment::with_prefix("SAPPHIRE_PROXY"))
             .build()?

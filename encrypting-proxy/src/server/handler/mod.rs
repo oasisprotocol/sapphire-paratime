@@ -16,14 +16,14 @@ use upstream::Upstream;
 use error::Error;
 use types::*;
 
-pub(super) struct RequestHandler<C: Cipher, U: Upstream> {
+pub(crate) struct RequestHandler<C: Cipher, U: Upstream> {
     cipher: C,
     upstream: U,
     max_request_size_bytes: usize,
 }
 
 impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
-    pub(super) fn new(cipher: C, upstream: U, max_request_size_bytes: usize) -> Self {
+    pub(crate) fn new(cipher: C, upstream: U, max_request_size_bytes: usize) -> Self {
         Self {
             cipher,
             upstream,
@@ -31,7 +31,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         }
     }
 
-    pub(super) fn handle_req<'a, A: Allocator + Copy>(
+    pub(crate) fn handle_req<'a, A: Allocator + Copy>(
         &self,
         req: &'a mut tiny_http::Request, // Will have its body consumed into `req_buf` after validation.
         req_buf: &'a mut Vec<u8, A>, // Holds the deserialized request body. Early-returned errors borrow their id and method from here.

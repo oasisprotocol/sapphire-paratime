@@ -7,16 +7,16 @@ use tiny_http::StatusCode;
 
 use crate::cipher::SessionCipher;
 
-use handler::{upstream::Web3GatewayUpstream, RequestHandler};
+pub(crate) use handler::{upstream::Web3GatewayUpstream, RequestHandler};
 
-pub(crate) struct Server {
+pub struct Server {
     server: tiny_http::Server,
     handler: RequestHandler<SessionCipher, Web3GatewayUpstream>,
     is_tls: bool,
 }
 
 impl Server {
-    pub(crate) fn new(
+    pub fn new(
         config: crate::config::Config,
     ) -> Result<Arc<Self>, std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>> {
         let server_cfg = tiny_http::ServerConfig {
@@ -35,7 +35,7 @@ impl Server {
         }))
     }
 
-    pub(crate) fn serve(&self) -> ! {
+    pub fn serve(&self) -> ! {
         loop {
             let mut req = match self.server.recv() {
                 Ok(req) => req,

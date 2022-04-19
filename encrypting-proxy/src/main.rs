@@ -2,17 +2,15 @@
 #![cfg_attr(not(test), deny(clippy::expect_used, clippy::unwrap_used))]
 #![feature(allocator_api)]
 
-mod cipher;
-mod config;
-mod server;
+use sapphire_encrypting_proxy as sep;
 
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 fn main() {
     init_tracing();
 
-    let config = config::Config::load().expect("failed to load config");
+    let config = sep::Config::load().expect("failed to load config");
     tracing::info!(config=?config, "loaded config");
-    let server = server::Server::new(config).expect("failed to start server");
+    let server = sep::Server::new(config).expect("failed to start server");
 
     let num_threads: usize = env!("SAPPHIRE_PROXY_NUM_THREADS").parse().unwrap();
     // The main thread will also serve requests.
