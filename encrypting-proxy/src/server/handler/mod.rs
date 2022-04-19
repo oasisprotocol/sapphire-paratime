@@ -249,12 +249,19 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         } else if res.status() != 200 {
             return Err(Error::ErrorResponse(res.status()));
         }
-        res_buf.reserve_exact(
-            res.header("content-length")
-                .and_then(|l| l.parse::<usize>().ok())
-                .unwrap_or_default(),
-        );
-        std::io::copy(&mut res.into_reader(), res_buf).map_err(|_| Error::Internal)?;
+
+        let res_content_length = res
+            .header("content-length")
+            .and_then(|l| l.parse::<usize>().ok());
+        let mut res_reader = match res_content_length {
+            Some(content_length) => {
+                res_buf.reserve_exact((content_length as usize).saturating_sub(res_buf.capacity()));
+                res.into_reader()
+                    .take(content_length.min(self.max_request_size_bytes) as u64)
+            }
+            None => res.into_reader().take(self.max_request_size_bytes as u64),
+        };
+        std::io::copy(&mut res_reader, res_buf).map_err(|_| Error::Internal)?;
         serde_json::from_slice(res_buf).map_err(Error::UnexpectedRepsonse)
     }
 }
