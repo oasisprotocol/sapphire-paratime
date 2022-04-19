@@ -1,39 +1,5 @@
-[package]
-name = "sapphire-encrypting-proxy"
-version = "0.1.0"
-edition = "2021"
-
-[package.metadata.fortanix-sgx]
-heap-size = 134217728 # 128 MiB
-stack-size = 8388608 # 8 MiB
-threads = 16
-
-[dependencies]
-# server
-bumpalo = { version = "3.9.1", features = ["allocator_api"] }
-config = "0.12.0"
-derive_builder = "0.11.1"
-hex = { version = "0.4.3", features = ["serde"] }
-jsonrpsee-types = "0.10.1"
-serde = { version = "1.0.136", features = ["derive"] }
-serde_json = { version = "1.0.79", features = ["raw_value"] }
-thiserror = "1.0.30"
-tiny_http = { version = "0.11.0", features = ["ssl-rustls"] }
-tracing = "0.1.32"
-tracing-subscriber = { version = "0.3.9", features = ["env-filter", "json"] }
-ureq = { version = "2.4.0", features = ["json"] }
-url = { version = "2.2.2", features = ["serde"] }
-# cipher
-arrayref = "0.3.6"
-deoxysii = "0.2.3"
-hmac = "0.12.1"
-rand = "0.8.5"
-sha2 = "0.10.2"
-x25519-dalek = "=1.1.1" # Unpin when zeroize dep floats again (clashes with tiny_http).
-
-[build-dependencies]
-cargo_toml = "0.11.5"
-serde = { version = "1.0.136", features = ["derive"] }
+[workspace]
+members = ["encrypting-proxy"]
 
 [profile.release]
 codegen-units = 1
