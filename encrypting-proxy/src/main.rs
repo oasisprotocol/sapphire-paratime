@@ -1,5 +1,8 @@
 #![deny(rust_2018_idioms, single_use_lifetimes, unreachable_pub)]
-#![cfg_attr(not(test), deny(clippy::expect_used, clippy::unwrap_used))]
+#![cfg_attr(
+    not(any(test, fuzzing)),
+    deny(clippy::expect_used, clippy::unwrap_used)
+)]
 #![feature(allocator_api)]
 
 use sapphire_encrypting_proxy as sep;
