@@ -3,12 +3,12 @@ use super::*;
 use mockall::predicate::*;
 
 macro_rules! web3_req {
-    ($req_id:expr, $method:expr, [$($param:expr),+ $(,)?]) => {
+    ($req_id:expr, $method:expr, [$($param:expr),* $(,)?]) => {
         serde_json::to_string(
             &jrpc::RequestSer::new(
                 &$req_id,
                 $method,
-                Some(jrpc::ParamsSer::Array(vec![$($param.into()),+])),
+                Some(jrpc::ParamsSer::Array(vec![$($param.into()),*])),
             )
         )
         .unwrap()
@@ -145,5 +145,32 @@ fn roundtrip_estimate_gas() {
         let web3_res = res.unwrap();
         assert_eq!(web3_res.id, req_id);
         assert_eq!(web3_res.result.to_value().as_str().unwrap(), gas_used);
+    });
+}
+
+#[test]
+fn roundtrip_non_confidential() {
+    let req_id = jrpc::Id::Str("non-confidential".into());
+    let res_id = req_id.clone();
+
+    let block_number = "eth_blockNumber";
+    let req_body = web3_req!(req_id, block_number, []);
+    let expected_proxy_req_body = web3_req!(req_id, block_number, []);
+
+    let block_number = "098765";
+
+    let mut upstream = MockUpstream::new();
+    upstream
+        .expect_request()
+        .with(function(move |req_body| {
+            req_body == expected_proxy_req_body.as_bytes()
+        }))
+        .returning(move |_| Ok(res(res_id.clone(), block_number)));
+
+    let mut server = TestServer::with_upstream(upstream);
+    server.request(test_req(req_body), |res| {
+        let web3_res = res.unwrap();
+        assert_eq!(web3_res.id, req_id);
+        assert_eq!(web3_res.result.to_value().as_str().unwrap(), block_number);
     });
 }
