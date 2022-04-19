@@ -1,6 +1,4 @@
 mod handler;
-#[cfg(test)]
-mod tests;
 
 use std::sync::Arc;
 

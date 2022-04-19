@@ -1,3 +1,8 @@
+mod proxy_error;
+#[cfg(test)]
+mod tests;
+mod types;
+
 use std::{alloc::Allocator, io::Read};
 
 use bumpalo::Bump;
@@ -5,6 +10,9 @@ use jsonrpsee_types as jrpc;
 use serde_json::value::RawValue;
 
 use crate::cipher::Cipher;
+
+use proxy_error::ProxyError;
+use types::*;
 
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
@@ -95,41 +103,6 @@ impl<C: Cipher> RequestHandler<C> {
             .params
             .map(|rv| rv.get())
             .ok_or(ProxyError::MissingParams)?;
-
-        // A replacement for [`jsonrpsee_types::RequestSer`], which requires owned params.
-        #[derive(serde::Serialize)]
-        struct Web3Request<'a> {
-            jsonrpc: jrpc::TwoPointZero,
-            id: &'a jrpc::Id<'a>,
-            method: &'a str,
-            params: Web3RequestParams<'a>,
-        }
-
-        #[derive(serde::Serialize)]
-        #[serde(untagged)]
-        enum Web3RequestParams<'a> {
-            SendRawTx(#[serde(borrow)] EthSendRawTxParams<'a>),
-            Call(#[serde(borrow)] EthCallParams<'a>),
-        }
-
-        type EthSendRawTxParams<'a> = (&'a str,);
-        type EthCallParams<'a> = (EthTx<'a>, Option<&'a RawValue>);
-
-        #[derive(serde::Serialize, serde::Deserialize)]
-        struct EthTx<'a> {
-            #[serde(borrow)]
-            from: Option<&'a RawValue>,
-            #[serde(borrow)]
-            to: Option<&'a RawValue>,
-            #[serde(borrow)]
-            gas: Option<&'a RawValue>,
-            #[serde(borrow)]
-            gas_price: Option<&'a RawValue>,
-            #[serde(borrow)]
-            value: Option<&'a RawValue>,
-            #[serde(borrow)]
-            data: Option<&'a str>,
-        }
 
         macro_rules! encrypt {
             ($data_hex:expr => $ct_hex:ident) => {{
@@ -282,87 +255,5 @@ impl<C: Cipher> RequestHandler<C> {
         );
         std::io::copy(&mut res.into_reader(), res_buf).map_err(|_| ProxyError::Internal)?;
         serde_json::from_slice(res_buf).map_err(ProxyError::UnexpectedRepsonse)
-    }
-}
-
-pub(super) type HandlerResult<'a> =
-    Result<jrpc::Response<'a, Web3ResponseParams<'a>>, jrpc::ErrorResponse<'a>>;
-
-#[cfg_attr(test, derive(Debug))]
-pub(super) enum Web3ResponseParams<'a> {
-    RawValue(&'a RawValue),
-    CallResult(Vec<u8, &'a Bump>), // `String::from_utf8` requires the vec be in the global allocator
-}
-
-impl serde::Serialize for Web3ResponseParams<'_> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        match self {
-            Self::RawValue(rv) => rv.serialize(serializer),
-            Self::CallResult(hex_bytes) => {
-                let hex_str = from_utf8(hex_bytes);
-                hex_str.serialize(serializer)
-            }
-        }
-    }
-}
-
-fn from_utf8(bytes: &'_ [u8]) -> &'_ str {
-    if cfg!(debug_assertions) {
-        #[allow(clippy::expect_used)]
-        std::str::from_utf8(bytes).expect("re-encoded call result was not hex")
-    } else {
-        unsafe { std::str::from_utf8_unchecked(bytes) }
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-enum ProxyError {
-    #[error("request timed out")]
-    Timeout,
-
-    #[error(transparent)]
-    BadGateway(#[from] Box<ureq::Error>),
-
-    #[error("request missing required params")]
-    MissingParams,
-
-    #[error(transparent)]
-    InvalidParams(serde_json::Error),
-
-    #[error("invalid hex data in request: {0}")]
-    InvalidRequestData(#[source] hex::FromHexError),
-
-    #[error("invalid hex data in upstream response: {0}")]
-    InvalidResponseData(#[source] hex::FromHexError),
-
-    #[error("invalid response from the upstream gateway: {0}")]
-    UnexpectedRepsonse(#[source] serde_json::Error),
-
-    #[error("an unexpected error occured")]
-    Internal,
-}
-
-impl ProxyError {
-    fn into_rpc_error(self, req_id: jrpc::Id<'_>) -> jrpc::error::ErrorResponse<'_> {
-        let code = match self {
-            Self::Timeout => jrpc::error::ErrorCode::ServerIsBusy,
-            Self::MissingParams | Self::InvalidParams(_) | Self::InvalidRequestData(_) => {
-                jrpc::error::ErrorCode::InvalidParams
-            }
-            Self::UnexpectedRepsonse(_) | Self::InvalidResponseData(_) => {
-                jrpc::error::ErrorCode::InternalError
-            }
-            Self::BadGateway(_) => jrpc::error::ErrorCode::ServerError(-1),
-            Self::Internal => jrpc::error::ErrorCode::ServerError(-2),
-        };
-        let message = format!("{}. {}", code.message(), self);
-        jrpc::ErrorResponse::new(
-            jrpc::error::ErrorObject {
-                code,
-                message: message.into(),
-                data: None,
-            },
-            req_id,
-        )
     }
 }
