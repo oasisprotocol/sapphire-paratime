@@ -59,7 +59,6 @@ impl SessionCipher {
         secret_key: &x25519_dalek::StaticSecret,
     ) -> [u8; deoxysii::KEY_SIZE] {
         let pmk = secret_key.diffie_hellman(runtime_public_key);
-
         #[allow(clippy::unwrap_used)]
         let mut kdf = Kdf::new_from_slice(b"MRAE_Box_Deoxys-II-256-128").unwrap();
         kdf.update(pmk.as_bytes());
@@ -68,7 +67,6 @@ impl SessionCipher {
         let mut derived_key = [0u8; deoxysii::KEY_SIZE];
         let digest = kdf.finalize();
         derived_key.copy_from_slice(&digest.into_bytes()[..deoxysii::KEY_SIZE]);
-
         derived_key
     }
 
@@ -94,10 +92,17 @@ impl Cipher for SessionCipher {
     // `enveloped_tagged_ct` has format:
     //    version:u8 || nonce:[u8;15] || rx_nonce:[u8;15] || rx_pub_key:[u8;32]
     fn encrypt_into(&self, pt: &[u8], enveloped_tagged_ct: &mut [u8]) -> usize {
+        let output_len = Self::ct_len(pt.len());
+        if enveloped_tagged_ct.len() < output_len {
+            panic!(
+                "`enveloped_tagged_ct` needed length at least {output_len} but was only {}",
+                enveloped_tagged_ct.len()
+            );
+        }
         let (tx_nonce, rx_nonce) = self.next_nonce();
 
-        let metadata_size = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
-        let (metadata, tagged_ct) = enveloped_tagged_ct.split_at_mut(metadata_size);
+        let metadata_len = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
+        let (metadata, tagged_ct) = enveloped_tagged_ct.split_at_mut(metadata_len);
         #[allow(clippy::unwrap_used)]
         let (version, nonces_and_keypair) = metadata.split_first_mut().unwrap();
         let (nonces, keypair) = nonces_and_keypair.split_at_mut(2 * NONCE_SIZE);
@@ -110,12 +115,11 @@ impl Cipher for SessionCipher {
         #[allow(clippy::unwrap_used)]
         let cipher_bytes_written = self
             .deoxysii
-            .seal_into(&tx_nonce, pt, metadata, tagged_ct)
-            .unwrap(); // OOM?
+            .seal_into(&tx_nonce, pt, metadata /* AAD */, tagged_ct)
+            .unwrap(); // OOM, or other irrecoverable error
 
-        let total_bytes_written = Self::ct_len(pt.len());
-        debug_assert_eq!(cipher_bytes_written + metadata_size, total_bytes_written);
-        total_bytes_written
+        debug_assert_eq!(cipher_bytes_written + metadata_len, output_len);
+        output_len
     }
 
     /// Decrypts `versioned_nonced_tagged_ct` into `pt`. The latter must be at least as large as
@@ -124,17 +128,18 @@ impl Cipher for SessionCipher {
     /// Returns the number of bytes written if successful.
     #[must_use]
     fn decrypt_into(&self, versioned_nonced_tagged_ct: &mut [u8], pt: &mut [u8]) -> Option<usize> {
-        if versioned_nonced_tagged_ct.len() < Self::RX_CT_OVERHEAD {
+        let pt_len = Self::pt_len(versioned_nonced_tagged_ct.len());
+        if versioned_nonced_tagged_ct.len() < pt_len {
             return None;
         }
-        let pt_len = Self::pt_len(versioned_nonced_tagged_ct.len());
 
-        let (version_and_nonce, tagged_ct) =
-            versioned_nonced_tagged_ct.split_at_mut(1 + NONCE_SIZE);
-        let version = version_and_nonce[0];
+        let version = versioned_nonced_tagged_ct[0];
         if version != 0 {
             return None;
         }
+
+        let (version_and_nonce, tagged_ct) =
+            versioned_nonced_tagged_ct.split_at_mut(1 + NONCE_SIZE);
         let nonce = arrayref::array_ref![version_and_nonce, 1, NONCE_SIZE];
 
         let cipher_bytes_written = self
@@ -142,11 +147,10 @@ impl Cipher for SessionCipher {
             .open_into(
                 nonce,
                 tagged_ct,
-                version_and_nonce, /* ad */
+                version_and_nonce, // Authenticated Associated Data (AAD)
                 &mut pt[..pt_len],
             )
             .ok()?;
-
         debug_assert_eq!(cipher_bytes_written, pt_len);
         Some(pt_len)
     }
@@ -171,8 +175,8 @@ impl SessionCipher {
     #[must_use]
     pub fn decrypt_encrypted(&self, ct: &mut [u8], pt: &mut [u8]) -> Option<()> {
         let pt_len = ct.len().saturating_sub(Self::TX_CT_OVERHEAD);
-        let metadata_size = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
-        let (metadata, tagged_ct) = ct.split_at_mut(metadata_size);
+        let metadata_len = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
+        let (metadata, tagged_ct) = ct.split_at_mut(metadata_len);
         let version = metadata[0];
         if version != 0 {
             return None;

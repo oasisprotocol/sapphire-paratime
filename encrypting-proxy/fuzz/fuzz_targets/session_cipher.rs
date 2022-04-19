@@ -30,10 +30,8 @@ libfuzzer_sys::fuzz_target!(|input: Input| {
             let ct_len = SessionCipher::ct_len(pt.len());
             let mut ct = vec![0u8; ct_len + input.out_buf_excess as usize];
             let mut rtpt = vec![0u8; pt.len() + input.out_buf_excess as usize];
-
             CIPHER.encrypt_into(&mut pt, &mut ct);
             assert!(ct.iter().skip(ct_len).copied().all(|b| b == 0));
-
             CIPHER
                 .decrypt_encrypted(&mut ct[..ct_len], &mut rtpt)
                 .unwrap();

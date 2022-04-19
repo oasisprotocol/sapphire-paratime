@@ -4,6 +4,11 @@ use jsonrpsee_types as jrpc;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 
+pub(super) struct IncomingWeb3Request<'a> {
+    pub(super) inner: jrpc::Request<'a>,
+    pub(super) content_length: usize,
+}
+
 // A replacement for [`jsonrpsee_types::RequestSer`], which requires owned params.
 #[derive(Serialize)]
 pub(super) struct Web3Request<'a> {

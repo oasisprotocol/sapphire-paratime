@@ -72,9 +72,14 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         let req_id = web3_req.id.clone();
 
         match &*web3_req.method {
-            "eth_sendRawTransaction" | "eth_call" | "eth_estimateGas" => {
-                self.handle_c10l_web3_req(web3_req, proxy_res_buf, bump)
-            }
+            "eth_sendRawTransaction" | "eth_call" | "eth_estimateGas" => self.handle_c10l_web3_req(
+                IncomingWeb3Request {
+                    inner: web3_req,
+                    content_length,
+                },
+                proxy_res_buf,
+                bump,
+            ),
             "eth_sendTransaction" => {
                 return Err(jrpc::ErrorResponse::new(
                     jrpc::error::ErrorObject::new(jrpc::error::ErrorCode::MethodNotFound, None),
@@ -90,11 +95,14 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
 
     fn handle_c10l_web3_req<'a, A: Allocator + Copy>(
         &self,
-        req: jrpc::Request<'a>,
+        req: IncomingWeb3Request<'a>,
         proxy_res_buf: &'a mut Vec<u8, A>,
         bump: A,
     ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, Error> {
-        let params_str = req.params.map(|rv| rv.get()).ok_or(Error::MissingParams)?;
+        let IncomingWeb3Request {
+            inner: req,
+            content_length: req_content_length,
+        } = req;
 
         macro_rules! encrypt {
             ($data_hex:expr => $ct_hex:ident) => {{
@@ -126,6 +134,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         let enc_data_hex_len;
         let mut enc_data_hex: Vec<u8, A>;
 
+        let params_str = req.params.map(|rv| rv.get()).ok_or(Error::MissingParams)?;
         let req_params: Web3RequestParams<'_> = match &*req.method {
             "eth_sendRawTransaction" => {
                 let params: EthSendRawTxParams<'a> =
@@ -161,10 +170,12 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             _ => unreachable!("not a confidential method"),
         };
 
+        let expected_req_content_length = enc_data_hex_len - pt_data_len + req_content_length;
         let mut req_bytes = Vec::with_capacity_in(
-            enc_data_hex_len - pt_data_len + params_str.len() + 100,
+            expected_req_content_length + 50, // add a few bytes for serde quirks, if any.
             bump,
         );
+        let initial_capacity = req_bytes.capacity();
         #[allow(clippy::unwrap_used)]
         serde_json::to_writer(
             &mut req_bytes,
@@ -176,6 +187,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             },
         )
         .unwrap(); // infallible, assuming correct allocation
+        debug_assert_eq!(req_bytes.capacity(), initial_capacity);
 
         match &*req.method {
             // The responses of these two are not confidential.
