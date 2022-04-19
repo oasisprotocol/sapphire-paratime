@@ -2,8 +2,6 @@ use super::*;
 
 use mockall::predicate::*;
 
-use crate::web3_req;
-
 #[test]
 fn send_transaction() {
     let req_id = jrpc::Id::Number(1);

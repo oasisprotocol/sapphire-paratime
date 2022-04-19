@@ -232,6 +232,11 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         res_buf: &'a mut Vec<u8, A>, // jrpc::Response borrows from here (the response body).
     ) -> Result<jrpc::Response<'a, T>, Error> {
         let res = self.upstream.request(req_body)?;
+        if res.status() == 429 {
+            return Err(Error::RateLimited);
+        } else if res.status() != 200 {
+            return Err(Error::ErrorResponse(res.status()));
+        }
         res_buf.reserve_exact(
             res.header("content-length")
                 .and_then(|l| l.parse::<usize>().ok())

@@ -5,6 +5,9 @@ pub(crate) enum Error {
     #[error("request timed out")]
     Timeout,
 
+    #[error("encrypting proxy is being rate limited by the upstream")]
+    RateLimited,
+
     #[error(transparent)]
     BadGateway(#[from] Box<ureq::Error>),
 
@@ -33,7 +36,7 @@ pub(crate) enum Error {
 impl Error {
     pub(super) fn into_rpc_error(self, req_id: jrpc::Id<'_>) -> jrpc::error::ErrorResponse<'_> {
         let code = match self {
-            Self::Timeout => jrpc::error::ErrorCode::ServerIsBusy,
+            Self::Timeout | Self::RateLimited => jrpc::error::ErrorCode::ServerIsBusy,
             Self::MissingParams | Self::InvalidParams(_) | Self::InvalidRequestData(_) => {
                 jrpc::error::ErrorCode::InvalidParams
             }

@@ -1,15 +1,14 @@
 mod errors;
 mod roundtrip;
 
-use super::*;
+use super::{upstream::MockUpstream, *};
 
 use bumpalo::Bump;
 use jsonrpsee_types::error::ErrorCode;
 use serde_json::json;
 use tiny_http::{Method, TestRequest};
 
-use super::upstream::MockUpstream;
-use crate::cipher::MockCipher;
+use crate::{cipher::MockCipher, web3_req};
 
 const MAX_REQUEST_SIZE_BYTES: usize = 1024;
 
