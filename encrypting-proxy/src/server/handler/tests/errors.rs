@@ -48,6 +48,15 @@ fn test_err_req_oversized() {
     );
 }
 
+#[test]
+fn test_send_transaction_unsupported() {
+    let mut server = TestServer::new();
+    server.request(
+        test_req(rpc_json!("eth_sendTransaction", "{}")),
+        err_checker(ErrorCode::MethodNotFound),
+    );
+}
+
 macro_rules! assert_invalid_params {
     ($server:ident, $method:literal, $params:tt) => {
         $server.request(
