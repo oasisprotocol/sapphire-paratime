@@ -1,4 +1,5 @@
 mod errors;
+mod proxy;
 
 use super::*;
 
@@ -7,6 +8,7 @@ use jsonrpsee_types::{self as jrpc, error::ErrorCode};
 use serde_json::json;
 use tiny_http::{Method, TestRequest};
 
+use super::upstream::MockUpstream;
 use crate::cipher::MockCipher;
 
 const MAX_REQUEST_SIZE_BYTES: usize = 1024;
@@ -14,34 +16,29 @@ const MAX_REQUEST_SIZE_BYTES: usize = 1024;
 type HandlerResult<'a> = super::HandlerResult<'a, &'a Bump>;
 
 struct TestServer {
-    handler: RequestHandler<MockCipher>,
+    handler: RequestHandler<MockCipher, MockUpstream>,
     alloc: Bump,
 }
 
 impl TestServer {
     fn new() -> Self {
-        Self::with_interceptor(|req: ureq::Request, _next: ureq::MiddlewareNext<'_>| {
-            assert_eq!(
-                req.url(),
-                crate::config::default_upstream().to_string(),
-                "wrong upstream url: {}",
-                req.url()
-            );
-            Ok(ureq::Response::new(501, "not implemented", "").unwrap())
-        })
+        Self::with_upstream(MockUpstream::new())
     }
 
-    /// Injects a middleware that can be used to mock the upstream gateway.
-    fn with_interceptor(interceptor: impl ureq::Middleware) -> Self {
+    fn with_upstream(upstream: MockUpstream) -> Self {
         Self {
             handler: RequestHandler::builder()
                 .cipher(MockCipher)
                 .max_request_size_bytes(MAX_REQUEST_SIZE_BYTES)
-                .http_agent(ureq::AgentBuilder::new().middleware(interceptor).build())
+                .upstream(upstream)
                 .build()
                 .unwrap(),
             alloc: Bump::new(),
         }
+    }
+
+    fn web3(&mut self, req: &jrpc::RequestSer<'_>, res_handler: impl FnOnce(HandlerResult<'_>)) {
+        self.request(test_req(serde_json::to_string(&req).unwrap()), res_handler)
     }
 
     fn request<T>(

@@ -1,7 +1,7 @@
 use jsonrpsee_types as jrpc;
 
 #[derive(Debug, thiserror::Error)]
-pub(super) enum ProxyError {
+pub(crate) enum ProxyError {
     #[error("request timed out")]
     Timeout,
 
@@ -20,6 +20,9 @@ pub(super) enum ProxyError {
     #[error("invalid hex data in upstream response: {0}")]
     InvalidResponseData(#[source] hex::FromHexError),
 
+    #[error("the upstream gateway returned err status code {0}")]
+    ErrorResponse(u16),
+
     #[error("invalid response from the upstream gateway: {0}")]
     UnexpectedRepsonse(#[source] serde_json::Error),
 
@@ -34,7 +37,7 @@ impl ProxyError {
             Self::MissingParams | Self::InvalidParams(_) | Self::InvalidRequestData(_) => {
                 jrpc::error::ErrorCode::InvalidParams
             }
-            Self::UnexpectedRepsonse(_) | Self::InvalidResponseData(_) => {
+            Self::ErrorResponse(_) | Self::UnexpectedRepsonse(_) | Self::InvalidResponseData(_) => {
                 jrpc::error::ErrorCode::InternalError
             }
             Self::BadGateway(_) => jrpc::error::ErrorCode::ServerError(-1),

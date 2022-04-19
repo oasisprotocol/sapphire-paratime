@@ -43,11 +43,11 @@ impl Config {
     }
 }
 
-pub(crate) fn default_listen_addr() -> String {
+fn default_listen_addr() -> String {
     "127.0.0.1:23294".into()
 }
 
-pub(crate) fn default_upstream() -> url::Url {
+fn default_upstream() -> url::Url {
     #[allow(clippy::unwrap_used)]
     "http://127.0.0.1:8545".parse().unwrap()
 }

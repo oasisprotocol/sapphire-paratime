@@ -2,6 +2,7 @@ mod proxy_error;
 #[cfg(test)]
 mod tests;
 mod types;
+pub(crate) mod upstream;
 
 use std::{alloc::Allocator, io::Read};
 
@@ -10,28 +11,22 @@ use serde_json::value::RawValue;
 
 use crate::cipher::Cipher;
 
+use upstream::Upstream;
+
 use proxy_error::ProxyError;
 use types::*;
 
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
-pub(super) struct RequestHandler<C: Cipher> {
+pub(super) struct RequestHandler<C: Cipher, U: Upstream> {
     cipher: C,
-
-    #[builder(default = "crate::config::default_upstream()")]
-    upstream: url::Url,
-
-    #[builder(
-        default = "ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(30)).build()"
-    )]
-    http_agent: ureq::Agent,
-
+    upstream: U,
     #[builder(default = "crate::config::default_max_request_size_bytes()")]
     max_request_size_bytes: usize,
 }
 
-impl<C: Cipher> RequestHandler<C> {
-    pub(super) fn builder() -> RequestHandlerBuilder<C> {
+impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
+    pub(super) fn builder() -> RequestHandlerBuilder<C, U> {
         RequestHandlerBuilder::default()
     }
 
@@ -238,15 +233,7 @@ impl<C: Cipher> RequestHandler<C> {
         req_body: &[u8],
         res_buf: &'a mut Vec<u8, A>, // jrpc::Response borrows from here (the response body).
     ) -> Result<jrpc::Response<'a, T>, ProxyError> {
-        let proxy_req = self.http_agent.request_url("POST", &self.upstream);
-        let res = match proxy_req.send_bytes(req_body) {
-            Ok(res) => res,
-            Err(ureq::Error::Status(_, res)) => res,
-            Err(ureq::Error::Transport(te)) => match te.kind() {
-                ureq::ErrorKind::Io => return Err(ProxyError::Timeout),
-                _ => return Err(ProxyError::BadGateway(Box::new(ureq::Error::Transport(te)))),
-            },
-        };
+        let res = self.upstream.request(req_body)?;
         res_buf.reserve_exact(
             res.header("content-length")
                 .and_then(|l| l.parse::<usize>().ok())

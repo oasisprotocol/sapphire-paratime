@@ -7,11 +7,11 @@ use tiny_http::StatusCode;
 
 use crate::cipher::SessionCipher;
 
-use handler::RequestHandler;
+use handler::{upstream::Web3GatewayUpstream, RequestHandler};
 
 pub(crate) struct Server {
     server: tiny_http::Server,
-    handler: RequestHandler<SessionCipher>,
+    handler: RequestHandler<SessionCipher, Web3GatewayUpstream>,
     is_tls: bool,
 }
 
@@ -31,7 +31,7 @@ impl Server {
                 .cipher(SessionCipher::from_runtime_public_key(
                     config.runtime_public_key,
                 ))
-                .upstream(config.upstream)
+                .upstream(Web3GatewayUpstream::new(config.upstream))
                 .max_request_size_bytes(config.max_request_size_bytes)
                 .build()
                 .unwrap(),
