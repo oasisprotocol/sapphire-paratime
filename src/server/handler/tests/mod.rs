@@ -2,15 +2,16 @@ mod errors;
 
 use super::*;
 
+use bumpalo::Bump;
 use jsonrpsee_types::{self as jrpc, error::ErrorCode};
 use serde_json::json;
 use tiny_http::{Method, TestRequest};
 
 use crate::cipher::MockCipher;
 
-use super::HandlerResult;
-
 const MAX_REQUEST_SIZE_BYTES: usize = 1024;
+
+type HandlerResult<'a> = super::HandlerResult<'a, &'a Bump>;
 
 struct TestServer {
     handler: RequestHandler<MockCipher>,

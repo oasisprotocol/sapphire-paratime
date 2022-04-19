@@ -1,4 +1,3 @@
-use bumpalo::Bump;
 use jsonrpsee_types as jrpc;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
@@ -38,16 +37,16 @@ pub(super) struct EthTx<'a> {
     pub(super) data: Option<&'a str>,
 }
 
-pub(crate) type HandlerResult<'a> =
-    Result<jrpc::Response<'a, Web3ResponseParams<'a>>, jrpc::ErrorResponse<'a>>;
+pub(crate) type HandlerResult<'a, A> =
+    Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, jrpc::ErrorResponse<'a>>;
 
 #[cfg_attr(test, derive(Debug))]
-pub(crate) enum Web3ResponseParams<'a> {
+pub(crate) enum Web3ResponseParams<'a, A: std::alloc::Allocator> {
     RawValue(&'a RawValue),
-    CallResult(Vec<u8, &'a Bump>), // `String::from_utf8` requires the vec be in the global allocator
+    CallResult(Vec<u8, A>), // `String::from_utf8` requires the vec be in the global allocator
 }
 
-impl serde::Serialize for Web3ResponseParams<'_> {
+impl<A: std::alloc::Allocator> serde::Serialize for Web3ResponseParams<'_, A> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             Self::RawValue(rv) => rv.serialize(serializer),

@@ -5,7 +5,6 @@ mod types;
 
 use std::{alloc::Allocator, io::Read};
 
-use bumpalo::Bump;
 use jsonrpsee_types as jrpc;
 use serde_json::value::RawValue;
 
@@ -36,13 +35,13 @@ impl<C: Cipher> RequestHandler<C> {
         RequestHandlerBuilder::default()
     }
 
-    pub(super) fn handle_req<'a, A: Allocator>(
+    pub(super) fn handle_req<'a, A: Allocator + Copy>(
         &self,
         req: &'a mut tiny_http::Request, // Will have its body consumed into `req_buf` after validation.
         req_buf: &'a mut Vec<u8, A>, // Holds the deserialized request body. Early-returned errors borrow their id and method from here.
         proxy_res_buf: &'a mut Vec<u8, A>, // Holds the proxy response body. The response borrows its data, id, and method from here.
-        bump: &'a Bump,
-    ) -> HandlerResult<'a> {
+        bump: A,
+    ) -> HandlerResult<'a, A> {
         macro_rules! jrpc_err {
             ($code:ident) => {
                 jrpc_err!($code, jrpc::error::ErrorCode::$code.message())
@@ -93,12 +92,12 @@ impl<C: Cipher> RequestHandler<C> {
         .map_err(move |e| e.into_rpc_error(req_id.into_owned()))
     }
 
-    fn handle_c10l_web3_req<'a, A: Allocator>(
+    fn handle_c10l_web3_req<'a, A: Allocator + Copy>(
         &self,
         req: jrpc::Request<'a>,
         proxy_res_buf: &'a mut Vec<u8, A>,
-        bump: &'a Bump,
-    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a>>, ProxyError> {
+        bump: A,
+    ) -> Result<jrpc::Response<'a, Web3ResponseParams<'a, A>>, ProxyError> {
         let params_str = req
             .params
             .map(|rv| rv.get())
@@ -116,8 +115,8 @@ impl<C: Cipher> RequestHandler<C> {
                 unsafe { $ct_hex.set_len($ct_hex.capacity()) };
                 let data = &mut $ct_hex[..data_len]; // plaintext is unused after encryption
 
-                // Allocate this in reverse drop order so that its space can be reused after drop
-                // ([`bumpalo::Bump`] allows re-using the last allocation).
+                // Allocate this in reverse drop order so that its space can be reused after drop.
+                // (`bumpalo::Bump` allows re-using the last allocation).
                 let mut ct_bytes = Vec::with_capacity_in(ct_len, bump);
                 unsafe { ct_bytes.set_len(ct_bytes.capacity()) };
 
@@ -132,7 +131,7 @@ impl<C: Cipher> RequestHandler<C> {
 
         let pt_data_len: usize;
         let enc_data_hex_len;
-        let mut enc_data_hex: Vec<u8, &'a Bump>;
+        let mut enc_data_hex: Vec<u8, A>;
 
         let req_params: Web3RequestParams<'_> = match &*req.method {
             "eth_sendRawTransaction" => {
@@ -234,7 +233,7 @@ impl<C: Cipher> RequestHandler<C> {
         }
     }
 
-    fn proxy<'a, T: serde::de::Deserialize<'a>, A: Allocator>(
+    fn proxy<'a, T: serde::de::Deserialize<'a>, A: Allocator + Copy>(
         &self,
         req_body: &[u8],
         res_buf: &'a mut Vec<u8, A>, // jrpc::Response borrows from here (the response body).
