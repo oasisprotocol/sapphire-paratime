@@ -29,7 +29,7 @@ fn main() {
 fn init_tracing() {
     let base_subscriber = tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::ACTIVE)
+        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .with_target(true);
     if cfg!(not(debug_assertions)) {
         base_subscriber.json().with_ansi(false).init();

@@ -873,6 +873,7 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
+ "sgx-isa",
  "sha2",
  "thiserror",
  "tiny_http",
@@ -922,6 +923,14 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "sgx-isa"
+version = "0.4.0"
+source = "git+https://github.com/fortanix/rust-sgx#998c34d158a69dd1af33f22587e8ae1c26ca6a27"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]

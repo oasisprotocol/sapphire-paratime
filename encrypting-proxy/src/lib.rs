@@ -4,7 +4,10 @@
     deny(clippy::expect_used, clippy::unwrap_used)
 )]
 #![feature(allocator_api)]
+#![cfg_attr(target_env = "sgx", feature(once_cell))]
 
+#[cfg(target_env = "sgx")]
+mod attestation;
 pub mod cipher;
 mod config;
 mod server;
