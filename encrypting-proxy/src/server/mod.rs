@@ -67,74 +67,78 @@ impl Server {
                 "access-control-max-age": "86400",
             });
 
-            if self.is_tls && !req.secure() {
-                req.respond(res.with_status_code(StatusCode(421))).ok();
-                continue;
-            }
-
-            const ROUTE_WEB3: &'static str = "/";
-            const ROUTE_QUOTE: &'static str = "/quote";
-
             macro_rules! respond {
                 ($res:expr) => {{
                     if let Err(e) = req.respond($res) {
                         tracing::error!(error=%e, "error responding to request");
                     }
-                }}
+                }};
+            }
+            macro_rules! respond_and_continue {
+                ($res:expr) => {{
+                    respond!($res);
+                    continue;
+                }};
+                ($res:expr, $status:literal) => {
+                    respond_and_continue!($res.with_status_code(StatusCode($status)))
+                };
             }
 
-            match (req.url(), req.method()) {
-                (ROUTE_WEB3, Method::Options) | (ROUTE_QUOTE, Method::Options) => {
-                    respond!(res.with_status_code(StatusCode(204)));
-                }
+            if self.is_tls && !req.secure() {
+                respond_and_continue!(res, 421);
+            }
 
-                (ROUTE_WEB3, Method::Post) => {
-                    let res = with_headers!(res, { "content-type": "application/json" });
+            const ROUTE_WEB3: &str = "/";
+            const ROUTE_QUOTE: &str = "/quote";
 
-                    with_alloc(|alloc| {
-                        let mut proxy_res_buf = Vec::new_in(alloc); // will be resized in `fn proxy`
-                        let mut req_buf = Vec::new_in(alloc); // will be resized in `fn handle_req`
-                        let mut res_buf =
-                            Vec::with_capacity_in(1024 /* rough estimate */, alloc);
-                        #[allow(clippy::unwrap_used)]
-                        match self
-                            .handler
-                            .handle_req(&mut req, &mut req_buf, &mut proxy_res_buf, alloc)
-                            .as_ref()
-                        {
-                            Ok(res_data) => serde_json::to_writer(&mut res_buf, res_data),
-                            Err(res_data) => serde_json::to_writer(&mut res_buf, res_data),
+            if req.url() == ROUTE_WEB3 || !(cfg!(target_env = "sgx") && req.url() == ROUTE_QUOTE) {
+                respond_and_continue!(res, 404);
+            }
+
+            if *req.method() == Method::Options {
+                respond_and_continue!(res, 204);
+            }
+
+            macro_rules! route {
+                ($method:ident, $path:ident, |$alloc:ident| $handler:block) => {{
+                    if req.url() == $path {
+                        if *req.method() != Method::$method {
+                            respond_and_continue!(res, 405);
                         }
-                        .unwrap(); // OOM or something bad
-                        respond!(res.with_data(res_buf.as_slice(), Some(res_buf.len())));
-                    })
-                }
-
-                (ROUTE_QUOTE, Method::Get) => {
-                    #[cfg(target_env = "sgx")]
-                    {
-                        with_alloc(|alloc| match crate::attestation::get_quote(alloc) {
-                            Ok(quote) => {
-                                respond!(res.with_data(quote.as_slice(), Some(quote.len())))
-                            }
-                            Err(e) => {
-                                tracing::error!(error=?e, "failed to retrieve quote");
-                                respond!(res.with_status_code(StatusCode(500)));
-                            }
-                        })
+                        with_alloc(|$alloc| $handler);
+                        continue;
                     }
-                    #[cfg(not(target_env = "sgx"))]
-                    respond!(res.with_status_code(StatusCode(204)));
-                }
-
-                (ROUTE_WEB3, _) | (ROUTE_QUOTE, _) => {
-                    respond!(res.with_status_code(StatusCode(405)));
-                }
-
-                (_, _) => {
-                    respond!(res.with_status_code(StatusCode(404)));
-                }
+                }};
             }
+
+            route!(Post, ROUTE_WEB3, |alloc| {
+                let mut proxy_res_buf = Vec::new_in(alloc); // will be resized in `fn proxy`
+                let mut req_buf = Vec::new_in(alloc); // will be resized in `fn handle_req`
+                let mut res_buf = Vec::with_capacity_in(1024 /* rough estimate */, alloc);
+                #[allow(clippy::unwrap_used)]
+                match self
+                    .handler
+                    .handle_req(&mut req, &mut req_buf, &mut proxy_res_buf, alloc)
+                    .as_ref()
+                {
+                    Ok(res_data) => serde_json::to_writer(&mut res_buf, res_data),
+                    Err(res_data) => serde_json::to_writer(&mut res_buf, res_data),
+                }
+                .unwrap(); // OOM or something bad
+                respond!(with_headers!(res, { "content-type": "application/json" })
+                    .with_data(res_buf.as_slice(), Some(res_buf.len())))
+            });
+
+            #[cfg(target_env = "sgx")]
+            route!(Get, ROUTE_QUOTE, |alloc| {
+                match crate::attestation::get_quote(alloc) {
+                    Ok(quote) => respond!(res.with_data(quote.as_slice(), Some(quote.len()))),
+                    Err(e) => {
+                        tracing::error!(error=?e, "failed to retrieve quote");
+                        respond!(res.with_status_code(StatusCode(500)))
+                    }
+                }
+            });
         }
     }
 }
