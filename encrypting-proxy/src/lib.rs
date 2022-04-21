@@ -6,10 +6,11 @@
 #![feature(allocator_api)]
 #![cfg_attr(target_env = "sgx", feature(once_cell))]
 
+mod acme;
 #[cfg(target_env = "sgx")]
 mod attestation;
-pub mod cipher;
 mod config;
+pub mod crypto;
 mod server;
 
 pub use crate::{config::Config, server::Server};

@@ -5,7 +5,7 @@ use std::lazy::SyncLazy as Lazy;
 
 use libfuzzer_sys::arbitrary;
 
-use sapphire_encrypting_proxy::cipher::{Cipher, SessionCipher};
+use sapphire_encrypting_proxy::crypto::{Cipher, SessionCipher};
 
 #[derive(Debug, arbitrary::Arbitrary)]
 struct Input {

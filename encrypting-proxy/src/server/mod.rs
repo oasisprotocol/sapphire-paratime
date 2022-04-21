@@ -5,7 +5,7 @@ use std::sync::Arc;
 use bumpalo::Bump;
 use tiny_http::{Method, StatusCode};
 
-use crate::cipher::SessionCipher;
+use crate::crypto::SessionCipher;
 
 pub(crate) use handler::{upstream::Web3GatewayUpstream, RequestHandler};
 

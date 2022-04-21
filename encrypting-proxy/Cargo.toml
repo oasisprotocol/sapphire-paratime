@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [package.metadata.fortanix-sgx]
-heap-size = 134217728 # 128 MiB
-stack-size = 8388608 # 8 MiB
-threads = 16
+heap-size = 134217728  # 128 MiB
+stack-size = 8388608   # 8 MiB
+threads = 16           # must be at least 2 or else ACME verification cannot proceed
 
 [dependencies]
 # server
@@ -22,8 +22,9 @@ tracing = "0.1.32"
 tracing-subscriber = { version = "0.3.9", features = ["env-filter", "json"] }
 ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
-# cipher
+# crypto
 arrayref = "0.3.6"
+biscuit = "0.5.0"
 deoxysii = "0.2.3"
 hmac = "0.12.1"
 rand = "0.8.5"

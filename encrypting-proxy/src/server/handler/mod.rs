@@ -9,7 +9,7 @@ use std::{alloc::Allocator, io::Read};
 use jsonrpsee_types as jrpc;
 use serde_json::value::RawValue;
 
-use crate::cipher::Cipher;
+use crate::crypto::Cipher;
 
 use upstream::Upstream;
 
@@ -267,13 +267,13 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
 }
 
 #[cfg(fuzzing)]
-impl RequestHandler<crate::cipher::NoopCipher, upstream::MockUpstream> {
+impl RequestHandler<crate::crypto::NoopCipher, upstream::MockUpstream> {
     pub(crate) fn fuzz(req_body: &'static str, res_body: &'static str) {
         let mut upstream = upstream::MockUpstream::new();
         upstream
             .expect_request()
             .returning(|_| Ok(ureq::Response::new(200, "OK", res_body).unwrap()));
-        let handler = RequestHandler::new(crate::cipher::NoopCipher, upstream, 1024 * 1024);
+        let handler = RequestHandler::new(crate::crypto::NoopCipher, upstream, 1024 * 1024);
 
         let mut req = tiny_http::TestRequest::new().with_body(req_body).into();
         let bump = bumpalo::Bump::new();
