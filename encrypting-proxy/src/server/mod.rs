@@ -12,20 +12,24 @@ pub(crate) use handler::{upstream::Web3GatewayUpstream, RequestHandler};
 pub struct Server {
     server: tiny_http::Server,
     handler: RequestHandler<SessionCipher, Web3GatewayUpstream>,
-    is_tls: bool,
+    require_tls: bool,
 }
 
 impl Server {
     pub fn new(
         config: crate::config::Config,
     ) -> Result<Arc<Self>, std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>> {
+        let require_tls = config.tls.is_some();
         let server_cfg = tiny_http::ServerConfig {
             addr: &config.listen_addr,
-            ssl: None, // TODO: fetch from letsencrypt or other provider
+            ssl: config
+                .tls
+                .map(crate::acme::get_or_create_tls_cert)
+                .transpose()?,
         };
         Ok(Arc::new(Self {
             server: tiny_http::Server::new(server_cfg)?,
-            is_tls: config.tls,
+            require_tls,
             #[allow(clippy::unwrap_used)]
             handler: RequestHandler::new(
                 SessionCipher::from_runtime_public_key(config.runtime_public_key),
@@ -84,7 +88,7 @@ impl Server {
                 };
             }
 
-            if self.is_tls && !req.secure() {
+            if self.require_tls && !req.secure() {
                 respond_and_continue!(res, 421);
             }
 

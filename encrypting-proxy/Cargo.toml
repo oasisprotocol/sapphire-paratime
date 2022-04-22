@@ -9,9 +9,10 @@ stack-size = 8388608   # 8 MiB
 threads = 16           # must be at least 2 or else ACME verification cannot proceed
 
 [dependencies]
+# common
+config = "0.12.0"
 # server
 bumpalo = { version = "3.9.1", features = ["allocator_api"] }
-config = "0.12.0"
 hex = { version = "0.4.3", features = ["serde"] }
 jsonrpsee-types = "0.10.1"
 serde = { version = "1.0.136", features = ["derive"] }
@@ -24,12 +25,15 @@ ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 # crypto
 arrayref = "0.3.6"
-biscuit = "0.5.0"
 deoxysii = "0.2.3"
 hmac = "0.12.1"
 rand = "0.8.5"
 sha2 = "0.10.2"
 x25519-dalek = "=1.1.1" # Unpin when zeroize dep floats again (clashes with tiny_http).
+# acme
+base64 = "0.13.0"
+jsonwebkey = "0.3.5"
+zeroize = "1.5.2"
 
 [target.'cfg(target_env = "sgx")'.dependencies]
 sgx-isa = { git = "https://github.com/fortanix/rust-sgx" } # Use crates.io when >0.3.3
