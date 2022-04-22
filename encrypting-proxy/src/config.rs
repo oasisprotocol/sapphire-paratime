@@ -1,4 +1,6 @@
 use serde::Deserialize;
+#[cfg(not(target_env = "sgx"))]
+use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -40,10 +42,17 @@ impl Default for Config {
 
 impl Config {
     pub fn load() -> Result<Self, config::ConfigError> {
-        config::ConfigBuilder::<config::builder::DefaultState>::default()
+        let mut config: Self = config::ConfigBuilder::<config::builder::DefaultState>::default()
             .add_source(config::Environment::with_prefix("SAPPHIRE_PROXY"))
             .build()?
-            .try_deserialize()
+            .try_deserialize()?;
+        if let Some(provider_url) = config.tls.as_mut().map(|c| &mut c.acme_provider_url) {
+            #[allow(clippy::unwrap_used)]
+            if !provider_url.as_str().ends_with('/') {
+                *provider_url = format!("{provider_url}/").parse().unwrap();
+            }
+        }
+        Ok(config)
     }
 }
 
@@ -64,6 +73,14 @@ pub struct AcmeConfig {
 
     /// The domain name of the host where this instance is running.
     pub domain: String,
+
+    /// The path to the ACME account JWK. It will be created if it does not exist.
+    #[cfg(not(target_env = "sgx"))]
+    pub acme_account_jwk_path: PathBuf,
+
+    /// The path to the TLS private key. It will be created if it does not exist.
+    #[cfg(not(target_env = "sgx"))]
+    pub tls_private_key_path: PathBuf,
 }
 
 impl Default for AcmeConfig {
@@ -72,6 +89,10 @@ impl Default for AcmeConfig {
             challenge_responder_listen_addr: defaults::listen_addr(),
             acme_provider_url: defaults::acme_provider_url(),
             domain: defaults::listen_addr(),
+            #[cfg(not(target_env = "sgx"))]
+            acme_account_jwk_path: PathBuf::from("sapphire-proxy-acme-account-key.json"),
+            #[cfg(not(target_env = "sgx"))]
+            tls_private_key_path: PathBuf::from("sapphire-proxy-tls-private-key.pem"),
         }
     }
 }
@@ -91,6 +112,8 @@ mod defaults {
     }
 
     pub(super) fn acme_provider_url() -> url::Url {
-        "https://acme-v02.api.letsencrypt.org/acme".parse().unwrap()
+        "https://acme-v02.api.letsencrypt.org/acme/"
+            .parse()
+            .unwrap()
     }
 }

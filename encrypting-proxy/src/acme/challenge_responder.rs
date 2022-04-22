@@ -7,7 +7,6 @@ use std::{
 };
 
 use jsonwebkey::JsonWebKey;
-
 pub(crate) struct ChallengeResponseServer {
     server: tiny_http::Server,
     /// base64url-encoded thumbprint of the ACME account JWK.
@@ -17,16 +16,18 @@ pub(crate) struct ChallengeResponseServer {
 }
 
 impl ChallengeResponseServer {
-    fn new(listen_addr: &str, account_key_thumbprint: String) -> Arc<Self> {
+    #[allow(clippy::expect_used)]
+    pub(super) fn new(listen_addr: &str, account_key_thumbprint: String) -> Arc<Self> {
         Arc::new(Self {
-            server: tiny_http::Server::http(listen_addr).unwrap(),
+            server: tiny_http::Server::http(listen_addr)
+                .expect("failed to start challenge responder"),
             account_key_thumbprint,
             tokens: Default::default(),
             shutdown_signal: Default::default(),
         })
     }
 
-    fn serve(&self) {
+    pub(super) fn serve(&self) {
         loop {
             if self.shutdown_signal.load(SeqCst) {
                 break;
@@ -62,6 +63,7 @@ impl ChallengeResponseServer {
                 None => respond!(404),
             };
             let has_token = {
+                #[allow(clippy::unwrap_used)]
                 let tokens = self.tokens.read().unwrap();
                 tokens.contains(token)
                 // drop the lock asap
@@ -74,43 +76,8 @@ impl ChallengeResponseServer {
         }
     }
 
-    fn shutdown(&self) {
+    pub(super) fn shutdown(&self) {
         self.shutdown_signal.store(true, SeqCst);
         self.server.unblock();
     }
 }
-
-pub(crate) fn get_or_create_tls_cert(
-    config: crate::config::AcmeConfig,
-) -> Result<tiny_http::SslConfig, Error> {
-    let account_key_thumbprint = String::new();
-    let challenge_response_server = ChallengeResponseServer::new(
-        &config.challenge_responder_listen_addr,
-        account_key_thumbprint,
-    );
-    let server_thread = std::thread::spawn({
-        let server = challenge_response_server.clone();
-        move || server.serve()
-    });
-
-    // 1. Retrieve account key and TLS private key.
-    // 2. Create account, if needed.
-    // 3. Initiate order.
-    // 4. Start handling challenges.
-    // 5. Finalize order.
-    // 6. Post-process certificate.
-
-    challenge_response_server.shutdown();
-    #[allow(clippy::expect_used)]
-    server_thread
-        .join()
-        .expect("challenge responder encountered an error");
-
-    Ok(tiny_http::SslConfig {
-        certificate: vec![],
-        private_key: vec![],
-    })
-}
-
-#[derive(Debug, thiserror::Error)]
-pub(crate) enum Error {}
