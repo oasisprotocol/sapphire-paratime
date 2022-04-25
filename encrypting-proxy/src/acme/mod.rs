@@ -17,7 +17,8 @@ pub(crate) fn get_or_create_tls_cert(
         move || server.serve()
     });
 
-    let mut client = client::AcmeClient::connect(config.acme_provider_url, account_key)?;
+    let mut client =
+        client::AcmeClientConnector::new(config.acme_provider_url, account_key).connect()?;
 
     let tls_cert = client.order_certificate()?;
 
