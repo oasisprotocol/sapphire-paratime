@@ -47,8 +47,13 @@ impl Config {
             .build()?
             .try_deserialize()?;
         if let Some(provider_url) = config.tls.as_mut().map(|c| &mut c.acme_provider_url) {
-            if !provider_url.as_str().ends_with('/') {
-                *provider_url = format!("{provider_url}/").parse().unwrap();
+            if !provider_url.path().ends_with('/') {
+                provider_url.set_path(&format!("{}/", provider_url.path()))
+            }
+            if provider_url.scheme() != "https" {
+                provider_url
+                    .set_scheme("https")
+                    .expect("ACME provider URL must be HTTPS");
             }
         }
         Ok(config)
@@ -67,6 +72,7 @@ pub struct AcmeConfig {
     pub challenge_responder_listen_addr: String,
 
     /// The URL of the ACME provider to use for generating the server TLS certificate.
+    /// For example, `https://acme-v02.api.letsencrypt.org`.
     #[serde(default = "defaults::acme_provider_url")]
     pub acme_provider_url: url::Url,
 

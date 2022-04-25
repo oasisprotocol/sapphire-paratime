@@ -32,7 +32,9 @@ sha2 = "0.10.2"
 x25519-dalek = "=1.1.1" # Unpin when zeroize dep floats again (clashes with tiny_http).
 # acme
 base64 = "0.13.0"
-jsonwebkey = "0.3.5"
+# jsonwebkey = "0.3.5"
+jsonwebkey = { path = "/Users/nhynes/Projects/parcel/jwk-rs", features = ["generate", "jwt-convert", "thumbprint"] }
+jsonwebtoken = "8.1.0"
 zeroize = "1.5.2"
 
 [target.'cfg(target_env = "sgx")'.dependencies]

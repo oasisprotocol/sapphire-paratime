@@ -1,4 +1,4 @@
-#![deny(rust_2018_idioms, single_use_lifetimes)]
+#![deny(rust_2018_idioms)]
 #![feature(allocator_api)]
 #![cfg_attr(target_env = "sgx", feature(once_cell))]
 

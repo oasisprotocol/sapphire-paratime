@@ -1,12 +1,13 @@
 mod challenge_responder;
 mod client;
 
-use jsonwebkey::JsonWebKey;
+use jsonwebkey::{self as jwk, JsonWebKey};
 
 pub(crate) fn get_or_create_tls_cert(
     config: crate::config::AcmeConfig,
 ) -> Result<tiny_http::SslConfig, Error> {
-    let account_key_thumbprint = String::new();
+    let account_key = JsonWebKey::new(jwk::Key::generate_symmetric(32)); // TODO
+    let account_key_thumbprint = account_key.key.thumbprint();
     let challenge_response_server = challenge_responder::ChallengeResponseServer::new(
         &config.challenge_responder_listen_addr,
         account_key_thumbprint,
@@ -16,14 +17,9 @@ pub(crate) fn get_or_create_tls_cert(
         move || server.serve()
     });
 
-    let client = client::AcmeClient::new(config.acme_provider_url);
+    let mut client = client::AcmeClient::connect(config.acme_provider_url, account_key)?;
 
-    // 2. Retrieve account key and TLS private key.
-
-    // 4. Initiate order.
-    // 5. Start handling challenges.
-    // 6. Finalize order.
-    // 7. Post-process certificate.
+    let tls_cert = client.order_certificate()?;
 
     challenge_response_server.shutdown();
     server_thread
@@ -31,14 +27,9 @@ pub(crate) fn get_or_create_tls_cert(
         .expect("challenge responder encountered an error");
 
     Ok(tiny_http::SslConfig {
-        certificate: vec![],
+        certificate: tls_cert,
         private_key: vec![],
     })
-}
-
-fn get_nonce(res: &ureq::Response) -> Result<&str, Error> {
-    res.header("replay-nonce")
-        .ok_or(Error::Protocol("failed to obtain replay-nonce"))
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -46,6 +37,12 @@ fn get_nonce(res: &ureq::Response) -> Result<&str, Error> {
 pub(crate) enum Error {
     #[error(transparent)]
     Http(#[from] ureq::Error),
+
+    #[error("could not process HTTP response: {0}")]
+    HttpResponse(#[from] std::io::Error),
+
+    #[error("signature error: {0}")]
+    Signature(#[from] jsonwebtoken::errors::Error),
 
     #[error("ACME protocol error: {0}")]
     Protocol(&'static str),

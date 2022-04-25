@@ -6,7 +6,6 @@ use std::{
     },
 };
 
-use jsonwebkey::JsonWebKey;
 pub(crate) struct ChallengeResponseServer {
     server: tiny_http::Server,
     /// base64url-encoded thumbprint of the ACME account JWK.
@@ -72,6 +71,10 @@ impl ChallengeResponseServer {
             let challenge_response = format!("{token}.{}", self.account_key_thumbprint);
             respond!(200, challenge_response.as_bytes());
         }
+    }
+
+    pub(super) fn register_token(&self, token: String) {
+        self.tokens.write().unwrap().insert(token);
     }
 
     pub(super) fn shutdown(&self) {
