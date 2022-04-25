@@ -79,7 +79,6 @@ impl<A: std::alloc::Allocator> serde::Serialize for Web3ResponseParams<'_, A> {
 
 pub(super) fn from_utf8(bytes: &'_ [u8]) -> &'_ str {
     if cfg!(debug_assertions) {
-        #[allow(clippy::expect_used)]
         std::str::from_utf8(bytes).expect("re-encoded call result was not hex")
     } else {
         unsafe { std::str::from_utf8_unchecked(bytes) }

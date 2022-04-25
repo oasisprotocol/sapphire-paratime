@@ -30,7 +30,6 @@ impl Server {
         Ok(Arc::new(Self {
             server: tiny_http::Server::new(server_cfg)?,
             require_tls,
-            #[allow(clippy::unwrap_used)]
             handler: RequestHandler::new(
                 SessionCipher::from_runtime_public_key(config.runtime_public_key),
                 Web3GatewayUpstream::new(config.upstream),
@@ -119,7 +118,6 @@ impl Server {
                 let mut proxy_res_buf = Vec::new_in(alloc); // will be resized in `fn proxy`
                 let mut req_buf = Vec::new_in(alloc); // will be resized in `fn handle_req`
                 let mut res_buf = Vec::with_capacity_in(1024 /* rough estimate */, alloc);
-                #[allow(clippy::unwrap_used)]
                 match self
                     .handler
                     .handle_req(&mut req, &mut req_buf, &mut proxy_res_buf, alloc)

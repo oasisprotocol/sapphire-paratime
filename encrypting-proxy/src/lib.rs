@@ -1,8 +1,4 @@
 #![deny(rust_2018_idioms, single_use_lifetimes)]
-#![cfg_attr(
-    not(any(test, fuzzing)),
-    deny(clippy::expect_used, clippy::unwrap_used)
-)]
 #![feature(allocator_api)]
 #![cfg_attr(target_env = "sgx", feature(once_cell))]
 

@@ -59,7 +59,6 @@ impl SessionCipher {
         secret_key: &x25519_dalek::StaticSecret,
     ) -> [u8; deoxysii::KEY_SIZE] {
         let pmk = secret_key.diffie_hellman(runtime_public_key);
-        #[allow(clippy::unwrap_used)]
         let mut kdf = Kdf::new_from_slice(b"MRAE_Box_Deoxys-II-256-128").unwrap();
         kdf.update(pmk.as_bytes());
         drop(pmk);
@@ -103,7 +102,6 @@ impl Cipher for SessionCipher {
 
         let metadata_len = 1 + 2 * NONCE_SIZE + Self::PUBLIC_KEY_SIZE;
         let (metadata, tagged_ct) = enveloped_tagged_ct.split_at_mut(metadata_len);
-        #[allow(clippy::unwrap_used)]
         let (version, nonces_and_keypair) = metadata.split_first_mut().unwrap();
         let (nonces, keypair) = nonces_and_keypair.split_at_mut(2 * NONCE_SIZE);
         let (tx_nonce_bytes, rx_nonce_bytes) = nonces.split_at_mut(NONCE_SIZE);
@@ -112,7 +110,6 @@ impl Cipher for SessionCipher {
         rx_nonce_bytes.copy_from_slice(&rx_nonce);
         keypair.copy_from_slice(self.keypair.public.as_bytes());
 
-        #[allow(clippy::unwrap_used)]
         let cipher_bytes_written = self
             .deoxysii
             .seal_into(&tx_nonce, pt, metadata /* AAD */, tagged_ct)
@@ -184,7 +181,6 @@ impl SessionCipher {
         let tx_nonce_bytes = &metadata[1..(NONCE_SIZE + 1)];
         let nonce = arrayref::array_ref![tx_nonce_bytes, 0, NONCE_SIZE];
 
-        #[allow(clippy::unwrap_used)]
         self.deoxysii
             .open_into(nonce, tagged_ct, metadata, &mut pt[..pt_len])
             .ok()?;

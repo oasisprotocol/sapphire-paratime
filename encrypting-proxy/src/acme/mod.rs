@@ -26,7 +26,6 @@ pub(crate) fn get_or_create_tls_cert(
     // 7. Post-process certificate.
 
     challenge_response_server.shutdown();
-    #[allow(clippy::expect_used)]
     server_thread
         .join()
         .expect("challenge responder encountered an error");

@@ -37,7 +37,6 @@ impl AcmeClient {
     }
 
     fn ep(&self, path: &'static str) -> url::Url {
-        #[allow(clippy::unwrap_used)]
         self.provider_url.join(path).unwrap()
     }
 }

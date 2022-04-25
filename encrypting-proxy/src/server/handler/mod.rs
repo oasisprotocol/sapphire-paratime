@@ -125,7 +125,6 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 self.cipher.encrypt_into(&data, &mut ct_bytes);
 
                 $ct_hex[0..2].copy_from_slice(b"0x");
-                #[allow(clippy::unwrap_used)]
                 hex::encode_to_slice(&ct_bytes[..ct_len], &mut $ct_hex[2..]).unwrap(); // infallible
             }};
         }
@@ -176,7 +175,6 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             bump,
         );
         let initial_capacity = req_bytes.capacity();
-        #[allow(clippy::unwrap_used)]
         serde_json::to_writer(
             &mut req_bytes,
             &Web3Request {
@@ -226,7 +224,6 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 res_hex.truncate(res_hex_len);
                 debug_assert_eq!(res_hex.len(), res_hex_len);
                 res_hex[0..2].copy_from_slice(b"0x");
-                #[allow(clippy::unwrap_used)]
                 hex::encode_to_slice(res_bytes, &mut res_hex[2..]).unwrap(); // infallible
 
                 Ok(jrpc::Response::new(

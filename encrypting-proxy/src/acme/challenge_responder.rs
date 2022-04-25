@@ -16,7 +16,6 @@ pub(crate) struct ChallengeResponseServer {
 }
 
 impl ChallengeResponseServer {
-    #[allow(clippy::expect_used)]
     pub(super) fn new(listen_addr: &str, account_key_thumbprint: String) -> Arc<Self> {
         Arc::new(Self {
             server: tiny_http::Server::http(listen_addr)
@@ -63,7 +62,6 @@ impl ChallengeResponseServer {
                 None => respond!(404),
             };
             let has_token = {
-                #[allow(clippy::unwrap_used)]
                 let tokens = self.tokens.read().unwrap();
                 tokens.contains(token)
                 // drop the lock asap

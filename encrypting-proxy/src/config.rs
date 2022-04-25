@@ -47,7 +47,6 @@ impl Config {
             .build()?
             .try_deserialize()?;
         if let Some(provider_url) = config.tls.as_mut().map(|c| &mut c.acme_provider_url) {
-            #[allow(clippy::unwrap_used)]
             if !provider_url.as_str().ends_with('/') {
                 *provider_url = format!("{provider_url}/").parse().unwrap();
             }
@@ -97,7 +96,6 @@ impl Default for AcmeConfig {
     }
 }
 
-#[allow(clippy::unwrap_used)]
 mod defaults {
     pub(super) fn listen_addr() -> String {
         "127.0.0.1:23294".into()
