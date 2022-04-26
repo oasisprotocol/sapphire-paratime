@@ -1,3 +1,5 @@
+#![forbid(unused_variables, unsafe_code)] // Make it harder to forget to use a byte slice.
+
 use std::sync::atomic::{AtomicU64, Ordering::SeqCst};
 
 use deoxysii::{DeoxysII, NONCE_SIZE, TAG_SIZE};
