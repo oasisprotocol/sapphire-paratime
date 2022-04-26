@@ -17,8 +17,8 @@ struct Input {
 #[derive(Debug, arbitrary::Arbitrary)]
 enum Operation {
     TxRoundtrip,
-    RxRoundtrip { nonce: [u8; 15] },
-    Decrypt,
+    RxRoundtrip { req_id: u64 },
+    Decrypt { req_id: u64 },
 }
 
 libfuzzer_sys::fuzz_target!(|input: Input| {
@@ -27,30 +27,29 @@ libfuzzer_sys::fuzz_target!(|input: Input| {
     match input.operation {
         Operation::TxRoundtrip => {
             let mut pt = input.buf;
-            let ct_len = SessionCipher::ct_len(pt.len());
+            let ct_len = SessionCipher::request_ct_len(pt.len());
             let mut ct = vec![0u8; ct_len + input.out_buf_excess as usize];
             let mut rtpt = vec![0u8; pt.len() + input.out_buf_excess as usize];
-            CIPHER.encrypt_into(&mut pt, &mut ct);
+            let req_id = CIPHER.encrypt_into(&mut pt, &mut ct);
             assert!(ct.iter().skip(ct_len).copied().all(|b| b == 0));
-            CIPHER
-                .decrypt_encrypted(&mut ct[..ct_len], &mut rtpt)
-                .unwrap();
+            assert!(CIPHER.decrypt_encrypted(req_id, &mut ct[..ct_len], &mut rtpt));
             assert_eq!(pt, &rtpt[..pt.len()]);
         }
-        Operation::RxRoundtrip { nonce } => {
+        Operation::RxRoundtrip { req_id } => {
             let mut pt = input.buf;
             let ct_len = pt.len() + SessionCipher::RX_CT_OVERHEAD;
             let mut ct = vec![0u8; ct_len + input.out_buf_excess as usize];
             let mut rtpt = vec![0u8; pt.len() + input.out_buf_excess as usize];
-            CIPHER.encrypt_for_decrypt(&mut pt, &nonce, &mut ct);
-            CIPHER.decrypt_into(&mut ct[..ct_len], &mut rtpt).unwrap();
+            CIPHER.encrypt_for_decrypt(&mut pt, req_id, &mut ct);
+            assert!(CIPHER.decrypt_into(req_id, &mut ct[..ct_len], &mut rtpt));
             assert_eq!(pt, &rtpt[..pt.len()]);
             assert!(rtpt.iter().skip(pt.len()).copied().all(|b| b == 0));
         }
-        Operation::Decrypt => {
+        Operation::Decrypt { req_id } => {
             let mut ct = input.buf;
-            let mut pt = vec![0u8; SessionCipher::pt_len(ct.len() + input.out_buf_excess as usize)];
-            let _ = CIPHER.decrypt_into(&mut ct, &mut pt);
+            let mut pt =
+                vec![0u8; SessionCipher::response_pt_len(ct.len() + input.out_buf_excess as usize)];
+            let _ = CIPHER.decrypt_into(req_id, &mut ct, &mut pt);
         }
     }
 });

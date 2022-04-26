@@ -130,7 +130,7 @@ impl Cipher for SessionCipher {
         pt: &mut [u8],
     ) -> bool {
         let pt_len = Self::response_pt_len(versioned_nonced_tagged_ct.len());
-        if versioned_nonced_tagged_ct.len() < pt_len {
+        if versioned_nonced_tagged_ct.len() < Self::RX_CT_OVERHEAD {
             return false;
         }
 
