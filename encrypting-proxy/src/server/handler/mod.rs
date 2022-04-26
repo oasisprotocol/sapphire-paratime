@@ -109,7 +109,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 let data_hex = $data_hex.strip_prefix("0x").unwrap_or($data_hex);
 
                 let data_len = data_hex.len() / 2;
-                let ct_len = C::ct_len(data_len);
+                let ct_len = C::request_ct_len(data_len);
                 let ct_hex_len = 2 * ct_len + 2;
 
                 $ct_hex = Vec::with_capacity_in(ct_hex_len, bump);
@@ -201,7 +201,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                     .unwrap_or(call_res.result);
 
                 let enc_res_len = enc_res_hex.len() / 2;
-                let res_len = C::pt_len(enc_res_len);
+                let res_len = C::response_pt_len(enc_res_len);
                 let res_hex_len = 2 * res_len + 2 /* 0x */;
 
                 let mut enc_res_bytes = Vec::with_capacity_in(enc_res_len, bump); // will also hold res hex after decryption

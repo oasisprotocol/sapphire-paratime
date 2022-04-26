@@ -14,14 +14,18 @@ pub trait Cipher {
 
     fn encrypt_into(&self, pt: &[u8], ct: &mut [u8]) -> usize;
 
-    fn ct_len(pt_len: usize) -> usize {
-        pt_len + Self::TX_CT_OVERHEAD
+    /// The size of the (encrypted) request message.
+    fn request_ct_len(pt_len: usize) -> usize {
+        pt_len
+            .checked_add(Self::TX_CT_OVERHEAD)
+            .expect("request is much to large")
     }
 
     #[must_use]
     fn decrypt_into(&self, ct: &mut [u8], pt: &mut [u8]) -> Option<usize>;
 
-    fn pt_len(ct_len: usize) -> usize {
+    /// The size of the plaintext response message after decryption.
+    fn response_pt_len(ct_len: usize) -> usize {
         ct_len.saturating_sub(Self::RX_CT_OVERHEAD)
     }
 }
@@ -86,12 +90,12 @@ impl Cipher for SessionCipher {
     const RX_CT_OVERHEAD: usize = NONCE_SIZE + TAG_SIZE + 1 /* version byte */;
 
     /// Encrypts `pt` into `enveloped_tagged_ct`. The latter must be at least as large as
-    /// `ct_len(pt)` or else this function will panic.
+    /// `request_ct_len(pt)` or else this function will panic.
     /// Returns the number of bytes written.
     // `enveloped_tagged_ct` has format:
     //    version:u8 || nonce:[u8;15] || rx_nonce:[u8;15] || rx_pub_key:[u8;32]
     fn encrypt_into(&self, pt: &[u8], enveloped_tagged_ct: &mut [u8]) -> usize {
-        let output_len = Self::ct_len(pt.len());
+        let output_len = Self::request_ct_len(pt.len());
         if enveloped_tagged_ct.len() < output_len {
             panic!(
                 "`enveloped_tagged_ct` needed length at least {output_len} but was only {}",
@@ -120,12 +124,12 @@ impl Cipher for SessionCipher {
     }
 
     /// Decrypts `versioned_nonced_tagged_ct` into `pt`. The latter must be at least as large as
-    /// to `pt_len(versioned_nonced_tagged_ct)` or else this function will panic.
+    /// to `response_pt_len(versioned_nonced_tagged_ct)` or else this function will panic.
     /// successful decryption.
     /// Returns the number of bytes written if successful.
     #[must_use]
     fn decrypt_into(&self, versioned_nonced_tagged_ct: &mut [u8], pt: &mut [u8]) -> Option<usize> {
-        let pt_len = Self::pt_len(versioned_nonced_tagged_ct.len());
+        let pt_len = Self::response_pt_len(versioned_nonced_tagged_ct.len());
         if versioned_nonced_tagged_ct.len() < pt_len {
             return None;
         }
@@ -224,7 +228,7 @@ mod testing {
             let (enc_tag, ct) = ct.split_at_mut(Self::TX_CT_OVERHEAD);
             enc_tag.copy_from_slice(Self::TX_ENC_TAG);
             ct[..pt.len()].copy_from_slice(pt);
-            Self::ct_len(pt.len())
+            Self::request_ct_len(pt.len())
         }
 
         fn decrypt_into(&self, ct: &mut [u8], pt: &mut [u8]) -> Option<usize> {
@@ -262,7 +266,7 @@ mod tests {
         ($pt:expr$(, $excess_capacity:literal)?) => {{
             let cipher = SessionCipher::from_runtime_public_key([0u8; 32]);
             let pt: &[u8] = $pt;
-            let ct_len = SessionCipher::ct_len(pt.len());
+            let ct_len = SessionCipher::request_ct_len(pt.len());
             let mut ct = vec![0u8; ct_len$(+ $excess_capacity)?];
             let mut rtpt = vec![0u8; pt.len()$(+ $excess_capacity)?];
             cipher.encrypt_into(&pt, &mut ct);
