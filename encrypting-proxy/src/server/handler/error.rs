@@ -29,6 +29,15 @@ pub(crate) enum Error {
     #[error("invalid response from the upstream gateway: {0}")]
     UnexpectedRepsonse(#[source] serde_json::Error),
 
+    #[error(
+        "mismatched response ID returned by the upstream gateway. expected {expected:?} but got \
+         {actual:?}"
+    )]
+    UnexpectedResponseId {
+        expected: jrpc::Id<'static>,
+        actual: jrpc::Id<'static>,
+    },
+
     #[error("an unexpected error occured")]
     Internal,
 }
@@ -44,7 +53,9 @@ impl Error {
                 jrpc::error::ErrorCode::InternalError
             }
             Self::BadGateway(_) => jrpc::error::ErrorCode::ServerError(-1),
-            Self::Internal => jrpc::error::ErrorCode::ServerError(-2),
+            Self::Internal | Self::UnexpectedResponseId { .. } => {
+                jrpc::error::ErrorCode::ServerError(-2)
+            }
         };
         let message = format!("{}. {}", code.message(), self);
         jrpc::ErrorResponse::new(

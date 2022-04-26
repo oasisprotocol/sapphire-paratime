@@ -8,7 +8,7 @@ use jsonrpsee_types::error::ErrorCode;
 use serde_json::json;
 use tiny_http::{Method, TestRequest};
 
-use crate::{cipher::testing::MockCipher, web3_req};
+use crate::{crypto::cipher::MockCipher, web3_req};
 
 const MAX_REQUEST_SIZE_BYTES: usize = 1024;
 

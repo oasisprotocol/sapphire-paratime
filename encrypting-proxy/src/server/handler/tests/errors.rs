@@ -130,19 +130,32 @@ fn res_tampering_gateway() {
 
 #[test]
 fn res_gateway_bad_hex() {
-    let req_id = jrpc::Id::Str("non-conforming-gateway".into());
-    let res_id = req_id.clone();
-
     let call = "eth_call";
+    let req_id = jrpc::Id::Str("non-conforming-gateway".into());
     let req_body = web3_req!(req_id, call, [json!({ "data": "0x00" }), "pending"]);
 
     let mut upstream = MockUpstream::new();
     upstream
         .expect_request()
-        .returning(move |_| Ok(res(res_id.clone(), "0x6" /* invalid hex */)));
+        .returning(move |_| Ok(res(jrpc::Id::Number(1), "0x6" /* invalid hex */)));
 
     let mut server = TestServer::with_upstream(upstream);
     server.request(test_req(req_body), err_checker!(ErrorCode::InternalError));
+}
+
+#[test]
+fn res_gateway_bad_res_id() {
+    let call = "eth_call";
+    let req_id = jrpc::Id::Str("tampering-gateway".into());
+    let req_body = web3_req!(req_id, call, [json!({ "data": "0x00" }), "pending"]);
+
+    let mut upstream = MockUpstream::new();
+    upstream
+        .expect_request()
+        .returning(move |_| Ok(res(jrpc::Id::Number(2), "0x66")));
+
+    let mut server = TestServer::with_upstream(upstream);
+    server.request(test_req(req_body), err_checker!(ErrorCode::ServerError(-2)));
 }
 
 #[test]

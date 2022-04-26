@@ -9,7 +9,7 @@ use std::{alloc::Allocator, io::Read};
 use jsonrpsee_types as jrpc;
 use serde_json::value::RawValue;
 
-use crate::crypto::Cipher;
+use crate::crypto::{Cipher, RequestId};
 
 use upstream::Upstream;
 
@@ -88,7 +88,9 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             }
             _ => self
                 .proxy::<&'a RawValue, _>(req_buf, proxy_res_buf)
-                .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
+                .map(|res| {
+                    jrpc::Response::new(Web3ResponseParams::RawValue(res.result), web3_req.id)
+                }),
         }
         .map_err(move |e| e.into_rpc_error(req_id.into_owned()))
     }
@@ -105,7 +107,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         } = req;
 
         macro_rules! encrypt {
-            ($data_hex:expr => $ct_hex:ident) => {{
+            ($data_hex:expr => $ct_hex:ident, $req_id:ident) => {{
                 let data_hex = $data_hex.strip_prefix("0x").unwrap_or($data_hex);
 
                 let data_len = data_hex.len() / 2;
@@ -122,7 +124,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 unsafe { ct_bytes.set_len(ct_bytes.capacity()) };
 
                 hex::decode_to_slice(data_hex, data).map_err(Error::InvalidRequestData)?;
-                self.cipher.encrypt_into(&data, &mut ct_bytes);
+                $req_id = Some(self.cipher.encrypt_into(&data, &mut ct_bytes));
 
                 $ct_hex[0..2].copy_from_slice(b"0x");
                 hex::encode_to_slice(&ct_bytes[..ct_len], &mut $ct_hex[2..]).unwrap(); // infallible
@@ -132,6 +134,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
         let pt_data_len: usize;
         let enc_data_hex_len;
         let mut enc_data_hex: Vec<u8, A>;
+        let proxy_req_id: Option<RequestId>;
 
         let params_str = req.params.map(|rv| rv.get()).ok_or(Error::MissingParams)?;
         let req_params: Web3RequestParams<'_> = match &*req.method {
@@ -139,7 +142,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 let params: EthSendRawTxParams<'a> =
                     serde_json::from_str(params_str).map_err(Error::InvalidParams)?;
                 pt_data_len = params.0.len();
-                encrypt!(params.0 => enc_data_hex);
+                encrypt!(params.0 => enc_data_hex, proxy_req_id);
                 enc_data_hex_len = enc_data_hex.len();
                 Web3RequestParams::SendRawTx((from_utf8(&enc_data_hex),))
             }
@@ -149,13 +152,14 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                 match params.0.data.as_ref() {
                     Some(data) => {
                         pt_data_len = data.len();
-                        encrypt!(data => enc_data_hex);
+                        encrypt!(data => enc_data_hex, proxy_req_id);
                         enc_data_hex_len = enc_data_hex.len()
                     }
                     None => {
                         pt_data_len = 0;
                         enc_data_hex = Vec::new_in(bump); // doesn't allocate
                         enc_data_hex_len = 0;
+                        proxy_req_id = None;
                     }
                 }
                 Web3RequestParams::Call((
@@ -175,11 +179,14 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             bump,
         );
         let initial_capacity = req_bytes.capacity();
+        let proxy_req_jrpc_id = proxy_req_id
+            .map(jrpc::Id::Number)
+            .unwrap_or_else(|| req.id.clone());
         serde_json::to_writer(
             &mut req_bytes,
             &Web3Request {
                 jsonrpc: jrpc::TwoPointZero,
-                id: &req.id,
+                id: &proxy_req_jrpc_id,
                 method: &req.method,
                 params: req_params,
             },
@@ -191,9 +198,16 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
             // The responses of these two are not confidential.
             "eth_sendRawTransaction" | "eth_estimateGas" => self
                 .proxy::<&'a RawValue, _>(&req_bytes, proxy_res_buf)
-                .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), res.id)),
+                .map(|res| jrpc::Response::new(Web3ResponseParams::RawValue(res.result), req.id)),
             "eth_call" => {
+                let proxy_req_id = proxy_req_id.expect("proxy_req_id not set for c10l request");
                 let call_res = self.proxy::<&'a str, _>(&req_bytes, proxy_res_buf)?;
+                if call_res.id != proxy_req_jrpc_id {
+                    return Err(Error::UnexpectedResponseId {
+                        expected: jrpc::Id::Number(proxy_req_id),
+                        actual: call_res.id.into_owned(),
+                    });
+                }
 
                 let enc_res_hex = call_res
                     .result
@@ -211,10 +225,9 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
 
                 let mut res_bytes = Vec::with_capacity_in(res_len, bump);
                 unsafe { res_bytes.set_len(res_bytes.capacity()) };
-                if self
+                if !self
                     .cipher
-                    .decrypt_into(&mut enc_res_bytes, &mut res_bytes)
-                    .is_none()
+                    .decrypt_into(proxy_req_id, &mut enc_res_bytes, &mut res_bytes)
                 {
                     tracing::error!("failed to decrypt response");
                     return Err(Error::Internal);
@@ -228,7 +241,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
 
                 Ok(jrpc::Response::new(
                     Web3ResponseParams::CallResult(res_hex),
-                    call_res.id,
+                    req.id,
                 ))
             }
             _ => unreachable!("not a confidential method"),

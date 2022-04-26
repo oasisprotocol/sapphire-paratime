@@ -24,7 +24,6 @@ tracing-subscriber = { version = "0.3.9", features = ["env-filter", "json"] }
 ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 # crypto
-arrayref = "0.3.6"
 deoxysii = "0.2.3"
 hmac = "0.12.1"
 rand = "0.8.5"

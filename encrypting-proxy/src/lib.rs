@@ -1,5 +1,5 @@
 #![deny(rust_2018_idioms)]
-#![feature(allocator_api)]
+#![feature(allocator_api, split_array)]
 #![cfg_attr(target_env = "sgx", feature(once_cell))]
 
 pub mod acme;
