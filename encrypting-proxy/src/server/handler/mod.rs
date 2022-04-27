@@ -108,7 +108,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
 
         macro_rules! encrypt {
             ($data_hex:expr => $ct_hex:ident, $req_id:ident) => {{
-                let data_hex = $data_hex.strip_prefix("0x").unwrap_or($data_hex);
+                let data_hex = $data_hex.trim_start_matches("0x");
 
                 let data_len = data_hex.len() / 2;
                 let ct_len = C::request_ct_len(data_len);
@@ -209,10 +209,7 @@ impl<C: Cipher, U: Upstream> RequestHandler<C, U> {
                     });
                 }
 
-                let enc_res_hex = call_res
-                    .result
-                    .strip_prefix("0x")
-                    .unwrap_or(call_res.result);
+                let enc_res_hex = call_res.result.trim_start_matches("0x");
 
                 let enc_res_len = enc_res_hex.len() / 2;
                 let res_len = C::response_pt_len(enc_res_len);

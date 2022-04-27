@@ -78,7 +78,6 @@ impl SessionCipher {
         let mut kdf = Kdf::new_from_slice(b"MRAE_Box_Deoxys-II-256-128").unwrap();
         kdf.update(pmk.as_bytes());
         drop(pmk);
-
         let mut derived_key = [0u8; deoxysii::KEY_SIZE];
         let digest = kdf.finalize();
         derived_key.copy_from_slice(&digest.into_bytes()[..deoxysii::KEY_SIZE]);

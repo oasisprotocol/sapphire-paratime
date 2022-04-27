@@ -75,7 +75,7 @@ fn call() {
                 .result
                 .to_value()
                 .as_str()
-                .and_then(|s| s.strip_prefix("0x"))
+                .map(|s| s.trim_start_matches("0x"))
                 .unwrap(),
             data_hex
         );
