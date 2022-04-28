@@ -68,22 +68,17 @@ impl AcmeClientConnector {
                 nonce,
                 jwk_or_kid: JwkOrKid::Jwk(&self.account_key),
             },
-            Payload::new_account(),
+            Payload::NewAccount,
         )
         .sign(&signing_key, signing_key_alg)?
         .send(&self.http_agent)?;
 
-        let account_key_id = new_account_res
-            .header("location")
-            .ok_or(Error::Protocol("new-account did not return a kid"))
-            .and_then(|kid| {
-                kid.parse()
-                    .map_err(|_| Error::Protocol("new-account did not return a valid kid: {kid}"))
-            })?;
         let nonce = extract_nonce(&new_account_res)?;
+        let account_key_id = extract_location(&new_account_res, "new-account", "kid")?;
 
         Ok(AcmeClient {
             account_key_id,
+            account_key_thumbprint: self.account_key.key.thumbprint(),
             signing_key,
             signing_key_alg,
             nonce: nonce.into(),
@@ -98,6 +93,7 @@ impl AcmeClientConnector {
 pub(super) struct AcmeClient {
     /// The account key id returned from `new-account` and used as the `kid` in subsequent calls.
     account_key_id: Url,
+    account_key_thumbprint: String,
     http_agent: Agent,
     nonce: String,
     directory: Directory,
@@ -108,12 +104,128 @@ pub(super) struct AcmeClient {
 }
 
 impl AcmeClient {
-    pub(super) fn order_certificate(&mut self) -> Result<Vec<u8>, Error> {
-        todo!()
+    pub(super) fn order_certificate(mut self, domains: Vec<String>) -> Result<PendingOrder, Error> {
+        let (new_order_res, nonce) =
+            self.post(Payload::NewOrder { domains }, &self.directory.new_order)?;
+        self.nonce = nonce;
+        let order_url = extract_location(&new_order_res, "new-order", "order URL")?;
+
+        let order_res: NewOrderResponse = new_order_res.into_json()?;
+        Ok(PendingOrder {
+            client: self,
+            order_url,
+            authorization_urls: order_res.authorization_urls,
+            finalize_url: order_res.finalize_url,
+        })
+    }
+
+    fn get<T: serde::de::DeserializeOwned>(&self, url: &Url) -> Result<T, Error> {
+        let res = self.http_agent.request_url("GET", url).call()?;
+        if res.status() >= 300 {
+            return Err(ureq::Error::Status(res.status(), res).into());
+        }
+        Ok(res.into_json()?)
+    }
+
+    /// Returns the response and the nonce.
+    fn post(&self, payload: Payload<'_>, url: &Url) -> Result<(ureq::Response, String), Error> {
+        let res = UnsignedRequest::new(
+            JwsProtected {
+                alg: self.signing_key_alg.name(),
+                url,
+                nonce: &self.nonce,
+                jwk_or_kid: JwkOrKid::Kid(&self.account_key_id),
+            },
+            payload,
+        )
+        .sign(&self.signing_key, self.signing_key_alg)?
+        .send(&self.http_agent)?;
+        let nonce = extract_nonce(&res)?.into();
+        Ok((res, nonce))
+    }
+}
+
+/// PendingOrder that the client must complete in order to be issued a cert.
+pub(super) struct PendingOrder {
+    client: AcmeClient,
+    _order_url: Url,
+    authorization_urls: Vec<Url>,
+    finalize_url: Url,
+}
+
+impl PendingOrder {
+    pub(super) fn challenges<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = Result<Challenge<'a>, Error>> + 'a {
+        self.authorization_urls.iter().map(|authz_url| {
+            let authz_res: AuthorizationResponse = self.client.get(authz_url)?;
+            let challenge = authz_res
+                .challenges
+                .into_iter()
+                .find(|c| c.ty == "http-01")
+                .ok_or(Error::NoHttp01Challenge)?;
+            Ok(Challenge {
+                client: &self.client,
+                url: challenge.url,
+                token: challenge.token,
+            })
+        })
+    }
+
+    /// Returns the TLS cert (in TODO format).
+    pub(super) fn complete(self, csr: Vec<u8>) -> Result<Vec<u8>, Error> {
+        todo!("POST to finalize url with CSR");
+        Ok(vec![])
+    }
+}
+
+/// An http-01 challenge. The token should be registered into the challenge responder server.
+pub(super) struct Challenge<'a> {
+    client: &'a AcmeClient,
+    url: Url,
+    token: String,
+}
+
+impl Challenge<'_> {
+    pub(super) fn token(&self) -> String {
+        self.token.clone()
+    }
+
+    pub(super) fn wait_for_validation(self) -> Result<(), Error> {
+        self.client.post(
+            Payload::ChallengeResponse {
+                key_auth: &self.client.account_key_thumbprint,
+            },
+            &self.url,
+        )?;
+        loop {
+            #[derive(serde::Deserialize)]
+            struct ChallengeStatus {
+                status: Status,
+            }
+            let ChallengeStatus { status } = self.client.get(&self.url)?;
+            match status {
+                Status::Invalid => return Err(Error::ChallengeFailed),
+                Status::Valid => return Ok(()),
+                _ => std::thread::sleep(std::time::Duration::from_secs(1)),
+            }
+        }
     }
 }
 
 fn extract_nonce(res: &ureq::Response) -> Result<&str, Error> {
     res.header("replay-nonce")
-        .ok_or(Error::Protocol("failed to obtain replay-nonce"))
+        .ok_or_else(|| Error::Protocol("failed to obtain replay-nonce".into()))
+}
+
+fn extract_location(
+    res: &ureq::Response,
+    endpoint: &'static str,
+    item: &'static str,
+) -> Result<url::Url, Error> {
+    let loc = res
+        .header("location")
+        .ok_or_else(|| Error::Protocol(format!("{endpoint} did not return the expected {item}")))?;
+    loc.parse()
+        .map_err(|_| Error::Protocol(format!("{endpoint} did not return a valid {item}: {loc}")))
 }

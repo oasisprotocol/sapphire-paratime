@@ -76,8 +76,9 @@ pub struct AcmeConfig {
     #[serde(default = "defaults::acme_provider_url")]
     pub acme_provider_url: url::Url,
 
-    /// The domain name of the host where this instance is running.
-    pub domain: String,
+    /// The domain name(s) for which to obtain a TLS cert. This service must
+    /// be running on all specified domains.
+    pub domains: Vec<String>,
 
     /// The path to the ACME account JWK. It will be created if it does not exist.
     #[cfg(not(target_env = "sgx"))]
@@ -93,7 +94,7 @@ impl Default for AcmeConfig {
         Self {
             challenge_responder_listen_addr: defaults::listen_addr(),
             acme_provider_url: defaults::acme_provider_url(),
-            domain: defaults::listen_addr(),
+            domains: vec![defaults::listen_addr()],
             #[cfg(not(target_env = "sgx"))]
             acme_account_jwk_path: PathBuf::from("sapphire-proxy-acme-account-key.json"),
             #[cfg(not(target_env = "sgx"))]

@@ -1,7 +1,7 @@
 use jsonwebkey::{self as jwk, JsonWebKey};
 use jsonwebtoken as jwt;
 use serde::{
-    ser::{SerializeStruct, Serializer},
+    ser::{SerializeSeq, SerializeStruct, Serializer},
     Deserialize, Serialize,
 };
 use url::Url;
@@ -17,33 +17,39 @@ pub(super) struct Directory {
     pub(super) new_order: Url,
 }
 
-#[derive(Clone, Copy, Serialize)]
-#[serde(untagged)]
-pub(super) enum Payload {
-    NewAccount(NewAccountPayload),
-    NewOrder(bool),
+pub(super) enum Payload<'a> {
+    NewAccount,
+    NewOrder { domains: Vec<String> },
+    ChallengeResponse { key_auth: &'a str },
 }
 
-impl Payload {
-    pub(super) fn new_account() -> Self {
-        Self::NewAccount(NewAccountPayload)
-    }
-}
-
-#[derive(Clone, Copy)]
-#[non_exhaustive]
-pub(super) struct NewAccountPayload;
-
-impl Serialize for NewAccountPayload {
+impl Serialize for Payload<'_> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        let mut ss = s.serialize_struct("", 2)?;
-        ss.serialize_field("termsOfServiceAgreed", &true)?;
-        ss.serialize_field("contact", &("mailto:sep@oasislabs.com",))?;
-        ss.end()
+        match self {
+            Self::NewAccount => {
+                let mut ss = s.serialize_struct("", 2)?;
+                ss.serialize_field("termsOfServiceAgreed", &true)?;
+                ss.serialize_field("contact", &("mailto:sep@oasislabs.com",))?;
+                ss.end()
+            }
+            Self::NewOrder { domains } => {
+                let mut ss = s.serialize_seq(Some(domains.len()))?;
+                for domain in domains.into_iter() {
+                    ss.serialize_element(&serde_json::json!({ "type": "dns", "value": domain }))?;
+                }
+                ss.end()
+            }
+            Self::ChallengeResponse { key_auth } => {
+                let mut ss = s.serialize_struct("", 1)?;
+                ss.serialize_field("keyAuthorization", key_auth)?;
+                ss.end()
+            }
+        }
     }
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(super) struct JwsProtected<'a> {
     pub(super) alg: &'a str,
     pub(super) url: &'a Url,
@@ -53,6 +59,7 @@ pub(super) struct JwsProtected<'a> {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(untagged)]
 pub(super) enum JwkOrKid<'a> {
     Jwk(#[serde(serialize_with = "serialize_public_jwk")] &'a JsonWebKey),
     Kid(&'a Url),
@@ -72,11 +79,11 @@ fn serialize_public_jwk<S: Serializer>(jwk: &JsonWebKey, s: S) -> Result<S::Ok, 
 
 pub(super) struct UnsignedRequest<'a> {
     protected: JwsProtected<'a>,
-    payload: Payload,
+    payload: Payload<'a>,
 }
 
 impl<'a> UnsignedRequest<'a> {
-    pub(super) fn new(protected: JwsProtected<'a>, payload: Payload) -> Self {
+    pub(super) fn new(protected: JwsProtected<'a>, payload: Payload<'a>) -> Self {
         Self { protected, payload }
     }
 
@@ -112,6 +119,7 @@ fn base64json<T: Serialize>(t: &T) -> String {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(super) struct Request<'a> {
     #[serde(skip)]
     url: &'a Url,
@@ -128,4 +136,44 @@ impl Request<'_> {
         }
         Ok(res)
     }
+}
+
+/// @see https://datatracker.ietf.org/doc/html/draft-ietf-acme-acme-09#section-7.4
+#[derive(Deserialize)]
+pub(super) struct NewOrderResponse {
+    #[serde(rename = "authorizations")]
+    pub(super) authorization_urls: Vec<Url>,
+    #[serde(rename = "finalize")]
+    pub(super) finalize_url: Url,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct StatusOnly {
+    pub(super) status: Status,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct AuthorizationResponse {
+    pub(super) status: Status,
+    pub(super) challenges: Vec<Challenge>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(super) enum Status {
+    Pending,
+    Processing,
+    Valid,
+    Invalid,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct Challenge {
+    #[serde(rename = "type")]
+    pub(super) ty: String, // http-01 is the one we care about
+    pub(super) url: Url,
+    pub(super) token: String,
 }

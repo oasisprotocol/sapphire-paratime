@@ -17,15 +17,21 @@ pub(crate) fn get_or_create_tls_cert(
         move || server.serve()
     });
 
-    let mut client =
-        client::AcmeClientConnector::new(config.acme_provider_url, account_key).connect()?;
-
-    let tls_cert = client.order_certificate()?;
+    let mut order = client::AcmeClientConnector::new(config.acme_provider_url, account_key)
+        .connect()?
+        .order_certificate(config.domains)?;
+    for challenge in order.challenges() {
+        let challenge = challenge?;
+        challenge_response_server.register_token(challenge.token());
+        challenge.wait_for_validation()?;
+    }
 
     challenge_response_server.shutdown();
     server_thread
         .join()
         .expect("challenge responder encountered an error");
+
+    let tls_cert = order.complete(vec![] /* TODO: generate CSR */)?;
 
     Ok(tiny_http::SslConfig {
         certificate: tls_cert,
@@ -46,5 +52,11 @@ pub(crate) enum Error {
     Signature(#[from] jsonwebtoken::errors::Error),
 
     #[error("ACME protocol error: {0}")]
-    Protocol(&'static str),
+    Protocol(String),
+
+    #[error("ACME authorization did not have an http-01 challenge, so it could not be completed")]
+    NoHttp01Challenge,
+
+    #[error("challenge resulted in invalid status")]
+    ChallengeFailed,
 }
