@@ -17,15 +17,15 @@ pub struct Server {
 
 impl Server {
     pub fn new(
-        config: crate::config::Config,
+        config: Config,
     ) -> Result<Arc<Self>, std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>> {
         let require_tls = config.tls.is_some();
         let server_cfg = tiny_http::ServerConfig {
             addr: &config.listen_addr,
-            ssl: config
-                .tls
-                .map(crate::acme::get_or_create_tls_cert)
-                .transpose()?,
+            ssl: config.tls.map(|t| tiny_http::SslConfig {
+                private_key: t.private_key,
+                certificate: t.certificate,
+            }),
         };
         Ok(Arc::new(Self {
             server: tiny_http::Server::new(server_cfg)?,
@@ -45,14 +45,14 @@ impl Server {
                 Err(_) => continue,
             };
 
-            let req_span = tracing::info_span!(
+            let _req_span = tracing::info_span!(
                 "request",
                 method=%req.method(),
                 path=req.url(),
                 remote_addr=%req.remote_addr(),
                 content_length=req.body_length().unwrap_or_default(),
-            );
-            let _in_req_span = req_span.enter();
+            )
+            .entered();
 
             macro_rules! with_headers {
                 ($res:expr, { $($name:literal: $value:literal),+ $(,)? }) => {
@@ -153,4 +153,28 @@ fn with_alloc<T>(f: impl FnOnce(&Bump) -> T) -> T {
         bump.reset();
         outcome
     })
+}
+
+#[derive(Debug)]
+pub struct Config {
+    /// The server listen address `ip:port`.
+    pub listen_addr: std::net::SocketAddr,
+
+    /// If set, the server will require all connections to use TLS.
+    pub tls: Option<TlsConfig>,
+
+    /// The URL of the upstream Web3 gateway (TLS optional).
+    pub upstream: url::Url,
+
+    /// The maximum size of a Web3 request.
+    pub max_request_size_bytes: usize,
+
+    /// The public key of the Sapphire ParaTime.
+    pub runtime_public_key: [u8; 32],
+}
+
+#[derive(Debug)]
+pub struct TlsConfig {
+    pub private_key: Vec<u8>,
+    pub certificate: Vec<u8>,
 }

@@ -2,14 +2,12 @@
 #![feature(allocator_api, split_array)]
 #![cfg_attr(target_env = "sgx", feature(once_cell))]
 
-pub mod acme;
 #[cfg(target_env = "sgx")]
 mod attestation;
-pub mod config;
 pub mod crypto;
-mod server;
+pub mod server;
 
-pub use crate::{config::Config, server::Server};
+pub use crate::server::Server;
 
 #[cfg(fuzzing)]
 /// A module that allows fuzzing all of the things that really shouldn't be exported.

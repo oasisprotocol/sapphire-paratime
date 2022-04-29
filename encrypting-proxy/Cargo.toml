@@ -10,7 +10,7 @@ threads = 16           # must be at least 2 or else ACME verification cannot pro
 
 [dependencies]
 # common
-config = "0.12.0"
+clap = { version = "3.1.12", default-features = false, features = ["derive", "std"] }
 # server
 bumpalo = { version = "3.9.1", features = ["allocator_api"] }
 hex = { version = "0.4.3", features = ["serde"] }
@@ -20,7 +20,7 @@ serde_json = { version = "1.0.79", features = ["raw_value"] }
 thiserror = "1.0.30"
 tiny_http = { version = "0.11.0", features = ["ssl-rustls"] }
 tracing = "0.1.32"
-tracing-subscriber = { version = "0.3.9", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3.9", features = ["json"] }
 ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 # crypto
@@ -29,14 +29,16 @@ hmac = "0.12.1"
 rand = "0.8.5"
 sha2 = "0.10.2"
 x25519-dalek = "=1.1.1" # Unpin when zeroize dep floats again (clashes with tiny_http).
-# acme
-base64 = "0.13.0"
-# jsonwebkey = "0.3.5"
-jsonwebkey = { path = "/Users/nhynes/Projects/parcel/jwk-rs", features = ["generate", "jwt-convert", "thumbprint"] }
+# jsonwebkey = "0.4.0"
+jsonwebkey = { git = "https://github.com/nhynes/jwk-rs", features = ["generate", "jwt-convert", "thumbprint"] }
 jsonwebtoken = "8.1.0"
 zeroize = "1.5.2"
 
+[target.'cfg(not(target_env = "sgx"))'.dependencies]
+clap = { version = "3.1.12", default-features = true, features = ["derive", "cargo"] }
+
 [target.'cfg(target_env = "sgx")'.dependencies]
+tracing = { version = "0.1.32", features = ["release_max_level_info"] }
 sgx-isa = { git = "https://github.com/fortanix/rust-sgx" } # Use crates.io when >0.3.3
 
 [build-dependencies]
