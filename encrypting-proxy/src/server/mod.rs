@@ -23,7 +23,7 @@ impl Server {
         let server_cfg = tiny_http::ServerConfig {
             addr: &config.listen_addr,
             ssl: config.tls.map(|t| tiny_http::SslConfig {
-                private_key: t.private_key,
+                private_key: t.secret_key,
                 certificate: t.certificate,
             }),
         };
@@ -175,6 +175,6 @@ pub struct Config {
 
 #[derive(Debug)]
 pub struct TlsConfig {
-    pub private_key: Vec<u8>,
+    pub secret_key: Vec<u8>,
     pub certificate: Vec<u8>,
 }

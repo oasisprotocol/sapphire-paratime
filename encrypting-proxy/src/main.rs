@@ -3,9 +3,11 @@
 
 use std::path::PathBuf;
 
+use anyhow::{Error, Result};
+
 use sapphire_encrypting_proxy as sep;
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = clap::Parser::parse();
 
     init_tracing(args.log_level);
@@ -13,10 +15,26 @@ fn main() {
     match args.command {
         Command::GenCsr {
             #[cfg(not(target_env = "sgx"))]
-            tls_private_key_path,
+            tls_secret_key_path,
+            subject,
             csr_path,
         } => {
-            let _gen_csr_span = tracing::info_span!("gen-csr").entered();
+            let _gen_csr_span = tracing::debug_span!("gen-csr").entered();
+            #[cfg(not(target_env = "sgx"))]
+            let secret_key = {
+                let secret_key_pem =
+                    std::fs::read_to_string(&tls_secret_key_path).map_err(|e| {
+                        Error::from(e)
+                            .context(format!("could not read {}", tls_secret_key_path.display()))
+                    })?;
+                p256::SecretKey::from_sec1_pem(&secret_key_pem)
+                    .map_err(|_| anyhow::anyhow!("invalid private key"))?
+            };
+            let csr_pem = sep::csr::generate(&secret_key, &subject)?;
+            std::fs::write(&csr_path, csr_pem).map_err(|e| {
+                Error::from(e).context(format!("failed to write to {}", csr_path.display()))
+            })?;
+            Ok(())
         }
         Command::Serve {
             listen_addr,
@@ -24,7 +42,7 @@ fn main() {
             max_request_size_bytes,
             runtime_public_key,
             #[cfg(not(target_env = "sgx"))]
-            tls_private_key_path,
+            tls_secret_key_path,
             tls_cert_path,
         } => {
             let server = sep::Server::new(sep::server::Config {
@@ -32,13 +50,17 @@ fn main() {
                 upstream: web3_gateway_url,
                 max_request_size_bytes,
                 runtime_public_key,
-                tls: tls_cert_path.map(|p| sep::server::TlsConfig {
-                    certificate: read_file(&p),
-                    #[cfg(not(target_env = "sgx"))]
-                    private_key: read_file(tls_private_key_path.as_ref().unwrap()),
-                    #[cfg(target_env = "sgx")]
-                    private_key: todo!(),
-                }),
+                tls: tls_cert_path
+                    .map(|p| {
+                        Ok::<_, Error>(sep::server::TlsConfig {
+                            certificate: read_file(&p)?,
+                            #[cfg(not(target_env = "sgx"))]
+                            secret_key: read_file(tls_secret_key_path.as_ref().unwrap())?,
+                            #[cfg(target_env = "sgx")]
+                            secret_key: todo!(),
+                        })
+                    })
+                    .transpose()?,
             })
             .expect("failed to start server");
             let num_threads: usize = env!("SAPPHIRE_PROXY_NUM_THREADS").parse().unwrap();
@@ -99,10 +121,20 @@ enum LogLevel {
 #[derive(Debug, clap::Subcommand)]
 enum Command {
     GenCsr {
-        /// The path to the PEM-encoded P-384 (secp384r1) private key used to sign the CSR.
+        /// The path to the SEC1 PEM-encoded P-256 (prime256v1) private key used to sign the CSR.
+        ///
+        /// Generated, for instance, by `openssl ecparam -genkey -name prime256v1 -noout`
         #[cfg(not(target_env = "sgx"))]
         #[clap(short = 'k', long, parse(try_from_os_str = ensure_file_exists))]
-        tls_private_key_path: PathBuf,
+        tls_secret_key_path: PathBuf,
+
+        /// The Relative Distinguised Name Sequence (RDNSequence) for the CSR's Subject,
+        /// with format as specified in https://datatracker.ietf.org/doc/html/rfc4514.
+        ///
+        /// For example:
+        /// `C=US,ST=California,L=San Francisco,O=Oasis Labs,CN=sapphire-proxy.oasislabs.com`
+        #[clap(long)]
+        subject: String,
 
         /// The path on disk to the PEM-encoded CSR that this command will generate .
         #[clap(short = 'o', long, parse(from_os_str))]
@@ -125,10 +157,10 @@ enum Command {
         #[clap(long, parse(try_from_str = parse_byte_array))]
         runtime_public_key: [u8; 32],
 
-        /// The path on disk to the PEM-encoded P-384 (secp384r1) private key.
+        /// The path on disk to the SEC1 PEM-encoded P-256 (prime256v1) private key.
         #[cfg(not(target_env = "sgx"))]
         #[clap(long, requires = "tls-cert-path", parse(try_from_os_str = ensure_file_exists))]
-        tls_private_key_path: Option<PathBuf>,
+        tls_secret_key_path: Option<PathBuf>,
 
         /// The path on disk to the TLS cert that this server will present.
         /// If provided, all requests will required to use TLS.
@@ -154,14 +186,12 @@ fn parse_byte_array<const N: usize>(input: &str) -> Result<[u8; N], hex::FromHex
 //     Ok(arr)
 // }
 
-fn ensure_file_exists(s: &std::ffi::OsStr) -> Result<PathBuf, &'static str> {
+fn ensure_file_exists(s: &std::ffi::OsStr) -> Result<PathBuf> {
     let p = PathBuf::from(s);
-    if !p.exists() {
-        return Err("file does not exist");
-    }
+    anyhow::ensure!(p.exists(), "file does not exist");
     Ok(p)
 }
 
-fn read_file(p: &std::path::Path) -> Vec<u8> {
-    std::fs::read(p).unwrap_or_else(|e| panic!("could not read {}: {e}", p.display()))
+fn read_file(p: &std::path::Path) -> Result<Vec<u8>> {
+    std::fs::read(p).map_err(|e| Error::from(e).context(format!("could not read {}", p.display())))
 }
