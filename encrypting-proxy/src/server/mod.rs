@@ -2,6 +2,7 @@ mod handler;
 
 use std::sync::Arc;
 
+use anyhow::Result;
 use bumpalo::Bump;
 use tiny_http::{Method, StatusCode};
 
@@ -16,9 +17,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(
-        config: Config,
-    ) -> Result<Arc<Self>, std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>> {
+    pub fn new(config: Config) -> Result<Arc<Self>> {
         let require_tls = config.tls.is_some();
         let server_cfg = tiny_http::ServerConfig {
             addr: &config.listen_addr,
@@ -28,7 +27,8 @@ impl Server {
             }),
         };
         Ok(Arc::new(Self {
-            server: tiny_http::Server::new(server_cfg)?,
+            server: tiny_http::Server::new(server_cfg)
+                .map_err(|e| anyhow::anyhow!("failed to start server: {e}"))?,
             require_tls,
             handler: RequestHandler::new(
                 SessionCipher::from_runtime_public_key(config.runtime_public_key),
@@ -92,11 +92,10 @@ impl Server {
             }
 
             const ROUTE_WEB3: &str = "/";
-            /// Returns a report that can be used for local attestation, or sent to the QE
-            /// to turn into a Quote for remote attestation.
-            const ROUTE_REPORT: &str = "/report";
+            // Returns a report signed by the quoting enclave used for remote attestation.
+            const ROUTE_QUOTE: &str = "/quote";
 
-            if req.url() == ROUTE_WEB3 || !(cfg!(target_env = "sgx") && req.url() == ROUTE_REPORT) {
+            if req.url() == ROUTE_WEB3 || !(cfg!(target_env = "sgx") && req.url() == ROUTE_QUOTE) {
                 respond_and_continue!(res, 404);
             }
 
@@ -110,7 +109,9 @@ impl Server {
                         if *req.method() != Method::$method {
                             respond_and_continue!(res, 405);
                         }
-                        with_alloc(|$alloc| $handler);
+                        if let Err(e) = with_alloc(|$alloc| $handler) {
+                            tracing::error!(error=%e, "handler error");
+                        }
                         continue;
                     }
                 }};
@@ -130,23 +131,25 @@ impl Server {
                 }
                 .unwrap(); // OOM or something bad
                 respond!(with_headers!(res, { "content-type": "application/json" })
-                    .with_data(res_buf.as_slice(), Some(res_buf.len())))
+                    .with_data(res_buf.as_slice(), Some(res_buf.len())));
+                Ok(())
             });
 
             #[cfg(target_env = "sgx")]
-            // This endpoint only returns a report and not a quote that can be used for remote
-            // attestation. To turn the report into a quote, the report needs to be sent to the
-            // Quoting Enclave (QE) through the Architectural Enclave Service Manager (AESM) service.
-            // This enclave can't communicate directly with the QE and must go through the untrusted
-            // AESM service. Thus, quoting is able to be kept outside of the enclave, and so is to
-            // reduce the TCB and allow the peripheral software to choose between centralized
-            // Intel Attestation Service (IAS) and not-as-centralized Data Center Attestation
-            // Primitives (DCAP) attestation.
-            route!(Get, ROUTE_REPORT, |alloc| {
+            route!(Get, ROUTE_QUOTE, |alloc| {
+                #[derive(serde::Serialize)]
+                struct ErrorResponse<'a> {
+                    error: &'a str,
+                }
+
+                #[derive(serde::Serialize)]
+                struct QuoteResponse<'a> {
+                    quote: &'a str,
+                }
                 macro_rules! respond_err {
                     ($status:literal, $msg:expr) => {{
                         let mut res_buf = Vec::with_capacity_in(256, alloc);
-                        serde_json::to_writer(&mut res_buf, &serde_json::json!({ "error": $msg }))
+                        serde_json::to_writer(&mut res_buf, &ErrorResponse { error: $msg })
                             .unwrap();
                         respond!(res
                             .with_status_code(StatusCode($status))
@@ -167,7 +170,7 @@ impl Server {
                             400,
                             "missing `challenge` query param. expected 32 base64url-encoded bytes"
                         );
-                        return;
+                        return Ok::<_, anyhow::Error>(());
                     }
                 };
                 if challenge_str.len() != CHALLENGE_B64_LEN {
@@ -175,7 +178,7 @@ impl Server {
                         400,
                         "invalid challenge. expected 32 base64url-encoded bytes"
                     );
-                    return;
+                    return Ok(());
                 }
                 let mut challenge = [0u8; 32];
                 if let Err(e) = base64::decode_config_slice(
@@ -183,18 +186,25 @@ impl Server {
                     base64::URL_SAFE_NO_PAD,
                     &mut challenge,
                 ) {
-                    respond_err!(400, format!("invalid challenge: {e}"));
-                    return;
+                    respond_err!(400, &format!("invalid challenge: {e}"));
+                    return Ok(());
                 }
-                let report = crate::sgx::get_report(challenge);
-                let report_bytes: &[u8] = report.as_ref();
-                respond!(res.with_data(report_bytes, Some(report_bytes.len())))
+                let quote = crate::sgx::get_quote(challenge)?;
+                let mut quote_b64_buf = Vec::with_capacity_in(quote.len() * 14 / 10, alloc);
+                let quote_b64_len =
+                    base64::encode_config_slice(quote, base64::STANDARD, &mut quote_b64_buf);
+                let quote_b64 =
+                    unsafe { std::str::from_utf8_unchecked(&quote_b64_buf[..quote_b64_len]) };
+                let mut res_buf = Vec::with_capacity_in(quote_b64.len() + 32, alloc);
+                serde_json::to_writer(&mut res_buf, &QuoteResponse { quote: quote_b64 })?;
+                respond!(res.with_data(res_buf.as_slice(), Some(res_buf.len())));
+                Ok(())
             });
         }
     }
 }
 
-fn with_alloc<T>(f: impl FnOnce(&Bump) -> T) -> T {
+fn with_alloc<T>(f: impl FnOnce(&Bump) -> Result<T>) -> Result<T> {
     thread_local!(static BUMP: std::cell::RefCell<Bump> = Default::default());
     BUMP.with(|bump_cell| {
         let mut bump = bump_cell.borrow_mut();

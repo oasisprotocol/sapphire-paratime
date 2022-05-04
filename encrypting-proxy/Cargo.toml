@@ -31,18 +31,19 @@ hmac = "0.11.0"
 rand = "0.8.5"
 sha2 = "0.9.9"
 x25519-dalek = "=1.1.1" # Unpin when zeroize dep floats again (clashes with tiny_http).
-zeroize = "1.5.4"
 # tls (csr)
 der = "0.6.0-pre.2"
 p256 = { version = "0.10.1", features = ["pem"] } # Consider switching to p384 once its arithmetic is fixed (https://github.com/RustCrypto/elliptic-curves/pull/513).
 spki = "0.6.0-pre.2"
 x509-cert = "0.0.2"
+zeroize = "1.5.4"
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 p256 = { version = "0.10.1", features = ["arithmetic", "pem"] }
 clap = { version = "3.1.12", default-features = true, features = ["derive", "cargo"] }
 
 [target.'cfg(target_env = "sgx")'.dependencies]
+aesm-client = "0.5.3"
 tracing = { version = "0.1.32", features = ["release_max_level_info"] }
 sgx-isa = { git = "https://github.com/fortanix/rust-sgx" } # Use crates.io when >0.3.3
 
