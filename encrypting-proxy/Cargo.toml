@@ -13,6 +13,8 @@ threads = 16           # must be at least 2 or else ACME verification cannot pro
 anyhow = "1.0.56"
 base64 = "0.13.0"
 clap = { version = "3.1.12", default-features = false, features = ["derive", "std"] }
+tracing = "0.1.32"
+tracing-subscriber = { version = "0.3.9", features = ["json"] }
 # server
 bumpalo = { version = "3.9.1", features = ["allocator_api"] }
 hex = { version = "0.4.3", features = ["serde"] }
@@ -21,8 +23,6 @@ serde = { version = "1.0.136", features = ["derive"] }
 serde_json = { version = "1.0.79", features = ["raw_value"] }
 thiserror = "1.0.30"
 tiny_http = { version = "0.11.0", features = ["ssl-rustls"] }
-tracing = "0.1.32"
-tracing-subscriber = { version = "0.3.9", features = ["json"] }
 ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 # crypto

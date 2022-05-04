@@ -1,5 +1,6 @@
 use std::lazy::{SyncLazy as Lazy, SyncOnceCell as OnceCell};
 
+use hmac::{Mac, NewMac};
 use p256::pkcs8::der::pem;
 use sgx_isa::*;
 use sha2::Digest;
@@ -11,24 +12,22 @@ static TLS_CERT_FINGERPRINT: OnceCell<[u8; 32]> = OnceCell::new();
 pub fn tls_secret_key() -> &'static p256::SecretKey {
     static TLS_SECRET_KEY: Lazy<p256::SecretKey> = Lazy::new(|| {
         // The key requires 256 bits of entropy, but a seal key is only 128 bits.
-        // We use the SGX KDF, which we assume is at least as good as a library KDF, by
-        // concatenating two keys.
-        let mut key_req = Keyrequest {
+        // Compared to sealing a generated key, this requires less code.
+        type Kdf = hmac::Hmac<sha2::Sha512Trunc256>;
+        let mut kdf = Kdf::new_from_slice(b"sapphire-encrypting-proxy-tls-key").unwrap();
+        let key_req = Keyrequest {
             keyname: Keyname::Seal as _,
             keypolicy: Keypolicy::MRENCLAVE,
             isvsvn: SELF_REPORT.isvsvn,
             cpusvn: SELF_REPORT.cpusvn,
             attributemask: [0xff; 2],
-            keyid: [0u8; 32],
             miscmask: 0xff,
             ..Default::default()
         };
-        let mut scalar = zeroize::Zeroizing::new([0u8; 32]);
-        let (scalar_l, scalar_h) = scalar.split_at_mut(16);
-        scalar_l.copy_from_slice(&key_req.egetkey().unwrap());
-        key_req.keyid[0] = 1;
-        scalar_h.copy_from_slice(&key_req.egetkey().unwrap());
-        p256::SecretKey::from_be_bytes(&*scalar).unwrap()
+        let key = zeroize::Zeroizing::new(key_req.egetkey().expect("failed to egetkey"));
+        kdf.update(&*key);
+        let digest = kdf.finalize();
+        p256::SecretKey::from_be_bytes(&digest.into_bytes()[..32]).unwrap() // infallible
     });
     &*TLS_SECRET_KEY
 }
