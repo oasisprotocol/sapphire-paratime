@@ -43,7 +43,6 @@ p256 = { version = "0.10.1", features = ["arithmetic", "pem"] }
 clap = { version = "3.1.12", default-features = true, features = ["derive", "cargo"] }
 
 [target.'cfg(target_env = "sgx")'.dependencies]
-aesm-client = "0.5.3"
 tracing = { version = "0.1.32", features = ["release_max_level_info"] }
 sgx-isa = { git = "https://github.com/fortanix/rust-sgx" } # Use crates.io when >0.3.3
 

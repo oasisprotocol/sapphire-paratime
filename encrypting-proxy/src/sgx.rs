@@ -1,7 +1,9 @@
-use std::lazy::{SyncLazy as Lazy, SyncOnceCell as OnceCell};
+use std::{
+    io::{BufReader, Read, Write},
+    lazy::{SyncLazy as Lazy, SyncOnceCell as OnceCell},
+};
 
-use aesm_client::{sgx::AesmClientExt, AesmClient};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use hmac::{Mac, NewMac};
 use p256::pkcs8::der::pem;
 use sgx_isa::*;
@@ -43,16 +45,14 @@ pub fn record_tls_cert_fingerprint(cert_pem: &[u8]) {
         .expect("TLS cert fingerprint already set");
 }
 
-macro_rules! bytes {
-    ($src:ident) => {{
-        let sl: &[u8] = $src.as_ref();
-        let mut bytes = Vec::with_capacity(sl.len());
-        bytes.copy_from_slice(sl.as_ref());
-        bytes
-    }};
+pub fn get_quote(challenge: [u8; 32]) -> Result<Vec<u8>> {
+    get_quote_in(challenge, std::alloc::Global)
 }
 
-pub fn get_quote(challenge: [u8; 32]) -> Result<Vec<u8>> {
+pub(crate) fn get_quote_in<A: std::alloc::Allocator>(
+    challenge: [u8; 32],
+    alloc: A,
+) -> Result<Vec<u8, A>> {
     let mut report_data = [0u8; 64];
     let (cert_ack, challenge_response) = report_data.split_at_mut(64);
     match TLS_CERT_FINGERPRINT.get() {
@@ -68,36 +68,17 @@ pub fn get_quote(challenge: [u8; 32]) -> Result<Vec<u8>> {
     }
     challenge_response.copy_from_slice(&challenge);
     let report = Report::for_target(&*TARGET_INFO, &report_data);
+    let report_bytes: &[u8] = report.as_ref();
+    let report_len_bytes = (report_bytes.len() as u32).to_le_bytes();
 
-    let aesm_client = AesmClient::new(std::net::TcpStream::connect("127.0.0.1:23295")?);
-    let att_key_ids = aesm_client
-        .get_supported_att_key_ids()
-        .map_err(|e| anyhow!("failed to get attestation keys: {e}"))?;
-    let att_key_id = att_key_ids
-        .into_iter()
-        .find(|kid| {
-            // Taken from https://github.com/fortanix/rust-sgx/blob/6410015/intel-sgx/aesm-client/tests/live_quote.rs
-            const ALG_OFFSET: usize = 154;
-            let mut alg_id_bytes = [0u8; std::mem::size_of::<u32>()];
-            alg_id_bytes.copy_from_slice(&kid[ALG_OFFSET..ALG_OFFSET + 4]);
-            let alg_id = u32::from_le_bytes(alg_id_bytes);
-            alg_id == 2 // SGX_QL_ALG_ECDSA_P256
-        })
-        .ok_or_else(|| {
-            anyhow!(
-                "failed to locate ECDSA attestation key. ECDSA attestation may not be supported"
-            )
-        })?;
-    aesm_client
-        .init_quote_ex(att_key_id.clone())
-        .map_err(|e| anyhow!("failed to init ECDSA attestation: {e}"))?;
-    let quote_result = aesm_client
-        .get_quote_ex(att_key_id, bytes!(report), Some(bytes!(TARGET_INFO)), {
-            let mut nonce = vec![0u8; 16];
-            rand::Rng::fill(&mut rand::rngs::OsRng, nonce.as_mut_slice());
-            nonce
-        })
-        .map_err(|e| anyhow!("failed to get ECDSA quote: {e}"))?;
-    // Optionally, verify the `quote_result.qe_report()` to ensure that the AESM isn't faulty.
-    Ok(quote_result.quote().to_vec())
+    let mut quoter = BufReader::new(std::net::TcpStream::connect("dcap-quote")?);
+    quoter.get_mut().write_all(&report_len_bytes)?;
+    quoter.get_mut().write_all(report.as_ref())?;
+    let mut quote_len_bytes = [0u8; std::mem::size_of::<u32>()];
+    quoter.read_exact(&mut quote_len_bytes)?;
+    let quote_len = u32::from_le_bytes(quote_len_bytes) as usize;
+    anyhow::ensure!(quote_len < 4096, "received unexpectedly large quote");
+    let mut quote = Vec::with_capacity_in(quote_len, alloc);
+    quoter.read_exact(&mut quote)?;
+    Ok(quote)
 }

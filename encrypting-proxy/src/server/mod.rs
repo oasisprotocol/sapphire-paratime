@@ -189,7 +189,7 @@ impl Server {
                     respond_err!(400, &format!("invalid challenge: {e}"));
                     return Ok(());
                 }
-                let quote = crate::sgx::get_quote(challenge)?;
+                let quote = crate::sgx::get_quote_in(challenge, alloc)?;
                 let mut quote_b64_buf = Vec::with_capacity_in(quote.len() * 14 / 10, alloc);
                 let quote_b64_len =
                     base64::encode_config_slice(quote, base64::STANDARD, &mut quote_b64_buf);
