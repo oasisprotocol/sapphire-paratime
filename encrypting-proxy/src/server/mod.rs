@@ -134,6 +134,14 @@ impl Server {
             });
 
             #[cfg(target_env = "sgx")]
+            // This endpoint only returns a report and not a quote that can be used for remote
+            // attestation. To turn the report into a quote, the report needs to be sent to the
+            // Quoting Enclave (QE) through the Architectural Enclave Service Manager (AESM) service.
+            // This enclave can't communicate directly with the QE and must go through the untrusted
+            // AESM service. Thus, quoting is able to be kept outside of the enclave, and so is to
+            // reduce the TCB and allow the peripheral software to choose between centralized
+            // Intel Attestation Service (IAS) and not-as-centralized Data Center Attestation
+            // Primitives (DCAP) attestation.
             route!(Get, ROUTE_REPORT, |alloc| {
                 macro_rules! respond_err {
                     ($status:literal, $msg:expr) => {{
@@ -155,7 +163,10 @@ impl Server {
                         &req_url[start..(start + CHALLENGE_B64_LEN)]
                     }
                     None => {
-                        respond_err!(400, "missing challenge query param");
+                        respond_err!(
+                            400,
+                            "missing `challenge` query param. expected 32 base64url-encoded bytes"
+                        );
                         return;
                     }
                 };

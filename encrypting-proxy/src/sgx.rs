@@ -5,6 +5,7 @@ use sgx_isa::*;
 use sha2::Digest;
 
 static SELF_REPORT: Lazy<Report> = Lazy::new(Report::for_self);
+static TARGET_INFO: Lazy<Targetinfo> = Lazy::new(|| Targetinfo::from(SELF_REPORT.clone()));
 static TLS_CERT_FINGERPRINT: OnceCell<[u8; 32]> = OnceCell::new();
 
 pub fn tls_secret_key() -> &'static p256::SecretKey {
@@ -44,15 +45,23 @@ pub fn record_tls_cert_fingerprint(cert_pem: &[u8]) {
 pub fn get_report(challenge: [u8; 32]) -> Report {
     let mut report_data = [0u8; 64];
     let (cert_ack, challenge_response) = report_data.split_at_mut(64);
-    if let Some(fp) = TLS_CERT_FINGERPRINT.get() {
-        // The enclave reports what its key is for the client to compare to the TLS cert.
-        cert_ack.copy_from_slice(fp);
+    match TLS_CERT_FINGERPRINT.get() {
+        Some(fp) => {
+            // The enclave reports what its key is for the client to compare to the TLS cert.
+            cert_ack.copy_from_slice(fp);
+        }
+        None => {
+            tracing::warn!(
+                "`record_tls_cert_fingerprint` not called. clients cannot verify the TLS cert"
+            );
+        }
     }
     challenge_response.copy_from_slice(&challenge);
-    let target_info = Targetinfo::from(SELF_REPORT.clone());
-    Report::for_target(&target_info, &report_data)
+    Report::for_target(&*TARGET_INFO, &report_data)
 
-    // let aesm_client = AesmClient::new("");
+    // If the enclave were made to also obtain the quote, this code would be used:
+    //
+    // let aesm_client = AesmClient::new("127.0.0.1:9999");
     // let att_key_ids = aesm_client
     //     .get_supported_att_key_ids()
     //     .map_err(|e| anyhow!("failed to get attestation keys: {e}"))?;
