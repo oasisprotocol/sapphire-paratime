@@ -94,6 +94,8 @@ mod tests {
         let mut cp = std::process::Command::new("openssl")
             .args(["req", "-verify", "-noout"])
             .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
             .spawn()?;
         {
             std::io::Write::write_all(&mut cp.stdin.take().unwrap(), &csr)?;
