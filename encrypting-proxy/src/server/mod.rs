@@ -71,6 +71,9 @@ impl Server {
             });
 
             macro_rules! respond {
+                ($res:expr, $status:literal) => {
+                    respond!($res.with_status_code(StatusCode($status)))
+                };
                 ($res:expr) => {{
                     if let Err(e) = req.respond($res) {
                         tracing::error!(error=%e, "error responding to request");
@@ -78,13 +81,10 @@ impl Server {
                 }};
             }
             macro_rules! respond_and_continue {
-                ($res:expr) => {{
-                    respond!($res);
+                ($res:expr$(, $status:literal)?) => {{
+                    respond!($res$(, $status)?);
                     continue;
                 }};
-                ($res:expr, $status:literal) => {
-                    respond_and_continue!($res.with_status_code(StatusCode($status)))
-                };
             }
 
             if self.require_tls && !req.secure() {
@@ -92,9 +92,11 @@ impl Server {
             }
 
             const ROUTE_WEB3: &str = "/";
-            const ROUTE_QUOTE: &str = "/quote";
+            /// Returns a report that can be used for local attestation, or sent to the QE
+            /// to turn into a Quote for remote attestation.
+            const ROUTE_REPORT: &str = "/report";
 
-            if req.url() == ROUTE_WEB3 || !(cfg!(target_env = "sgx") && req.url() == ROUTE_QUOTE) {
+            if req.url() == ROUTE_WEB3 || !(cfg!(target_env = "sgx") && req.url() == ROUTE_REPORT) {
                 respond_and_continue!(res, 404);
             }
 
@@ -132,14 +134,50 @@ impl Server {
             });
 
             #[cfg(target_env = "sgx")]
-            route!(Get, ROUTE_QUOTE, |alloc| {
-                match crate::attestation::get_quote(alloc) {
-                    Ok(quote) => respond!(res.with_data(quote.as_slice(), Some(quote.len()))),
-                    Err(e) => {
-                        tracing::error!(error=?e, "failed to retrieve quote");
-                        respond!(res.with_status_code(StatusCode(500)))
-                    }
+            route!(Get, ROUTE_REPORT, |alloc| {
+                macro_rules! respond_err {
+                    ($status:literal, $msg:expr) => {{
+                        let mut res_buf = Vec::with_capacity_in(256, alloc);
+                        serde_json::to_writer(&mut res_buf, &serde_json::json!({ "error": $msg }))
+                            .unwrap();
+                        respond!(res
+                            .with_status_code(StatusCode($status))
+                            .with_data(res_buf.as_slice(), Some(res_buf.len())))
+                    }};
                 }
+
+                const CHALLENGE_PARAM: &str = "challenge=";
+                const CHALLENGE_B64_LEN: usize = 43;
+                let req_url = req.url();
+                let challenge_str = match req.url().find(CHALLENGE_PARAM) {
+                    Some(pos) => {
+                        let start = pos + CHALLENGE_PARAM.len();
+                        &req_url[start..(start + CHALLENGE_B64_LEN)]
+                    }
+                    None => {
+                        respond_err!(400, "missing challenge query param");
+                        return;
+                    }
+                };
+                if challenge_str.len() != CHALLENGE_B64_LEN {
+                    respond_err!(
+                        400,
+                        "invalid challenge. expected 32 base64url-encoded bytes"
+                    );
+                    return;
+                }
+                let mut challenge = [0u8; 32];
+                if let Err(e) = base64::decode_config_slice(
+                    challenge_str,
+                    base64::URL_SAFE_NO_PAD,
+                    &mut challenge,
+                ) {
+                    respond_err!(400, format!("invalid challenge: {e}"));
+                    return;
+                }
+                let report = crate::sgx::get_report(challenge);
+                let report_bytes: &[u8] = report.as_ref();
+                respond!(res.with_data(report_bytes, Some(report_bytes.len())))
             });
         }
     }

@@ -2,11 +2,11 @@
 #![feature(allocator_api, iter_intersperse, split_array)]
 #![cfg_attr(target_env = "sgx", feature(once_cell))]
 
-#[cfg(target_env = "sgx")]
-pub mod attestation;
 pub mod crypto;
-pub mod csr;
 pub mod server;
+#[cfg(target_env = "sgx")]
+pub mod sgx;
+pub mod tls;
 
 pub use crate::server::Server;
 

@@ -3,9 +3,9 @@
 use std::sync::atomic::{AtomicU64, Ordering::SeqCst};
 
 use deoxysii::{DeoxysII, NONCE_SIZE, TAG_SIZE};
-use hmac::Mac;
+use hmac::{Mac, NewMac};
 
-type Kdf = hmac::Hmac<sha2::Sha512_256>;
+type Kdf = hmac::Hmac<sha2::Sha512Trunc256>;
 type Nonce = [u8; deoxysii::NONCE_SIZE];
 pub type RequestId = u64;
 

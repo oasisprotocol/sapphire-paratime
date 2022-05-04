@@ -20,17 +20,11 @@ fn main() -> Result<()> {
             csr_path,
         } => {
             let _gen_csr_span = tracing::debug_span!("gen-csr").entered();
+            #[cfg(target_env = "sgx")]
+            let tls_secret_key = sep::tls::load_secret_key();
             #[cfg(not(target_env = "sgx"))]
-            let secret_key = {
-                let secret_key_pem =
-                    std::fs::read_to_string(&tls_secret_key_path).map_err(|e| {
-                        Error::from(e)
-                            .context(format!("could not read {}", tls_secret_key_path.display()))
-                    })?;
-                p256::SecretKey::from_sec1_pem(&secret_key_pem)
-                    .map_err(|_| anyhow::anyhow!("invalid private key"))?
-            };
-            let csr_pem = sep::csr::generate(&secret_key, &subject)?;
+            let tls_secret_key = &sep::tls::load_secret_key_from(&tls_secret_key_path)?;
+            let csr_pem = sep::tls::csr::generate(tls_secret_key, &subject)?;
             std::fs::write(&csr_path, csr_pem).map_err(|e| {
                 Error::from(e).context(format!("failed to write to {}", csr_path.display()))
             })?;
@@ -52,12 +46,21 @@ fn main() -> Result<()> {
                 runtime_public_key,
                 tls: tls_cert_path
                     .map(|p| {
+                        let cert_pem = read_file(&p)?;
+                        #[cfg(target_env = "sgx")]
+                        sep::sgx::record_tls_cert_fingerprint(&cert_pem);
                         Ok::<_, Error>(sep::server::TlsConfig {
-                            certificate: read_file(&p)?,
+                            certificate: cert_pem,
                             #[cfg(not(target_env = "sgx"))]
                             secret_key: read_file(tls_secret_key_path.as_ref().unwrap())?,
                             #[cfg(target_env = "sgx")]
-                            secret_key: todo!(),
+                            // This API is not great, but it can't be blamed for not expecting
+                            // keys in uncommon formats.
+                            secret_key: sep::tls::load_secret_key()
+                                .to_pem(Default::default())
+                                .unwrap()
+                                .as_bytes()
+                                .to_vec(),
                         })
                     })
                     .transpose()?,
