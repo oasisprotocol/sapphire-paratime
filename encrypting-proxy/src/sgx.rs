@@ -68,8 +68,6 @@ pub(crate) fn get_quote_in<A: std::alloc::Allocator>(
     }
     challenge_response.copy_from_slice(&challenge);
     let report = Report::for_target(&*TARGET_INFO, &report_data);
-    let report_bytes: &[u8] = report.as_ref();
-    let report_len_bytes = (report_bytes.len() as u16).to_le_bytes();
 
     let mut quoter = BufReader::new(std::net::TcpStream::connect("dcap-quote")?);
     quoter.get_mut().write_all(report.as_ref())?;

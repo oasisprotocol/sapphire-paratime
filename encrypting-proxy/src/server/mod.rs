@@ -14,6 +14,7 @@ pub struct Server {
     server: tiny_http::Server,
     handler: RequestHandler<SessionCipher, Web3GatewayUpstream>,
     require_tls: bool,
+    config: ConfigEssentials,
 }
 
 impl Server {
@@ -32,9 +33,13 @@ impl Server {
             require_tls,
             handler: RequestHandler::new(
                 SessionCipher::from_runtime_public_key(config.runtime_public_key),
-                Web3GatewayUpstream::new(config.upstream),
+                Web3GatewayUpstream::new(config.upstream.clone()),
                 config.max_request_size_bytes,
             ),
+            config: ConfigEssentials {
+                upstream: config.upstream,
+                runtime_public_key: config.runtime_public_key,
+            },
         }))
     }
 
@@ -145,6 +150,7 @@ impl Server {
                 #[derive(serde::Serialize)]
                 struct QuoteResponse<'a> {
                     quote: &'a str,
+                    config: &'a ConfigEssentials,
                 }
                 macro_rules! respond_err {
                     ($status:literal, $msg:expr) => {{
@@ -196,7 +202,13 @@ impl Server {
                 let quote_b64 =
                     unsafe { std::str::from_utf8_unchecked(&quote_b64_buf[..quote_b64_len]) };
                 let mut res_buf = Vec::with_capacity_in(quote_b64.len() + 32, alloc);
-                serde_json::to_writer(&mut res_buf, &QuoteResponse { quote: quote_b64 })?;
+                serde_json::to_writer(
+                    &mut res_buf,
+                    &QuoteResponse {
+                        quote: quote_b64,
+                        config: &self.config,
+                    },
+                )?;
                 respond!(res.with_data(res_buf.as_slice(), Some(res_buf.len())));
                 Ok(())
             });
@@ -229,6 +241,13 @@ pub struct Config {
     pub max_request_size_bytes: usize,
 
     /// The public key of the Sapphire ParaTime.
+    pub runtime_public_key: [u8; 32],
+}
+
+#[cfg(target_env = "sgx")]
+#[derive(serde::Serialize)]
+pub struct ConfigEssentials {
+    pub upstream: url::Url,
     pub runtime_public_key: [u8; 32],
 }
 
