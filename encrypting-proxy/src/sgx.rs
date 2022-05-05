@@ -69,14 +69,13 @@ pub(crate) fn get_quote_in<A: std::alloc::Allocator>(
     challenge_response.copy_from_slice(&challenge);
     let report = Report::for_target(&*TARGET_INFO, &report_data);
     let report_bytes: &[u8] = report.as_ref();
-    let report_len_bytes = (report_bytes.len() as u32).to_le_bytes();
+    let report_len_bytes = (report_bytes.len() as u16).to_le_bytes();
 
     let mut quoter = BufReader::new(std::net::TcpStream::connect("dcap-quote")?);
-    quoter.get_mut().write_all(&report_len_bytes)?;
     quoter.get_mut().write_all(report.as_ref())?;
-    let mut quote_len_bytes = [0u8; std::mem::size_of::<u32>()];
+    let mut quote_len_bytes = [0u8; std::mem::size_of::<u16>()];
     quoter.read_exact(&mut quote_len_bytes)?;
-    let quote_len = u32::from_le_bytes(quote_len_bytes) as usize;
+    let quote_len = u16::from_le_bytes(quote_len_bytes) as usize;
     anyhow::ensure!(quote_len < 4096, "received unexpectedly large quote");
     let mut quote = Vec::with_capacity_in(quote_len, alloc);
     quoter.read_exact(&mut quote)?;

@@ -85,7 +85,9 @@ fn init_tracing(log_level: LogLevel) {
         LogLevel::Error => tracing::Level::ERROR,
         LogLevel::Warn => tracing::Level::WARN,
         LogLevel::Info => tracing::Level::INFO,
+        #[cfg(any(not(target_env = "sgx"), debug_assertions))]
         LogLevel::Debug => tracing::Level::DEBUG,
+        #[cfg(any(not(target_env = "sgx"), debug_assertions))]
         LogLevel::Trace => tracing::Level::TRACE,
     };
     let base_subscriber = tracing_subscriber::fmt()
