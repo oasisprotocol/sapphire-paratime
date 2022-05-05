@@ -23,21 +23,28 @@ impl UsercallExtension for DcapQuoteExtension {
             if addr != "dcap-quote" {
                 return Ok(None); // Treat the address as an IP address, the default behavior.
             }
-            let svc: Box<dyn AsyncStream> = Box::new(DcapQuoteService {
-                state: DcapQuoteServiceState::default(),
-                span: tracing::info_span!("quote-request"),
-            });
+            let svc: Box<dyn AsyncStream> = Box::new(DcapQuoteService::new(dcap_ql::quote));
             Ok(Some(svc))
         }
         .boxed_local()
     }
 }
 
-#[derive(Debug)]
 #[pin_project::pin_project]
 struct DcapQuoteService {
+    quoter: fn(&Report) -> Result<Vec<u8>, dcap_ql::Quote3Error>,
     state: DcapQuoteServiceState,
     span: tracing::Span,
+}
+
+impl DcapQuoteService {
+    fn new(quoter: fn(&Report) -> Result<Vec<u8>, dcap_ql::Quote3Error>) -> Self {
+        Self {
+            quoter,
+            state: DcapQuoteServiceState::default(),
+            span: tracing::info_span!("quote-request"),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -76,7 +83,7 @@ impl tokio::io::AsyncRead for DcapQuoteService {
                 let mut total_bytes_written = 0;
                 if *position < LEN_LEN {
                     let length_bytes_written =
-                        buf.write(&quote.len().to_le_bytes()[*position..])?;
+                        buf.write(&(quote.len() as u16).to_le_bytes()[*position..])?;
                     *position += length_bytes_written;
                     total_bytes_written += length_bytes_written;
                 }
@@ -127,7 +134,7 @@ impl tokio::io::AsyncWrite for DcapQuoteService {
                             )))
                         }
                     };
-                    match dcap_ql::quote(&report) {
+                    match (this.quoter)(&report) {
                         Ok(quote) => {
                             *this.state =
                                 DcapQuoteServiceState::WritingQuote { quote, position: 0 };
@@ -156,5 +163,104 @@ impl tokio::io::AsyncWrite for DcapQuoteService {
     fn poll_shutdown(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
         self.state = Default::default();
         Poll::Ready(Ok(()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::task::Context;
+
+    use tokio::io::{AsyncRead, AsyncWrite};
+
+    const MOCK_QUOTE: &[u8] = &[1, 2, 3, 4, 5];
+
+    fn mock_quoter(_report: &Report) -> Result<Vec<u8>, dcap_ql::Quote3Error> {
+        Ok(MOCK_QUOTE.to_vec())
+    }
+
+    macro_rules! extract_ready {
+        ($poll:expr) => {
+            match $poll {
+                Poll::Ready(v) => v,
+                _ => unreachable!(),
+            }
+        };
+    }
+
+    #[test]
+    fn protocol_happy_path() {
+        let waker = futures_util::task::noop_waker();
+        let mut cx = Context::from_waker(&waker);
+        let mut service = Pin::new(Box::new(DcapQuoteService::new(mock_quoter)));
+
+        let report = Report::default();
+        let report_bytes: &[u8] = report.as_ref();
+        let bytes_written =
+            extract_ready!(service.as_mut().poll_write(&mut cx, report_bytes)).unwrap();
+        assert_eq!(bytes_written, report_bytes.len());
+
+        let mut read_buf = vec![0u8; 10];
+        let bytes_read =
+            extract_ready!(service.as_mut().poll_read(&mut cx, &mut read_buf)).unwrap();
+        assert_eq!(bytes_read, MOCK_QUOTE.len() + std::mem::size_of::<u16>());
+        assert_eq!(&read_buf[..2], (MOCK_QUOTE.len() as u16).to_le_bytes());
+        assert_eq!(&read_buf[2..bytes_read], MOCK_QUOTE);
+    }
+
+    #[test]
+    fn protocol_partial() {
+        let waker = futures_util::task::noop_waker();
+        let mut cx = Context::from_waker(&waker);
+        let mut service = Pin::new(Box::new(DcapQuoteService::new(mock_quoter)));
+
+        let report = Report::default();
+        let report_bytes: &[u8] = report.as_ref();
+        let bytes_written =
+            extract_ready!(service.as_mut().poll_write(&mut cx, &report_bytes[0..10])).unwrap();
+        assert_eq!(bytes_written, 10);
+        let bytes_written =
+            extract_ready!(service.as_mut().poll_write(&mut cx, &report_bytes[10..])).unwrap();
+        assert_eq!(bytes_written, report_bytes.len() - 10);
+
+        let mut read_buf = vec![0u8; 10];
+        let bytes_read =
+            extract_ready!(service.as_mut().poll_read(&mut cx, &mut read_buf[..1])).unwrap();
+        assert_eq!(bytes_read, 1);
+        let bytes_read =
+            extract_ready!(service.as_mut().poll_read(&mut cx, &mut read_buf[1..])).unwrap();
+        assert_eq!(bytes_read, MOCK_QUOTE.len() + 1);
+        assert_eq!(&read_buf[..2], (MOCK_QUOTE.len() as u16).to_le_bytes());
+        assert_eq!(
+            &read_buf[2..(MOCK_QUOTE.len() + std::mem::size_of::<u16>())],
+            MOCK_QUOTE
+        );
+    }
+
+    #[test]
+    fn protocol_early_read() {
+        let waker = futures_util::task::noop_waker();
+        let mut cx = Context::from_waker(&waker);
+        let mut service = Pin::new(Box::new(DcapQuoteService::new(mock_quoter)));
+
+        let mut read_buf = vec![0u8; 10];
+        let read_result = extract_ready!(service.as_mut().poll_read(&mut cx, &mut read_buf));
+        assert!(read_result.is_err());
+    }
+
+    #[test]
+    fn protocol_late_write() {
+        let waker = futures_util::task::noop_waker();
+        let mut cx = Context::from_waker(&waker);
+        let mut service = Pin::new(Box::new(DcapQuoteService::new(mock_quoter)));
+
+        let report = Report::default();
+        let report_bytes: &[u8] = report.as_ref();
+        extract_ready!(service.as_mut().poll_write(&mut cx, report_bytes)).unwrap();
+        assert_eq!(
+            extract_ready!(service.as_mut().poll_write(&mut cx, report_bytes)).unwrap(),
+            0
+        );
     }
 }
