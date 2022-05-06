@@ -17,17 +17,13 @@ fn main() -> Result<()> {
             #[cfg(not(target_env = "sgx"))]
             tls_secret_key_path,
             subject,
-            csr_path,
         } => {
             let _gen_csr_span = tracing::debug_span!("gen-csr").entered();
             #[cfg(target_env = "sgx")]
             let tls_secret_key = sep::tls::load_secret_key();
             #[cfg(not(target_env = "sgx"))]
             let tls_secret_key = &sep::tls::load_secret_key_from(&tls_secret_key_path)?;
-            let csr_pem = sep::tls::csr::generate(tls_secret_key, &subject)?;
-            std::fs::write(&csr_path, csr_pem).map_err(|e| {
-                Error::from(e).context(format!("failed to write to {}", csr_path.display()))
-            })?;
+            println!("{}", sep::tls::csr::generate(tls_secret_key, &subject)?);
             Ok(())
         }
         Command::Serve {
@@ -69,11 +65,13 @@ fn main() -> Result<()> {
             let num_threads: usize = env!("SAPPHIRE_PROXY_NUM_THREADS").parse().unwrap();
             // The main thread will also serve requests.
             let num_extra_threads = if num_threads == 1 { 0 } else { num_threads - 1 };
+            tracing::debug!("starting {num_threads} server threads");
             for _ in 0..num_extra_threads {
                 let server = server.clone();
+                tracing::debug!("starting aux server thread");
                 std::thread::spawn(move || server.serve());
             }
-            tracing::info!("started server");
+            tracing::info!("starting server on main thread");
             server.serve();
         }
     }
@@ -140,10 +138,6 @@ enum Command {
         /// `C=US,ST=California,L=San Francisco,O=Oasis Labs,CN=sapphire-proxy.oasislabs.com`
         #[clap(long)]
         subject: String,
-
-        /// The path on disk to the PEM-encoded CSR that this command will generate .
-        #[clap(short = 'o', long, parse(from_os_str))]
-        csr_path: PathBuf,
     },
     Serve {
         /// The server listen address.
@@ -155,7 +149,7 @@ enum Command {
         web3_gateway_url: url::Url,
 
         /// The maximum size of a Web3 request that this server will process.
-        #[clap(hide = true, default_value = "1024 * 1024")]
+        #[clap(long, hide = true, default_value = "1048576")]
         max_request_size_bytes: usize,
 
         /// The public key of the Sapphire paratime to which this proxy is indirectly connected.

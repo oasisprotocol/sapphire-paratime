@@ -2,6 +2,9 @@
 members = ["encrypting-proxy", "encrypting-proxy-runner"]
 resolver = "2"
 
+[profile.dev]
+panic = "abort"
+
 [profile.release]
 codegen-units = 1
 lto = true

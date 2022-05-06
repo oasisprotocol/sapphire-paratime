@@ -49,6 +49,10 @@ impl DcapQuoteService {
 
 #[derive(Debug)]
 enum DcapQuoteServiceState {
+    WritingTargetInfo {
+        target_info: Box<sgx_isa::Targetinfo>,
+        position: usize
+    },
     ReadingReport {
         report: Box<[u8; Report::UNPADDED_SIZE]>,
         position: usize,
@@ -62,8 +66,8 @@ enum DcapQuoteServiceState {
 
 impl Default for DcapQuoteServiceState {
     fn default() -> Self {
-        Self::ReadingReport {
-            report: Box::new([0u8; Report::UNPADDED_SIZE]),
+        Self::WritingTargetInfo {
+            target_info: Box::new(dcap_ql::target_info().unwrap()), // TODO: no unwrap
             position: 0,
         }
     }
@@ -78,6 +82,19 @@ impl tokio::io::AsyncRead for DcapQuoteService {
         let mut this = self.project();
         let _entered = this.span.enter();
         match &mut this.state {
+            DcapQuoteServiceState::WritingTargetInfo { target_info, position } => {
+                let ti_bytes: &[u8] = (**target_info).as_ref();
+                let bytes_written = buf.write(&ti_bytes[*position..])?;
+                *position += bytes_written;
+                if *position == ti_bytes.len() {
+                    tracing::debug!("wrote target info. switching to reading report");
+                    *this.state = DcapQuoteServiceState::ReadingReport {
+                        report: Box::new([0u8; Report::UNPADDED_SIZE]),
+                        position: 0,
+                    };
+                }
+                Poll::Ready(Ok(bytes_written))
+            }
             DcapQuoteServiceState::WritingQuote { quote, position } => {
                 const LEN_LEN: usize = std::mem::size_of::<u16>();
                 let mut total_bytes_written = 0;
@@ -136,6 +153,7 @@ impl tokio::io::AsyncWrite for DcapQuoteService {
                     };
                     match (this.quoter)(&report) {
                         Ok(quote) => {
+                            tracing::debug!("read report. switching to writing quote");
                             *this.state =
                                 DcapQuoteServiceState::WritingQuote { quote, position: 0 };
                         }

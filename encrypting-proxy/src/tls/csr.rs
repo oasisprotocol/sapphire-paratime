@@ -18,7 +18,7 @@ use x509_cert::{
 /// The subject info is as specified in https://datatracker.ietf.org/doc/html/rfc4514.
 /// For example:
 /// `C=US,ST=California,L=San Francisco,O=Oasis Labs,CN=sapphire-proxy.oasislabs.com`
-pub fn generate(secret_key: &p256::SecretKey, subject_info: &str) -> Result<Vec<u8>> {
+pub fn generate(secret_key: &p256::SecretKey, subject_info: &str) -> Result<String> {
     let public_key = secret_key.public_key();
     let public_key_bytes = public_key.to_encoded_point(false /* compressed */);
 
@@ -71,7 +71,7 @@ pub fn generate(secret_key: &p256::SecretKey, subject_info: &str) -> Result<Vec<
         .flatten()
         .copied()
         .collect();
-    Ok(cert_req_pem)
+    Ok(unsafe { String::from_utf8_unchecked(cert_req_pem) })
 }
 
 fn der_encode<'a, T: der::Encodable>(t: &T, buf: &'a mut [u8]) -> der::Result<&'a [u8]> {

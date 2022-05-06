@@ -10,7 +10,6 @@ use sgx_isa::*;
 use sha2::Digest;
 
 static SELF_REPORT: Lazy<Report> = Lazy::new(Report::for_self);
-static TARGET_INFO: Lazy<Targetinfo> = Lazy::new(|| Targetinfo::from(SELF_REPORT.clone()));
 static TLS_CERT_FINGERPRINT: OnceCell<[u8; 32]> = OnceCell::new();
 
 pub fn tls_secret_key() -> &'static p256::SecretKey {
@@ -49,12 +48,25 @@ pub fn get_quote(challenge: [u8; 32]) -> Result<Vec<u8>> {
     get_quote_in(challenge, std::alloc::Global)
 }
 
-pub(crate) fn get_quote_in<A: std::alloc::Allocator>(
+pub(crate) fn get_quote_in<A: std::alloc::Allocator + Copy>(
     challenge: [u8; 32],
     alloc: A,
 ) -> Result<Vec<u8, A>> {
+    let _span = tracing::info_span!("get-quote").entered();
+    let mut quoter = BufReader::new(std::net::TcpStream::connect("dcap-quote")?);
+    let mut qe_target_info = Vec::with_capacity_in(Targetinfo::UNPADDED_SIZE, alloc);
+    unsafe {
+        qe_target_info.set_len(qe_target_info.capacity());
+    }
+    tracing::debug!("reading target info");
+    quoter.read_exact(&mut qe_target_info)?;
+    let qe_target_info = match Targetinfo::try_copy_from(&qe_target_info) {
+        Some(ti) => ti,
+        None => return Err(anyhow::anyhow!("received invalid QE target info")),
+    };
+
     let mut report_data = [0u8; 64];
-    let (cert_ack, challenge_response) = report_data.split_at_mut(64);
+    let (cert_ack, challenge_response) = report_data.split_at_mut(32);
     match TLS_CERT_FINGERPRINT.get() {
         Some(fp) => {
             // The enclave reports what its key is for the client to compare to the TLS cert.
@@ -67,15 +79,19 @@ pub(crate) fn get_quote_in<A: std::alloc::Allocator>(
         }
     }
     challenge_response.copy_from_slice(&challenge);
-    let report = Report::for_target(&*TARGET_INFO, &report_data);
-
-    let mut quoter = BufReader::new(std::net::TcpStream::connect("dcap-quote")?);
+    let report = Report::for_target(&qe_target_info, &report_data);
+    tracing::debug!("writing report");
     quoter.get_mut().write_all(report.as_ref())?;
     let mut quote_len_bytes = [0u8; std::mem::size_of::<u16>()];
+    tracing::debug!("reading quote");
     quoter.read_exact(&mut quote_len_bytes)?;
     let quote_len = u16::from_le_bytes(quote_len_bytes) as usize;
-    anyhow::ensure!(quote_len < 4096, "received unexpectedly large quote");
+    anyhow::ensure!(quote_len < 8192, "received unexpectedly large quote");
     let mut quote = Vec::with_capacity_in(quote_len, alloc);
+    unsafe {
+        quote.set_len(quote.capacity());
+    }
     quoter.read_exact(&mut quote)?;
+    tracing::debug!("got quote");
     Ok(quote)
 }

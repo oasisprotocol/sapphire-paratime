@@ -103,17 +103,14 @@ impl Server {
             // Returns a report signed by the quoting enclave used for remote attestation.
             const ROUTE_QUOTE: &str = "/quote";
 
-            if req.url() == ROUTE_WEB3 || !(cfg!(target_env = "sgx") && req.url() == ROUTE_QUOTE) {
-                respond_and_continue!(res, 404);
-            }
-
             if *req.method() == Method::Options {
                 respond_and_continue!(res, 204);
             }
 
             macro_rules! route {
                 ($method:ident, $path:ident, |$alloc:ident| $handler:block) => {{
-                    if req.url() == $path {
+                    let path = &req.url()[..req.url().find('?').unwrap_or_else(|| req.url().len())];
+                    if path == $path {
                         if *req.method() != Method::$method {
                             respond_and_continue!(res, 405);
                         }
@@ -200,6 +197,9 @@ impl Server {
                 }
                 let quote = crate::sgx::get_quote_in(challenge, alloc)?;
                 let mut quote_b64_buf = Vec::with_capacity_in(quote.len() * 14 / 10, alloc);
+                unsafe {
+                    quote_b64_buf.set_len(quote_b64_buf.capacity());
+                }
                 let quote_b64_len =
                     base64::encode_config_slice(quote, base64::STANDARD, &mut quote_b64_buf);
                 let quote_b64 =
@@ -208,13 +208,15 @@ impl Server {
                 serde_json::to_writer(
                     &mut res_buf,
                     &QuoteResponse {
-                        quote: quote_b64,
+                        quote: &quote_b64,
                         config: &self.config,
                     },
                 )?;
                 respond!(res.with_data(res_buf.as_slice(), Some(res_buf.len())));
                 Ok(())
             });
+
+            respond_and_continue!(res, 404);
         }
     }
 }
@@ -251,6 +253,7 @@ pub struct Config {
 #[derive(serde::Serialize)]
 pub struct ConfigEssentials {
     pub upstream: url::Url,
+    #[serde(serialize_with = "hex::serde::serialize")]
     pub runtime_public_key: [u8; 32],
 }
 
