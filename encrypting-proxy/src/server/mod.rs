@@ -11,10 +11,12 @@ use crate::crypto::SessionCipher;
 pub(crate) use handler::{upstream::Web3GatewayUpstream, RequestHandler};
 
 pub struct Server {
+    #[cfg(target_env = "sgx")]
+    /// The components of the config that clients care about, sent with the remote attestation.
+    config: ConfigEssentials,
     server: tiny_http::Server,
     handler: RequestHandler<SessionCipher, Web3GatewayUpstream>,
     require_tls: bool,
-    config: ConfigEssentials,
 }
 
 impl Server {
@@ -28,6 +30,11 @@ impl Server {
             }),
         };
         Ok(Arc::new(Self {
+            #[cfg(target_env = "sgx")]
+            config: ConfigEssentials {
+                upstream: config.upstream.clone(),
+                runtime_public_key: config.runtime_public_key,
+            },
             server: tiny_http::Server::new(server_cfg)
                 .map_err(|e| anyhow::anyhow!("failed to start server: {e}"))?,
             require_tls,
@@ -36,10 +43,6 @@ impl Server {
                 Web3GatewayUpstream::new(config.upstream.clone()),
                 config.max_request_size_bytes,
             ),
-            config: ConfigEssentials {
-                upstream: config.upstream,
-                runtime_public_key: config.runtime_public_key,
-            },
         }))
     }
 
