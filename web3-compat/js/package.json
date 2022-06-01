@@ -1,0 +1,24 @@
+{
+  "name": "@oasislabs/sapphire-paratime",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "description": "The Sapphire ParaTime Web3 integration library.",
+  "keywords": [
+    "sapphire",
+    "paratime",
+    "oasis",
+    "web3"
+  ],
+  "type": "module",
+  "main": "lib/src/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.5.1",
+    "ethers": "^5.6.8",
+    "jest": "^28.1.0",
+    "prettier": "^2.6.2",
+    "typescript": "^4.7.2"
+  }
+}
