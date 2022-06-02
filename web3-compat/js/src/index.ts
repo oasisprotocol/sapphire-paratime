@@ -1,72 +1,94 @@
-import { Signer, TypedDataSigner } from '@ethersproject/abstract-signer';
+import {
+  Signer,
+  TypedDataDomain,
+  TypedDataField,
+  TypedDataSigner,
+} from '@ethersproject/abstract-signer';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { arrayify, hexlify } from '@ethersproject/bytes';
+import { BytesLike, arrayify, hexlify } from '@ethersproject/bytes';
 import { BN } from 'bn.js';
 import * as cbor from 'cborg';
 import type { RequireExactlyOne } from 'type-fest';
 
-/**
- * Prepares a signed call that allows retrieving data scoped to the sender's account.
- * @param call The call. `from` must be set.
- * @param provider An ethers provider.
- * @return The call that should be submitted to the Web3 gateway.
- */
-export async function prepareSignedCall(
-  call: EthCall,
-  provider: Signer & TypedDataSigner,
-): Promise<{ to: string; data: string }> {
-  const caller = call.from;
-  const simulateCallQuery: SimulateCallQuery = {
-    caller: toBEBytes(caller, 20),
-    address: toBEBytes(call.to, 20),
-    value: call.value ? toBEBytes(call.value, 32) : undefined,
-    gas_price: toBEBytes(call.gas ?? call.gasLimit, 32),
-    gas_limit: call.gasLimit
-      ? BigNumber.from(call.gasLimit).toNumber()
-      : undefined,
-    data: call.data
-      ? arrayify(call.data, { allowMissingPrefix: true })
-      : undefined,
-    nonce: await provider.getTransactionCount('pending'),
-  };
-  const signature = await signCall(simulateCallQuery, provider);
-  const envelopedSignedCall = {
-    call: simulateCallQuery,
-    signature,
-  };
+export function signedCallEIP712Params(chainId: number): {
+  domain: TypedDataDomain;
+  types: Record<string, TypedDataField[]>;
+} {
   return {
-    to: '0x0000000000000000000000000000000000000000', // This field is required, but not needed by Sapphire, so we set it to something uninformative.
-    data: hexlify(cbor.encode(envelopedSignedCall)),
+    domain: {
+      name: 'Sapphire ParaTime',
+      version: '1.0.0',
+      chainId,
+    },
+    types: {
+      Call: [
+        { name: 'from', type: 'address' },
+        { name: 'to', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'gasPrice', type: 'uint256' },
+        { name: 'gasLimit', type: 'uint64' },
+        { name: 'data', type: 'bytes' },
+        { name: 'nonce', type: 'uint64' },
+      ],
+    },
   };
 }
 
-async function signCall(
-  call: SimulateCallQuery,
+/** Prepares a signed call that allows retrieving data scoped to the sender's account. */
+export async function prepareSignedCall(
+  call: EthCall,
   signer: Signer & TypedDataSigner,
-): Promise<Uint8Array> {
-  const chainId = await signer.getChainId();
-  if (chainId !== 0x5afe && chainId !== 0x5aff) {
-    throw new Error(
-      'Signed queries can only be sent to Sapphire or Sapphire Testnet. Please check your Web3 provider connection.',
-    );
+  overrides?: Partial<{
+    nonce: number;
+    chainId: number;
+  }>,
+): Promise<{ to: string; data: string }> {
+  if (!call.from || !call.to) {
+    throw TypeError('signed call must have a sender and recipient');
   }
-  const domain = {
-    name: 'sapphire-paratime',
-    version: '1.0.0',
-    chainId,
+  const leash: Leash = {
+    nonce: overrides?.nonce ?? (await signer.getTransactionCount('pending')),
   };
-  const types = {
-    Call: [
-      { name: 'gas_price', type: 'uint256' },
-      { name: 'gas_limit', type: 'uint64' },
-      { name: 'caller', type: 'address' },
-      { name: 'address', type: 'address' },
-      { name: 'value', type: 'uint256' },
-      { name: 'data', type: 'bytes' },
-      { name: 'nonce', type: 'uint64' },
-    ],
+
+  const envelopedQuery: SignedQueryEnvelope = {
+    query: {
+      ...makeSimulateCallQuery(call),
+      ...leash,
+    },
+    signature: await signCall({ ...makeSignableCall(call), ...leash }, signer, {
+      chainId: overrides?.chainId,
+    }),
   };
-  return arrayify(await signer._signTypedData(domain, types, call));
+  return {
+    to: '0x0000000000000000000000000000000000000000', // This field is required, but not needed by Sapphire, so we set it to something uninformative.
+    data: hexlify(cbor.encode(envelopedQuery)),
+  };
+}
+
+function map<T, U>(v: T | undefined, f: (v: T) => U): U | undefined {
+  return v ? f(v) : undefined;
+}
+
+export function makeSignableCall(call: EthCall): SignableEthCall {
+  return {
+    from: call.from,
+    to: call.to,
+    value: map(call.value, BigNumber.from),
+    gasPrice: map(call.gasPrice, BigNumber.from),
+    gasLimit: map(call.gas ?? call.gasLimit, BigNumber.from)?.toNumber(),
+    data: map(call.data, (v) => hexlify(v, { allowMissingPrefix: true })),
+  };
+}
+
+export function makeSimulateCallQuery(call: EthCall): SimulateCallQuery {
+  return {
+    caller: toBEBytes(call.from, 20),
+    address: toBEBytes(call.to, 20),
+    value: map(call.value, (v) => toBEBytes(v, 32)),
+    gas_price: map(call.gasPrice, (v) => toBEBytes(v, 32)),
+    gas_limit: map(call.gas ?? call.gasLimit, BigNumber.from)?.toNumber(),
+    data: map(call.data, (v) => arrayify(v, { allowMissingPrefix: true })),
+  };
 }
 
 function toBEBytes(bn: BigNumberish, length: number): Uint8Array {
@@ -78,23 +100,65 @@ function toBEBytes(bn: BigNumberish, length: number): Uint8Array {
   );
 }
 
+async function signCall(
+  call: SignableEthCall & Leash,
+  signer: Signer & TypedDataSigner,
+  overrides?: Partial<{ chainId: number }>,
+): Promise<Uint8Array> {
+  const chainId = overrides?.chainId ?? (await signer.getChainId());
+  if (chainId !== 0x5afe && chainId !== 0x5aff) {
+    throw new Error(
+      'Signed queries can only be sent to Sapphire or Sapphire Testnet. Please check your Web3 provider connection.',
+    );
+  }
+  const { domain, types } = signedCallEIP712Params(chainId);
+  types.Call = types.Call.filter(
+    ({ name }) => (call as any)[name] !== undefined,
+  );
+  return arrayify(await signer._signTypedData(domain, types, call));
+}
+
 export type EthCall = {
   from: string;
   to: string;
   value?: BigNumberish;
   gasPrice?: BigNumberish;
-  data?: Uint8Array | string;
-} & RequireExactlyOne<{
-  gas?: number | string; // web3.js
-  gasLimit?: BigNumberish; // ethers
-}>;
+  data?: BytesLike;
+} & Partial<
+  RequireExactlyOne<{
+    gas: number | string; // web3.js
+    gasLimit: BigNumberish; // ethers
+  }>
+>;
 
-type SimulateCallQuery = {
+/**
+ * The structure passed to eth_signTypedData_v4.
+ *
+ * `uint256`, `address`, and `bytes` are required to be hex-stringified.
+ */
+export type SignableEthCall = {
+  from: string;
+  to: string;
+  value?: BigNumber;
+  gasPrice?: BigNumber;
+  gasLimit?: number;
+  data?: string;
+};
+
+export type Leash = {
+  nonce: number;
+};
+
+export type SignedQueryEnvelope = {
+  query: SimulateCallQuery & Leash;
+  signature: Uint8Array;
+};
+
+export type SimulateCallQuery = {
   gas_price?: Uint8Array; // U256
   gas_limit?: number; // U64
   caller: Uint8Array; // H160
   address: Uint8Array; // H160
   value?: Uint8Array; // U256
   data?: Uint8Array; // bytes
-  nonce: number; // u64
 };
