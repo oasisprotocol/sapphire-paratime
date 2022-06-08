@@ -11,11 +11,14 @@ import {
   signedCallEIP712Params,
 } from '@oasislabs/sapphire-paratime/signed_calls';
 
-const CHAIN_ID = 0x5aff;
+const CHAIN_ID = 0x5afe;
 
 describe('signed calls', () => {
-  let from: Wallet;
-  let to: Wallet;
+  // 0x11e244400Cf165ade687077984F09c3A037b868F
+  let from = new Wallet(
+    '0x8160d68c4bf9425b1d3a14dc6d59a99d7d130428203042a8d419e68d626bd9f2',
+  );
+  let to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
 
   const overrides: PrepareSignedCallOverrides = {
     leash: {
@@ -29,15 +32,10 @@ describe('signed calls', () => {
     chainId: CHAIN_ID,
   };
 
-  beforeAll(() => {
-    from = Wallet.createRandom();
-    to = Wallet.createRandom();
-  });
-
   it('signs', async () => {
     const call = {
       from: from.address,
-      to: to.address,
+      to,
       value: 42,
       gasPrice: 123,
       gasLimit: 10,
@@ -76,7 +74,7 @@ describe('signed calls', () => {
   it('partial', async () => {
     const call = {
       from: from.address,
-      to: to.address,
+      to,
     };
 
     const signedCall = await prepareSignedCall(call, from, overrides);
