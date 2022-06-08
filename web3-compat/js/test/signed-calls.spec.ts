@@ -3,7 +3,7 @@ import * as cbor from 'cborg';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
 import {
-  Leash,
+  PrepareSignedCallOverrides,
   SignableEthCall,
   SignedQueryEnvelope,
   SimulateCallQuery,
@@ -17,8 +17,13 @@ describe('signed calls', () => {
   let from: Wallet;
   let to: Wallet;
 
-  const overrides = {
-    nonce: 999,
+  const overrides: PrepareSignedCallOverrides = {
+    leash: {
+      nonce: 999,
+      blockHash:
+        '0xc92b675c7013e33aa88feaae520eb0ede155e7cacb3c4587e0923cba9953f8bb',
+      blockRange: 3,
+    },
     chainId: CHAIN_ID,
   };
 
@@ -51,14 +56,20 @@ describe('signed calls', () => {
     expect(simulateCallQuery.gas_price).toEqual(u8To256(call.gasPrice));
     expect(simulateCallQuery.gas_limit).toEqual(call.gasLimit);
     expect(simulateCallQuery.data).toEqual(new Uint8Array(call.data));
-    expect(simulateCallQuery.nonce).toEqual(overrides.nonce);
+    expect(simulateCallQuery.leash.nonce).toEqual(overrides.leash?.nonce);
+    expect(hexlify(simulateCallQuery.leash.block_hash)).toEqual(
+      overrides.leash?.blockHash,
+    );
+    expect(simulateCallQuery.leash.block_range).toEqual(
+      overrides.leash?.blockRange,
+    );
 
     // Validate the signature.
     const recoveredSigner = verify(envelopedQuery);
     expect(recoveredSigner).toEqual(from.address);
   });
 
-  it.only('partial', async () => {
+  it('partial', async () => {
     const call = {
       from: from.address,
       to: to.address,
@@ -81,9 +92,7 @@ function verify({ query, signature }: SignedQueryEnvelope): string {
   return ethers.utils.verifyTypedData(domain, types, decoded, signature);
 }
 
-function decodeSimulateCallQuery(
-  query: SimulateCallQuery & Leash,
-): SignableEthCall & Leash {
+function decodeSimulateCallQuery(query: SimulateCallQuery): SignableEthCall {
   return {
     from: hexlify(query.caller),
     to: hexlify(query.address),
@@ -91,7 +100,11 @@ function decodeSimulateCallQuery(
     gasPrice: query.gas_price ? BigNumber.from(query.gas_price) : undefined,
     gasLimit: query.gas_limit,
     data: query.data ? hexlify(query.data) : undefined,
-    nonce: query.nonce,
+    leash: {
+      nonce: query.leash.nonce,
+      blockHash: query.leash.block_hash,
+      blockRange: query.leash.block_range,
+    },
   };
 }
 

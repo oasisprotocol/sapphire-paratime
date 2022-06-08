@@ -24,8 +24,10 @@
     "cborg": "^1.9.4"
   },
   "devDependencies": {
+    "@ethersproject/abstract-provider": "^5.6.1",
     "@types/bn.js": "^5.1.0",
     "@types/jest": "^27.5.1",
+    "@types/node": "^17.0.41",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "eslint": "^8.16.0",
