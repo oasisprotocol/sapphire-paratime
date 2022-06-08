@@ -9,7 +9,7 @@ const config = {
     '^@oasislabs/sapphire-paratime/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'node',
-  testRegex: '.*\\.spec\\.ts$',
+  testRegex: 'test/.*\\.spec\\.ts$',
   transform: {
     '\\.ts$': 'ts-jest',
     '\\.js$': 'babel-jest',

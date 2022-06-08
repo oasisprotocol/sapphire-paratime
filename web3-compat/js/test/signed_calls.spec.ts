@@ -9,7 +9,7 @@ import {
   SimulateCallQuery,
   prepareSignedCall,
   signedCallEIP712Params,
-} from '@oasislabs/sapphire-paratime';
+} from '@oasislabs/sapphire-paratime/signed_calls';
 
 const CHAIN_ID = 0x5aff;
 
