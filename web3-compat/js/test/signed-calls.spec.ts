@@ -20,8 +20,10 @@ describe('signed calls', () => {
   const overrides: PrepareSignedCallOverrides = {
     leash: {
       nonce: 999,
-      blockHash:
-        '0xc92b675c7013e33aa88feaae520eb0ede155e7cacb3c4587e0923cba9953f8bb',
+      block: {
+        hash: '0xc92b675c7013e33aa88feaae520eb0ede155e7cacb3c4587e0923cba9953f8bb',
+        number: 42,
+      },
       blockRange: 3,
     },
     chainId: CHAIN_ID,
@@ -57,13 +59,15 @@ describe('signed calls', () => {
     expect(simulateCallQuery.gas_limit).toEqual(call.gasLimit);
     expect(simulateCallQuery.data).toEqual(new Uint8Array(call.data));
     expect(simulateCallQuery.leash.nonce).toEqual(overrides.leash?.nonce);
+    expect(simulateCallQuery.leash.block_number).toEqual(
+      overrides.leash!.block!.number,
+    );
     expect(hexlify(simulateCallQuery.leash.block_hash)).toEqual(
-      overrides.leash?.blockHash,
+      overrides.leash!.block!.hash!,
     );
     expect(simulateCallQuery.leash.block_range).toEqual(
       overrides.leash?.blockRange,
     );
-
     // Validate the signature.
     const recoveredSigner = verify(envelopedQuery);
     expect(recoveredSigner).toEqual(from.address);
@@ -86,9 +90,6 @@ describe('signed calls', () => {
 function verify({ query, signature }: SignedQueryEnvelope): string {
   const { domain, types } = signedCallEIP712Params(CHAIN_ID);
   const decoded = decodeSimulateCallQuery(query);
-  types.Call = types.Call.filter(
-    ({ name }) => (decoded as any)[name] !== undefined,
-  );
   return ethers.utils.verifyTypedData(domain, types, decoded, signature);
 }
 
@@ -102,6 +103,7 @@ function decodeSimulateCallQuery(query: SimulateCallQuery): SignableEthCall {
     data: query.data ? hexlify(query.data) : undefined,
     leash: {
       nonce: query.leash.nonce,
+      blockNumber: query.leash.block_number,
       blockHash: query.leash.block_hash,
       blockRange: query.leash.block_range,
     },

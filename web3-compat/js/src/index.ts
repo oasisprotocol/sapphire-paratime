@@ -9,7 +9,16 @@ import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { BytesLike, arrayify, hexlify } from '@ethersproject/bytes';
 import { BN } from 'bn.js';
 import * as cbor from 'cborg';
-import type { RequireExactlyOne, SnakeCasedProperties } from 'type-fest';
+import type {
+  Promisable,
+  RequireExactlyOne,
+  SnakeCasedProperties,
+} from 'type-fest';
+
+const DEFAULT_GAS_PRICE = 1;
+const DEFAULT_GAS_LIMIT = 30_000_000;
+const DEFAULT_VALUE = 0;
+const DEFAULT_DATA = new Uint8Array();
 
 export function signedCallEIP712Params(chainId: number): {
   domain: TypedDataDomain;
@@ -33,6 +42,7 @@ export function signedCallEIP712Params(chainId: number): {
       ],
       Leash: [
         { name: 'nonce', type: 'uint64' },
+        { name: 'blockNumber', type: 'uint64' },
         { name: 'blockHash', type: 'uint256' },
         { name: 'blockRange', type: 'uint64' },
       ],
@@ -57,22 +67,23 @@ export async function prepareSignedCall(
     const nonceP = overrides?.nonce
       ? overrides.nonce
       : signer.getTransactionCount('pending');
-    let blockHashP;
-    if (overrides?.blockHash !== undefined) {
-      blockHashP = overrides.blockHash;
+    let blockP: Promisable<BlockId>;
+    if (overrides?.block !== undefined) {
+      blockP = overrides.block;
     } else {
       if (signer.provider === undefined) {
         throw new Error(
-          'unable to determine block hash, as a provider is not connected',
+          'unable to locate base block, as a provider is not connected',
         );
       }
       const blockTag = overrides?.blockTag ?? 'latest';
-      blockHashP = signer.provider.getBlock(blockTag).then((b) => b.hash);
+      blockP = signer.provider.getBlock(blockTag);
     }
-    const [nonce, blockHash] = await Promise.all([nonceP, blockHashP]);
+    const [nonce, block] = await Promise.all([nonceP, blockP]);
     return {
       nonce,
-      blockHash: arrayify(blockHash),
+      blockNumber: block.number,
+      blockHash: arrayify(block.hash),
       blockRange: overrides?.blockRange ?? 15 /* ~90s */,
     };
   }
@@ -91,18 +102,16 @@ export async function prepareSignedCall(
   };
 }
 
-function map<T, U>(v: T | undefined, f: (v: T) => U): U | undefined {
-  return v ? f(v) : undefined;
-}
-
 export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
   return {
     from: call.from,
     to: call.to,
-    value: map(call.value, BigNumber.from),
-    gasPrice: map(call.gasPrice, BigNumber.from),
-    gasLimit: map(call.gas ?? call.gasLimit, BigNumber.from)?.toNumber(),
-    data: map(call.data, (v) => hexlify(v, { allowMissingPrefix: true })),
+    value: BigNumber.from(call.value ?? DEFAULT_VALUE),
+    gasPrice: BigNumber.from(call.gasPrice ?? DEFAULT_GAS_PRICE),
+    gasLimit: BigNumber.from(
+      call.gas ?? call.gasLimit ?? DEFAULT_GAS_LIMIT,
+    ).toNumber(),
+    data: hexlify(call.data ?? DEFAULT_DATA, { allowMissingPrefix: true }),
     leash,
   };
 }
@@ -111,15 +120,19 @@ export function makeSimulateCallQuery(
   call: EthCall,
   leash: Leash,
 ): SimulateCallQuery {
+  const gas = call.gas ?? call.gasLimit;
   return {
     caller: toBEBytes(call.from, 20),
     address: toBEBytes(call.to, 20),
-    value: map(call.value, (v) => toBEBytes(v, 32)),
-    gas_price: map(call.gasPrice, (v) => toBEBytes(v, 32)),
-    gas_limit: map(call.gas ?? call.gasLimit, BigNumber.from)?.toNumber(),
-    data: map(call.data, (v) => arrayify(v, { allowMissingPrefix: true })),
+    value: toBEBytes(call.value ?? DEFAULT_VALUE, 32),
+    gas_price: toBEBytes(call.gasPrice ?? DEFAULT_GAS_PRICE, 32),
+    gas_limit: gas ? BigNumber.from(gas).toNumber() : DEFAULT_GAS_LIMIT,
+    data: call.data
+      ? arrayify(call.data, { allowMissingPrefix: true })
+      : DEFAULT_DATA,
     leash: {
       nonce: leash.nonce,
+      block_number: leash.blockNumber,
       block_hash: leash.blockHash,
       block_range: leash.blockRange,
     },
@@ -147,9 +160,6 @@ async function signCall(
     );
   }
   const { domain, types } = signedCallEIP712Params(chainId);
-  types.Call = types.Call.filter(
-    ({ name }) => (call as any)[name] !== undefined,
-  );
   return arrayify(await signer._signTypedData(domain, types, call));
 }
 
@@ -158,12 +168,15 @@ export type PrepareSignedCallOverrides = Partial<{
   chainId: number;
 }>;
 
-export type LeashOverrides = Partial<{
-  nonce: number;
-  blockHash: string;
-  blockTag: BlockTag;
-  blockRange: number;
-}>;
+export type LeashOverrides = Partial<
+  {
+    nonce: number;
+    blockRange: number;
+  } & RequireExactlyOne<{
+    block: BlockId;
+    blockTag: BlockTag;
+  }>
+>;
 
 export type EthCall = {
   from: string;
@@ -199,20 +212,24 @@ export type SignedQueryEnvelope = {
 };
 
 export type SimulateCallQuery = {
-  gas_price?: Uint8Array; // U256
-  gas_limit?: number; // U64
+  gas_price: Uint8Array; // uint256
+  gas_limit: number; // uint64
   caller: Uint8Array; // H160
   address: Uint8Array; // H160
-  value?: Uint8Array; // U256
-  data?: Uint8Array; // bytes
+  value: Uint8Array; // uint256
+  data: Uint8Array; // bytes
   leash: SnakeCasedProperties<Leash>; // itself
 };
 
 export type Leash = {
-  /** The largest sender account nonce for which the call will be valid. */
+  /** The largest sender account nonce whence the call will be valid. */
   nonce: number;
-  /** The block hash from which the call will be valid. */
+  /** The block number whence the call will be valid. */
+  blockNumber: number; // uint64
+  /** The expected block hash to be found at `blockNumber`. */
   blockHash: Uint8Array;
-  /** The number of blocks past the block at `blockHahsh` for which the call will be valid. */
-  blockRange: number;
+  /** The number of blocks past the block at `blockNumber` whence the call will be valid. */
+  blockRange: number; // uint64
 };
+
+type BlockId = { hash: string; number: number };
