@@ -1,3 +1,33 @@
-[workspace]
-members = ["runtime"]
+[package]
+name = "sapphire-paratime"
+version = "0.1.0"
+authors = ["Oasis Protocol Foundation <info@oasisprotocol.org>"]
+edition = "2021"
+license = "Apache-2.0"
 resolver = "2"
+
+[package.metadata.orc.release]
+runtime-id = "000000000000000000000000000000000000000000000000e2eaa99fc008f87f"
+
+[package.metadata.orc.test]
+runtime-id = "00000000000000000000000000000000000000000000000072c8215e60d5bca7"
+
+[package.metadata.fortanix-sgx]
+heap-size = 134217728
+stack-size = 2097152
+threads = 6
+
+[dependencies]
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main", package = "oasis-runtime-sdk-evm" }
+
+# Third party.
+once_cell = "1.8.0"
+
+[dev-dependencies]
+io-context = "0.2.0"
+cbor = { version = "0.2.1", package = "oasis-cbor" }
+
+[profile.release]
+codegen-units = 1
+lto = true
