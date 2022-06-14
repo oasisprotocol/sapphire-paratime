@@ -14,7 +14,7 @@ on:
 
 jobs:
 
-  check-reproducible-build:
+  check-reproducible-build-runtime:
     # NOTE: This name appears in GitHub's Checks API.
     name: check-reproducibility
     runs-on: ubuntu-latest
@@ -40,7 +40,33 @@ jobs:
         run: |
           [ "${{ steps.build-1.outputs.hashes }}" == "${{ steps.build-2.outputs.hashes }}" ]
 
-  check-reproducible-build-sgx:
+  check-reproducible-build-encryptig-proxy:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: check-reproducibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build encrypting proxy, 1.
+        id: build-1
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: encrypting-proxy
+
+      - name: Build encrypting proxy, 2.
+        id: build-2
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: encrypting-proxy
+
+      - name: Check binary equality
+        run: |
+          [ "${{ steps.build-1.outputs.hashes }}" == "${{ steps.build-2.outputs.hashes }}" ]
+
+  check-reproducible-build-sgx-runtime:
     # NOTE: This name appears in GitHub's Checks API.
     name: check-reproducibility-sgx
     runs-on: ubuntu-latest
@@ -62,6 +88,34 @@ jobs:
         with:
           image: oasisprotocol/runtime-builder:main
           binaries: sapphire-paratime.sgxs
+          sgx: yes
+
+      - name: Check binary equality
+        run: |
+          [ "${{ steps.build-1.outputs.hashes }}" == "${{ steps.build-2.outputs.hashes }}" ]
+
+  check-reproducible-build-sgx-encrypting-proxy:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: check-reproducibility-sgx
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build runtime, 1.
+        id: build-1
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: sapphire-encrypting-proxy.sgxs
+          sgx: yes
+
+      - name: Build runtime, 2.
+        id: build-2
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: sapphire-encrypting-proxy.sgxs
           sgx: yes
 
       - name: Check binary equality
