@@ -1,0 +1,33 @@
+version: 2
+updates:
+
+  # Manage Github Actions versions.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "ci:"
+    labels:
+      - c:deps
+      - c:testing
+
+  # Manage Rust package versions.
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "cargo:"
+    labels:
+      - c:deps
+
+  - package-ecosystem: npm
+    directory: clients/js
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "clients/js:"
+    labels:
+      - c:deps
+      - c:clients/js
