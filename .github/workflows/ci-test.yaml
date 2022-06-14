@@ -1,0 +1,65 @@
+# NOTE: This name appears in GitHub's Checks API and in workflow's status badge.
+name: ci-test
+
+# Trigger the workflow when:
+on:
+  # A push occurs to one of the matched branches.
+  push:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+  # Or when a pull request event occurs for a pull request against one of the
+  # matched branches.
+  pull_request:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+
+jobs:
+
+  test-rust:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-rust
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+
+      - name: Install protoc
+        run: sudo apt install -y protobuf-compiler
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+  test-rust-sgx:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: test-rust-sgx
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # gcc-multilib is required for bindgen to work for SGX.
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-multilib
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          target: x86_64-fortanix-unknown-sgx
+
+      - name: Build for SGX
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: -p sapphire-paratime -p sapphire-encrypting-proxy --release --target x86_64-fortanix-unknown-sgx

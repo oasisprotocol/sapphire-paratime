@@ -23,7 +23,7 @@ impl Server {
     pub fn new(config: Config) -> Result<Arc<Self>> {
         let require_tls = config.tls.is_some();
         let server_cfg = tiny_http::ServerConfig {
-            addr: &config.listen_addr,
+            addr: tiny_http::ConfigListenAddr::from_socket_addrs(config.listen_addr).unwrap(),
             ssl: config.tls.map(|t| tiny_http::SslConfig {
                 private_key: t.secret_key,
                 certificate: t.certificate,
@@ -57,7 +57,7 @@ impl Server {
                 "request",
                 method=%req.method(),
                 path=req.url(),
-                remote_addr=%req.remote_addr(),
+                remote_addr=?req.remote_addr(),
                 content_length=req.body_length().unwrap_or_default(),
             )
             .entered();
@@ -100,6 +100,7 @@ impl Server {
             }
 
             const ROUTE_WEB3: &str = "/";
+            #[cfg(target_env = "sgx")]
             // Returns a report signed by the quoting enclave used for remote attestation.
             const ROUTE_QUOTE: &str = "/quote";
 

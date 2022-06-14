@@ -12,7 +12,7 @@ threads = 16          # run the enclave with 5 more TCS than this
 # common
 anyhow = "1.0.56"
 base64 = "0.13.0"
-clap = { version = "3.1.12", default-features = false, features = ["derive", "std"] }
+clap = { version = "~3.1.12", default-features = false, features = ["derive", "std"] } # Unpin when not annoying deprecation warnings.
 tracing = "0.1.32"
 tracing-subscriber = { version = "0.3.9", features = ["json"] }
 # server
@@ -40,7 +40,7 @@ zeroize = "1.4.3"
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 p256 = { version = "0.10.1", features = ["arithmetic", "pem"] }
-clap = { version = "3.1.12", default-features = true, features = ["derive"] }
+clap = { version = "~3.1.12", default-features = true, features = ["derive"] } # Unpin when not annoying deprecation warnings.
 
 [target.'cfg(target_env = "sgx")'.dependencies]
 tracing = { version = "0.1.32", features = ["release_max_level_info"] }
