@@ -51,7 +51,7 @@ impl DcapQuoteService {
 enum DcapQuoteServiceState {
     WritingTargetInfo {
         target_info: Box<sgx_isa::Targetinfo>,
-        position: usize
+        position: usize,
     },
     ReadingReport {
         report: Box<[u8; Report::UNPADDED_SIZE]>,
@@ -82,7 +82,10 @@ impl tokio::io::AsyncRead for DcapQuoteService {
         let mut this = self.project();
         let _entered = this.span.enter();
         match &mut this.state {
-            DcapQuoteServiceState::WritingTargetInfo { target_info, position } => {
+            DcapQuoteServiceState::WritingTargetInfo {
+                target_info,
+                position,
+            } => {
                 let ti_bytes: &[u8] = (**target_info).as_ref();
                 let bytes_written = buf.write(&ti_bytes[*position..])?;
                 *position += bytes_written;

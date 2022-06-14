@@ -4,7 +4,10 @@
 mod ext;
 
 fn main() -> anyhow::Result<()> {
-    anyhow::ensure!(dcap_ql::is_loaded(), "DCAP Quoting Library could not be loaded");
+    anyhow::ensure!(
+        dcap_ql::is_loaded(),
+        "DCAP Quoting Library could not be loaded"
+    );
     if let Err(e) = dcap_ql::target_info() {
         anyhow::bail!("failed to get QE target info: {e:?}");
     }
