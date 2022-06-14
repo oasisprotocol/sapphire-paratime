@@ -1017,7 +1017,7 @@ checksum = "43ee23aa5b4f68c7a092b5c3beb25f50c406adc75e2363634f242f28ab255372"
 dependencies = [
  "der 0.4.5",
  "elliptic-curve 0.10.6",
- "hmac",
+ "hmac 0.11.0",
  "signature",
 ]
 
@@ -1624,6 +1624,15 @@ checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
  "crypto-mac",
  "digest 0.9.0",
+]
+
+[[package]]
+name = "hmac"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
+dependencies = [
+ "digest 0.10.3",
 ]
 
 [[package]]
@@ -2340,7 +2349,7 @@ dependencies = [
  "deoxysii",
  "ed25519-dalek",
  "futures 0.3.21",
- "hmac",
+ "hmac 0.11.0",
  "honggfuzz",
  "impl-trait-for-tuples",
  "intrusive-collections",
@@ -2390,7 +2399,7 @@ dependencies = [
  "curve25519-dalek 3.2.0",
  "digest 0.9.0",
  "hex",
- "hmac",
+ "hmac 0.11.0",
  "impl-trait-for-tuples",
  "io-context",
  "k256",
@@ -3014,7 +3023,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96ef608575f6392792f9ecf7890c00086591d29a83910939d430753f7c050525"
 dependencies = [
  "crypto-bigint 0.3.2",
- "hmac",
+ "hmac 0.11.0",
  "zeroize",
 ]
 
@@ -3162,7 +3171,7 @@ dependencies = [
  "deoxysii",
  "der 0.6.0-pre.3",
  "hex",
- "hmac",
+ "hmac 0.12.1",
  "jsonrpsee-types",
  "mockall",
  "p256",

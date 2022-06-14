@@ -27,7 +27,7 @@ ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 # crypto
 deoxysii = "0.2.3"
-hmac = "0.11.0"
+hmac = "0.12.1"
 rand = "0.8.5"
 sha2 = "0.9.9"
 x25519-dalek = "1.1.1"
