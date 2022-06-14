@@ -19,7 +19,7 @@ threads = 6
 
 [dependencies]
 oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main" }
-module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main", package = "oasis-runtime-sdk-evm" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main", package = "oasis-runtime-sdk-evm" } # TODO: pin to rev once signed queries land
 
 # Third party.
 once_cell = "1.8.0"
@@ -30,4 +30,4 @@ cbor = { version = "0.2.1", package = "oasis-cbor" }
 
 [profile.release]
 codegen-units = 1
-lto = true
+lto = "thin"

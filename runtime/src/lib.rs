@@ -1,4 +1,6 @@
-//! The Emerald ParaTime.
+//! The Sapphire ParaTime.
+#![deny(rust_2018_idioms, single_use_lifetimes, unreachable_pub)]
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use oasis_runtime_sdk::{
@@ -6,6 +8,7 @@ use oasis_runtime_sdk::{
     types::token::{BaseUnits, Denomination},
     Module, Version,
 };
+use once_cell::unsync::Lazy;
 
 /// Configuration of the various modules.
 pub struct Config;
@@ -32,14 +35,12 @@ const fn chain_id() -> u64 {
 impl modules::core::Config for Config {
     /// Default local minimum gas price configuration that is used in case no overrides are set in
     /// local per-node configuration.
-    const DEFAULT_LOCAL_MIN_GAS_PRICE: once_cell::unsync::Lazy<BTreeMap<Denomination, u128>> =
-        once_cell::unsync::Lazy::new(|| BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]));
+    const DEFAULT_LOCAL_MIN_GAS_PRICE: Lazy<BTreeMap<Denomination, u128>> =
+        Lazy::new(|| [(Denomination::NATIVE, 100_000_000_000)].into());
 
     /// Methods which are exempt from minimum gas price requirements.
-    const MIN_GAS_PRICE_EXEMPT_METHODS: once_cell::unsync::Lazy<BTreeSet<&'static str>> =
-        once_cell::unsync::Lazy::new(|| BTreeSet::from(["consensus.Deposit"]));
-
-    const CONFIDENTIAL: bool = true;
+    const MIN_GAS_PRICE_EXEMPT_METHODS: Lazy<BTreeSet<&'static str>> =
+        Lazy::new(|| ["consensus.Deposit"].into());
 }
 
 impl module_evm::Config for Config {
@@ -48,6 +49,8 @@ impl module_evm::Config for Config {
     const CHAIN_ID: u64 = chain_id();
 
     const TOKEN_DENOMINATION: Denomination = Denomination::NATIVE;
+
+    const CONFIDENTIAL: bool = true;
 }
 
 /// The EVM ParaTime.
@@ -58,15 +61,15 @@ impl sdk::Runtime for Runtime {
     const VERSION: Version = sdk::version_from_cargo!();
     /// Current version of the global state (e.g. parameters). Any parameter updates should bump
     /// this version in order for the migrations to be executed.
-    const STATE_VERSION: u32 = 2;
+    const STATE_VERSION: u32 = 0;
 
     /// Schedule control configuration.
-    const SCHEDULE_CONTROL: Option<config::ScheduleControl> = Some(config::ScheduleControl {
+    const SCHEDULE_CONTROL: config::ScheduleControl = config::ScheduleControl {
         initial_batch_size: 50,
         batch_size: 50,
         min_remaining_gas: 1_000, // accounts.Transfer method calls.
         max_tx_count: 1_000,      // Consistent with runtime descriptor.
-    });
+    };
 
     type Core = modules::core::Module<Config>;
 
@@ -90,12 +93,9 @@ impl sdk::Runtime for Runtime {
         (
             modules::core::Genesis {
                 parameters: modules::core::Parameters {
-                    min_gas_price: {
-                        let mut mgp = BTreeMap::new();
-                        mgp.insert(Denomination::NATIVE, 100_000_000_000);
-                        mgp
-                    },
+                    min_gas_price: { BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]) },
                     max_batch_gas: if is_testnet() { 30_000_000 } else { 10_000_000 },
+                    max_tx_size: 32 * 1024,
                     max_tx_signers: 1,
                     max_multisig_signers: 8,
                     gas_costs: modules::core::GasCosts {
@@ -110,15 +110,13 @@ impl sdk::Runtime for Runtime {
                 parameters: modules::accounts::Parameters {
                     gas_costs: modules::accounts::GasCosts { tx_transfer: 1_000 },
                     denomination_infos: {
-                        let mut denomination_infos = BTreeMap::new();
-                        denomination_infos.insert(
+                        BTreeMap::from([(
                             Denomination::NATIVE,
                             modules::accounts::types::DenominationInfo {
                                 // Consistent with EVM ecosystem.
                                 decimals: 18,
                             },
-                        );
-                        denomination_infos
+                        )])
                     },
                     ..Default::default()
                 },
