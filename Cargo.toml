@@ -1,9 +1,10 @@
 [workspace]
-members = ["proxy", "runner"]
+members = [
+  "encrypting-proxy/proxy",
+  "encrypting-proxy/runner",
+  "runtime",
+]
 resolver = "2"
-
-[profile.dev]
-panic = "abort"
 
 [profile.release]
 codegen-units = 1

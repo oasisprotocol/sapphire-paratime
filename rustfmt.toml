@@ -3,4 +3,3 @@ version = "One"
 format_strings = true
 imports_granularity = "Crate"
 unstable_features = true
-

@@ -1,0 +1,69 @@
+# NOTE: This name appears in GitHub's Checks API and in workflow's status badge.
+name: ci-reproducibility
+
+# Trigger the workflow when:
+on:
+  push:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+  # Besides pushes on the branches above, also check every day at 00:00 UTC.
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+
+  check-reproducible-build:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: check-reproducibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build runtime, 1.
+        id: build-1
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: sapphire-paratime
+
+      - name: Build runtime, 2.
+        id: build-2
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: sapphire-paratime
+
+      - name: Check binary equality
+        run: |
+          [ "${{ steps.build-1.outputs.hashes }}" == "${{ steps.build-2.outputs.hashes }}" ]
+
+  check-reproducible-build-sgx:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: check-reproducibility-sgx
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build runtime, 1.
+        id: build-1
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: sapphire-paratime.sgxs
+          sgx: yes
+
+      - name: Build runtime, 2.
+        id: build-2
+        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
+        with:
+          image: oasisprotocol/runtime-builder:main
+          binaries: sapphire-paratime.sgxs
+          sgx: yes
+
+      - name: Check binary equality
+        run: |
+          [ "${{ steps.build-1.outputs.hashes }}" == "${{ steps.build-2.outputs.hashes }}" ]

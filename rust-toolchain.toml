@@ -1,6 +1,0 @@
-[toolchain]
-channel = "nightly-2022-02-16"
-components = [ "rustfmt", "clippy" ]
-targets = [ "x86_64-fortanix-unknown-sgx" ]
-profile = "minimal"
-
