@@ -15,6 +15,7 @@
   "scripts": {
     "lint": "prettier --check . && eslint --ignore-path .gitignore .",
     "format": "prettier --write .",
+    "build": "tsc -b",
     "test": "jest"
   },
   "dependencies": {
