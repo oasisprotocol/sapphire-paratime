@@ -8,26 +8,20 @@ updates:
       interval: daily
     commit-message:
       prefix: "ci:"
-    labels:
-      - c:deps
-      - c:testing
 
-  # Manage Rust package versions.
-  - package-ecosystem: cargo
-    directory: /
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "cargo:"
-    labels:
-      - c:deps
+# Never uncomment. Dependabot for Cargo isn't great.
+#  # Manage Rust package versions.
+#  - package-ecosystem: cargo
+#    directory: /
+#    schedule:
+#      interval: daily
+#    commit-message:
+#      prefix: "cargo:"
 
-  - package-ecosystem: npm
-    directory: clients/js
-    schedule:
-      interval: daily
-    commit-message:
-      prefix: "clients/js:"
-    labels:
-      - c:deps
-      - c:clients/js
+# Uncomment when https://github.com/dependabot/dependabot-core/issues/1736 is resolved.
+# - package-ecosystem: npm
+#   directory: clients/js
+#   schedule:
+#     interval: daily
+#   commit-message:
+#     prefix: "clients/js:"
