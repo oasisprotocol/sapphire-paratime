@@ -15,10 +15,10 @@ const CHAIN_ID = 0x5afe;
 
 describe('signed calls', () => {
   // 0x11e244400Cf165ade687077984F09c3A037b868F
-  let from = new Wallet(
+  const from = new Wallet(
     '0x8160d68c4bf9425b1d3a14dc6d59a99d7d130428203042a8d419e68d626bd9f2',
   );
-  let to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
+  const to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
 
   const overrides: PrepareSignedCallOverrides = {
     leash: {
