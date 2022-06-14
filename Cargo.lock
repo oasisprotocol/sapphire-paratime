@@ -3170,7 +3170,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sgx-isa 0.4.0",
- "sha2 0.9.9",
+ "sha2 0.10.2",
  "spki 0.6.0-pre.2",
  "thiserror",
  "tiny_http",
