@@ -26,7 +26,7 @@ export function signedCallEIP712Params(chainId: number): {
 } {
   return {
     domain: {
-      name: 'Sapphire ParaTime',
+      name: 'oasis-runtime-sdk/evm: signed query',
       version: '1.0.0',
       chainId,
     },
