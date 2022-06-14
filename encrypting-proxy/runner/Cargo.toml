@@ -13,6 +13,6 @@ futures-util = "0.3.21"
 pin-project = "1.0.10"
 sgx-isa = { version = "0.4.0" , git = "https://github.com/fortanix/rust-sgx" }
 sgxs-loaders = { version = "0.3.3", git = "https://github.com/fortanix/rust-sgx" }
-tokio = "0.2.25"
+tokio = "1.19.2"
 tracing = "0.1.32"
 tracing-subscriber = { version = "0.3.9", features = ["json"] }

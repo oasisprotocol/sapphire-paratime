@@ -3196,7 +3196,7 @@ dependencies = [
  "pin-project",
  "sgx-isa 0.4.0",
  "sgxs-loaders",
- "tokio 0.2.25",
+ "tokio 1.19.2",
  "tracing",
  "tracing-subscriber",
 ]
