@@ -22,7 +22,7 @@ jsonrpsee-types = "0.10.1"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = { version = "1.0.79", features = ["raw_value"] }
 thiserror = "1.0.30"
-tiny_http = { git = "https://github.com/nhynes/tiny-http", branch = "patch-1", version = "0.11.0", features = ["ssl-rustls"] } # Use crates when https://github.com/tiny-http/tiny-http/pull/226 is merged.
+tiny_http = { git = "https://github.com/tiny-http/tiny-http", features = ["ssl-rustls"] } # Use crates when >0.11.0
 ureq = { version = "2.4.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 # crypto
