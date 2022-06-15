@@ -30,6 +30,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly-2022-02-16
           components: rustfmt, clippy
 
       - name: Install protoc

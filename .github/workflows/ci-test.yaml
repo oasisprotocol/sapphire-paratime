@@ -29,6 +29,8 @@ jobs:
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-02-16
 
       - name: Install protoc
         run: sudo apt install -y protobuf-compiler
@@ -56,6 +58,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
+          toolchain: nightly-2022-02-16
           target: x86_64-fortanix-unknown-sgx
 
       - name: Build for SGX
