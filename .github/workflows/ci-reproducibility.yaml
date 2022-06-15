@@ -68,7 +68,7 @@ jobs:
 
   check-reproducible-build-sgx-runtime:
     # NOTE: This name appears in GitHub's Checks API.
-    name: check-reproducibility-sgx
+    name: check-reproducibility-sgx-runtime
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -79,6 +79,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
+          pkg-dirs: runtime
           binaries: sapphire-paratime.sgxs
           sgx: yes
 
@@ -87,6 +88,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
+          pkg-dirs: runtime
           binaries: sapphire-paratime.sgxs
           sgx: yes
 
@@ -96,25 +98,27 @@ jobs:
 
   check-reproducible-build-sgx-encrypting-proxy:
     # NOTE: This name appears in GitHub's Checks API.
-    name: check-reproducibility-sgx
+    name: check-reproducibility-sgx-encrypting-proxy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build runtime, 1.
+      - name: Build encrypting proxy, 1.
         id: build-1
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
+          pkg-dirs: encrypting-proxy/proxy
           binaries: sapphire-encrypting-proxy.sgxs
           sgx: yes
 
-      - name: Build runtime, 2.
+      - name: Build encrypting proxy, 2.
         id: build-2
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
+          pkg-dirs: encrypting-proxy/proxy
           binaries: sapphire-encrypting-proxy.sgxs
           sgx: yes
 

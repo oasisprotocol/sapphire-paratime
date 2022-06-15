@@ -7,6 +7,13 @@ use anyhow::{Error, Result};
 
 use sapphire_encrypting_proxy as sep;
 
+/// This is needed because `ring` uses `-fstack-protector`, and LLVM doesn't insert it
+/// because the stack canary is now stored in thread-local storage and not globablly.
+/// We just define some random bytes here to make the compiler happy.
+#[cfg(target_env = "sgx")]
+#[no_mangle]
+static mut __stack_chk_guard: std::os::raw::c_long = 0x74352b770a7185b5;
+
 fn main() -> Result<()> {
     let args: Args = clap::Parser::parse();
 
