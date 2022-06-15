@@ -20,6 +20,7 @@ threads = 6
 [dependencies]
 oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main" }
 module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main", package = "oasis-runtime-sdk-evm" } # TODO: pin to rev once signed queries land
+cipher-keymanager = { git = "https://github.com/oasisprotocol/cipher-paratime", rev = "462890d" }
 
 # Third party.
 once_cell = "1.8.0"

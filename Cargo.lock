@@ -471,6 +471,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cipher-keymanager"
+version = "0.1.0-testnet"
+source = "git+https://github.com/oasisprotocol/cipher-paratime?rev=462890d#462890d33f55655fa6f9f18b2597c1b9bef21bd3"
+dependencies = [
+ "oasis-core-keymanager-api-common",
+ "oasis-core-keymanager-lib",
+ "oasis-core-runtime",
+]
+
+[[package]]
 name = "clap"
 version = "3.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2323,6 +2333,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "oasis-core-keymanager-lib"
+version = "0.0.0"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.5#5ece9964f231ad4ce9a6d32c800c7a00151f476d"
+dependencies = [
+ "anyhow",
+ "io-context",
+ "lazy_static",
+ "lru",
+ "oasis-cbor",
+ "oasis-core-keymanager-api-common",
+ "oasis-core-keymanager-client",
+ "oasis-core-runtime",
+ "rand 0.7.3",
+ "sgx-isa 0.3.3",
+ "sp800-185",
+ "tiny-keccak 2.0.2",
+ "tokio 1.19.2",
+ "x25519-dalek",
+ "zeroize",
+]
+
+[[package]]
 name = "oasis-core-runtime"
 version = "0.0.0"
 source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.5#5ece9964f231ad4ce9a6d32c800c7a00151f476d"
@@ -3205,6 +3237,7 @@ dependencies = [
 name = "sapphire-paratime"
 version = "0.1.0"
 dependencies = [
+ "cipher-keymanager",
  "io-context",
  "oasis-cbor",
  "oasis-runtime-sdk",

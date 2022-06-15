@@ -3,8 +3,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+#[cfg(target_env = "sgx")]
+use oasis_runtime_sdk::core::consensus::verifier::TrustRoot;
 use oasis_runtime_sdk::{
-    self as sdk, config, modules,
+    self as sdk, config,
+    keymanager::TrustedPolicySigners,
+    modules,
     types::token::{BaseUnits, Denomination},
     Module, Version,
 };
@@ -88,6 +92,25 @@ impl sdk::Runtime for Runtime {
         // EVM.
         module_evm::Module<Config>,
     );
+
+    fn trusted_policy_signers() -> Option<TrustedPolicySigners> {
+        Some(cipher_keymanager::trusted_policy_signers())
+    }
+
+    #[cfg(target_env = "sgx")]
+    fn consensus_trust_root() -> Option<TrustRoot> {
+        if is_testnet() {
+            // Testnet.
+            Some(TrustRoot {
+                height: 9500687,
+                hash: "9cdd98b0acef04edf3056ce0b66b8323474f8c0048ad15ea6f97c3a4fc27a1d2".into(),
+                runtime_id: "0000000000000000000000000000000000000000000000000000000000000000"
+                    .into(),
+            })
+        } else {
+            panic!("no trust root defined for Mainnet");
+        }
+    }
 
     fn genesis_state() -> <Self::Modules as sdk::module::MigrationHandler>::Genesis {
         (
