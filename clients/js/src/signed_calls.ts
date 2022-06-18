@@ -43,7 +43,7 @@ export function signedCallEIP712Params(chainId: number): {
       Leash: [
         { name: 'nonce', type: 'uint64' },
         { name: 'blockNumber', type: 'uint64' },
-        { name: 'blockHash', type: 'uint256' },
+        { name: 'blockHash', type: 'bytes32' },
         { name: 'blockRange', type: 'uint64' },
       ],
     },
