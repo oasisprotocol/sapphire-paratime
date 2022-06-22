@@ -34,9 +34,9 @@ export function signedCallEIP712Params(chainId: number): {
       Call: [
         { name: 'from', type: 'address' },
         { name: 'to', type: 'address' },
-        { name: 'value', type: 'uint256' },
-        { name: 'gasPrice', type: 'uint256' },
         { name: 'gasLimit', type: 'uint64' },
+        { name: 'gasPrice', type: 'uint256' },
+        { name: 'value', type: 'uint256' },
         { name: 'data', type: 'bytes' },
         { name: 'leash', type: 'Leash' },
       ],
@@ -106,11 +106,11 @@ export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
   return {
     from: call.from,
     to: call.to,
-    value: BigNumber.from(call.value ?? DEFAULT_VALUE),
-    gasPrice: BigNumber.from(call.gasPrice ?? DEFAULT_GAS_PRICE),
     gasLimit: BigNumber.from(
       call.gas ?? call.gasLimit ?? DEFAULT_GAS_LIMIT,
     ).toNumber(),
+    gasPrice: BigNumber.from(call.gasPrice ?? DEFAULT_GAS_PRICE),
+    value: BigNumber.from(call.value ?? DEFAULT_VALUE),
     data: hexlify(call.data ?? DEFAULT_DATA, { allowMissingPrefix: true }),
     leash,
   };
@@ -124,9 +124,9 @@ export function makeSimulateCallQuery(
   return {
     caller: toBEBytes(call.from, 20),
     address: toBEBytes(call.to, 20),
-    value: toBEBytes(call.value ?? DEFAULT_VALUE, 32),
-    gas_price: toBEBytes(call.gasPrice ?? DEFAULT_GAS_PRICE, 32),
     gas_limit: gas ? BigNumber.from(gas).toNumber() : DEFAULT_GAS_LIMIT,
+    gas_price: toBEBytes(call.gasPrice ?? DEFAULT_GAS_PRICE, 32),
+    value: toBEBytes(call.value ?? DEFAULT_VALUE, 32),
     data: call.data
       ? arrayify(call.data, { allowMissingPrefix: true })
       : DEFAULT_DATA,
@@ -199,9 +199,9 @@ export type EthCall = {
 export type SignableEthCall = {
   from: string;
   to: string;
-  value?: BigNumber;
-  gasPrice?: BigNumber;
   gasLimit?: number;
+  gasPrice?: BigNumber;
+  value?: BigNumber;
   data?: string;
   leash: Leash;
 };
@@ -212,10 +212,10 @@ export type SignedQueryEnvelope = {
 };
 
 export type SimulateCallQuery = {
-  gas_price: Uint8Array; // uint256
-  gas_limit: number; // uint64
   caller: Uint8Array; // H160
   address: Uint8Array; // H160
+  gas_limit: number; // uint64
+  gas_price: Uint8Array; // uint256
   value: Uint8Array; // uint256
   data: Uint8Array; // bytes
   leash: SnakeCasedProperties<Leash>; // itself

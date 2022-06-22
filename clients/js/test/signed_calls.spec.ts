@@ -36,17 +36,19 @@ describe('signed calls', () => {
     const call = {
       from: from.address,
       to,
-      value: 42,
-      gasPrice: 123,
       gasLimit: 10,
+      gasPrice: 123,
+      value: 42,
       data: [1, 2, 3, 4],
     };
 
     const signedCall = await prepareSignedCall(call, from, overrides);
+    // console.log(signedCall);
 
     const envelopedQuery: SignedQueryEnvelope = cbor.decode(
       arrayify(signedCall.data),
     );
+    // console.log(Buffer.from(envelopedQuery.signature).toString('hex'));
 
     // Validate the structure.
     const simulateCallQuery = envelopedQuery.query;
