@@ -12,7 +12,7 @@ on:
 
 jobs:
 
-  prepare-release-runtime:
+  prepare-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,7 +26,7 @@ jobs:
       - name: Install protoc
         run: sudo apt install -y protobuf-compiler
 
-      - name: Build tagged release, elf
+      - name: Build tagged runtime, elf
         id: build-elf
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
@@ -45,34 +45,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: sapphire-paratime.orc
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: true
-
-  prepare-release-encrypting-proxy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go 1.17
-        uses: actions/setup-go@v3
-        with:
-          go-version: "1.17.x"
-
-      - name: Install protoc
-        run: sudo apt install -y protobuf-compiler
-
-      - name: Build tagged release, elf
-        id: build-elf
-        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
-        with:
-          image: oasisprotocol/runtime-builder:main
-          binaries: sapphire-encrypting-proxy
-          clean: no
-
-      - name: Publish the release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: sapphire-encrypting-proxy
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: true
