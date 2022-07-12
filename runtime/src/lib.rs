@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use oasis_runtime_sdk::core::consensus::verifier::TrustRoot;
 use oasis_runtime_sdk::{
     self as sdk, config,
+    core::common::crypto::signature::PublicKey,
     keymanager::TrustedPolicySigners,
     modules,
     types::token::{BaseUnits, Denomination},
@@ -94,7 +95,13 @@ impl sdk::Runtime for Runtime {
     );
 
     fn trusted_policy_signers() -> Option<TrustedPolicySigners> {
-        Some(cipher_keymanager::trusted_policy_signers())
+        let tps = cipher_keymanager::trusted_policy_signers();
+        // The `cipher_keymanager` crate may use a different version of `oasis_core`
+        // so we need to convert the `TrustedPolicySigners` between the versions.
+        Some(TrustedPolicySigners {
+            signers: tps.signers.into_iter().map(|s| PublicKey(s.0)).collect(),
+            threshold: tps.threshold,
+        })
     }
 
     #[cfg(target_env = "sgx")]
@@ -118,7 +125,7 @@ impl sdk::Runtime for Runtime {
                 parameters: modules::core::Parameters {
                     min_gas_price: { BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]) },
                     max_batch_gas: if is_testnet() { 30_000_000 } else { 10_000_000 },
-                    max_tx_size: 32 * 1024,
+                    max_tx_size: 300 * 1024,
                     max_tx_signers: 1,
                     max_multisig_signers: 8,
                     gas_costs: modules::core::GasCosts {
