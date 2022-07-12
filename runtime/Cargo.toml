@@ -1,26 +1,26 @@
 [package]
 name = "sapphire-paratime"
-version = "0.1.0"
+version = "0.1.0-testnet"
 authors = ["Oasis Protocol Foundation <info@oasisprotocol.org>"]
 edition = "2021"
 license = "Apache-2.0"
-resolver = "2"
 
 [package.metadata.orc.release]
-runtime-id = "000000000000000000000000000000000000000000000000e2eaa99fc008f87f"
+runtime-id = "0000000000000000000000000000000000000000000000000000000000000000"
 
 [package.metadata.orc.test]
-runtime-id = "00000000000000000000000000000000000000000000000072c8215e60d5bca7"
+runtime-id = "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
 
 [package.metadata.fortanix-sgx]
 heap-size = 134217728
 stack-size = 2097152
 threads = 6
+debug = false
 
 [dependencies]
-oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main" }
-module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", branch = "main", package = "oasis-runtime-sdk-evm" } # TODO: pin to rev once signed queries land
-cipher-keymanager = { git = "https://github.com/oasisprotocol/cipher-paratime", rev = "462890d" }
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "b4efbe841" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "b4efbe841", package = "oasis-runtime-sdk-evm" }
+cipher-keymanager = { git = "https://github.com/oasisprotocol/cipher-paratime", rev = "462890d33f55655fa6f9f18b2597c1b9bef21bd3" }
 
 # Third party.
 once_cell = "1.8.0"
