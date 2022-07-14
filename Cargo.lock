@@ -3367,7 +3367,7 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "0.1.0-testnet"
+version = "0.1.1-testnet"
 dependencies = [
  "cipher-keymanager",
  "io-context",
