@@ -18,8 +18,8 @@ threads = 6
 debug = false
 
 [dependencies]
-oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "b4efbe841" }
-module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "b4efbe841", package = "oasis-runtime-sdk-evm" }
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "60136c93aa95be844fdd3ef212974dc153100074" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "60136c93aa95be844fdd3ef212974dc153100074", package = "oasis-runtime-sdk-evm" }
 cipher-keymanager = { git = "https://github.com/oasisprotocol/cipher-paratime", rev = "462890d33f55655fa6f9f18b2597c1b9bef21bd3" }
 
 # Third party.
