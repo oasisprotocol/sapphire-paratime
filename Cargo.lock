@@ -2314,13 +2314,13 @@ dependencies = [
 [[package]]
 name = "oasis-core-client"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8#c94a7fa2c9532cda579d595eeb457a559bdf8013"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9#2b35f69b5a8fa3d9b8e1dd19123d4e3da72b5e38"
 dependencies = [
  "anyhow",
  "futures 0.3.21",
  "io-context",
  "oasis-cbor",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
  "thiserror",
  "tokio 1.20.1",
 ]
@@ -2345,13 +2345,13 @@ dependencies = [
 [[package]]
 name = "oasis-core-keymanager-api-common"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8#c94a7fa2c9532cda579d595eeb457a559bdf8013"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9#2b35f69b5a8fa3d9b8e1dd19123d4e3da72b5e38"
 dependencies = [
  "anyhow",
  "base64",
  "lazy_static",
  "oasis-cbor",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
  "rand 0.7.3",
  "rustc-hex",
  "thiserror",
@@ -2377,15 +2377,15 @@ dependencies = [
 [[package]]
 name = "oasis-core-keymanager-client"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8#c94a7fa2c9532cda579d595eeb457a559bdf8013"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9#2b35f69b5a8fa3d9b8e1dd19123d4e3da72b5e38"
 dependencies = [
  "futures 0.3.21",
  "io-context",
  "lru",
  "oasis-cbor",
- "oasis-core-client 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
- "oasis-core-keymanager-api-common 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
+ "oasis-core-client 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
+ "oasis-core-keymanager-api-common 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
  "thiserror",
 ]
 
@@ -2470,7 +2470,7 @@ dependencies = [
 [[package]]
 name = "oasis-core-runtime"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8#c94a7fa2c9532cda579d595eeb457a559bdf8013"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9#2b35f69b5a8fa3d9b8e1dd19123d4e3da72b5e38"
 dependencies = [
  "anyhow",
  "arbitrary",
@@ -2526,7 +2526,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=60136c93aa95be844fdd3ef212974dc153100074#60136c93aa95be844fdd3ef212974dc153100074"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=c8be17dff70962d7da295e9143a7a9fe06a70720#c8be17dff70962d7da295e9143a7a9fe06a70720"
 dependencies = [
  "anyhow",
  "base64",
@@ -2541,10 +2541,10 @@ dependencies = [
  "k256",
  "num-traits",
  "oasis-cbor",
- "oasis-core-client 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
- "oasis-core-keymanager-api-common 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
- "oasis-core-keymanager-client 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.8)",
+ "oasis-core-client 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
+ "oasis-core-keymanager-api-common 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
+ "oasis-core-keymanager-client 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.1.9)",
  "oasis-runtime-sdk-macros",
  "once_cell",
  "schnorrkel",
@@ -2560,7 +2560,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=60136c93aa95be844fdd3ef212974dc153100074#60136c93aa95be844fdd3ef212974dc153100074"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=c8be17dff70962d7da295e9143a7a9fe06a70720#c8be17dff70962d7da295e9143a7a9fe06a70720"
 dependencies = [
  "anyhow",
  "base64",
@@ -2587,7 +2587,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=60136c93aa95be844fdd3ef212974dc153100074#60136c93aa95be844fdd3ef212974dc153100074"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=c8be17dff70962d7da295e9143a7a9fe06a70720#c8be17dff70962d7da295e9143a7a9fe06a70720"
 dependencies = [
  "darling 0.14.1",
  "proc-macro2 1.0.43",
@@ -3344,7 +3344,7 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "0.1.1-testnet"
+version = "0.1.2-testnet"
 dependencies = [
  "cipher-keymanager",
  "io-context",
