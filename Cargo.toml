@@ -1,14 +1,7 @@
 [workspace]
-members = [
-  "encrypting-proxy/proxy",
-  "encrypting-proxy/runner",
-  "runtime",
-]
+members = ["runtime"]
 resolver = "2"
 
 [profile.release]
 codegen-units = 1
 lto = "thin"
-
-[patch.crates-io]
-ring = { git = "https://github.com/crypto-com/ring", rev = "4d42cc1f" }

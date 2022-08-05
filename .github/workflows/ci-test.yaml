@@ -65,7 +65,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: -p sapphire-paratime -p sapphire-encrypting-proxy --locked --release --target x86_64-fortanix-unknown-sgx
+          args: -p sapphire-paratime --locked --release --target x86_64-fortanix-unknown-sgx
 
   test-client-js:
     name: test-client-js

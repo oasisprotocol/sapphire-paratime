@@ -1,7 +1,0 @@
-[build]
-rustflags = ["-Ctarget-feature=+aes,+sse2,+ssse3"]
-rustdocflags = ["-Ctarget-feature=+aes,+sse2,+ssse3"]
-
-[test]
-rustflags = ["-Ctarget-feature=+aes,+sse2,+ssse3"]
-rustdocflags = ["-Ctarget-feature=+aes,+sse2,+ssse3"]
