@@ -28,27 +28,14 @@ jobs:
           setup: |
             export OASIS_UNSAFE_SKIP_AVR_VERIFY=1 OASIS_UNSAFE_SKIP_KM_POLICY=1 OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES=1
 
-      - name: Build tagged release, sgxs, debug
-        id: build-debug-sgxs
-        uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
-        with:
-          image: oasisprotocol/runtime-builder:main
-          pkg-dirs: runtime
-          binaries: sapphire-paratime.sgxs
-          clean: no
-          sgx: yes
-          setup: |
-            export OASIS_UNSAFE_SKIP_AVR_VERIFY=1 OASIS_UNSAFE_SKIP_KM_POLICY=1 OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES=1
-
-      - name: Create the debug Oasis Runtime Containers
+      - name: Create the debug Oasis Runtime Container
         run: |
           go install github.com/oasisprotocol/oasis-sdk/tools/orc@latest
           pushd runtime
-          orc init ${RUNTIME_EXECUTABLE} --sgx-executable ${RUNTIME_SGXS} --output ../debug-sapphire-paratime.orc
+          orc init ${RUNTIME_EXECUTABLE} --output ../insecure-debug-sapphire-paratime.orc
           popd
         env:
           RUNTIME_EXECUTABLE: ${{ github.workspace }}/${{ steps.build-debug-elf.outputs.build-path }}/sapphire-paratime
-          RUNTIME_SGXS: ${{ github.workspace }}/${{ steps.build-debug-sgxs.outputs.build-path }}/sapphire-paratime.sgxs
 
       - name: Build tagged release, elf
         id: build-elf
@@ -69,7 +56,7 @@ jobs:
           clean: no
           sgx: yes
 
-      - name: Create the Oasis Runtime Containers
+      - name: Create the Oasis Runtime Container
         run: |
           go install github.com/oasisprotocol/oasis-sdk/tools/orc@latest
           pushd runtime
@@ -84,5 +71,5 @@ jobs:
         with:
           # Create a draft since the release requires an offline signing process.
           draft: true
-          artifacts: sapphire-paratime.orc,debug-sapphire-paratime.orc
+          artifacts: sapphire-paratime.orc,insecure-debug-sapphire-paratime.orc
           token: ${{ secrets.GITHUB_TOKEN }}
