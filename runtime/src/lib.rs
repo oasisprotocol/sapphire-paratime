@@ -95,6 +95,9 @@ impl sdk::Runtime for Runtime {
     );
 
     fn trusted_policy_signers() -> Option<TrustedPolicySigners> {
+        if option_env!("OASIS_UNSAFE_SKIP_KM_POLICY") == Some("1") {
+            return Some(TrustedPolicySigners::default());
+        }
         let tps = cipher_keymanager::trusted_policy_signers();
         // The `cipher_keymanager` crate may use a different version of `oasis_core`
         // so we need to convert the `TrustedPolicySigners` between the versions.
