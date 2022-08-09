@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/ethereum/go-ethereum v1.10.19
-	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.2.0
 )
 
 require (

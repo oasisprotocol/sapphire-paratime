@@ -8,14 +8,29 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/evm"
 )
 
 // Signer is a type that produces secp256k1 signatures in RSV format.
 type Signer interface {
 	// Sign returns a 65-byte secp256k1 signature as (R || S || V) over the provided digest.
 	Sign(digest [32]byte) ([]byte, error)
+}
+
+// SignedCallDataPack defines a signed call.
+//
+// It should be encoded and sent in the `data` field of an Ethereum call.
+type SignedCallDataPack struct {
+	Data      DataEnvelope `json:"data"`
+	Leash     Leash        `json:"leash"`
+	Signature []byte       `json:"signature"`
+}
+
+// DataEnvelope is an oasis-sdk `Call` without optional fields.
+//
+// Replace this with an an actual format-bearing `Call` during encryption using
+// a callformat encode method.
+type DataEnvelope struct {
+	Body []byte `json:"body"`
 }
 
 type Leash struct {
@@ -25,48 +40,23 @@ type Leash struct {
 	BlockRange  uint64 `json:"block_range"`
 }
 
-type LeashedSimulateCallQuery struct {
-	evm.SimulateCallQuery
-	Leash Leash `json:"leash"`
-}
-
-// SignedQueryEnvelope is a query alongside its signature.
+// NewDataPack returns a SignedCallDataPack.
 //
-// It should be encoded and sent in the `data` field of a `SimulateCallQuery`.
-type SignedQueryEnvelope struct {
-	Query     LeashedSimulateCallQuery `json:"query"`
-	Signature []byte                   `json:"signature"`
-}
-
-// EncodeSignedCall returns a value that should be set as the `data` field of `SimulateCall`.
-//
-// This method does not encrypt `data`, so that should be done in advance, if required.
-func EncodeSignedCall(signer Signer, chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice, value *big.Int, data []byte, leash Leash) ([]byte, error) {
-	gasPriceU256 := math.U256Bytes(gasPrice)
-	valueU256 := math.U256Bytes(value)
-	signable := packCall(chainId, caller, callee, gasLimit, gasPrice, value, data, leash)
+// This method does not encrypt `data`, so that should be done afterwards.
+func NewDataPack(signer Signer, chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice, value *big.Int, data []byte, leash Leash) (*SignedCallDataPack, error) {
+	signable := makeSignableCall(chainId, caller, callee, gasLimit, gasPrice, value, data, leash)
 	signature, err := signTypedData(signer, signable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign call: %w", err)
 	}
-	envelopedCall := cbor.Marshal(SignedQueryEnvelope{
-		Query: LeashedSimulateCallQuery{
-			SimulateCallQuery: evm.SimulateCallQuery{
-				GasPrice: gasPriceU256,
-				GasLimit: gasLimit,
-				Caller:   caller,
-				Address:  callee,
-				Value:    valueU256,
-				Data:     data,
-			},
-			Leash: leash,
-		},
+	return &SignedCallDataPack{
+		Data:      DataEnvelope{Body: data},
+		Leash:     leash,
 		Signature: signature,
-	})
-	return envelopedCall, nil
+	}, nil
 }
 
-func packCall(chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice *big.Int, value *big.Int, data []byte, leash Leash) apitypes.TypedData {
+func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice *big.Int, value *big.Int, data []byte, leash Leash) apitypes.TypedData {
 	if value == nil {
 		value = big.NewInt(0)
 	}
