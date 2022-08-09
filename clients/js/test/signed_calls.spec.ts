@@ -1,12 +1,12 @@
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import * as cbor from 'cborg';
-import { BigNumber, Wallet, ethers } from 'ethers';
+import { Wallet, ethers, BigNumber } from 'ethers';
 
 import {
   PrepareSignedCallOverrides,
-  SignableEthCall,
-  SignedQueryEnvelope,
-  SimulateCallQuery,
+  SignedCall,
+  SignedCallDataPack,
+  makeSignableCall,
   prepareSignedCall,
   signedCallEIP712Params,
 } from '@oasislabs/sapphire-paratime/signed_calls';
@@ -43,75 +43,78 @@ describe('signed calls', () => {
     };
 
     const signedCall = await prepareSignedCall(call, from, overrides);
-    // console.log(signedCall);
+    expect(signedCall).toMatchObject({
+      ...call,
+      data: signedCall.data, // don't check this field (yet)
+    });
 
-    const envelopedQuery: SignedQueryEnvelope = cbor.decode(
-      arrayify(signedCall.data),
-    );
-    // console.log(Buffer.from(envelopedQuery.signature).toString('hex'));
-
-    // Validate the structure.
-    const simulateCallQuery = envelopedQuery.query;
-    expect(simulateCallQuery.caller).toEqual(arrayify(call.from));
-    expect(simulateCallQuery.address).toEqual(arrayify(call.to));
-    expect(simulateCallQuery.value).toEqual(u8To256(call.value));
-    expect(simulateCallQuery.gas_price).toEqual(u8To256(call.gasPrice));
-    expect(simulateCallQuery.gas_limit).toEqual(call.gasLimit);
-    expect(simulateCallQuery.data).toEqual(new Uint8Array(call.data));
-    expect(simulateCallQuery.leash.nonce).toEqual(overrides.leash?.nonce);
-    expect(simulateCallQuery.leash.block_number).toEqual(
-      overrides.leash!.block!.number,
-    );
-    expect(hexlify(simulateCallQuery.leash.block_hash)).toEqual(
+    const dataPack = verify(signedCall);
+    expect(dataPack.data?.body).toEqual(new Uint8Array(call.data));
+    expect(dataPack.leash.nonce).toEqual(overrides.leash?.nonce);
+    expect(dataPack.leash.block_number).toEqual(overrides.leash!.block!.number);
+    expect(hexlify(dataPack.leash.block_hash)).toEqual(
       overrides.leash!.block!.hash!,
     );
-    expect(simulateCallQuery.leash.block_range).toEqual(
-      overrides.leash?.blockRange,
-    );
-    // Validate the signature.
-    const recoveredSigner = verify(envelopedQuery);
-    expect(recoveredSigner).toEqual(from.address);
+    expect(dataPack.leash.block_range).toEqual(overrides.leash?.blockRange);
   });
 
   it('partial', async () => {
     const call = {
       from: from.address,
-      to,
     };
 
     const signedCall = await prepareSignedCall(call, from, overrides);
+    expect(signedCall).toMatchObject({
+      ...call,
+      data: signedCall.data, // don't check this field (yet)
+    });
 
-    const envelopedQuery = cbor.decode(arrayify(signedCall.data));
-    const recoveredSigner = verify(envelopedQuery);
-    expect(recoveredSigner).toEqual(from.address);
+    verify(signedCall);
+  });
+
+  it('defaults', async () => {
+    const call = {
+      from: from.address,
+    };
+
+    const signable = makeSignableCall(call, {
+      nonce: 2,
+      block_number: 1,
+      block_range: 4,
+      block_hash: new Uint8Array(),
+    });
+
+    expect(signable).toEqual({
+      from: from.address,
+      to: '0x0000000000000000000000000000000000000000',
+      gasLimit: 0,
+      gasPrice: BigNumber.from(0),
+      value: BigNumber.from(0),
+      data: '0x',
+      leash: {
+        nonce: 2,
+        blockNumber: 1,
+        blockRange: 4,
+        blockHash: new Uint8Array(),
+      },
+    });
   });
 });
 
-function verify({ query, signature }: SignedQueryEnvelope): string {
+function verify(call: SignedCall): SignedCallDataPack {
   const { domain, types } = signedCallEIP712Params(CHAIN_ID);
-  const decoded = decodeSimulateCallQuery(query);
-  return ethers.utils.verifyTypedData(domain, types, decoded, signature);
-}
-
-function decodeSimulateCallQuery(query: SimulateCallQuery): SignableEthCall {
-  return {
-    from: hexlify(query.caller),
-    to: hexlify(query.address),
-    value: query.value ? BigNumber.from(query.value) : undefined,
-    gasPrice: query.gas_price ? BigNumber.from(query.gas_price) : undefined,
-    gasLimit: query.gas_limit,
-    data: query.data ? hexlify(query.data) : undefined,
-    leash: {
-      nonce: query.leash.nonce,
-      blockNumber: query.leash.block_number,
-      blockHash: query.leash.block_hash,
-      blockRange: query.leash.block_range,
-    },
-  };
-}
-
-function u8To256(u8: number): Uint8Array {
-  const u256 = new Uint8Array(32);
-  u256[31] = u8;
-  return u256;
+  const dataPack: SignedCallDataPack = cbor.decode(arrayify(call.data));
+  const recoveredSender = ethers.utils.verifyTypedData(
+    domain,
+    types,
+    makeSignableCall(
+      { ...call, data: dataPack.data ? dataPack.data.body : undefined },
+      dataPack.leash,
+    ),
+    dataPack.signature,
+  );
+  if (call.from !== recoveredSender) {
+    throw new Error('signed call signature verification failed');
+  }
+  return dataPack;
 }
