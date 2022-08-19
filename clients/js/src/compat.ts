@@ -65,11 +65,13 @@ export function wrap<U extends UpstreamProvider>(
     });
 
   if (isEthersTypedDataSigner(upstream)) {
-    const signer: EthersTypedDataSigner = upstream.provider
-      ? (upstream.connect(
-          wrapEthersProvider(upstream.provider, cipher, upstream),
-        ) as EthersTypedDataSigner)
-      : upstream;
+    const signer: EthersTypedDataSigner =
+      upstream.provider &&
+      !((upstream instanceof JsonRpcSigner) /* cannot be reconnected */)
+        ? (upstream.connect(
+            wrapEthersProvider(upstream.provider, cipher, upstream),
+          ) as EthersTypedDataSigner)
+        : upstream;
     const hooks = {
       sendTransaction: hookEthersSend(
         signer.sendTransaction.bind(signer),
@@ -180,8 +182,8 @@ function isEthersTypedDataSigner(
   return EthersSigner.isSigner(upstream) && '_signTypedData' in upstream;
 }
 
-function isJsonRpcProvider(p?: EthersProvider): p is JsonRpcProvider {
-  return p !== undefined && 'send' in p;
+function isJsonRpcProvider(p: unknown): p is JsonRpcProvider {
+  return isEthersProvider(p) && 'send' in p;
 }
 
 function hookEthersCall(

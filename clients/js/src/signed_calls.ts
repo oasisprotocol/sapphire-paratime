@@ -16,8 +16,8 @@ import type {
 
 import { Cipher, Envelope } from './cipher.js';
 
-const DEFAULT_GAS_PRICE = 0;
-const DEFAULT_GAS_LIMIT = 0;
+const DEFAULT_GAS_PRICE = 1; // Default gas params are assigned in the web3 gateway.
+const DEFAULT_GAS_LIMIT = 30_000_000;
 const DEFAULT_VALUE = 0;
 const DEFAULT_DATA = '0x';
 const zeroAddress = () => `0x${'0'.repeat(40)}`;
@@ -118,7 +118,8 @@ async function makeLeash(
     blockP = overrides.block;
   } else {
     signer._checkProvider('getBlock');
-    blockP = signer.provider!.getBlock(overrides?.blockTag ?? 'latest');
+    const latestBlock = await signer.provider!.getBlock('latest');
+    blockP = signer.provider!.getBlock(latestBlock.number - 1); // The latest block is not historical.
   }
   const [nonce, block] = await Promise.all([nonceP, blockP]);
   return {
