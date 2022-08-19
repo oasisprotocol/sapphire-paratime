@@ -196,7 +196,14 @@ export class Mock extends Cipher {
   }
 }
 
+/**
+ * A Cipher that constructs itself only when needed.
+ * Useful for deferring async construction (e.g., fetching public keys) until in an async context.
+ *
+ * @param generator A function that yields the cipher implementation. This function must be multiply callable and without observable side effects (c.f. Rust's `impl Fn()`).
+ */
 export function lazy(generator: () => Promisable<Cipher>): Cipher {
+  // Note: in cases when `generate` is run concurrently, the first fulfillment will be used.
   return new Proxy(
     {},
     {
@@ -205,8 +212,8 @@ export function lazy(generator: () => Promisable<Cipher>): Cipher {
         if (prop === 'kind' || prop === 'publicKey') {
           if (target.inner) return Reflect.get(target.inner, prop);
           return Promise.resolve(generator()).then((inner: Cipher) => {
-            target.inner = inner;
-            return Reflect.get(inner, prop);
+            if (!target.inner) target.inner = inner;
+            return Reflect.get(target.inner, prop);
           });
         }
         // Funcs (async)
