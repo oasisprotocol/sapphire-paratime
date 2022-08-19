@@ -82,8 +82,8 @@ describe('signed calls', () => {
     expect(signable).toEqual({
       from: from.address,
       to: '0x0000000000000000000000000000000000000000',
-      gasLimit: 0,
-      gasPrice: BigNumber.from(0),
+      gasLimit: 30_000_000,
+      gasPrice: BigNumber.from(1),
       value: BigNumber.from(0),
       data: '0x',
       leash: {

@@ -1,4 +1,8 @@
-export * from './cipher.js';
+export {
+  Plain as PlainCipher,
+  X25519DeoxysII as X25519DeoxysIICipher,
+  lazy as lazyCipher,
+} from './cipher.js';
 export * from './compat.js';
 export * from './signed_calls.js';
 

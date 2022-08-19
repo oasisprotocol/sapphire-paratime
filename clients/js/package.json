@@ -14,20 +14,22 @@
     "lib",
     "src"
   ],
-  "type": "module",
   "sideEffects": false,
-  "main": "./lib/index.js",
-  "module": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/cjs/index.d.ts",
   "exports": {
-    ".": "./lib/index.js",
-    "./compat": "./lib/compat.js",
-    "./signed_calls": "./lib/signed_calls.js"
+    "node": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
+    }
   },
   "scripts": {
     "lint": "prettier --check . && eslint --ignore-path .gitignore .",
     "format": "prettier --write . && eslint --ignore-path .gitignore --fix .",
-    "build": "tsc -b",
+    "build": "tsc -p ./tsconfig.json && tsc -p ./tsconfig.cjs.json",
+    "build:esm": "tsc -p ./tsconfig.json",
+    "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "jest",
     "coverage": "jest --coverage"
   },

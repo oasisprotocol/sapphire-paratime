@@ -8,7 +8,7 @@
     "lib": ["esnext", "dom"],
     "module": "es2020",
     "moduleResolution": "node",
-    "outDir": "lib",
+    "outDir": "lib/esm",
     "paths": {
       "@oasislabs/sapphire-paratime": ["src/index"],
       "@oasislabs/sapphire-paratime/*": ["src/*"]
