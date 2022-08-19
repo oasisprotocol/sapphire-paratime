@@ -1,17 +1,13 @@
-import { arrayify, hexlify } from '@ethersproject/bytes';
-import * as cbor from 'cborg';
-import { Wallet, ethers, BigNumber } from 'ethers';
+import { hexlify } from '@ethersproject/bytes';
+import { Wallet, BigNumber } from 'ethers';
 
 import {
   PrepareSignedCallOverrides,
-  SignedCall,
   SignedCallDataPack,
   makeSignableCall,
-  prepareSignedCall,
-  signedCallEIP712Params,
-} from '@oasislabs/sapphire-paratime/signed_calls';
+} from '@oasislabs/sapphire-paratime/signed_calls.js';
 
-const CHAIN_ID = 0x5afe;
+import { CHAIN_ID, verifySignedCall } from './utils';
 
 describe('signed calls', () => {
   // 0x11e244400Cf165ade687077984F09c3A037b868F
@@ -42,14 +38,15 @@ describe('signed calls', () => {
       data: [1, 2, 3, 4],
     };
 
-    const signedCall = await prepareSignedCall(call, from, overrides);
-    expect(signedCall).toMatchObject({
-      ...call,
-      data: signedCall.data, // don't check this field (yet)
-    });
+    const origCall = JSON.parse(JSON.stringify(call));
+    const dataPack = await SignedCallDataPack.make(call, from, overrides);
+    expect(call).toMatchObject(origCall); // Should not modify input.
 
-    const dataPack = verify(signedCall);
-    expect(dataPack.data?.body).toEqual(new Uint8Array(call.data));
+    await verifySignedCall({
+      ...call,
+      data: dataPack.encode(),
+    });
+    expect(dataPack.data).toEqual(new Uint8Array(call.data));
     expect(dataPack.leash.nonce).toEqual(overrides.leash?.nonce);
     expect(dataPack.leash.block_number).toEqual(overrides.leash!.block!.number);
     expect(hexlify(dataPack.leash.block_hash)).toEqual(
@@ -63,13 +60,11 @@ describe('signed calls', () => {
       from: from.address,
     };
 
-    const signedCall = await prepareSignedCall(call, from, overrides);
-    expect(signedCall).toMatchObject({
+    const dataPack = await SignedCallDataPack.make(call, from, overrides);
+    await verifySignedCall({
       ...call,
-      data: signedCall.data, // don't check this field (yet)
+      data: dataPack.encode(),
     });
-
-    verify(signedCall);
   });
 
   it('defaults', async () => {
@@ -100,21 +95,3 @@ describe('signed calls', () => {
     });
   });
 });
-
-function verify(call: SignedCall): SignedCallDataPack {
-  const { domain, types } = signedCallEIP712Params(CHAIN_ID);
-  const dataPack: SignedCallDataPack = cbor.decode(arrayify(call.data));
-  const recoveredSender = ethers.utils.verifyTypedData(
-    domain,
-    types,
-    makeSignableCall(
-      { ...call, data: dataPack.data ? dataPack.data.body : undefined },
-      dataPack.leash,
-    ),
-    dataPack.signature,
-  );
-  if (call.from !== recoveredSender) {
-    throw new Error('signed call signature verification failed');
-  }
-  return dataPack;
-}
