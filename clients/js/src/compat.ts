@@ -42,6 +42,7 @@ type AsyncSend = (
 ) => void;
 
 interface Web3ReqArgs {
+  readonly id?: string | number;
   readonly method: string;
   readonly params?: any[];
 }
@@ -123,17 +124,17 @@ export function wrap<U extends UpstreamProvider>(
       cb: (err: unknown, ok?: unknown) => void,
     ) => {
       hookP(args)
-        .then((res) => cb(null, { result: res }))
+        .then((res) => cb(null, { jsonrpc: '2.0', id: args.id, result: res }))
         .catch((err) => cb(err));
     };
-    const sendProp = 'send' in upstream ? 'send' : 'sendAsync';
     return new Proxy(upstream, {
       get(web3, prop) {
         if (prop === WRAPPED_MARKER) return true;
-        if (prop === sendProp) return hook;
+        // Web3.js legacy code may use both send and sendAync.
+        if (prop === 'send' || prop === 'sendAsync') return hook;
         return proxy(web3, prop);
       },
-    });
+    }) as U;
   }
 
   throw new TypeError('Unable to wrap unsupported upstream signer.');
