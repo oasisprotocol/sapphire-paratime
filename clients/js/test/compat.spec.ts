@@ -98,7 +98,7 @@ class MockEIP1193Provider extends MockProvider {
 
 class MockLegacyProvider extends MockProvider {
   public readonly send: (
-    args: { method: string; params?: any[] },
+    args: { id?: string | number; method: string; params?: any[] },
     cb: (err: unknown, ok?: unknown) => void,
   ) => void;
 
@@ -107,7 +107,7 @@ class MockLegacyProvider extends MockProvider {
     this.send = (args, cb) => {
       this._request(args)
         .then((res: any) => {
-          cb(null, { result: res });
+          cb(null, { jsonrpc: '2.0', id: args.id, result: res });
         })
         .catch((err) => cb(err));
     };
