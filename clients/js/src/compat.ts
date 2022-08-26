@@ -2,6 +2,7 @@ import {
   Signer as EthersSigner,
   TypedDataSigner,
 } from '@ethersproject/abstract-signer';
+import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, isBytesLike } from '@ethersproject/bytes';
 import * as rlp from '@ethersproject/rlp';
 import {
@@ -48,6 +49,8 @@ interface Web3ReqArgs {
 }
 
 const WRAPPED_MARKER = '_isSapphireWrapped';
+/** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit (currently set to the one found in the Eth docs). */
+const DEFAULT_GAS = 90_000;
 
 export function wrap<U extends UpstreamProvider>(
   upstream: U,
@@ -221,6 +224,7 @@ function hookEthersSend(send: EthersCall, cipher: Cipher): EthersCall {
   return async (tx: Deferrable<TransactionRequest>, ...rest) => {
     const data = await tx.data;
     tx.data = cipher.encryptEncode(data);
+    if (!tx.gasLimit) tx.gasLimit = DEFAULT_GAS;
     return send(tx, ...rest);
   };
 }
@@ -291,6 +295,7 @@ async function prepareRequest(
 
   if (method === 'eth_signTransaction' || method === 'eth_sendTransaction') {
     params[0].data = await cipher.encryptEncode(params[0].data);
+    if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
     return { method, params };
   }
 
@@ -336,6 +341,7 @@ async function repackRawTx(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { r, s, v, hash, type, ...parsed } = parseTx(raw);
   if (!signer) throw new CallError(REPACK_ERROR, null);
+  if (!parsed.gasLimit) parsed.gasLimit = BigNumber.from(DEFAULT_GAS);
   try {
     return signer.signTransaction({
       ...parsed,
