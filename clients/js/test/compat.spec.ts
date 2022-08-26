@@ -43,12 +43,10 @@ class MockProvider {
       if (method === 'eth_call') {
         return ethers.utils.hexlify(
           cbor.encode({
-            unknown: ethers.utils.hexlify(
-              cbor.encode({
-                nonce: MockCipher.NONCE,
-                data: new Uint8Array([0x11, 0x23, 0x58]),
-              }),
-            ),
+            unknown: {
+              nonce: MockCipher.NONCE,
+              data: cbor.encode({ ok: new Uint8Array([0x11, 0x23, 0x58]) }),
+            },
           }),
         );
       }
@@ -141,7 +139,7 @@ describe('ethers signer', () => {
     const txData = cbor.decode(ethers.utils.arrayify(tx.data));
     expect(txData.format).toEqual(cipher.kind);
     expect(ethers.utils.hexlify(txData.body.data)).toEqual(
-      ethers.utils.hexlify(data),
+      ethers.utils.hexlify(cbor.encode({ body: data })),
     );
   });
 
