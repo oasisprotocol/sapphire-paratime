@@ -27,7 +27,7 @@ describe('Plain', () => {
 
     const envelope = await cipher.encryptEnvelope(DATA);
     expect(envelope).toBeDefined();
-    expect({ format: 0, body: DATA }).toMatchObject(envelope!);
+    expect({ body: cbor.encode({ body: DATA }) }).toMatchObject(envelope!);
     expect(await cipher.encryptEnvelope()).not.toBeDefined();
 
     expect(await cipher.encryptEncode(DATA)).toEqual(
@@ -79,14 +79,13 @@ describe('X25519DeoxysII', () => {
     expect(envelope.format).toEqual(1);
     if (!('nonce' in envelope.body)) throw new Error('unenveloped body');
     expect(envelope.body.pk).toEqual(cipher.publicKey);
+    const resData = await cipher.encrypt(cbor.encode({ ok: DATA }));
     expect(
       await cipher.decryptCallResult({
-        unknown: hexlify(
-          cbor.encode({
-            nonce: envelope.body.nonce,
-            data: envelope.body.data,
-          }),
-        ),
+        unknown: {
+          nonce: resData.nonce,
+          data: resData.ciphertext,
+        },
       }),
     ).toEqual(DATA);
   });

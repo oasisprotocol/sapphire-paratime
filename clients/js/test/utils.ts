@@ -17,9 +17,13 @@ export async function verifySignedCall(
   const { domain, types } = signedCallEIP712Params(CHAIN_ID);
   const dataPack = cbor.decode(ethers.utils.arrayify(call.data!));
   const body = dataPack?.data?.body;
-  const origData = cipher
-    ? await cipher.decrypt(body?.nonce, body?.data ?? body)
-    : body;
+  let origData: Uint8Array;
+  if (cipher) {
+    const envelopeBytes = await cipher.decrypt(body?.nonce, body?.data ?? body);
+    origData = cbor.decode(envelopeBytes).body;
+  } else {
+    origData = body;
+  }
   const recoveredSender = ethers.utils.verifyTypedData(
     domain,
     types,
