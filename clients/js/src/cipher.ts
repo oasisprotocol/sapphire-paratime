@@ -35,7 +35,7 @@ export type CallResult = {
   fail?: CallFailure;
   unknown?: { nonce: Uint8Array; data: Uint8Array };
 };
-type CallFailure = { module: string; code: number; message?: string };
+export type CallFailure = { module: string; code: number; message?: string };
 
 export abstract class Cipher {
   public abstract kind: Promisable<Kind>;
@@ -105,9 +105,15 @@ export abstract class Cipher {
   }
 }
 
+/**
+ * A {@link Cipher} that does not encrypt data.
+ *
+ * This cipher is useful for debugging and sending messages that
+ * you would prefer everyone to be able to see (e.g., for auditing purposes).
+ */
 export class Plain extends Cipher {
-  public readonly kind = Kind.Plain;
-  public readonly publicKey = new Uint8Array();
+  public override readonly kind = Kind.Plain;
+  public override readonly publicKey = new Uint8Array();
 
   public async encrypt(plaintext: Uint8Array): Promise<{
     ciphertext: Uint8Array;
@@ -124,9 +130,14 @@ export class Plain extends Cipher {
   }
 }
 
+/**
+ * A {@link Cipher} that derives a shared secret using X25519 and then uses DeoxysII for encrypting using that secret.
+ *
+ * This is the default cipher.
+ */
 export class X25519DeoxysII extends Cipher {
-  public readonly kind = Kind.X25519DeoxysII;
-  public readonly publicKey: Uint8Array;
+  public override readonly kind = Kind.X25519DeoxysII;
+  public override readonly publicKey: Uint8Array;
 
   private cipher: deoxysii.AEAD;
   private key: Uint8Array; // Stored for curious users.
@@ -177,9 +188,10 @@ export class X25519DeoxysII extends Cipher {
   }
 }
 
+/** A cipher that pretends to be an encrypting cipher. Used for tests. */
 export class Mock extends Cipher {
-  public readonly kind = Kind.Mock;
-  public readonly publicKey = new Uint8Array([1, 2, 3]);
+  public override readonly kind = Kind.Mock;
+  public override readonly publicKey = new Uint8Array([1, 2, 3]);
 
   public static readonly NONCE = new Uint8Array([10, 20, 30, 40]);
 
