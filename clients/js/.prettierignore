@@ -1,6 +1,7 @@
 pnpm-lock.yaml
 .cache/
 coverage/
+docs/
 lib/
 node_modules/
 *.log
