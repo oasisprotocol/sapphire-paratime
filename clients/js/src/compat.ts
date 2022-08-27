@@ -26,8 +26,6 @@ import {
 import { CallError } from './index.js';
 import { EthCall, SignedCallDataPack } from './signed_calls.js';
 
-type EthersTypedDataSigner = EthersSigner & TypedDataSigner;
-
 export type UpstreamProvider =
   | { request: EIP1193Request } // EIP-1193
   | { sendAsync: AsyncSend } // old MetaMask
@@ -35,14 +33,16 @@ export type UpstreamProvider =
   | EthersTypedDataSigner
   | EthersProvider;
 
-type EIP1193Request = (args: Web3ReqArgs) => Promise<unknown>;
+export type EIP1193Request = (args: Web3ReqArgs) => Promise<unknown>;
 
-type AsyncSend = (
+export type AsyncSend = (
   args: Web3ReqArgs,
   cb: (err: unknown, ok?: unknown) => void,
 ) => void;
 
-interface Web3ReqArgs {
+export type EthersTypedDataSigner = EthersSigner & TypedDataSigner;
+
+export interface Web3ReqArgs {
   readonly id?: string | number;
   readonly method: string;
   readonly params?: any[];
@@ -52,6 +52,19 @@ const WRAPPED_MARKER = '_isSapphireWrapped';
 /** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit (currently set to the one found in the Eth docs). */
 const DEFAULT_GAS = 90_000;
 
+/**
+ * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
+ *
+ * @param upstream The upstream web3 provider. Try something like one of the following:
+ * ```
+ * ethers.providers.Web3Provider(window.ethereum)
+ * ethers.Wallet(privateKey)
+ * ethers.getDefaultProvider(NETWORKS.testnet.defaultGateway)
+ * web3.currentProvider
+ * window.ethereum
+ * ```
+ * @param customCipher An optional cipher to use for encrypting messages. If not provided an encrypting cipher will be chosen. This field is useful for providing a {@link cipher.Plain} cipher or using a custom public key for an encrypting cipher.
+ */
 export function wrap<U extends UpstreamProvider>(
   upstream: U,
   customCipher?: Cipher,

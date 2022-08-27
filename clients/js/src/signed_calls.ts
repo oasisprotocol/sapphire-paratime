@@ -217,4 +217,4 @@ export type Leash = {
   block_range: number; // uint64
 };
 
-type BlockId = { hash: string; number: number };
+export type BlockId = { hash: string; number: number };
