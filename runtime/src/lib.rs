@@ -95,6 +95,7 @@ impl sdk::Runtime for Runtime {
     );
 
     fn trusted_policy_signers() -> Option<TrustedPolicySigners> {
+        #[allow(clippy::partialeq_to_none)]
         if option_env!("OASIS_UNSAFE_SKIP_KM_POLICY") == Some("1") {
             return Some(TrustedPolicySigners::default());
         }
