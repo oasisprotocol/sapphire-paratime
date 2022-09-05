@@ -167,7 +167,7 @@ describe('ethers provider', () => {
     expect((wrapped as any)._isSapphireWrapped).toBe(true);
   });
 
-  it('call/estimateGas', async () => {
+  it('unsigned call/estimateGas', async () => {
     const callRequest = { to, data };
     const response = await wrapped.call(callRequest);
     expect(response).toEqual('0x112358');
@@ -305,7 +305,7 @@ function runTestBattery(
     expect(wrapped.provider!.sendTransaction(raw)).rejects.toThrow(/bogus/i);
   });
 
-  it('call/estimateGas', async () => {
+  it('signed call/estimateGas', async () => {
     const from = await wrapped.getAddress();
     const callRequest = {
       from,

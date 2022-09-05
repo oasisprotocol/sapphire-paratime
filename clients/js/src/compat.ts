@@ -1,7 +1,4 @@
-import {
-  Signer as EthersSigner,
-  TypedDataSigner,
-} from '@ethersproject/abstract-signer';
+import { Signer as AbstractSigner } from '@ethersproject/abstract-signer';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, isBytesLike } from '@ethersproject/bytes';
 import * as rlp from '@ethersproject/rlp';
@@ -9,7 +6,7 @@ import {
   BlockTag,
   JsonRpcProvider,
   JsonRpcSigner,
-  Provider as EthersProvider,
+  Provider as AbstractProvider,
   TransactionRequest,
   Web3Provider,
 } from '@ethersproject/providers';
@@ -24,14 +21,32 @@ import {
   lazy as lazyCipher,
 } from './cipher.js';
 import { CallError } from './index.js';
-import { EthCall, SignedCallDataPack } from './signed_calls.js';
+import {
+  EthCall,
+  SignedCallDataPack,
+  Signer as SignedCallSigner,
+} from './signed_calls.js';
 
 export type UpstreamProvider =
   | { request: EIP1193Request } // EIP-1193
   | { sendAsync: AsyncSend } // old MetaMask
   | { send: AsyncSend } // Web3.js
-  | EthersTypedDataSigner
+  | EthersSigner
   | EthersProvider;
+
+export type EthersProvider = Pick<
+  AbstractProvider,
+  'sendTransaction' | 'call' | 'estimateGas' | 'getNetwork'
+>;
+
+export type EthersSigner = Pick<
+  AbstractSigner,
+  'sendTransaction' | 'signTransaction' | 'call' | 'estimateGas' | 'getChainId'
+> &
+  SignedCallSigner & {
+    connect(provider: EthersProvider): EthersSigner;
+    provider?: EthersProvider;
+  };
 
 export type EIP1193Request = (args: Web3ReqArgs) => Promise<unknown>;
 
@@ -39,8 +54,6 @@ export type AsyncSend = (
   args: Web3ReqArgs,
   cb: (err: unknown, ok?: unknown) => void,
 ) => void;
-
-export type EthersTypedDataSigner = EthersSigner & TypedDataSigner;
 
 export interface Web3ReqArgs {
   readonly id?: string | number;
@@ -81,14 +94,20 @@ export function wrap<U extends UpstreamProvider>(
       return X25519DeoxysII.ephemeral(rtPubKey);
     });
 
-  if (isEthersTypedDataSigner(upstream)) {
-    const signer: EthersTypedDataSigner =
-      upstream.provider &&
-      !((upstream instanceof JsonRpcSigner) /* cannot be reconnected */)
-        ? (upstream.connect(
-            wrapEthersProvider(upstream.provider, cipher, upstream),
-          ) as EthersTypedDataSigner)
-        : upstream;
+  if (isEthersSigner(upstream)) {
+    let signer: EthersSigner;
+    if (upstream.provider) {
+      try {
+        signer = upstream.connect(
+          wrapEthersProvider(upstream.provider, cipher, upstream),
+        );
+      } catch (e: any) {
+        if (e.code !== 'UNSUPPORTED_OPERATION') throw e;
+        signer = upstream;
+      }
+    } else {
+      signer = upstream;
+    }
     const hooks = {
       sendTransaction: hookEthersSend(
         signer.sendTransaction.bind(signer),
@@ -104,12 +123,15 @@ export function wrap<U extends UpstreamProvider>(
         cipher,
         signer,
       ),
-      connect(provider: EthersProvider) {
-        return wrap(signer.connect(provider) as EthersTypedDataSigner, cipher);
+      connect(provider: AbstractProvider) {
+        return wrap(
+          signer.connect(provider) as unknown as EthersSigner,
+          cipher,
+        );
       },
     };
     return new Proxy(signer, {
-      get(signer: EthersTypedDataSigner, prop) {
+      get(signer: EthersSigner, prop) {
         if (prop === WRAPPED_MARKER) return true;
         return Reflect.get(hooks, prop) ?? proxy(signer, prop);
       },
@@ -167,7 +189,7 @@ function wrapEthersProvider<P extends EthersProvider>(
   // so the `call` and `estimateGas` methods are already hooked.
   const hooks = signer
     ? {
-        sendTransaction: <EthersProvider['sendTransaction']>(async (raw) => {
+        sendTransaction: <AbstractProvider['sendTransaction']>(async (raw) => {
           const repacked = await repackRawTx(await raw, cipher, signer);
           return provider.sendTransaction(repacked);
         }),
@@ -190,13 +212,11 @@ function wrapEthersProvider<P extends EthersProvider>(
 }
 
 function isEthersProvider(upstream: unknown): upstream is EthersProvider {
-  return EthersProvider.isProvider(upstream);
+  return AbstractProvider.isProvider(upstream);
 }
 
-function isEthersTypedDataSigner(
-  upstream: unknown,
-): upstream is EthersTypedDataSigner {
-  return EthersSigner.isSigner(upstream) && '_signTypedData' in upstream;
+function isEthersSigner(upstream: unknown): upstream is EthersSigner {
+  return AbstractSigner.isSigner(upstream) && '_signTypedData' in upstream;
 }
 
 function isJsonRpcProvider(p: unknown): p is JsonRpcProvider {
@@ -206,7 +226,7 @@ function isJsonRpcProvider(p: unknown): p is JsonRpcProvider {
 function hookEthersCall(
   call: EthersCall,
   cipher: Cipher,
-  signer?: EthersTypedDataSigner,
+  signer?: EthersSigner,
 ): EthersCall {
   return async (callP, blockTag?: BlockTag) => {
     if (!signer || !(await callNeedsSigning(callP))) {
@@ -306,7 +326,7 @@ async function prepareRequest(
     };
   }
 
-  if (method === 'eth_signTransaction' || method === 'eth_sendTransaction') {
+  if (/^eth_((send|sign)Transaction|call|estimateGas)$/.test(method)) {
     params[0].data = await cipher.encryptEncode(params[0].data);
     if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
     return { method, params };
@@ -317,7 +337,7 @@ async function prepareRequest(
 
 async function prepareSignedCall(
   call: EthCall,
-  signer: EthersTypedDataSigner,
+  signer: EthersSigner,
   cipher: Cipher,
 ): Promise<EthCall> {
   const dataPack = await SignedCallDataPack.make(call, signer);
@@ -390,20 +410,22 @@ class EnvelopeError extends Error {}
 async function inferRuntimePublicKeySource(
   upstream: UpstreamProvider,
 ): Promise<Parameters<typeof fetchRuntimePublicKey>[0]> {
-  const isEthersSigner = isEthersTypedDataSigner(upstream);
-  if (isEthersSigner || isEthersProvider(upstream)) {
-    const provider = isEthersSigner ? upstream.provider : upstream;
+  const isSigner = isEthersSigner(upstream);
+  if (isSigner || isEthersProvider(upstream)) {
+    const provider = isSigner ? upstream.provider : upstream;
     if (isJsonRpcProvider(provider)) {
       return {
         send: (method, params) => provider.send(method, params),
       };
     }
     return {
-      chainId: isEthersSigner
+      chainId: isSigner
         ? await upstream.getChainId()
         : (await upstream.getNetwork()).chainId,
     };
   }
   const provider = new Web3Provider(upstream);
-  return { send: (method, params) => provider.send(method, params) };
+  return {
+    chainId: (await provider.getNetwork()).chainId,
+  };
 }
