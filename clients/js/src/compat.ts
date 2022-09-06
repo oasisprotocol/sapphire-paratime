@@ -1,4 +1,5 @@
 import { Signer as AbstractSigner } from '@ethersproject/abstract-signer';
+import { getContractAddress } from '@ethersproject/address';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, isBytesLike } from '@ethersproject/bytes';
 import * as rlp from '@ethersproject/rlp';
@@ -69,7 +70,7 @@ export type SapphireAnnex = {
 };
 
 /** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
-const DEFAULT_GAS = 1_000_000;
+const DEFAULT_GAS = 3_000_000;
 
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
@@ -126,11 +127,13 @@ export function wrap<U extends UpstreamProvider>(
         cipher,
       ),
       call: hookEthersCall(signer.call.bind(signer), cipher, signer),
-      estimateGas: hookEthersCall(
-        signer.estimateGas.bind(signer),
-        cipher,
-        signer,
-      ),
+      // TODO(#39): replace with original once resolved
+      estimateGas: () => DEFAULT_GAS,
+      // estimateGas: hookEthersCall(
+      //   signer.estimateGas.bind(signer),
+      //   cipher,
+      //   signer,
+      // ),
       connect(provider: AbstractProvider) {
         return wrap(
           signer.connect(provider) as unknown as EthersSigner,
@@ -263,7 +266,6 @@ function hookEthersSend(send: EthersCall, cipher: Cipher): EthersCall {
   return async (tx: Deferrable<TransactionRequest>, ...rest) => {
     const data = await tx.data;
     tx.data = cipher.encryptEncode(data);
-    if (!tx.gasLimit) tx.gasLimit = DEFAULT_GAS;
     return send(tx, ...rest);
   };
 }
@@ -295,9 +297,17 @@ function hookExternalProvider(
   cipher: Cipher,
 ): EIP1193Request {
   return async (args: Web3ReqArgs) => {
+    if (args.method === 'eth_estimateGas')
+      return BigNumber.from(DEFAULT_GAS).toHexString(); // TODO(#39)
     const { method, params } = await prepareRequest(args, signer, cipher);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') return cipher.decryptEncoded(res);
+    if (method === 'eth_getTransactionReceipt' && res?.contractAddress) {
+      // TODO(#41)
+      const prevBlock = Number.parseInt(res.blockNumber, 16) - 1;
+      const nonce = await signer.getTransactionCount(prevBlock);
+      res.contractAddress = getContractAddress({ from: res.from, nonce });
+    }
     return res;
   };
 }
@@ -329,7 +339,6 @@ async function prepareRequest(
 
   if (/^eth_((send|sign)Transaction|call|estimateGas)$/.test(method)) {
     params[0].data = await cipher.encryptEncode(params[0].data);
-    if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
     return { method, params };
   }
 
@@ -375,7 +384,7 @@ async function repackRawTx(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { r, s, v, hash, type, ...parsed } = parseTx(raw);
   if (!signer) throw new CallError(REPACK_ERROR, null);
-  if (!parsed.gasLimit) parsed.gasLimit = BigNumber.from(DEFAULT_GAS);
+  if (!parsed.gasLimit) parsed.gasLimit = BigNumber.from(DEFAULT_GAS); // TODO(39)
   try {
     return signer.signTransaction({
       ...parsed,
