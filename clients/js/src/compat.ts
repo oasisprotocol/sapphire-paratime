@@ -61,7 +61,13 @@ export interface Web3ReqArgs {
   readonly params?: any[];
 }
 
-const WRAPPED_MARKER = '_isSapphireWrapped';
+const SAPPHIRE_PROP = 'sapphire';
+export type SapphireAnnex = {
+  [SAPPHIRE_PROP]: {
+    cipher: Cipher;
+  };
+};
+
 /** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
 const DEFAULT_GAS = 1_000_000;
 
@@ -81,9 +87,11 @@ const DEFAULT_GAS = 1_000_000;
 export function wrap<U extends UpstreamProvider>(
   upstream: U,
   customCipher?: Cipher,
-): U {
+): U & SapphireAnnex {
   // Already wrapped, so don't wrap it again.
-  if (Reflect.get(upstream, WRAPPED_MARKER) === true) return upstream;
+  if (Reflect.get(upstream, SAPPHIRE_PROP) !== undefined) {
+    return upstream as U & SapphireAnnex;
+  }
 
   const cipher =
     customCipher ??
@@ -130,12 +138,7 @@ export function wrap<U extends UpstreamProvider>(
         );
       },
     };
-    return new Proxy(signer, {
-      get(signer: EthersSigner, prop) {
-        if (prop === WRAPPED_MARKER) return true;
-        return Reflect.get(hooks, prop) ?? proxy(signer, prop);
-      },
-    }) as U;
+    return makeProxy(signer as any, cipher, hooks);
   }
 
   if (isEthersProvider(upstream)) {
@@ -145,13 +148,7 @@ export function wrap<U extends UpstreamProvider>(
   if ('request' in upstream) {
     const signer = new Web3Provider(upstream).getSigner();
     const hook = hookExternalProvider(signer, cipher);
-    return new Proxy(upstream, {
-      get(web3, prop) {
-        if (prop === WRAPPED_MARKER) return true;
-        if (prop === 'request') return hook;
-        return proxy(web3, prop);
-      },
-    });
+    return makeProxy(upstream, cipher, { request: hook });
   }
 
   if ('send' in upstream || 'sendAsync' in upstream) {
@@ -165,26 +162,40 @@ export function wrap<U extends UpstreamProvider>(
         .then((res) => cb(null, { jsonrpc: '2.0', id: args.id, result: res }))
         .catch((err) => cb(err));
     };
-    return new Proxy(upstream, {
-      get(web3, prop) {
-        if (prop === WRAPPED_MARKER) return true;
-        // Web3.js legacy code may use both send and sendAync.
-        if (prop === 'send' || prop === 'sendAsync') return hook;
-        return proxy(web3, prop);
-      },
-    }) as U;
+    return makeProxy(upstream, cipher, {
+      send: hook,
+      sendAsync: hook,
+    });
   }
 
   throw new TypeError('Unable to wrap unsupported upstream signer.');
+}
+
+function makeProxy<U extends UpstreamProvider>(
+  upstream: U,
+  cipher: Cipher,
+  hooks: { [key: string | symbol]: any },
+): U & SapphireAnnex {
+  return new Proxy(upstream, {
+    get(upstream, prop) {
+      if (prop === SAPPHIRE_PROP) return { cipher };
+      if (prop in hooks) return hooks[prop];
+      const value = Reflect.get(upstream, prop);
+      return typeof value === 'function' ? value.bind(upstream) : value;
+    },
+  }) as U & SapphireAnnex;
 }
 
 function wrapEthersProvider<P extends EthersProvider>(
   provider: P,
   cipher: Cipher,
   signer?: EthersSigner,
-): P {
+): P & SapphireAnnex {
   // Already wrapped, so don't wrap it again.
-  if (Reflect.get(provider, WRAPPED_MARKER) === true) return provider;
+  if (Reflect.get(provider, SAPPHIRE_PROP) !== undefined) {
+    return provider as P & SapphireAnnex;
+  }
+
   // If a signer is provided it's because this method was invoked by wrapping a signer,
   // so the `call` and `estimateGas` methods are already hooked.
   const hooks = signer
@@ -203,12 +214,7 @@ function wrapEthersProvider<P extends EthersProvider>(
           signer,
         ),
       };
-  return new Proxy(provider, {
-    get(provider, prop) {
-      if (prop === WRAPPED_MARKER) return true;
-      return Reflect.get(hooks, prop) ?? proxy(provider, prop);
-    },
-  }) as P;
+  return makeProxy(provider, cipher, hooks);
 }
 
 function isEthersProvider(upstream: unknown): upstream is EthersProvider {
@@ -282,11 +288,6 @@ async function undefer<T>(obj: Deferrable<T>): Promise<T> {
   return Object.fromEntries(
     await Promise.all(Object.entries(obj).map(async ([k, v]) => [k, await v])),
   );
-}
-
-function proxy(target: object, prop: string | symbol): any {
-  const value = Reflect.get(target, prop);
-  return typeof value === 'function' ? value.bind(target) : value;
 }
 
 function hookExternalProvider(

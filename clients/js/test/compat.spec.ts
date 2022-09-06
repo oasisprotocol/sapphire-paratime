@@ -119,7 +119,7 @@ describe('ethers signer', () => {
       '0x11e244400Cf165ade687077984F09c3A037b868F',
     );
     expect(await wrapped.getAddress()).toEqual(wrapped.address);
-    expect((wrapped as any)._isSapphireWrapped).toBe(true);
+    expect((wrapped as any).sapphire).toMatchObject({ cipher });
   });
 
   it('sendRawTransaction un-enveloped', async () => {
@@ -164,7 +164,7 @@ describe('ethers provider', () => {
 
   it('proxy', async () => {
     expect(wrapped._isProvider).toBe(true);
-    expect((wrapped as any)._isSapphireWrapped).toBe(true);
+    expect((wrapped as any).sapphire).toMatchObject({ cipher });
   });
 
   it('unsigned call/estimateGas', async () => {
@@ -193,7 +193,7 @@ describe('window.ethereum', () => {
     const wrapped = wrap(new MockEIP1193Provider(), cipher);
     expect(wrapped.isMetaMask).toBe(false);
     expect(wrapped.isConnected()).toBe(false);
-    expect((wrapped as any)._isSapphireWrapped).toBe(true);
+    expect((wrapped as any).sapphire).toMatchObject({ cipher });
   });
 
   runTestBattery(() => {
@@ -216,7 +216,7 @@ describe('legacy MetaMask', () => {
     const wrapped = wrap(new MockLegacyProvider(), cipher);
     expect(wrapped.isMetaMask).toBe(false);
     expect(wrapped.isConnected()).toBe(false);
-    expect((wrapped as any)._isSapphireWrapped).toBe(true);
+    expect((wrapped as any).sapphire).toMatchObject({ cipher });
   });
 
   runTestBattery(() => {
