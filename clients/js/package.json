@@ -33,6 +33,7 @@
     "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "jest",
     "coverage": "jest --coverage",
+    "postinstall": "pnpm build",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {

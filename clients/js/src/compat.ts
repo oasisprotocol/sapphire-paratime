@@ -266,6 +266,7 @@ function hookEthersSend(send: EthersCall, cipher: Cipher): EthersCall {
   return async (tx: Deferrable<TransactionRequest>, ...rest) => {
     const data = await tx.data;
     tx.data = cipher.encryptEncode(data);
+    if (!tx.gasLimit) tx.gasLimit = DEFAULT_GAS;
     return send(tx, ...rest);
   };
 }
@@ -339,6 +340,7 @@ async function prepareRequest(
 
   if (/^eth_((send|sign)Transaction|call|estimateGas)$/.test(method)) {
     params[0].data = await cipher.encryptEncode(params[0].data);
+    if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
     return { method, params };
   }
 
