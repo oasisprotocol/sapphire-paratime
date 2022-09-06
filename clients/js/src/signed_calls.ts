@@ -1,6 +1,6 @@
-import { BlockTag } from '@ethersproject/abstract-provider';
+import { BlockTag, Provider } from '@ethersproject/abstract-provider';
 import {
-  Signer,
+  Signer as EthersSigner,
   TypedDataDomain,
   TypedDataField,
   TypedDataSigner,
@@ -21,6 +21,12 @@ const DEFAULT_GAS_LIMIT = 30_000_000;
 const DEFAULT_VALUE = 0;
 const DEFAULT_DATA = '0x';
 const zeroAddress = () => `0x${'0'.repeat(40)}`;
+
+export type Signer = Pick<EthersSigner, 'getTransactionCount' | 'getChainId'> &
+  TypedDataSigner & {
+    provider?: Pick<Provider, 'getBlock'>;
+    _checkProvider?: EthersSigner['_checkProvider'];
+  };
 
 export function signedCallEIP712Params(chainId: number): {
   domain: TypedDataDomain;
@@ -117,7 +123,7 @@ async function makeLeash(
   if (overrides?.block !== undefined) {
     blockP = overrides.block;
   } else {
-    signer._checkProvider('getBlock');
+    if (signer._checkProvider) signer._checkProvider('getBlock');
     const latestBlock = await signer.provider!.getBlock('latest');
     blockP = signer.provider!.getBlock(latestBlock.number - 1); // The latest block is not historical.
   }
