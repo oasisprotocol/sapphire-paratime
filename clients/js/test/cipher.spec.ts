@@ -27,7 +27,7 @@ describe('Plain', () => {
 
     const envelope = await cipher.encryptEnvelope(DATA);
     expect(envelope).toBeDefined();
-    expect({ body: cbor.encode({ body: DATA }) }).toMatchObject(envelope!);
+    expect({ body: DATA }).toMatchObject(envelope!);
     expect(await cipher.encryptEnvelope()).not.toBeDefined();
 
     expect(await cipher.encryptEncode(DATA)).toEqual(

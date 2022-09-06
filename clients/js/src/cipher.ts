@@ -65,13 +65,19 @@ export abstract class Cipher {
       throw new Error('Attempted to sign tx having non-byteslike data.');
     }
     if (plaintext.length === 0) return; // Txs without data are just balance transfers, and all data in those is public.
-    const { ciphertext: data, nonce } = await this.encrypt(
-      cbor.encode({ body: arrayify(plaintext) }),
-    );
+    const { data, nonce } = await this.encryptCallData(arrayify(plaintext));
     const [format, pk] = await Promise.all([this.kind, this.publicKey]);
     const body = pk.length && nonce.length ? { pk, nonce, data } : data;
     if (format === Kind.Plain) return { body };
     return { format, body };
+  }
+
+  protected async encryptCallData(
+    plaintext: Uint8Array,
+  ): Promise<{ data: Uint8Array; nonce: Uint8Array }> {
+    const body = cbor.encode({ body: plaintext });
+    const { ciphertext: data, nonce } = await this.encrypt(body);
+    return { data, nonce };
   }
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
@@ -127,6 +133,12 @@ export class Plain extends Cipher {
     ciphertext: Uint8Array,
   ): Promise<Uint8Array> {
     return ciphertext;
+  }
+
+  async encryptCallData(
+    plaintext: Uint8Array,
+  ): Promise<{ data: Uint8Array; nonce: Uint8Array }> {
+    return { data: plaintext, nonce: new Uint8Array() };
   }
 }
 

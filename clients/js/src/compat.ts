@@ -62,8 +62,8 @@ export interface Web3ReqArgs {
 }
 
 const WRAPPED_MARKER = '_isSapphireWrapped';
-/** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit (currently set to the one found in the Eth docs). */
-const DEFAULT_GAS = 90_000;
+/** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
+const DEFAULT_GAS = 1_000_000;
 
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
