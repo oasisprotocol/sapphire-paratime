@@ -27,6 +27,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
+          pkg-dirs: runtime
           binaries: sapphire-paratime
 
       - name: Build runtime, 2.
@@ -34,6 +35,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
+          pkg-dirs: runtime
           binaries: sapphire-paratime
 
       - name: Check binary equality
