@@ -1,4 +1,5 @@
 import { Signer as AbstractSigner } from '@ethersproject/abstract-signer';
+import { getContractAddress } from '@ethersproject/address';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, isBytesLike } from '@ethersproject/bytes';
 import * as rlp from '@ethersproject/rlp';
@@ -301,6 +302,12 @@ function hookExternalProvider(
     const { method, params } = await prepareRequest(args, signer, cipher);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') return cipher.decryptEncoded(res);
+    if (method === 'eth_getTransactionReceipt' && res?.contractAddress) {
+      // TODO(#41)
+      const prevBlock = Number.parseInt(res.blockNumber, 16) - 1;
+      const nonce = await signer.getTransactionCount(prevBlock);
+      res.contractAddress = getContractAddress({ from: res.from, nonce });
+    }
     return res;
   };
 }
