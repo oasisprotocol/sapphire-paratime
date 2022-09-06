@@ -283,13 +283,11 @@ export async function fetchRuntimePublicKey(
   const res = await (fetchImpl
     ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
     : fetchRuntimePublicKeyNode(gatewayUrl));
-  return arrayify(res.key);
+  return arrayify(res.result.key);
 }
 
 type CallDataPublicKeyResponse = {
-  key: string;
-  checksum: string;
-  signature: string;
+  result: { key: string; checksum: string; signature: string };
 };
 
 async function fetchRuntimePublicKeyNode(

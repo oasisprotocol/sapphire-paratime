@@ -123,8 +123,10 @@ describe('fetchRuntimePublicKey', () => {
         return true;
       })
       .reply(200, {
-        key: `0x${Buffer.from(publicKey).toString('hex')}`,
-        // TODO: checksum and signature
+        result: {
+          key: `0x${Buffer.from(publicKey).toString('hex')}`,
+          // TODO: checksum and signature
+        },
       });
 
     expect(await fetchRuntimePublicKey(pointer, opts));

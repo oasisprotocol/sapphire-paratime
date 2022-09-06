@@ -406,6 +406,9 @@ class EnvelopeError extends Error {}
  *
  * If the upstream provider is Web3-like, then use that, as the user has chosen then gateway.
  * Otherwise, fetch the key from the default Web3 gateway for the particular chain ID.
+ *
+ * Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
+ * fall back to manually querying the default gateway.
  */
 async function inferRuntimePublicKeySource(
   upstream: UpstreamProvider,
@@ -413,7 +416,7 @@ async function inferRuntimePublicKeySource(
   const isSigner = isEthersSigner(upstream);
   if (isSigner || isEthersProvider(upstream)) {
     const provider = isSigner ? upstream.provider : upstream;
-    if (isJsonRpcProvider(provider)) {
+    if (isJsonRpcProvider(provider) && !(upstream as any).isMetaMask) {
       return {
         send: (method, params) => provider.send(method, params),
       };
