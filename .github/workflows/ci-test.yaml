@@ -21,6 +21,9 @@ jobs:
   test-rust:
     name: test-rust
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./runtime
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -32,14 +35,14 @@ jobs:
         run: sudo apt install -y protobuf-compiler
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --locked
+        run: cargo build --release --locked
 
   test-rust-sgx:
     name: test-rust-sgx
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./runtime
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -53,11 +56,8 @@ jobs:
       - name: Set up Rust
         run: rustup show
 
-      - name: Build for SGX
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: -p sapphire-paratime --locked --release --target x86_64-fortanix-unknown-sgx
+      - name: Check SGX buildability
+        run: cargo check --locked --release --target x86_64-fortanix-unknown-sgx
 
   test-client-js:
     name: test-client-js
