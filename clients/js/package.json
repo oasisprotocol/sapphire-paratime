@@ -1,7 +1,7 @@
 {
   "name": "@oasisprotocol/sapphire-paratime",
   "license": "Apache-2.0",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "The Sapphire ParaTime Web3 integration library.",
   "repository": "https://github.com/oasisprotocol/sapphire-paratime",
   "keywords": [
@@ -33,7 +33,6 @@
     "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "jest",
     "coverage": "jest --coverage",
-    "postinstall": "pnpm build",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
