@@ -27,7 +27,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
-          pkg-dirs: runtime
+          dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime
 
       - name: Build runtime, 2.
@@ -35,7 +35,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
-          pkg-dirs: runtime
+          dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime
 
       - name: Check binary equality
@@ -44,7 +44,7 @@ jobs:
 
   check-reproducible-build-sgx-runtime:
     # NOTE: This name appears in GitHub's Checks API.
-    name: check-reproducibility-sgx-runtime
+    name: check-reproducibility
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -55,7 +55,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
-          pkg-dirs: runtime
+          dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime.sgxs
           sgx: yes
 
@@ -64,7 +64,7 @@ jobs:
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
           image: oasisprotocol/runtime-builder:main
-          pkg-dirs: runtime
+          dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime.sgxs
           sgx: yes
 
