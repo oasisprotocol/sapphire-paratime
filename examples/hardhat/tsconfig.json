@@ -1,0 +1,14 @@
+{
+  "include": ["./scripts", "./typechain-types"],
+  "files": ["./hardhat.config.ts"],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "lib": ["esnext", "dom"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "lib/",
+    "sourceMap": true,
+    "strict": true,
+    "target": "esnext"
+  }
+}
