@@ -43,6 +43,7 @@ dependencies:
   deoxysii: 0.0.2
   js-sha512: 0.8.0
   tweetnacl: 1.0.3
+  type-fest: 2.19.0
 
 devDependencies:
   '@types/jest': 28.1.8
@@ -58,7 +59,6 @@ devDependencies:
   node-fetch: 2.6.7
   prettier: 2.7.1
   ts-jest: 28.0.8_556mfp7b5dutuj2jcrj5i7zc5q
-  type-fest: 2.19.0
   typedoc: 0.23.11_typescript@4.8.2
   typescript: 4.8.2
 
@@ -3407,7 +3407,7 @@ packages:
   /type-fest/2.19.0:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
-    dev: true
+    dev: false
 
   /typedoc/0.23.11_typescript@4.8.2:
     resolution: {integrity: sha512-FhZ2HfqlS++53UwHk4txCsTrTlpYR0So/0osMyBeP1E7llRNRqycJGfYK1qx9Wvvv5VO8tGdpwzOwDW5FrTi7A==}

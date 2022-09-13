@@ -51,7 +51,8 @@
     "cborg": "^1.9.5",
     "deoxysii": "^0.0.2",
     "js-sha512": "^0.8.0",
-    "tweetnacl": "^1.0.3"
+    "tweetnacl": "^1.0.3",
+    "type-fest": "^2.19.0"
   },
   "devDependencies": {
     "@types/jest": "^28.1.8",
@@ -67,7 +68,6 @@
     "node-fetch": "^2.6.7",
     "prettier": "^2.7.1",
     "ts-jest": "^28.0.8",
-    "type-fest": "^2.19.0",
     "typedoc": "^0.23.11",
     "typescript": "^4.8.2"
   }
