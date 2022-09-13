@@ -3,7 +3,11 @@
   "license": "Apache-2.0",
   "version": "1.0.3",
   "description": "The Sapphire ParaTime Web3 integration library.",
-  "repository": "https://github.com/oasisprotocol/sapphire-paratime",
+  "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oasisprotocol/sapphire-paratime.git"
+  },
   "keywords": [
     "sapphire",
     "paratime",
