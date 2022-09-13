@@ -57,6 +57,7 @@ export type AsyncSend = (
 ) => void;
 
 export interface Web3ReqArgs {
+  readonly jsonrpc?: string;
   readonly id?: string | number;
   readonly method: string;
   readonly params?: any[];
