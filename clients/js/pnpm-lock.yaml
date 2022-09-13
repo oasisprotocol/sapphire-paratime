@@ -9,8 +9,6 @@ specifiers:
   '@ethersproject/providers': ^5.7.0
   '@ethersproject/rlp': ^5.7.0
   '@ethersproject/transactions': ^5.7.0
-  '@types/bn.js': ^5.1.0
-  '@types/elliptic': ^6.4.14
   '@types/jest': ^28.1.8
   '@types/node': ^18.7.13
   '@types/node-fetch': ^2.6.2
@@ -47,8 +45,6 @@ dependencies:
   tweetnacl: 1.0.3
 
 devDependencies:
-  '@types/bn.js': 5.1.0
-  '@types/elliptic': 6.4.14
   '@types/jest': 28.1.8
   '@types/node': 18.7.13
   '@types/node-fetch': 2.6.2
@@ -1064,18 +1060,6 @@ packages:
     resolution: {integrity: sha512-v4Vwdko+pgymgS+A2UIaJru93zQd85vIGWObM5ekZNdXCKtDYqATlEYnWgfo86Q6I1Lh0oXnksDnMU1cwmlPDw==}
     dependencies:
       '@babel/types': 7.18.13
-    dev: true
-
-  /@types/bn.js/5.1.0:
-    resolution: {integrity: sha512-QSSVYj7pYFN49kW77o2s9xTCwZ8F2xLbjLLSEVh8D2F4JUhZtPAGOFLTD+ffqksBx/u4cE/KImFjyhqCjn/LIA==}
-    dependencies:
-      '@types/node': 18.7.13
-    dev: true
-
-  /@types/elliptic/6.4.14:
-    resolution: {integrity: sha512-z4OBcDAU0GVwDTuwJzQCiL6188QvZMkvoERgcVjq0/mPM8jCfdwZ3x5zQEVoL9WCAru3aG5wl3Z5Ww5wBWn7ZQ==}
-    dependencies:
-      '@types/bn.js': 5.1.0
     dev: true
 
   /@types/graceful-fs/4.1.5:
