@@ -5,7 +5,7 @@ import {
   PrepareSignedCallOverrides,
   SignedCallDataPack,
   makeSignableCall,
-} from '@oasislabs/sapphire-paratime/signed_calls.js';
+} from '@oasisprotocol/sapphire-paratime/signed_calls.js';
 
 import { CHAIN_ID, verifySignedCall } from './utils';
 

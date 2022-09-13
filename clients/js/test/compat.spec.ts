@@ -2,8 +2,8 @@ import { parse as parseTx } from '@ethersproject/transactions';
 import * as cbor from 'cborg';
 import * as ethers from 'ethers';
 
-import { Mock as MockCipher } from '@oasislabs/sapphire-paratime/cipher.js';
-import { wrap } from '@oasislabs/sapphire-paratime/compat.js';
+import { Mock as MockCipher } from '@oasisprotocol/sapphire-paratime/cipher.js';
+import { wrap } from '@oasisprotocol/sapphire-paratime/compat.js';
 
 import { CHAIN_ID, verifySignedCall } from './utils';
 

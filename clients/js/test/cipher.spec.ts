@@ -11,7 +11,7 @@ import {
   X25519DeoxysII,
   fetchRuntimePublicKey,
   lazy,
-} from '@oasislabs/sapphire-paratime/cipher.js';
+} from '@oasisprotocol/sapphire-paratime/cipher.js';
 
 const DATA = new Uint8Array([1, 2, 3, 4, 5]);
 

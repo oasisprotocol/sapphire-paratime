@@ -10,8 +10,8 @@
     "moduleResolution": "node",
     "outDir": "lib/esm",
     "paths": {
-      "@oasislabs/sapphire-paratime": ["src/index"],
-      "@oasislabs/sapphire-paratime/*": ["src/*"]
+      "@oasisprotocol/sapphire-paratime": ["src/index"],
+      "@oasisprotocol/sapphire-paratime/*": ["src/*"]
     },
     "sourceMap": true,
     "strict": true,

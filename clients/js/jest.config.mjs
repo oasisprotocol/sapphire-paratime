@@ -5,8 +5,8 @@ const config = {
   coverageReporters: ['lcov', 'text', 'cobertura', 'html'],
   moduleFileExtensions: ['js', 'ts'],
   moduleNameMapper: {
-    '^@oasislabs/sapphire-paratime$': '<rootDir>/src/index',
-    '^@oasislabs/sapphire-paratime/(.*)\\.js$': '<rootDir>/src/$1',
+    '^@oasisprotocol/sapphire-paratime$': '<rootDir>/src/index',
+    '^@oasisprotocol/sapphire-paratime/(.*)\\.js$': '<rootDir>/src/$1',
     '^(\\..+)\\.js$': '$1',
   },
   testEnvironment: 'node',
