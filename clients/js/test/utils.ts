@@ -5,8 +5,8 @@ import {
   EthCall,
   makeSignableCall,
   signedCallEIP712Params,
-} from '@oasislabs/sapphire-paratime/signed_calls.js';
-import { Cipher } from '@oasislabs/sapphire-paratime/cipher.js';
+} from '@oasisprotocol/sapphire-paratime/signed_calls.js';
+import { Cipher } from '@oasisprotocol/sapphire-paratime/cipher.js';
 
 export const CHAIN_ID = 0x5afe;
 
