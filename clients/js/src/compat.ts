@@ -29,9 +29,8 @@ import {
 } from './signed_calls.js';
 
 export type UpstreamProvider =
-  | { request: EIP1193Request } // EIP-1193
-  | { sendAsync: AsyncSend } // old MetaMask
-  | { send: AsyncSend } // Web3.js
+  | EIP1193Provider
+  | AsyncSendProvider // legacy
   | EthersSigner
   | EthersProvider;
 
@@ -49,19 +48,26 @@ export type EthersSigner = Pick<
     provider?: EthersProvider;
   };
 
-export type EIP1193Request = (args: Web3ReqArgs) => Promise<unknown>;
+export type EIP1193Provider = {
+  request: (args: Web3ReqArgs) => Promise<unknown>;
+};
 
-export type AsyncSend = (
-  args: Web3ReqArgs,
-  cb: (err: unknown, ok?: unknown) => void,
+export type AsyncSendProvider<Args = Web3ReqArgs> = {
+  send?: AsyncSend<Args>;
+  sendAsync?: AsyncSend<Args>;
+};
+
+export type AsyncSend<Args = Web3ReqArgs> = (
+  args: Args,
+  cb: (err: any, ok?: any) => void,
 ) => void;
 
-export interface Web3ReqArgs {
+export type Web3ReqArgs = {
   readonly jsonrpc?: string;
   readonly id?: string | number;
   readonly method: string;
   readonly params?: any[];
-}
+};
 
 const SAPPHIRE_PROP = 'sapphire';
 export type SapphireAnnex = {
@@ -95,14 +101,7 @@ export function wrap<U extends UpstreamProvider>(
     return upstream as U & SapphireAnnex;
   }
 
-  const cipher =
-    customCipher ??
-    lazyCipher(async () => {
-      const rtPubKey = await fetchRuntimePublicKey(
-        await inferRuntimePublicKeySource(upstream),
-      );
-      return X25519DeoxysII.ephemeral(rtPubKey);
-    });
+  const cipher = customCipher ?? getCipher(upstream);
 
   if (isEthersSigner(upstream)) {
     let signer: EthersSigner;
@@ -157,15 +156,7 @@ export function wrap<U extends UpstreamProvider>(
 
   if ('send' in upstream || 'sendAsync' in upstream) {
     const signer = new Web3Provider(upstream).getSigner();
-    const hookP = hookExternalProvider(signer, cipher);
-    const hook = (
-      args: Web3ReqArgs,
-      cb: (err: unknown, ok?: unknown) => void,
-    ) => {
-      hookP(args)
-        .then((res) => cb(null, { jsonrpc: '2.0', id: args.id, result: res }))
-        .catch((err) => cb(err));
-    };
+    const hook = callbackify(hookExternalProvider(signer, cipher));
     return makeProxy(upstream, cipher, {
       send: hook,
       sendAsync: hook,
@@ -173,6 +164,14 @@ export function wrap<U extends UpstreamProvider>(
   }
 
   throw new TypeError('Unable to wrap unsupported upstream signer.');
+}
+
+function getCipher(provider: UpstreamProvider): Cipher {
+  return lazyCipher(async () => {
+    const keySource = await inferRuntimePublicKeySource(provider);
+    const rtPubKey = await fetchRuntimePublicKey(keySource);
+    return X25519DeoxysII.ephemeral(rtPubKey);
+  });
 }
 
 function makeProxy<U extends UpstreamProvider>(
@@ -304,13 +303,30 @@ function hookExternalProvider(
     const { method, params } = await prepareRequest(args, signer, cipher);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') return cipher.decryptEncoded(res);
-    if (method === 'eth_getTransactionReceipt' && res?.contractAddress) {
-      // TODO(#41)
-      const prevBlock = Number.parseInt(res.blockNumber, 16) - 1;
-      const nonce = await signer.getTransactionCount(prevBlock);
-      res.contractAddress = getContractAddress({ from: res.from, nonce });
-    }
+    if (method === 'eth_getTransactionReceipt')
+      return patchTxReceipt(signer.provider, res);
     return res;
+  };
+}
+
+
+// TODO(#41)
+async function patchTxReceipt(
+  provider: JsonRpcProvider,
+  receipt: any,
+): Promise<any> {
+  if (!receipt?.contractAddress) return receipt;
+  const prevBlock = Number.parseInt(receipt.blockNumber, 16) - 1;
+  const nonce = await provider.getTransactionCount(receipt?.from, prevBlock);
+  receipt.contractAddress = getContractAddress({ from: receipt.from, nonce });
+  return receipt;
+}
+
+function callbackify(request: EIP1193Provider['request']) {
+  return (args: Web3ReqArgs, cb: (err: unknown, ok?: unknown) => void) => {
+    request(args)
+      .then((res) => cb(null, { jsonrpc: '2.0', id: args.id, result: res }))
+      .catch((err) => cb(err));
   };
 }
 
