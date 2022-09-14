@@ -1,7 +1,7 @@
 {
   "name": "@oasisprotocol/sapphire-paratime",
   "license": "Apache-2.0",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "The Sapphire ParaTime Web3 integration library.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/js",
   "repository": {
