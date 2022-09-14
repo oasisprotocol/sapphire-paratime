@@ -69,6 +69,13 @@ export type Web3ReqArgs = {
   readonly params?: any[];
 };
 
+export type StrictWeb3ReqArgs = {
+  readonly jsonrpc: string;
+  readonly id: number;
+  readonly method: string;
+  readonly params: any[];
+};
+
 const SAPPHIRE_PROP = 'sapphire';
 export type SapphireAnnex = {
   [SAPPHIRE_PROP]: {
@@ -89,16 +96,40 @@ const DEFAULT_GAS = 3_000_000;
  * ethers.getDefaultProvider(NETWORKS.testnet.defaultGateway)
  * web3.currentProvider
  * window.ethereum
+ * a Web3 gateway URL
  * ```
  * @param customCipher An optional cipher to use for encrypting messages. If not provided an encrypting cipher will be chosen. This field is useful for providing a {@link cipher.Plain} cipher or using a custom public key for an encrypting cipher.
  */
-export function wrap<U extends UpstreamProvider>(
+export function wrap<P extends AsyncSendProvider<StrictWeb3ReqArgs>>( // Web3.js
+  gatewayUrl: string | P,
+  customCipher?: Cipher,
+): EIP1193Provider & P & SapphireAnnex;
+export function wrap<U extends UpstreamProvider>( // Ethers, `window.ethereum`
   upstream: U,
   customCipher?: Cipher,
-): U & SapphireAnnex {
+): U & SapphireAnnex;
+export function wrap<U extends UpstreamProvider>(
+  upstream: U | string,
+  customCipher?: Cipher,
+): (U | (EIP1193Provider & AsyncSend)) & SapphireAnnex {
   // Already wrapped, so don't wrap it again.
-  if (Reflect.get(upstream, SAPPHIRE_PROP) !== undefined) {
+  if (
+    typeof upstream !== 'string' &&
+    Reflect.get(upstream, SAPPHIRE_PROP) !== undefined
+  ) {
     return upstream as U & SapphireAnnex;
+  }
+
+  if (typeof upstream === 'string') {
+    const provider = new JsonRpcProvider(upstream);
+    const cipher = customCipher ?? getCipher(provider);
+    const request = hookExternalProvider(provider, cipher);
+    const sendAsync = callbackify(request);
+    return makeProxy(provider, cipher, {
+      send: sendAsync,
+      sendAsync,
+      request,
+    }) as unknown as EIP1193Provider & AsyncSend & SapphireAnnex;
   }
 
   const cipher = customCipher ?? getCipher(upstream);
@@ -150,13 +181,13 @@ export function wrap<U extends UpstreamProvider>(
 
   if ('request' in upstream) {
     const signer = new Web3Provider(upstream).getSigner();
-    const hook = hookExternalProvider(signer, cipher);
+    const hook = hookExternalSigner(signer, cipher);
     return makeProxy(upstream, cipher, { request: hook });
   }
 
   if ('send' in upstream || 'sendAsync' in upstream) {
     const signer = new Web3Provider(upstream).getSigner();
-    const hook = callbackify(hookExternalProvider(signer, cipher));
+    const hook = callbackify(hookExternalSigner(signer, cipher));
     return makeProxy(upstream, cipher, {
       send: hook,
       sendAsync: hook,
@@ -182,7 +213,7 @@ function makeProxy<U extends UpstreamProvider>(
   return new Proxy(upstream, {
     get(upstream, prop) {
       if (prop === SAPPHIRE_PROP) return { cipher };
-      if (prop in hooks) return hooks[prop];
+      if (prop in hooks) return Reflect.get(hooks, prop);
       const value = Reflect.get(upstream, prop);
       return typeof value === 'function' ? value.bind(upstream) : value;
     },
@@ -293,10 +324,10 @@ async function undefer<T>(obj: Deferrable<T>): Promise<T> {
   );
 }
 
-function hookExternalProvider(
+function hookExternalSigner(
   signer: JsonRpcSigner,
   cipher: Cipher,
-): EIP1193Request {
+): EIP1193Provider['request'] {
   return async (args: Web3ReqArgs) => {
     if (args.method === 'eth_estimateGas')
       return BigNumber.from(DEFAULT_GAS).toHexString(); // TODO(#39)
@@ -309,6 +340,25 @@ function hookExternalProvider(
   };
 }
 
+function hookExternalProvider(
+  provider: JsonRpcProvider,
+  cipher: Cipher,
+): EIP1193Provider['request'] {
+  return async ({ method, params }: Web3ReqArgs) => {
+    if (method === 'eth_estimateGas')
+      return BigNumber.from(DEFAULT_GAS).toHexString(); // TODO(#39)
+    if (method === 'eth_call' && params) {
+      params[0].data = await cipher.encryptEncode(params[0].data);
+      if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
+      return provider.send(method, params);
+    }
+    if (method === 'eth_getTransactionReceipt') {
+      const res = await provider.send(method, params ?? []);
+      return patchTxReceipt(provider, res);
+    }
+    return provider.send(method, params ?? []);
+  };
+}
 
 // TODO(#41)
 async function patchTxReceipt(
