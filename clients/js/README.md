@@ -10,8 +10,8 @@ by wrapping your existing `ethers.Provider`/`window.ethereum`/`web3.providers.*`
 
 In just a couple of lines of code, you can bring confidentiality to your dapp frontend.
 
-**If your dapp doesn't port in under 10 minutes, you get your money back!**  
-But seriously, if you have more than a little trouble, file a bug report.
+**If your dapp doesn't port in under 10 minutes, it's a bug!**  
+If you have more than a little trouble, please file an issue.
 There should be _no_ reason _not_ to use the Sapphire ParaTime!
 
 ### ethers.js
@@ -57,5 +57,5 @@ window.ethereum = sapphire.wrap(window.ethereum); // If you're feeling bold.
 ## See Also
 
 - [Oasis Testnet Faucet](https://faucet.testnet.oasis.dev/)
-- [Creating dapps for Sapphire](https://docs.oasis.dev/general/developer-resources/sapphire-paratime/writing-dapps-on-sapphire)
-- [How to Transfer ROSE into an EVM ParaTime](https://docs.oasis.dev/general/manage-tokens/how-to-transfer-rose-into-evm-paratime)
+- [Creating dapps for Sapphire](https://docs.oasis.io/dapp/sapphire/quickstart)
+- [How to Transfer ROSE into an EVM ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime/)
