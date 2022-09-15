@@ -1,8 +1,8 @@
 import { HardhatUserConfig } from 'hardhat/config';
 
-import '@nomiclabs/hardhat-ethers';
-import '@typechain/hardhat';
+import '@nomiclabs/hardhat-waffle';
 import 'hardhat-watcher';
+import 'solidity-coverage';
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -12,6 +12,7 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: (1 << 32) - 1,
       },
+      viaIR: true,
     },
   },
   watcher: {
@@ -30,7 +31,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     require: ['ts-node/register/files'],
-    timeout: 20000,
+    timeout: 20_000,
   },
 };
 
