@@ -14,6 +14,20 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  networks: {
+    'emerald-testnet': {
+      url: 'https://testnet.emerald.oasis.dev',
+      accounts: process.env.EMERALD_TESTNET_PRIVATE_KEY
+        ? [process.env.EMERALD_TESTNET_PRIVATE_KEY]
+        : [],
+    },
+    'sapphire-testnet': {
+      url: 'https://testnet.sapphire.oasis.dev',
+      accounts: process.env.SAPPHIRE_TESTNET_PRIVATE_KEY
+        ? [process.env.SAPPHIRE_TESTNET_PRIVATE_KEY]
+        : [],
+    },
+  },
   watcher: {
     compile: {
       tasks: ['compile'],
