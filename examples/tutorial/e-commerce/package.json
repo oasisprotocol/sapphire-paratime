@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^1.0.5",
+    "@openzeppelin/contracts": "^4.7.3",
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "@truffle/hdwallet-provider": "^2.0.14"
+  }
+}

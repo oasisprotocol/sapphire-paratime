@@ -1,0 +1,28 @@
+.product-image {
+  margin: 32px 30%;
+  width: 40%;
+  min-height: 90px;
+}
+
+button.icon-only {
+  width: 18px;
+  font-size: 8px;
+}
+
+button.icon-only .material-icons {
+  font-size: 14px;
+}
+
+.cart-quantity {
+  max-width: 24px;
+  font-size: 12px;
+  text-align: center;
+  padding: 0;
+  height: 28px;
+}
+
+.cart-quantity::-webkit-inner-spin-button,
+.cart-quantity::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
