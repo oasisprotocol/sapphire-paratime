@@ -54,6 +54,20 @@ const provider = sapphire.wrap(window.ethereum);
 window.ethereum = sapphire.wrap(window.ethereum); // If you're feeling bold.
 ```
 
+## Troubleshooting
+
+### `Error: missing provider (operation="getChainId", code=UNSUPPORTED_OPERATION, ...)`
+
+**Explanation:** When you first make a transaction or call using a wrapped signer or provider,
+this library will automatically fetch the runtime public key from the Web3 gateway
+using your connected provider. If you've wrapped just a signer (e.g., `ethers.Wallet`),
+then you'll see this error.
+
+**Fix:** The simplest thing to do is connect a provider. Alternatively, you can pass in
+a pre-initialized `Cipher` object as the second argument to `wrap`; and then also generate
+signed queries manually using the `overrides` parameter to `SignedCallDataPack.make`. This
+latter approach is not recommended except for the most custom of use cases, however.
+
 ## See Also
 
 - [Oasis Testnet Faucet](https://faucet.testnet.oasis.dev/)
