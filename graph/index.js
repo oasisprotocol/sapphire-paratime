@@ -1,10 +1,9 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const ethers = require('ethers');
 const sapphire = require('@oasisprotocol/sapphire-paratime');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
 const provider = new ethers.providers.JsonRpcProvider(process.env.RPC);
 const signer = ethers.Wallet.createRandom().connect(provider);

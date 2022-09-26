@@ -6,7 +6,6 @@
   "license": "MIT",
   "dependencies": {
     "@oasisprotocol/sapphire-paratime": "^1.0.5",
-    "body-parser": "^1.20.0",
     "ethers": "^5.7.1",
     "express": "^4.18.1"
   }
