@@ -16,12 +16,13 @@ app.post('/', async (req, res) => {
         return;
     }
 
-    let payload;
-    if (req.body.method === 'eth_call') {
-        delete req.body.params[0]['gas'];
-        payload = await client.call(req.body.params[0], req.body.params[1]);
+    let result;
+    let { id, method, params } = req.body;
+    if (method === 'eth_call') {
+        delete params[0]['gas'];
+        result = await client.call(...params);
     } else {
-        payload = await provider.send(req.body.method, req.body.params);
+        result = await provider.send(method, params);
     }
     
     res.status(200);
