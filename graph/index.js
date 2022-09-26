@@ -25,7 +25,7 @@ app.post('/', async (req, res) => {
     }
     
     res.status(200)
-        .json({ id, jsonrpc: "2.0", result });
+        .json({ id, jsonrpc: "2.0", result })
         .end();
 })
 
