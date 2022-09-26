@@ -12,8 +12,7 @@ const client = sapphire.wrap(signer);
 
 app.post('/', async (req, res) => {
     if (req.body.jsonrpc !== '2.0') {
-        res.status(405);
-        res.end();
+        res.status(405).end();
         return;
     }
 
