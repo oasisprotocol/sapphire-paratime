@@ -25,9 +25,9 @@ app.post('/', async (req, res) => {
         result = await provider.send(method, params);
     }
     
-    res.status(200);
-    res.json({ id: req.body.id, jsonrpc: "2.0", result: payload });
-    res.end();
+    res.status(200)
+        .json({ id, jsonrpc: "2.0", result });
+        .end();
 })
 
 app.listen(8080);
