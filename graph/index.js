@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const provider = new ethers.providers.JsonRpcProvider(process.env.RPC);
-const signer = new ethers.Wallet(Buffer.from(ethers.utils.randomBytes(32)).toString('hex'), provider);
+const signer = ethers.Wallet.createRandom().connect(provider);
 const client = sapphire.wrap(signer);
 
 app.post('/', async (req, res) => {
