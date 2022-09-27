@@ -10,6 +10,7 @@ import deoxysii from 'deoxysii';
 import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair, randomBytes, scalarMult } from 'tweetnacl';
 import { Promisable } from 'type-fest';
+import crossFetch from 'cross-fetch';
 
 import { CallError, NETWORKS } from './index.js';
 
@@ -279,10 +280,8 @@ export async function fetchRuntimePublicKey(
         `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
       );
   }
-  const fetchImpl = globalThis?.fetch ?? opts?.fetch;
-  const res = await (fetchImpl
-    ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
-    : fetchRuntimePublicKeyNode(gatewayUrl));
+  const fetchImpl = opts?.fetch ?? crossFetch;
+  const res = await requestPublicKey(gatewayUrl, fetchImpl);
   return arrayify(res.result.key);
 }
 
@@ -290,34 +289,7 @@ type CallDataPublicKeyResponse = {
   result: { key: string; checksum: string; signature: string };
 };
 
-async function fetchRuntimePublicKeyNode(
-  gwUrl: string,
-): Promise<CallDataPublicKeyResponse> {
-  const https = await import('node:https');
-  const body = makeCallDataPublicKeyBody();
-  return new Promise((resolve, reject) => {
-    const opts = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'content-length': body.length,
-      },
-    };
-    const req = https.request(gwUrl, opts, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('error', (err) => reject(err));
-      res.on('data', (chunk) => chunks.push(chunk));
-      res.on('end', () => {
-        resolve(JSON.parse(Buffer.concat(chunks).toString()));
-      });
-    });
-    req.on('error', (err) => reject(err));
-    req.write(body);
-    req.end();
-  });
-}
-
-async function fetchRuntimePublicKeyBrowser(
+async function requestPublicKey(
   gwUrl: string,
   fetchImpl: typeof fetch,
 ): Promise<CallDataPublicKeyResponse> {
