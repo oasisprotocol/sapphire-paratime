@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "@oasisprotocol/sapphire-paratime",
   "license": "Apache-2.0",
   "version": "1.0.5",
@@ -19,22 +20,22 @@
     "src"
   ],
   "sideEffects": false,
-  "main": "./lib/cjs/index.js",
+  "main": "./lib/cjs/index.cjs",
   "module": "./lib/esm/index.js",
   "types": "./lib/cjs/index.d.ts",
   "exports": {
     "node": {
       "import": "./lib/esm/index.js",
-      "require": "./lib/cjs/index.js"
+      "require": "./lib/cjs/index.cjs"
     },
     "default": "./lib/esm/index.js"
   },
   "scripts": {
     "lint": "prettier --check . && eslint --ignore-path .gitignore .",
     "format": "prettier --write . && eslint --ignore-path .gitignore --fix .",
-    "build": "tsc -p ./tsconfig.json && tsc -p ./tsconfig.cjs.json",
+    "build": "npm run build:esm && npm run build:cjs",
     "build:esm": "tsc -p ./tsconfig.json",
-    "build:cjs": "tsc -p ./tsconfig.cjs.json",
+    "build:cjs": "tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
     "test": "jest",
     "coverage": "jest --coverage",
     "prepublishOnly": "pnpm build"

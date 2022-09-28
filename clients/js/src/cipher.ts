@@ -8,7 +8,7 @@ import * as cbor from 'cborg';
 // @ts-expect-error missing declaration
 import deoxysii from 'deoxysii';
 import { sha512_256 } from 'js-sha512';
-import nacl, { BoxKeyPair, randomBytes, scalarMult } from 'tweetnacl';
+import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
 
 import { CallError, NETWORKS } from './index.js';
@@ -177,7 +177,7 @@ export class X25519DeoxysII extends Cipher {
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
     const keyBytes = sha512_256.hmac
       .create('MRAE_Box_Deoxys-II-256-128')
-      .update(scalarMult(keypair.secretKey, peerPublicKey))
+      .update(nacl.scalarMult(keypair.secretKey, peerPublicKey))
       .arrayBuffer();
     this.key = new Uint8Array(keyBytes);
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
@@ -187,7 +187,7 @@ export class X25519DeoxysII extends Cipher {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   }> {
-    const nonce = randomBytes(deoxysii.NonceSize);
+    const nonce = nacl.randomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
