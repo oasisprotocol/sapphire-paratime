@@ -1,6 +1,6 @@
-const express = require('express');
-const ethers = require('ethers');
-const sapphire = require('@oasisprotocol/sapphire-paratime');
+import express from 'express';
+import { ethers } from 'ethers';
+import * as sapphire from '@oasisprotocol/sapphire-paratime';
 
 const app = express();
 app.use(express.json());
@@ -10,23 +10,21 @@ const signer = ethers.Wallet.createRandom().connect(provider);
 const client = sapphire.wrap(signer);
 
 app.post('/', async (req, res) => {
-    if (req.body.jsonrpc !== '2.0') {
-        res.status(405).end();
-        return;
-    }
+  if (req.body.jsonrpc !== '2.0') {
+    res.status(405).end();
+    return;
+  }
 
-    let result;
-    let { id, method, params } = req.body;
-    if (method === 'eth_call') {
-        delete params[0]['gas'];
-        result = await client.call(...params);
-    } else {
-        result = await provider.send(method, params);
-    }
-    
-    res.status(200)
-        .json({ id, jsonrpc: "2.0", result })
-        .end();
-})
+  let result;
+  let { id, method, params } = req.body;
+  if (method === 'eth_call') {
+    delete params[0]['gas'];
+    result = await client.call(params[0], params[1]);
+  } else {
+    result = await provider.send(method, params);
+  }
+
+  res.status(200).json({ id, jsonrpc: '2.0', result }).end();
+});
 
 app.listen(8080);

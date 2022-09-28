@@ -1,12 +1,20 @@
 {
   "private": true,
+  "type": "module",
   "name": "@oasisprotocol/sapphire-graph-proxy",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "lint": "prettier --check '*.json' index.js docker-compose.yml",
+    "format": "prettier --write '*.json' index.js docker-compose.yml"
+  },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "^1.0.5",
+    "@oasisprotocol/sapphire-paratime": "../clients/js",
     "ethers": "^5.7.1",
     "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "prettier": "^2.7.1"
   }
 }
