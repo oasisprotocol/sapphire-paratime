@@ -50,6 +50,12 @@ The rustup-installed versions of `cargo`, `rustc` and other tools will
 toolchain][rust-toolchain-precedence] when invoked from the Sapphire ParaTime
 git checkout directory.
 
+If rust toolchain is not installed on your device, you can install it like this:
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+```
+
 To install the appropriate version of the Rust toolchain, make sure you are
 in an Sapphire ParaTime git checkout directory and run:
 
