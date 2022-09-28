@@ -6,11 +6,12 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "start": "node index.js",
     "lint": "prettier --check '*.json' index.js docker-compose.yml",
     "format": "prettier --write '*.json' index.js docker-compose.yml"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "../clients/js",
+    "@oasisprotocol/sapphire-paratime": "../../clients/js",
     "ethers": "^5.7.1",
     "express": "^4.18.1"
   },
