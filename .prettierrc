@@ -1,5 +1,5 @@
 {
-  "proseWrap": "always",
+  "proseWrap": true,
   "singleQuote": true,
   "trailingComma": "all",
   "overrides": [
