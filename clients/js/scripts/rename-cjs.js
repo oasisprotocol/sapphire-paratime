@@ -8,7 +8,7 @@ for (const filename of await fs.readdir('.')) {
   if (!/\.js$/.test(filename)) continue;
   const cjs = await fs.readFile(filename, 'utf-8');
   await fs.writeFile(
-    filename.replace('.js', '.cjs'),
+    filename.replace(/\.js$/, '.cjs'),
     cjs.replaceAll(/require\("(.\/[\w_\-.]+)\.js"\)/g, 'require("$1.cjs")'),
   );
   await fs.unlink(filename);

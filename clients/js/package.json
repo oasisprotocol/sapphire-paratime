@@ -33,9 +33,9 @@
   "scripts": {
     "lint": "prettier --check . && eslint --ignore-path .gitignore .",
     "format": "prettier --write . && eslint --ignore-path .gitignore --fix .",
-    "build": "tsc -p ./tsconfig.json && tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
+    "build": "npm run build:esm && npm run build:cjs",
     "build:esm": "tsc -p ./tsconfig.json",
-    "build:cjs": "tsc -p ./tsconfig.cjs.json",
+    "build:cjs": "tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
     "test": "jest",
     "coverage": "jest --coverage",
     "prepublishOnly": "pnpm build"
