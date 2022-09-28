@@ -1727,7 +1727,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=b8e5f8f8c725eaf28f643f221930b55775b5a765#b8e5f8f8c725eaf28f643f221930b55775b5a765"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=408b8c5f9d2a7aeafaba773effb4bda5f6306a6e#408b8c5f9d2a7aeafaba773effb4bda5f6306a6e"
 dependencies = [
  "anyhow",
  "base64",
@@ -1761,7 +1761,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=b8e5f8f8c725eaf28f643f221930b55775b5a765#b8e5f8f8c725eaf28f643f221930b55775b5a765"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=408b8c5f9d2a7aeafaba773effb4bda5f6306a6e#408b8c5f9d2a7aeafaba773effb4bda5f6306a6e"
 dependencies = [
  "anyhow",
  "base64",
@@ -1771,6 +1771,7 @@ dependencies = [
  "evm",
  "fixed-hash",
  "hex",
+ "hmac",
  "k256",
  "num",
  "oasis-cbor",
@@ -1783,12 +1784,13 @@ dependencies = [
  "sha3 0.10.2",
  "thiserror",
  "uint",
+ "x25519-dalek",
 ]
 
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=b8e5f8f8c725eaf28f643f221930b55775b5a765#b8e5f8f8c725eaf28f643f221930b55775b5a765"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=408b8c5f9d2a7aeafaba773effb4bda5f6306a6e#408b8c5f9d2a7aeafaba773effb4bda5f6306a6e"
 dependencies = [
  "darling 0.14.1",
  "proc-macro2",
