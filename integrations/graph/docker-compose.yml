@@ -20,6 +20,7 @@ services:
       - host.docker.internal:host-gateway
     environment:
       ethereum: 'sapphire:http://proxy:8080'
+      GRAPH_ETHEREUM_MAX_BLOCK_RANGE_SIZE: 100
     env_file:
       - .env
   ipfs:
