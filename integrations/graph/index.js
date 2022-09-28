@@ -1,6 +1,6 @@
-import express from 'express';
-import { ethers } from 'ethers';
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
+import { ethers } from 'ethers';
+import express from 'express';
 
 const app = express();
 app.use(express.json());
