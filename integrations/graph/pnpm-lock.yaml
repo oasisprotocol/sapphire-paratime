@@ -1,13 +1,13 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@oasisprotocol/sapphire-paratime': ../../clients/js
+  '@oasisprotocol/sapphire-paratime': ^1.0.0
   ethers: ^5.7.1
   express: ^4.18.1
   prettier: ^2.7.1
 
 dependencies:
-  '@oasisprotocol/sapphire-paratime': link:../../clients/js
+  '@oasisprotocol/sapphire-paratime': 1.0.6
   ethers: 5.7.1
   express: 4.18.1
 
@@ -331,6 +331,27 @@ packages:
       '@ethersproject/strings': 5.7.0
     dev: false
 
+  /@oasisprotocol/sapphire-paratime/1.0.6:
+    resolution: {integrity: sha512-4Cc6u8WoFbiCe9zMpECwrHCx5sgIMLfdlQM580VEw6n2snjbbPj8ACj5EoY3hQrVRYW4sHnoczkkK9he2at8iw==}
+    dependencies:
+      '@ethersproject/abstract-provider': 5.7.0
+      '@ethersproject/abstract-signer': 5.7.0
+      '@ethersproject/address': 5.7.0
+      '@ethersproject/bignumber': 5.7.0
+      '@ethersproject/bytes': 5.7.0
+      '@ethersproject/providers': 5.7.1
+      '@ethersproject/rlp': 5.7.0
+      '@ethersproject/transactions': 5.7.0
+      cborg: 1.9.5
+      deoxysii: 0.0.2
+      js-sha512: 0.8.0
+      tweetnacl: 1.0.3
+      type-fest: 2.19.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
+
   /accepts/1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
@@ -383,6 +404,12 @@ packages:
     resolution: {integrity: sha512-cKV8tMCEpQs4hK/ik71d6LrPOnpkpGBR0wzxqr68g2m/LB2GxVYQroAjMJZRVM1Y4BCjCKc3vAamxSzOY2RP+w==}
     dev: false
 
+  /bsaes/0.0.2:
+    resolution: {integrity: sha512-iVxJFMOvCUG85sX2UVpZ9IgvH6Jjc5xpd/W8pALvFE7zfCqHkV7hW3M2XZtpg9biPS0K4Eka96bbNNgLohcpgQ==}
+    dependencies:
+      uint32: 0.2.1
+    dev: false
+
   /bytes/3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
@@ -393,6 +420,11 @@ packages:
     dependencies:
       function-bind: 1.1.1
       get-intrinsic: 1.1.3
+    dev: false
+
+  /cborg/1.9.5:
+    resolution: {integrity: sha512-fLBv8wmqtlXqy1Yu+pHzevAIkW6k2K0ZtMujNzWphLsA34vzzg9BHn+5GmZqOJkSA9V7EMKsWrf6K976c1QMjQ==}
+    hasBin: true
     dev: false
 
   /content-disposition/0.5.4:
@@ -425,6 +457,13 @@ packages:
         optional: true
     dependencies:
       ms: 2.0.0
+    dev: false
+
+  /deoxysii/0.0.2:
+    resolution: {integrity: sha512-mMob/2wDZBatPC48g188hFt5xxrbfYMl9L+XQGOZuHPU4ScCHpAKkbZiAU1yg/kROj6nPKZp5eItuNI3LdU7vA==}
+    dependencies:
+      bsaes: 0.0.2
+      uint32: 0.2.1
     dev: false
 
   /depd/2.0.0:
@@ -639,6 +678,10 @@ packages:
     resolution: {integrity: sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==}
     dev: false
 
+  /js-sha512/0.8.0:
+    resolution: {integrity: sha512-PWsmefG6Jkodqt+ePTvBZCSMFgN7Clckjd0O7su3I0+BW2QWUTJNzjktHsztGLhncP2h8mcF9V9Y2Ha59pAViQ==}
+    dev: false
+
   /media-typer/0.3.0:
     resolution: {integrity: sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g=}
     engines: {node: '>= 0.6'}
@@ -815,12 +858,25 @@ packages:
     engines: {node: '>=0.6'}
     dev: false
 
+  /tweetnacl/1.0.3:
+    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
+    dev: false
+
+  /type-fest/2.19.0:
+    resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
+    engines: {node: '>=12.20'}
+    dev: false
+
   /type-is/1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
     dependencies:
       media-typer: 0.3.0
       mime-types: 2.1.35
+    dev: false
+
+  /uint32/0.2.1:
+    resolution: {integrity: sha512-d3i8kc/4s1CFW5g3FctmF1Bu2GVXGBMTn82JY2BW0ZtTtI8pRx1YWGPCFBwRF4uYVSJ7ua4y+qYEPqS+x+3w7Q==}
     dev: false
 
   /unpipe/1.0.0:
