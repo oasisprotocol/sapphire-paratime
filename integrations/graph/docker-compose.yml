@@ -1,6 +1,7 @@
 version: '3'
 services:
   proxy:
+    restart: always
     build: .
     environment:
       RPC: 'https://testnet.sapphire.oasis.dev'
