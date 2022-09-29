@@ -5,8 +5,7 @@ import express from 'express';
 const app = express();
 app.use(express.json());
 
-const provider = sapphire.wrap(new ethers.getDefaultProvider(process.env.RPC));
-const nobody = Buffer.alloc(20);
+const provider = sapphire.wrap(new ethers.providers.JsonRpcBatchProvider(process.env.RPC));
 
 app.post('/', async (req, res) => {
   if (req.body.jsonrpc !== '2.0') {
@@ -18,7 +17,7 @@ app.post('/', async (req, res) => {
   let { id, method, params } = req.body;
   if (method === 'eth_call') {
     const { gas, ...txCall } = params[0];
-    result = await provider.call({ from: nobody, ...txCall }, params[1]);
+    result = await provider.call({ from: ethers.constants.AddressZero, ...txCall }, params[1]);
   } else {
     result = await provider.send(method, params);
   }
