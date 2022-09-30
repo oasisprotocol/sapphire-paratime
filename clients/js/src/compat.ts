@@ -1,5 +1,4 @@
 import { Signer as AbstractSigner } from '@ethersproject/abstract-signer';
-import { getContractAddress } from '@ethersproject/address';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, isBytesLike } from '@ethersproject/bytes';
 import * as rlp from '@ethersproject/rlp';
@@ -334,8 +333,6 @@ function hookExternalSigner(
     const { method, params } = await prepareRequest(args, signer, cipher);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') return cipher.decryptEncoded(res);
-    if (method === 'eth_getTransactionReceipt')
-      return patchTxReceipt(signer.provider, res);
     return res;
   };
 }
@@ -352,24 +349,8 @@ function hookExternalProvider(
       if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
       return provider.send(method, params);
     }
-    if (method === 'eth_getTransactionReceipt') {
-      const res = await provider.send(method, params ?? []);
-      return patchTxReceipt(provider, res);
-    }
     return provider.send(method, params ?? []);
   };
-}
-
-// TODO(#41)
-async function patchTxReceipt(
-  provider: JsonRpcProvider,
-  receipt: any,
-): Promise<any> {
-  if (!receipt?.contractAddress) return receipt;
-  const prevBlock = Number.parseInt(receipt.blockNumber, 16) - 1;
-  const nonce = await provider.getTransactionCount(receipt?.from, prevBlock);
-  receipt.contractAddress = getContractAddress({ from: receipt.from, nonce });
-  return receipt;
 }
 
 function callbackify(request: EIP1193Provider['request']) {
