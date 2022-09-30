@@ -2,8 +2,8 @@
   "private": true,
   "main": "lib/index.js",
   "scripts": {
-    "lint": "prettier --plugin-search-dir=. --check *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint contracts/**.sol",
-    "format": "prettier --plugin-search-dir=. --write *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint --fix contracts/**.sol",
+    "lint": "prettier --cache --plugin-search-dir=. --check *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint contracts/**.sol",
+    "format": "prettier --cache --plugin-search-dir=. --write *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint --fix contracts/**.sol",
     "build": "hardhat compile && tsc -b",
     "watch": "hardhat watch",
     "test": "hardhat test"

@@ -9,8 +9,8 @@
     "url": "https://github.com/oasisprotocol/sapphire-paratime.git"
   },
   "scripts": {
-    "lint": "eslint --ignore-path .gitignore --ext .ts && solhint 'contracts/**/*.sol' && prettier --check --plugin-search-dir=. --cache '*.json' '**/*.ts' '**/*.sol'",
-    "format": "eslint --fix --ignore-path .gitignore --ext .ts && solhint --fix 'contracts/**/*.sol' && prettier --write --plugin-search-dir=. --cache '*.json' '**/*.ts' '**/*.sol'",
+    "lint": "eslint --ignore-path .gitignore --ext .ts && solhint 'contracts/**/*.sol' && prettier --cache --check --plugin-search-dir=. --cache '*.json' '**/*.ts' '**/*.sol'",
+    "format": "eslint --fix --ignore-path .gitignore --ext .ts && solhint --fix 'contracts/**/*.sol' && prettier --cache --write --plugin-search-dir=. --cache '*.json' '**/*.ts' '**/*.sol'",
     "build": "hardhat compile",
     "test": "hardhat test"
   },
