@@ -1,0 +1,30 @@
+{
+  "name": "@oasisprotocol/sapphire-hardhat",
+  "license": "Apache-2.0",
+  "version": "1.0.0",
+  "description": "A Hardhat plugin for developing on the Sapphire ParaTime.",
+  "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/hardhat",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oasisprotocol/sapphire-paratime.git"
+  },
+  "keywords": [
+    "sapphire",
+    "paratime",
+    "hardhat"
+  ],
+  "main": "./index.js",
+  "scripts": {
+    "lint": "prettier --cache --check .",
+    "format": "prettier --cache --write ."
+  },
+  "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "workspace:^1.0.7"
+  },
+  "peerDependencies": {
+    "hardhat": "^2.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.7.1"
+  }
+}
