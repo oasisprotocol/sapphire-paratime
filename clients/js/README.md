@@ -2,17 +2,31 @@
 
 [@oasisprotocol/sapphire-paratime] makes it easy to port your dapp to the [Sapphire ParaTime]
 by wrapping your existing `ethers.Provider`/`window.ethereum`/`web3.providers.*`.
+Once you wrap your provider, you can use Sapphire just like you would use Ethereum.
 
 [@oasisprotocol/sapphire-paratime]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 [sapphire paratime]: https://docs.oasis.dev/general/developer-resources/sapphire-paratime/
 
+_If your dapp doesn't port in under 10 minutes, it's a bug!_  
+If you have more than a little trouble, please file an issue.  
+There should be _no_ reason _not_ to use the Sapphire ParaTime!
+
 ## Usage
 
-In just a couple of lines of code, you can bring confidentiality to your dapp frontend.
+After installing this library, find your Ethereum provider and wrap it using `sapphire.wrap`.
+Below are some examples for the most kinds of providers.
 
-**If your dapp doesn't port in under 10 minutes, it's a bug!**  
-If you have more than a little trouble, please file an issue.
-There should be _no_ reason _not_ to use the Sapphire ParaTime!
+### Hardhat
+
+Try the [@oasisprotocol/sapphire-hardhat] Hardhat plugin for extra convenience.
+Place this line at the top of your `hardhat.config.ts`.
+
+```js
+import '@oasisprotocol/sapphire-hardhat';
+// All other Hardhat plugins must come below.
+```
+
+[@oasisprotocol/sapphire-hardhat]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
 
 ### ethers.js
 

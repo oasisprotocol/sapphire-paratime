@@ -13,7 +13,7 @@
     "@ethersproject/bytes": "^5.5.0",
     "@ethersproject/providers": "^5.5.2",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
-    "@oasisprotocol/sapphire-paratime": "link:../../clients/js",
+    "@oasisprotocol/sapphire-hardhat": "workspace:^",
     "@openzeppelin/contracts": "^4.4.2",
     "ethers": "^5.5.3",
     "hardhat": "^2.8.3",

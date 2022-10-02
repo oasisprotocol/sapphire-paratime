@@ -42,12 +42,9 @@ jobs:
       - name: Formatting check
         run: cargo fmt -- --check
 
-  lint-client-js:
+  lint-js:
     name: lint-client-js
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./clients/js
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -78,17 +75,14 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm --filter '@oasisprotocol/sapphire-*' install
 
       - name: Lint JS client
-        run: pnpm lint
+        run: pnpm --filter '@oasisprotocol/sapphire-*' lint
 
   type-test-client-js:
     name: type-test-client-js
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./clients/js
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -119,12 +113,8 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm --filter '@oasisprotocol/sapphire-paratime*' install
 
-      - name: Install type-only-test dependencies
-        run: pnpm install
-        working-directory: ./clients/js/type-only-test
-
-      - name: Test type-only-test dependencies
+      - name: Test type-only-test
         run: pnpm test
         working-directory: ./clients/js/type-only-test

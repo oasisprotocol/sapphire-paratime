@@ -95,10 +95,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm --filter @oasisprotocol/sapphire-paratime install
 
       - name: Build JS client
         run: pnpm build
 
-      - name: Build JS client
+      - name: Test JS client
         run: pnpm test

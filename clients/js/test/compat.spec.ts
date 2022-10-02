@@ -323,3 +323,15 @@ function runTestBattery(
     // expect(gasUsed.toNumber()).toEqual(0x112358);
   });
 }
+
+describe('hre.network.provider', () => {
+  it('has JsonRpcProvider.send', async () => {
+    const upstreamProvider = new MockEIP1193Provider();
+    const provider = new ethers.providers.Web3Provider(upstreamProvider);
+    const hreProvider = {
+      send: provider.send.bind(provider),
+    };
+    const wrapped = wrap(hreProvider);
+    await expect(wrapped.send('eth_chainId', [])).resolves.toEqual(0x5afe);
+  });
+});

@@ -1,0 +1,6 @@
+packages:
+  - clients/js
+  - clients/js/type-only-test
+  - examples/hardhat
+  - examples/truffle
+  - integrations/hardhat

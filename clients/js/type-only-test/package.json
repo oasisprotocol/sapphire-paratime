@@ -1,4 +1,6 @@
 {
+  "private": true,
+  "name": "@oasisprotocol/sapphire-paratime-type-only-test",
   "scripts": {
     "test": "tsc"
   },

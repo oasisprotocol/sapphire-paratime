@@ -12,6 +12,7 @@ import {
 } from '@ethersproject/providers';
 import { parse as parseTx } from '@ethersproject/transactions';
 import * as cbor from 'cborg';
+import { RequireAtLeastOne } from 'type-fest';
 
 import {
   Cipher,
@@ -31,7 +32,8 @@ export type UpstreamProvider =
   | EIP1193Provider
   | AsyncSendProvider // legacy
   | EthersSigner
-  | EthersProvider;
+  | EthersProvider
+  | HreProvider;
 
 export type EthersProvider = Pick<
   AbstractProvider,
@@ -60,6 +62,14 @@ export type AsyncSend<Args = Web3ReqArgs> = (
   args: Args,
   cb: (err: any, ok?: any) => void,
 ) => void;
+
+/** As found in `hre.network.provider`. */
+export type HreProvider = RequireAtLeastOne<
+  EIP1193Provider & {
+    sendAsync: AsyncSend<Web3ReqArgs>;
+    send: JsonRpcProvider['send'];
+  }
+>;
 
 export type Web3ReqArgs = {
   readonly jsonrpc?: string;
@@ -178,22 +188,41 @@ export function wrap<U extends UpstreamProvider>(
     return wrapEthersProvider(upstream, cipher);
   }
 
-  if ('request' in upstream) {
-    const signer = new Web3Provider(upstream).getSigner();
-    const hook = hookExternalSigner(signer, cipher);
-    return makeProxy(upstream, cipher, { request: hook });
-  }
-
-  if ('send' in upstream || 'sendAsync' in upstream) {
-    const signer = new Web3Provider(upstream).getSigner();
-    const hook = callbackify(hookExternalSigner(signer, cipher));
+  if ('request' in upstream || 'send' in upstream || 'sendAsync' in upstream) {
+    const signer = makeWeb3Provider(upstream).getSigner();
+    const request = hookExternalSigner(signer, cipher);
+    const sendAsync = callbackify(request);
+    let send: AsyncSend | JsonRpcProvider['send'] = sendAsync;
+    if ('send' in upstream && isEthersSend(upstream.send)) {
+      // If the provided `send` is an `JsonRpcProvider.send`, we need to provide that instead of the usual `AsyncSend`
+      send = ((method, params) =>
+        request({ method, params })) as JsonRpcProvider['send'];
+    }
     return makeProxy(upstream, cipher, {
-      send: hook,
-      sendAsync: hook,
+      request,
+      send,
+      sendAsync,
     });
   }
 
   throw new TypeError('Unable to wrap unsupported upstream signer.');
+}
+
+function isEthersSend(
+  send?: AsyncSend | JsonRpcProvider['send'],
+): send is JsonRpcProvider['send'] {
+  if (!send) return false;
+  // If the function is async, it's likely ethers send.
+  try {
+    const res = (send as any)(); // either rejects or calls back with an error
+    if (res instanceof Promise) {
+      res.catch(() => void {}); // handle the rejection before the next tick
+      return true;
+    }
+  } catch {
+    // This is prophyalictic. Neither kind of `send` should synchronously throw.
+  }
+  return false;
 }
 
 function getCipher(provider: UpstreamProvider): Cipher {
@@ -487,8 +516,22 @@ async function inferRuntimePublicKeySource(
         : (await upstream.getNetwork()).chainId,
     };
   }
-  const provider = new Web3Provider(upstream);
   return {
-    chainId: (await provider.getNetwork()).chainId,
+    chainId: (await makeWeb3Provider(upstream).getNetwork()).chainId,
   };
+}
+
+function makeWeb3Provider(
+  upstream: EIP1193Provider | AsyncSendProvider | HreProvider,
+): Web3Provider {
+  let provider: EIP1193Provider | AsyncSendProvider;
+  if ('send' in upstream && isEthersSend(upstream.send)) {
+    provider = {
+      request: ({ method, params }) =>
+        (upstream.send as JsonRpcProvider['send'])(method, params ?? []),
+    } as EIP1193Provider;
+  } else {
+    provider = upstream as EIP1193Provider | AsyncSendProvider;
+  }
+  return new Web3Provider(provider);
 }

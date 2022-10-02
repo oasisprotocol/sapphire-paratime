@@ -13,6 +13,6 @@
     "@truffle/hdwallet-provider": "^2.0.14"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "link:../../clients/js"
+    "@oasisprotocol/sapphire-paratime": "workspace:^"
   }
 }

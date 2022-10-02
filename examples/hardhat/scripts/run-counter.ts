@@ -1,16 +1,12 @@
 // Usage: pnpm hardhat run --network <network> scripts/deploy-bridge-adapter-v1.ts
 
 import { ethers } from 'hardhat';
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
 
 async function main() {
-  const signer0 = (await ethers.getSigners())[0];
-  const chainId = await signer0.getChainId();
-  const signer = chainId in sapphire.NETWORKS ? sapphire.wrap(signer0) : signer0;
-  const Counter = await ethers.getContractFactory('Counter', signer);
+  const Counter = await ethers.getContractFactory('Counter');
   const counter = await Counter.deploy().then((c) => c.deployed());
   console.log('Counter deployed to:', counter.address, 'in', counter.deployTransaction.hash);
-  const code = await signer.provider!.getCode(counter.address);
+  const code = await ethers.provider.getCode(counter.address);
   if (code == '0x') throw new Error('deploy failed');
   for (let i = 0; i < 3; i++) {
     const tx = await counter.increment();
