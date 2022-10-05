@@ -287,10 +287,6 @@ function isEthersSigner(upstream: unknown): upstream is EthersSigner {
   return AbstractSigner.isSigner(upstream) && '_signTypedData' in upstream;
 }
 
-function isJsonRpcProvider(p: unknown): p is JsonRpcProvider {
-  return isEthersProvider(p) && 'send' in p;
-}
-
 function hookEthersCall(
   call: EthersCall,
   cipher: Cipher,
@@ -492,10 +488,6 @@ class EnvelopeError extends Error {}
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
- *
- * If the upstream provider is Web3-like, then use that, as the user has chosen then gateway.
- * Otherwise, fetch the key from the default Web3 gateway for the particular chain ID.
- *
  * Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
  * fall back to manually querying the default gateway.
  */
@@ -504,12 +496,6 @@ async function inferRuntimePublicKeySource(
 ): Promise<Parameters<typeof fetchRuntimePublicKey>[0]> {
   const isSigner = isEthersSigner(upstream);
   if (isSigner || isEthersProvider(upstream)) {
-    const provider = isSigner ? upstream.provider : upstream;
-    if (isJsonRpcProvider(provider) && !(upstream as any).isMetaMask) {
-      return {
-        send: (method, params) => provider.send(method, params),
-      };
-    }
     return {
       chainId: isSigner
         ? await upstream.getChainId()
