@@ -21,12 +21,14 @@ const config: HardhatUserConfig = {
       accounts: process.env.EMERALD_TESTNET_PRIVATE_KEY
         ? [process.env.EMERALD_TESTNET_PRIVATE_KEY]
         : [],
+      chainId: 0xa515
     },
     'sapphire-testnet': {
       url: 'https://testnet.sapphire.oasis.dev',
       accounts: process.env.SAPPHIRE_TESTNET_PRIVATE_KEY
         ? [process.env.SAPPHIRE_TESTNET_PRIVATE_KEY]
         : [],
+      chainId: 0x5aff
     },
   },
   watcher: {
