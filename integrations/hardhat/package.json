@@ -1,7 +1,7 @@
 {
   "name": "@oasisprotocol/sapphire-hardhat",
   "license": "Apache-2.0",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Hardhat plugin for developing on the Sapphire ParaTime.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/hardhat",
   "repository": {
