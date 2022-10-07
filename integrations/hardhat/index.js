@@ -5,7 +5,9 @@ extendEnvironment((hre) => {
   const { chainId, url: rpcUrl } = hre.network.config;
   if (chainId) {
     if (!sapphire.NETWORKS[chainId]) return;
-  } else if (/sapphire/i.test(rpcUrl)) {
+  } else {
+    if (!/sapphire/i.test(rpcUrl)) return;
+
     console.warn(
       'The Hardhat config for the network with `url`',
       rpcUrl,
