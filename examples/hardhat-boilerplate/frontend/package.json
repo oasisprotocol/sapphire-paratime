@@ -1,0 +1,39 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^1.0.0",
+    "bootstrap": "^4.4.1",
+    "ethers": "^5.4.7",
+    "https-browserify": "^1.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1",
+    "webpack-cli": "^4.10.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
