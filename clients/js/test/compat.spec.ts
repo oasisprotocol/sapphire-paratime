@@ -145,6 +145,25 @@ describe('ethers signer', () => {
     );
   });
 
+  it('unsigned call/estimateGas', async () => {
+    const upstreamProvider = new MockEIP1193Provider();
+    const wrapped = wrap(wallet, cipher).connect(
+      new ethers.providers.Web3Provider(upstreamProvider),
+    );
+    const callRequest = { from: ethers.constants.AddressZero, to, data };
+
+    const response = await wrapped.call(callRequest);
+    expect(response).toEqual('0x112358');
+    const encryptedCall = upstreamProvider._request.mock.lastCall[0].params![0];
+    expect(encryptedCall.data).toEqual(
+      await cipher.encryptEncode(callRequest.data),
+    );
+
+    // TODO(#39): re-enable once resolved
+    // const gasUsed = await wrapped.estimateGas(callRequest);
+    // expect(gasUsed.toNumber()).toEqual(0x112358);
+  });
+
   runTestBattery(() => {
     const provider = new MockEIP1193Provider();
     const signer = wrap(wallet, cipher).connect(

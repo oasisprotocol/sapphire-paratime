@@ -82,6 +82,24 @@ a pre-initialized `Cipher` object as the second argument to `wrap`; and then als
 signed queries manually using the `overrides` parameter to `SignedCallDataPack.make`. This
 latter approach is not recommended except for the most custom of use cases, however.
 
+### MetaMask keeps popping up asking me to sign messages
+
+**Explanation:** The default behavior of the Sapphire ParaTime compatibility library is to
+sign calls such that `msg.sender` can be authenticated during `eth_call` and `eth_estimateGas`.
+This is useful for methods in contracts that do identity-based access control. For better UX
+in the browser, you should only make signed calls when necessary.
+
+**Fix:** The Sapphire ParaTime compat lib will not sign calls when the `from` address is
+`address(0)`. For Web3.js you can pass `{ from: `0x${'0'.repeat(40)}` }` as the final arg
+to `Contract.method().call` ([ref](https://web3js.readthedocs.io/en/v1.2.11/web3-eth-contract.html)). For Ethers.js please read the next section.
+
+### `Contract with a Signer cannot override from (operation="overrides.from", code=UNSUPPORTED_OPERATION, ...)`
+
+**Explanation:** Ethers prevents overriding `from` when using a Signer [for safety reasons](https://github.com/ethers-io/ethers.js/discussions/3327).
+
+**Fix:** Create a new `Contract` instance but do not connect it to a signer–just a provider.
+Use that for unsigned queries instead.
+
 ## See Also
 
 - [Oasis Testnet Faucet](https://faucet.testnet.oasis.dev/)

@@ -93,7 +93,7 @@ export type SapphireAnnex = {
 };
 
 /** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
-const DEFAULT_GAS = 3_000_000;
+const DEFAULT_GAS = 10_000_000;
 
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
@@ -166,7 +166,7 @@ export function wrap<U extends UpstreamProvider>(
         signer.signTransaction.bind(signer),
         cipher,
       ),
-      call: hookEthersCall(signer.call.bind(signer), cipher, signer),
+      call: hookEthersCall(signer, 'call', cipher),
       // TODO(#39): replace with original once resolved
       estimateGas: () => DEFAULT_GAS,
       // estimateGas: hookEthersCall(
@@ -269,12 +269,8 @@ function wrapEthersProvider<P extends EthersProvider>(
       }
     : {
         // Calls can be unsigned, but must be enveloped.
-        call: hookEthersCall(provider.call.bind(provider), cipher, signer),
-        estimateGas: hookEthersCall(
-          provider.estimateGas.bind(provider),
-          cipher,
-          signer,
-        ),
+        call: hookEthersCall(provider, 'call', cipher),
+        estimateGas: hookEthersCall(provider, 'estimateGas', cipher),
       };
   return makeProxy(provider, cipher, hooks);
 }
@@ -288,30 +284,43 @@ function isEthersSigner(upstream: unknown): upstream is EthersSigner {
 }
 
 function hookEthersCall(
-  call: EthersCall,
+  signerOrProvider: EthersSigner | EthersProvider,
+  method: 'call' | 'estimateGas',
   cipher: Cipher,
-  signer?: EthersSigner,
 ): EthersCall {
+  const sendUnsignedCall = async (
+    provider: EthersProvider,
+    callP: Deferrable<TransactionRequest>,
+  ) => {
+    return provider[method]({
+      ...callP,
+      data: cipher.encryptEncode(await callP.data),
+    });
+  };
   return async (callP, blockTag?: BlockTag) => {
-    if (!signer || !(await callNeedsSigning(callP))) {
-      const res = await call({
-        ...callP,
-        data: cipher.encryptEncode(await callP.data),
-      });
-      if (typeof res === 'string') return cipher.decryptEncoded(res);
-      return res;
+    let res: string | BigNumber;
+    if (isEthersSigner(signerOrProvider)) {
+      const signer = signerOrProvider;
+      if (await callNeedsSigning(callP)) {
+        const dataPack = await SignedCallDataPack.make(
+          (await undefer(callP)) as any /* callNeedsSigning ensures type */,
+          signer,
+        );
+        res = await signer[method](
+          {
+            ...callP,
+            data: dataPack.encryptEncode(cipher),
+          },
+          blockTag,
+        );
+      } else {
+        if (signer._checkProvider) signer._checkProvider(method);
+        res = await sendUnsignedCall(signer.provider!, callP);
+      }
+    } else {
+      const provider = signerOrProvider;
+      res = await sendUnsignedCall(provider, callP);
     }
-    const dataPack = await SignedCallDataPack.make(
-      (await undefer(callP)) as any /* callNeedsSigning ensures type */,
-      signer,
-    );
-    const res = await call(
-      {
-        ...callP,
-        data: dataPack.encryptEncode(cipher),
-      },
-      blockTag,
-    );
     if (typeof res === 'string') return cipher.decryptEncoded(res);
     return res;
   };
