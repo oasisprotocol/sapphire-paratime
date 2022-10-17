@@ -1,5 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 
+import '@oasisprotocol/sapphire-hardhat';
+import '@typechain/hardhat';
 import '@nomiclabs/hardhat-waffle';
 import 'hardhat-watcher';
 import 'solidity-coverage';
@@ -13,6 +15,29 @@ const config: HardhatUserConfig = {
         runs: (1 << 32) - 1,
       },
       viaIR: true,
+    },
+  },
+  networks: {
+    'emerald-testnet': {
+      url: 'https://testnet.emerald.oasis.dev',
+      chainId: 0xa515,
+      accounts: process.env.EMERALD_TESTNET_PRIVATE_KEY
+        ? [process.env.EMERALD_TESTNET_PRIVATE_KEY]
+        : [],
+    },
+    'sapphire-testnet': {
+      url: 'https://testnet.sapphire.oasis.dev',
+      chainId: 0x5aff,
+      accounts: process.env.SAPPHIRE_TESTNET_PRIVATE_KEY
+        ? [process.env.SAPPHIRE_TESTNET_PRIVATE_KEY]
+        : [],
+    },
+    'sapphire-mainnet': {
+      url: 'https://sapphire.oasis.dev',
+      chainId: 0x5afe,
+      accounts: process.env.SAPPHIRE_MAINNET_PRIVATE_KEY
+        ? [process.env.SAPPHIRE_MAINNET_PRIVATE_KEY]
+        : [],
     },
   },
   watcher: {
