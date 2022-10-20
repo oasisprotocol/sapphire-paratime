@@ -235,19 +235,16 @@ export function lazy(generator: () => Promisable<Cipher>): Cipher {
   return new Proxy(
     {},
     {
-      get(target: { inner?: Cipher }, prop) {
+      get(target: { inner?: Promise<Cipher> }, prop) {
         // Props (Promiseable)
         if (prop === 'kind' || prop === 'publicKey') {
-          if (target.inner) return Reflect.get(target.inner, prop);
-          return Promise.resolve(generator()).then((inner: Cipher) => {
-            if (!target.inner) target.inner = inner;
-            return Reflect.get(target.inner, prop);
-          });
+          if (!target.inner) target.inner = Promise.resolve(generator());
+          return target.inner.then((c) => Reflect.get(c, prop));
         }
         // Funcs (async)
         return async (...args: unknown[]) => {
-          if (!target.inner) target.inner = await generator();
-          return Reflect.get(target.inner, prop).bind(target.inner)(...args);
+          if (!target.inner) target.inner = Promise.resolve(generator());
+          return target.inner.then((c) => Reflect.get(c, prop).apply(c, args));
         };
       },
     },
