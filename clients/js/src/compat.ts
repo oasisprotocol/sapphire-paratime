@@ -95,6 +95,8 @@ export type SapphireAnnex = {
 /** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
 const DEFAULT_GAS = 10_000_000;
 
+const HARDHAT_LOCAL_NETWORK_CHAINID = 0x7a69;
+
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
  *
@@ -509,11 +511,20 @@ async function inferRuntimePublicKeySource(
 ): Promise<Parameters<typeof fetchRuntimePublicKey>[0]> {
   const isSigner = isEthersSigner(upstream);
   if (isSigner || isEthersProvider(upstream)) {
-    return {
-      chainId: isSigner
-        ? await upstream.getChainId()
-        : (await upstream.getNetwork()).chainId,
-    };
+    const chainId = isSigner
+      ? await upstream.getChainId()
+      : (await upstream.getNetwork()).chainId;
+    // for hardhat localhost testing network, directly return its ethersProvider
+    if (
+      chainId == HARDHAT_LOCAL_NETWORK_CHAINID &&
+      'provider' in upstream &&
+      upstream['provider'] &&
+      'send' in upstream['provider']
+    ) {
+      return upstream['provider'];
+    } else {
+      return { chainId: chainId };
+    }
   }
   return {
     chainId: (await makeWeb3Provider(upstream).getNetwork()).chainId,
