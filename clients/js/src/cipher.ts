@@ -290,7 +290,7 @@ type CallDataPublicKeyResponse = {
 async function fetchRuntimePublicKeyNode(
   gwUrl: string,
 ): Promise<CallDataPublicKeyResponse> {
-  const https = await import('https');
+  const https = await import(/* webpackIgnore: true */ 'https');
   const body = makeCallDataPublicKeyBody();
   return new Promise((resolve, reject) => {
     const opts = {
