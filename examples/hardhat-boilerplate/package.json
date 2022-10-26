@@ -36,6 +36,6 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-hardhat": "^1.0.0"
+    "@oasisprotocol/sapphire-hardhat": "workspace:^"
   }
 }

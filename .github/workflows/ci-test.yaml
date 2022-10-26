@@ -100,5 +100,78 @@ jobs:
       - name: Build JS client
         run: pnpm build
 
+      - name: Upload client-js build
+        uses: actions/upload-artifact@v3
+        with:
+          name: client-js
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            clients/js/lib
+
       - name: Test JS client
         run: pnpm test
+
+  test-examples:
+    name: test-examples
+    runs-on: ubuntu-latest
+    needs: [test-client-js]
+    strategy:
+      matrix:
+        example: [hardhat, hardhat-boilerplate, truffle]
+    defaults:
+      run:
+        working-directory: examples/${{ matrix.example }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: pnpm/action-setup@v2.2.4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Download client-js build
+        uses: actions/download-artifact@v3
+        with:
+          name: client-js
+          path: clients/js/lib
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Build
+        run: |
+          ! grep -q '"build":' package.json || pnpm run build
+
+      - name: Test
+        run: |
+          ! grep -q '"test":' package.json || pnpm test
+
+      - name: Test Frontend
+        if: matrix.example == 'hardhat-boilerplate'
+        run: |
+          npx hardhat run scripts/deploy.js
+          cd frontend
+          pnpm build

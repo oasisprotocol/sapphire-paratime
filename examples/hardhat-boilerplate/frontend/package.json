@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "^1.0.0",
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
     "bootstrap": "^4.4.1",
     "ethers": "^5.4.7",
     "https-browserify": "^1.0.0",
