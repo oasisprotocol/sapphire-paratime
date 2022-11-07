@@ -2,5 +2,7 @@ packages:
   - clients/js
   - clients/js/type-only-test
   - examples/hardhat
+  - examples/hardhat-boilerplate
+  - examples/hardhat-boilerplate/frontend
   - examples/truffle
   - integrations/hardhat

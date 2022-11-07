@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,7 @@
     "@truffle/hdwallet-provider": "^2.0.14"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "workspace:^"
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
+    "truffle": "^5.6.3"
   }
 }

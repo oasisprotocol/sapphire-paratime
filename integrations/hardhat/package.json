@@ -19,7 +19,7 @@
     "format": "prettier --cache --write ."
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "workspace:^1.0.7"
+    "@oasisprotocol/sapphire-paratime": "workspace:^"
   },
   "peerDependencies": {
     "hardhat": "^2.0.0"
