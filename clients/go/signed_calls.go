@@ -27,7 +27,7 @@ type SignedCallDataPack struct {
 
 // DataEnvelope is an oasis-sdk `Call` without optional fields.
 //
-// Replace this with an an actual format-bearing `Call` during encryption using
+// Replace this with an actual format-bearing `Call` during encryption using
 // a callformat encode method.
 type DataEnvelope struct {
 	Body []byte `json:"body"`
@@ -115,7 +115,7 @@ func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, ga
 	}
 }
 
-/// signTypedData is based on go-ethereum/core/signer but modified to use an in-memory signer.
+// signTypedData is based on go-ethereum/core/signer but modified to use an in-memory signer.
 func signTypedData(signer Signer, typedData apitypes.TypedData) ([]byte, error) {
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
