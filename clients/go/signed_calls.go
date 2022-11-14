@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 )
+
+const ZeroAddress = "0x0000000000000000000000000000000000000000"
 
 // Signer is a type that produces secp256k1 signatures in RSV format.
 type Signer interface {
@@ -20,17 +24,32 @@ type Signer interface {
 //
 // It should be encoded and sent in the `data` field of an Ethereum call.
 type SignedCallDataPack struct {
-	Data      DataEnvelope `json:"data"`
-	Leash     Leash        `json:"leash"`
-	Signature []byte       `json:"signature"`
+	Data      Data   `json:"data"`
+	Leash     Leash  `json:"leash"`
+	Signature []byte `json:"signature"`
+}
+
+// Part of the datapack
+type Data struct {
+	Body []byte `json:"body"`
 }
 
 // DataEnvelope is an oasis-sdk `Call` without optional fields.
-//
-// Replace this with an actual format-bearing `Call` during encryption using
-// a callformat encode method.
 type DataEnvelope struct {
-	Body []byte `json:"body"`
+	Body   []byte `json:"body"`
+	Format uint64 `json:"format,omitempty"` // reuse for now, TODO swap later
+}
+
+// EncryptedBodyEnvelope is an oasis-sdk `Call` with optional fields.
+type EncryptedBodyEnvelope struct {
+	Body   Body   `json:"body"`
+	Format uint64 `json:"format"`
+}
+
+type Body struct {
+	PK    []byte `json:"pk"`
+	Data  []byte `json:"data"`
+	Nonce []byte `json:"nonce"`
 }
 
 type Leash struct {
@@ -50,13 +69,41 @@ func NewDataPack(signer Signer, chainId uint64, caller, callee []byte, gasLimit 
 		return nil, fmt.Errorf("failed to sign call: %w", err)
 	}
 	return &SignedCallDataPack{
-		Data:      DataEnvelope{Body: data},
+		Data:      Data{Body: data},
 		Leash:     leash,
 		Signature: signature,
 	}, nil
 }
 
+func (p *SignedCallDataPack) Encode() []byte {
+	return hexutil.Bytes(cbor.Marshal(p.Data.Body))
+}
+
+func (p *SignedCallDataPack) EncryptEncode(cipher Cipher) []byte {
+	// Encrypt when data exists
+	if p.Data.Body != nil {
+		return cipher.EncryptEncode(p.Data.Body)
+	}
+
+	return p.Encode()
+}
+
+func NewLeash(nonce uint64, blockNumber uint64, blockHash []byte, blockRange uint64) Leash {
+	return Leash{
+		Nonce:       nonce,
+		BlockNumber: blockNumber,
+		BlockHash:   blockHash,
+		BlockRange:  blockRange,
+	}
+}
+
 func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice *big.Int, value *big.Int, data []byte, leash Leash) apitypes.TypedData {
+	toAddr := ZeroAddress
+	// callee should exist except for contract creation
+	if callee != nil {
+		toAddr = hex.EncodeToString(callee[:])
+	}
+
 	if value == nil {
 		value = big.NewInt(0)
 	}
@@ -100,7 +147,7 @@ func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, ga
 		},
 		Message: map[string]interface{}{
 			"from":     hex.EncodeToString(caller[:]),
-			"to":       hex.EncodeToString(callee[:]),
+			"to":       toAddr,
 			"value":    &valueU256,
 			"gasLimit": math.NewHexOrDecimal256(int64(gasLimit)),
 			"gasPrice": &gasPriceU256,
