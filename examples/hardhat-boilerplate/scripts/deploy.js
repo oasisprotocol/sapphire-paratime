@@ -2,6 +2,7 @@
 // yours, or create new ones.
 
 const path = require("path");
+const sapphire = require('@oasisprotocol/sapphire-paratime');
 
 async function main() {
   // This is just a convenience check
@@ -22,7 +23,7 @@ async function main() {
 
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const Token = await ethers.getContractFactory("Token");
+  const Token = await ethers.getContractFactory("Token"/*, sapphire.wrap(deployer, new sapphire.cipher.Plain())*/);
   const token = await Token.deploy();
   await token.deployed();
 
