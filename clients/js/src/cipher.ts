@@ -11,7 +11,7 @@ import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
 
-import { CallError, NETWORKS } from './index.js';
+import { CallError, NETWORKS, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 
 export enum Kind {
   Plain = 0,
@@ -251,31 +251,16 @@ export function lazy(generator: () => Promisable<Cipher>): Cipher {
   ) as Cipher;
 }
 
-const OASIS_CALL_DATA_PUBLIC_KEY = 'oasis_callDataPublicKey';
-
-export async function fetchRuntimePublicKey(
-  source:
-    | { gatewayUrl: string }
-    | { chainId: number }
-    | { send: (method: string, params: any[]) => Promise<any> },
+export async function fetchRuntimePublicKeyByChainId(
+  chainId: number,
   opts?: { fetch?: typeof fetch },
 ): Promise<Uint8Array> {
-  if ('send' in source) {
-    const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
-    return arrayify(key);
-  }
+  const { defaultGateway: gatewayUrl } = NETWORKS[chainId];
+  if (!gatewayUrl)
+    throw new Error(
+      `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
+    );
 
-  let gatewayUrl: string;
-  if ('gatewayUrl' in source) {
-    gatewayUrl = source.gatewayUrl;
-  } else {
-    const chainId = source.chainId;
-    ({ defaultGateway: gatewayUrl } = NETWORKS[chainId]);
-    if (!gatewayUrl)
-      throw new Error(
-        `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
-      );
-  }
   const fetchImpl = globalThis?.fetch ?? opts?.fetch;
   const res = await (fetchImpl
     ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
@@ -335,7 +320,7 @@ function makeCallDataPublicKeyBody(): string {
   return JSON.stringify({
     jsonrpc: '2.0',
     id: Math.floor(Math.random() * 1e9),
-    method: 'oasis_callDataPublicKey',
+    method: OASIS_CALL_DATA_PUBLIC_KEY,
     params: [],
   });
 }

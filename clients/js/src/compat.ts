@@ -18,10 +18,10 @@ import {
   Cipher,
   Kind as CipherKind,
   X25519DeoxysII,
-  fetchRuntimePublicKey,
+  fetchRuntimePublicKeyByChainId,
   lazy as lazyCipher,
 } from './cipher.js';
-import { CallError } from './index.js';
+import { CallError, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 import {
   EthCall,
   SignedCallDataPack,
@@ -94,8 +94,6 @@ export type SapphireAnnex = {
 
 /** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
 const DEFAULT_GAS = 10_000_000;
-
-const HARDHAT_LOCAL_NETWORK_CHAINID = 0x7a69;
 
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
@@ -229,8 +227,7 @@ function isEthersSend(
 
 function getCipher(provider: UpstreamProvider): Cipher {
   return lazyCipher(async () => {
-    const keySource = await inferRuntimePublicKeySource(provider);
-    const rtPubKey = await fetchRuntimePublicKey(keySource);
+    const rtPubKey = await fetchRuntimePublicKey(provider);
     return X25519DeoxysII.ephemeral(rtPubKey);
   });
 }
@@ -506,29 +503,39 @@ class EnvelopeError extends Error {}
  * Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
  * fall back to manually querying the default gateway.
  */
-async function inferRuntimePublicKeySource(
+async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
-): Promise<Parameters<typeof fetchRuntimePublicKey>[0]> {
+): Promise<Uint8Array> {
   const isSigner = isEthersSigner(upstream);
+  let chainId: number;
   if (isSigner || isEthersProvider(upstream)) {
-    const chainId = isSigner
-      ? await upstream.getChainId()
-      : (await upstream.getNetwork()).chainId;
-    // for hardhat localhost testing network, directly return its ethersProvider
     if (
-      chainId == HARDHAT_LOCAL_NETWORK_CHAINID &&
       'provider' in upstream &&
       upstream['provider'] &&
       'send' in upstream['provider']
     ) {
-      return upstream['provider'];
-    } else {
-      return { chainId: chainId };
+      // first opportunistically try `send` from the provider
+      try {
+        const source = upstream['provider'] as {
+          send: (method: string, params: any[]) => Promise<any>;
+        };
+        const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+        if (key) {
+          return arrayify(key);
+        }
+      } catch (e) {
+        // don't do anything, move on to try chainId
+      }
     }
+
+    chainId = isSigner
+      ? await upstream.getChainId()
+      : (await upstream.getNetwork()).chainId;
+    return fetchRuntimePublicKeyByChainId(chainId);
   }
-  return {
-    chainId: (await makeWeb3Provider(upstream).getNetwork()).chainId,
-  };
+
+  chainId = (await makeWeb3Provider(upstream).getNetwork()).chainId;
+  return fetchRuntimePublicKeyByChainId(chainId);
 }
 
 function makeWeb3Provider(

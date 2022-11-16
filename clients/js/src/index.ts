@@ -29,6 +29,8 @@ export const NETWORKS = {
   [testnetParams.chainId]: testnetParams,
 };
 
+export const OASIS_CALL_DATA_PUBLIC_KEY = 'oasis_callDataPublicKey';
+
 export class CallError extends Error {
   public constructor(message: string, public readonly response: unknown) {
     super(message);
