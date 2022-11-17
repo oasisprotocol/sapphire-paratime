@@ -291,11 +291,15 @@ function hookEthersCall(
   const sendUnsignedCall = async (
     provider: EthersProvider,
     callP: Deferrable<TransactionRequest>,
+    blockTag?: BlockTag,
   ) => {
-    return provider[method]({
-      ...callP,
-      data: cipher.encryptEncode(await callP.data),
-    });
+    return provider[method](
+      {
+        ...callP,
+        data: cipher.encryptEncode(await callP.data),
+      },
+      blockTag,
+    );
   };
   return async (callP, blockTag?: BlockTag) => {
     let res: string | BigNumber;
@@ -315,11 +319,11 @@ function hookEthersCall(
         );
       } else {
         if (signer._checkProvider) signer._checkProvider(method);
-        res = await sendUnsignedCall(signer.provider!, callP);
+        res = await sendUnsignedCall(signer.provider!, callP, blockTag);
       }
     } else {
       const provider = signerOrProvider;
-      res = await sendUnsignedCall(provider, callP);
+      res = await sendUnsignedCall(provider, callP, blockTag);
     }
     if (typeof res === 'string') return cipher.decryptEncoded(res);
     return res;

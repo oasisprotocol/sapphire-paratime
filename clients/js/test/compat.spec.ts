@@ -190,12 +190,12 @@ describe('ethers provider', () => {
 
   it('unsigned call/estimateGas', async () => {
     const callRequest = { to, data };
-    const response = await wrapped.call(callRequest);
+    const response = await wrapped.call(callRequest, 'pending');
     expect(response).toEqual('0x112358');
-    const encryptedCall = upstreamProvider._request.mock.lastCall[0].params![0];
-    expect(encryptedCall.data).toEqual(
-      await cipher.encryptEncode(callRequest.data),
-    );
+    const [{ data: latestData }, pendingTag] =
+      upstreamProvider._request.mock.lastCall[0].params!;
+    expect(latestData).toEqual(await cipher.encryptEncode(callRequest.data));
+    expect(pendingTag).toEqual('pending');
 
     // TODO(#39): re-enable once resolved
     // const gasUsed = await wrapped.estimateGas(callRequest);
