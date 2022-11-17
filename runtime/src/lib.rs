@@ -99,8 +99,8 @@ impl sdk::Runtime for Runtime {
         if option_env!("OASIS_UNSAFE_SKIP_KM_POLICY") == Some("1") {
             return Some(TrustedPolicySigners::default());
         }
-        let tps = cipher_keymanager::trusted_policy_signers();
-        // The `cipher_keymanager` crate may use a different version of `oasis_core`
+        let tps = keymanager::trusted_policy_signers();
+        // The `keymanager` crate may use a different version of `oasis_core`
         // so we need to convert the `TrustedPolicySigners` between the versions.
         Some(TrustedPolicySigners {
             signers: tps.signers.into_iter().map(|s| PublicKey(s.0)).collect(),
@@ -113,10 +113,12 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 11841636,
-                hash: "5c7cb488ac0ebe0ca4ce8687c3ca7f85d305ab8d36f8b3dcea149d0ccb7b3e6d".into(),
+                height: 12574839,
+                hash: "56a63accfb683ecf082d71aea3b5ef259964ff30b25463526e08e18e9d09af8d".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
+                chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
+                    .to_string(),
             })
         } else {
             panic!("no trust root defined for Mainnet");
