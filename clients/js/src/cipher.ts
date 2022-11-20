@@ -80,6 +80,24 @@ export abstract class Cipher {
     return { data, nonce };
   }
 
+  /** Decrypts the data contained within call */
+  public async decryptCallData(
+    nonce: Uint8Array,
+    ciphertext: Uint8Array,
+  ): Promise<Uint8Array> {
+    const { body: plainData } = cbor.decode(
+      await this.decrypt(nonce, ciphertext),
+    );
+    return plainData;
+  }
+
+  /** Encrypts call result */
+  public async encryptCallResult(result: CallResult): Promise<Uint8Array> {
+    const encodedResult = cbor.encode(result);
+    const { ciphertext, nonce } = await this.encrypt(encodedResult);
+    return cbor.encode({ unknown: { nonce, data: ciphertext } });
+  }
+
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
   public async decryptEncoded(callResult: BytesLike): Promise<string> {
     return hexlify(
