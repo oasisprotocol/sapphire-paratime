@@ -19,8 +19,8 @@ debug = false
 
 [dependencies]
 keymanager = { git = "https://github.com/oasisprotocol/keymanager-paratime", tag = "v0.3.2-testnet" }
-module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "d5874bb4b0f462de34032e2395599de8daa70dea", package = "oasis-runtime-sdk-evm" }
-oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "d5874bb4b0f462de34032e2395599de8daa70dea" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63", package = "oasis-runtime-sdk-evm" }
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63" }
 
 # Third party.
 once_cell = "1.8.0"
