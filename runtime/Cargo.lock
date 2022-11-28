@@ -1582,8 +1582,8 @@ name = "keymanager"
 version = "0.3.2-testnet"
 source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.3.2-testnet#194eefaa416468a3f57afc589a2370f319c6c4d0"
 dependencies = [
- "oasis-core-keymanager",
- "oasis-core-runtime",
+ "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x)",
 ]
 
 [[package]]
@@ -2000,7 +2000,7 @@ checksum = "5fe0d7f5a7c55eba7e8e845046c6c81332f4fa4997f0ed497b9f44db1d7f2050"
 [[package]]
 name = "oasis-core-keymanager"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x#ef04665b536f91c2e1cc29f56ca0cf17e588c5e4"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.2.3#3d338936cd34e72a2662fa91d8e1aeb2ccf8d6d3"
 dependencies = [
  "anyhow",
  "base64",
@@ -2009,7 +2009,31 @@ dependencies = [
  "lazy_static",
  "lru",
  "oasis-cbor",
- "oasis-core-runtime",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.2.3)",
+ "rand 0.7.3",
+ "rustc-hex",
+ "sgx-isa",
+ "sp800-185",
+ "thiserror",
+ "tiny-keccak 2.0.2",
+ "tokio",
+ "x25519-dalek",
+ "zeroize",
+]
+
+[[package]]
+name = "oasis-core-keymanager"
+version = "0.0.0"
+source = "git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x#3d338936cd34e72a2662fa91d8e1aeb2ccf8d6d3"
+dependencies = [
+ "anyhow",
+ "base64",
+ "futures",
+ "io-context",
+ "lazy_static",
+ "lru",
+ "oasis-cbor",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x)",
  "rand 0.7.3",
  "rustc-hex",
  "sgx-isa",
@@ -2024,7 +2048,66 @@ dependencies = [
 [[package]]
 name = "oasis-core-runtime"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x#ef04665b536f91c2e1cc29f56ca0cf17e588c5e4"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v22.2.3#3d338936cd34e72a2662fa91d8e1aeb2ccf8d6d3"
+dependencies = [
+ "anyhow",
+ "arbitrary",
+ "base64",
+ "base64-serde",
+ "bech32",
+ "bincode",
+ "byteorder",
+ "chrono",
+ "crossbeam",
+ "curve25519-dalek 3.2.0",
+ "dcap-ql",
+ "deoxysii",
+ "ed25519-dalek",
+ "futures",
+ "hmac",
+ "honggfuzz",
+ "impl-trait-for-tuples",
+ "intrusive-collections",
+ "io-context",
+ "lazy_static",
+ "log",
+ "lru",
+ "mbedtls",
+ "num-bigint 0.4.3",
+ "num-traits",
+ "oasis-cbor",
+ "oid-registry",
+ "percent-encoding",
+ "rand 0.7.3",
+ "rsa",
+ "rustc-hex",
+ "serde",
+ "serde_json",
+ "sgx-isa",
+ "sha2 0.9.9",
+ "slog",
+ "slog-json",
+ "slog-scope",
+ "slog-stdlog",
+ "snow",
+ "sp800-185",
+ "tendermint",
+ "tendermint-light-client",
+ "tendermint-proto",
+ "tendermint-rpc",
+ "thiserror",
+ "tiny-keccak 2.0.2",
+ "tokio",
+ "x25519-dalek",
+ "x509-parser",
+ "yasna 0.5.0",
+ "zeroize",
+]
+
+[[package]]
+name = "oasis-core-runtime"
+version = "0.0.0"
+source = "git+https://github.com/oasisprotocol/oasis-core?branch=stable/22.2.x#3d338936cd34e72a2662fa91d8e1aeb2ccf8d6d3"
 dependencies = [
  "anyhow",
  "arbitrary",
@@ -2083,7 +2166,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=d5874bb4b0f462de34032e2395599de8daa70dea#d5874bb4b0f462de34032e2395599de8daa70dea"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63#04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63"
 dependencies = [
  "anyhow",
  "base64",
@@ -2098,8 +2181,8 @@ dependencies = [
  "k256",
  "num-traits",
  "oasis-cbor",
- "oasis-core-keymanager",
- "oasis-core-runtime",
+ "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.2.3)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v22.2.3)",
  "oasis-runtime-sdk-macros",
  "once_cell",
  "rand_core 0.6.4",
@@ -2116,7 +2199,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=d5874bb4b0f462de34032e2395599de8daa70dea#d5874bb4b0f462de34032e2395599de8daa70dea"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63#04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63"
 dependencies = [
  "anyhow",
  "base64",
@@ -2145,7 +2228,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=d5874bb4b0f462de34032e2395599de8daa70dea#d5874bb4b0f462de34032e2395599de8daa70dea"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?rev=04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63#04944cbb7a3cf346acb2693b0a7dfda4ab0f9f63"
 dependencies = [
  "darling",
  "proc-macro2 1.0.47",
