@@ -160,4 +160,26 @@ library Sapphire {
             result := out
         }
     }
+
+    /**
+     * TODO
+     */
+    function callFormat()
+        internal
+        view
+        returns (bytes8)
+    {
+        bytes32[3] memory data;
+        assembly {
+            let success := staticcall(
+                gas(),
+                0x0000000000000000000000000000000000000006,
+                [],
+            )
+            if iszero(success) {
+                revert(0, 0)
+            }
+        }
+        return data[2];
+    }
 }
