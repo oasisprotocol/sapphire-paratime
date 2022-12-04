@@ -14,12 +14,6 @@ import (
 
 const ZeroAddress = "0x0000000000000000000000000000000000000000"
 
-// Signer is a type that produces secp256k1 signatures in RSV format.
-type Signer interface {
-	// Sign returns a 65-byte secp256k1 signature as (R || S || V) over the provided digest.
-	Sign(digest [32]byte) ([]byte, error)
-}
-
 // SignedCallDataPack defines a signed call.
 //
 // It should be encoded and sent in the `data` field of an Ethereum call.
@@ -62,9 +56,9 @@ type Leash struct {
 // NewDataPack returns a SignedCallDataPack.
 //
 // This method does not encrypt `data`, so that should be done afterwards.
-func NewDataPack(signer Signer, chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice, value *big.Int, data []byte, leash Leash) (*SignedCallDataPack, error) {
+func NewDataPack(sign SignerFn, chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice, value *big.Int, data []byte, leash Leash) (*SignedCallDataPack, error) {
 	signable := makeSignableCall(chainId, caller, callee, gasLimit, gasPrice, value, data, leash)
-	signature, err := signTypedData(signer, signable)
+	signature, err := signTypedData(sign, signable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign call: %w", err)
 	}
@@ -75,11 +69,11 @@ func NewDataPack(signer Signer, chainId uint64, caller, callee []byte, gasLimit 
 	}, nil
 }
 
-func (p *SignedCallDataPack) Encode() []byte {
+func (p SignedCallDataPack) Encode() []byte {
 	return hexutil.Bytes(cbor.Marshal(p.Data.Body))
 }
 
-func (p *SignedCallDataPack) EncryptEncode(cipher Cipher) []byte {
+func (p SignedCallDataPack) EncryptEncode(cipher Cipher) []byte {
 	// Encrypt when data exists
 	if p.Data.Body != nil {
 		return cipher.EncryptEncode(p.Data.Body)
@@ -163,7 +157,7 @@ func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, ga
 }
 
 // signTypedData is based on go-ethereum/core/signer but modified to use an in-memory signer.
-func signTypedData(signer Signer, typedData apitypes.TypedData) ([]byte, error) {
+func signTypedData(sign SignerFn, typedData apitypes.TypedData) ([]byte, error) {
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash EIP721Domain: %w", err)
@@ -174,7 +168,7 @@ func signTypedData(signer Signer, typedData apitypes.TypedData) ([]byte, error) 
 	}
 	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
 	digest := crypto.Keccak256Hash(rawData)
-	signature, err := signer.Sign(digest)
+	signature, err := sign(*(*[32]byte)(digest.Bytes()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign typed data: %w", err)
 	}

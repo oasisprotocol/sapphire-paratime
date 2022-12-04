@@ -1,16 +1,19 @@
 package sapphire
 
 import (
+	"bytes"
 	"crypto/cipher"
-	"crypto/hmac"
-	"crypto/sha512"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
+	"net/http"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/oasisprotocol/deoxysii"
+	"github.com/oasisprotocol/emerald-web3-gateway/rpc/oasis"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/api"
+	mrae "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/deoxysii"
 	"github.com/twystd/tweetnacl-go/tweetnacl"
 )
 
@@ -57,31 +60,26 @@ type Cipher interface {
 	DecryptCallResult(result []byte) ([]byte, error)
 }
 
-type PlainCipher struct {
-}
+type PlainCipher struct{}
 
 func NewPlainCipher() PlainCipher {
 	return PlainCipher{}
 }
 
-func (p PlainCipher) Kind() uint64 {
+func (c PlainCipher) Kind() uint64 {
 	return Plain
 }
 
-func (p PlainCipher) PublicKey() []byte {
-	return make([]byte, 0)
-}
-
-func (p PlainCipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
+func (c PlainCipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
 	nonce = make([]byte, 0)
 	return plaintext, nonce
 }
 
-func (p PlainCipher) Decrypt(nonce []byte, ciphertext []byte) (plaintext []byte, err error) {
+func (c PlainCipher) Decrypt(nonce []byte, ciphertext []byte) (plaintext []byte, err error) {
 	return ciphertext, nil
 }
 
-func (p PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
+func (c PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
 	var callResult CallResult
 	cbor.MustUnmarshal(response, &callResult)
 
@@ -101,130 +99,93 @@ func (p PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
 	return nil, ErrCallResultDecode
 }
 
-func (p PlainCipher) DecryptEncoded(response []byte) ([]byte, error) {
-	return p.DecryptCallResult(response)
+func (c PlainCipher) DecryptEncoded(response []byte) ([]byte, error) {
+	return c.DecryptCallResult(response)
 }
 
-func (p PlainCipher) encryptCallData(plaintext []byte) (ciphertext []byte, nonce []byte) {
-	return plaintext, make([]byte, 0)
-}
-
-func (p PlainCipher) EncryptEnvelope(plaintext []byte) *DataEnvelope {
+func (c PlainCipher) EncryptEnvelope(plaintext []byte) *DataEnvelope {
 	// Txs without data are just balance transfers, and all data in those is public.
 	if len(plaintext) == 0 {
 		return nil
 	}
-
-	data, nonce := p.encryptCallData(plaintext)
-
-	if len(nonce) == 0 {
-		return &DataEnvelope{
-			Body:   data,
-			Format: p.Kind(),
-		}
-	}
-
 	return &DataEnvelope{
 		Body: cbor.Marshal(Body{
-			PK:    p.PublicKey(),
-			Nonce: nonce,
-			Data:  data,
+			Data: plaintext,
 		}),
-		Format: p.Kind(),
+		Format: c.Kind(),
 	}
 }
 
-func (p PlainCipher) EncryptEncode(plaintext []byte) []byte {
-	envelope := p.EncryptEnvelope(plaintext)
-
-	return hexutil.Bytes(cbor.Marshal(envelope))
+func (c PlainCipher) EncryptEncode(plaintext []byte) []byte {
+	envelope := c.EncryptEnvelope(plaintext)
+	return cbor.Marshal(envelope)
 }
 
 // This is the default cipher.
 type X25519DeoxysIICipher struct {
-	Cipher     cipher.AEAD
-	PublicKey  []byte
-	PrivateKey []byte
+	cipher  cipher.AEAD
+	keypair tweetnacl.KeyPair
 }
 
-func NewX255919DeoxysIICipher(keypair tweetnacl.KeyPair, peerPublicKey []byte) (*X25519DeoxysIICipher, error) {
-	// TODO: (followed by hashing to remove ECDH bias).?
-	key, err := tweetnacl.ScalarMult(keypair.SecretKey, peerPublicKey)
-
+func NewX25519DeoxysIICipher(keypair tweetnacl.KeyPair, peerPublicKey [32]byte) (*X25519DeoxysIICipher, error) {
+	var sharedKey [deoxysii.KeySize]byte
+	mrae.Box.DeriveSymmetricKey(sharedKey[:], &peerPublicKey, (*[32]byte)(keypair.SecretKey))
+	cipher, err := deoxysii.New(sharedKey[:])
+	api.Bzero(sharedKey[:])
 	if err != nil {
 		return nil, err
 	}
-
-	hash := hmac.New(sha512.New512_256, hexutil.Bytes("MRAE_Box_Deoxys-II-256-128"))
-
-	_, err = hash.Write(key)
-
-	if err != nil {
-		return nil, err
-	}
-	var hashed []byte
-	sharedKey := hash.Sum(hashed)
-	cipher, err := deoxysii.New(sharedKey)
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &X25519DeoxysIICipher{
-		PublicKey:  keypair.PublicKey,
-		PrivateKey: sharedKey,
-		Cipher:     cipher,
+		cipher:  cipher,
+		keypair: keypair,
 	}, nil
 }
 
-func (p X25519DeoxysIICipher) Kind() uint64 {
+func (c X25519DeoxysIICipher) Kind() uint64 {
 	return X25519DeoxysII
 }
 
-func (p X25519DeoxysIICipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
+func (c X25519DeoxysIICipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
 	nonce = make([]byte, deoxysii.NonceSize)
 	copy(nonce, []byte(fmt.Sprint(rand.Int())))
 	meta := make([]byte, 0)
-	res := p.Cipher.Seal(ciphertext, nonce, plaintext, meta)
+	res := c.cipher.Seal(ciphertext, nonce, plaintext, meta)
 	return res, nonce
 }
 
-func (p X25519DeoxysIICipher) Decrypt(nonce []byte, ciphertext []byte) ([]byte, error) {
+func (c X25519DeoxysIICipher) Decrypt(nonce []byte, ciphertext []byte) ([]byte, error) {
 	meta := make([]byte, 0)
-	return p.Cipher.Open(ciphertext[:0], nonce, ciphertext, meta)
+	return c.cipher.Open(ciphertext[:0], nonce, ciphertext, meta)
 }
 
-func (p X25519DeoxysIICipher) encryptCallData(plaintext []byte) (ciphertext []byte, nonce []byte) {
-	return p.Encrypt(cbor.Marshal(Data{
+func (c X25519DeoxysIICipher) encryptCallData(plaintext []byte) (ciphertext []byte, nonce []byte) {
+	return c.Encrypt(cbor.Marshal(Data{
 		Body: plaintext,
 	}))
 }
 
-func (p X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *EncryptedBodyEnvelope {
+func (c X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *EncryptedBodyEnvelope {
 	// Txs without data are just balance transfers, and all data in those is public.
 	if len(plaintext) == 0 {
 		return nil
 	}
-
-	data, nonce := p.encryptCallData(plaintext)
-
+	data, nonce := c.encryptCallData(plaintext)
 	return &EncryptedBodyEnvelope{
 		Body: Body{
 			Nonce: nonce,
 			Data:  data,
-			PK:    p.PublicKey,
+			PK:    c.keypair.PublicKey,
 		},
-		Format: p.Kind(),
+		Format: c.Kind(),
 	}
 }
 
-func (p X25519DeoxysIICipher) EncryptEncode(plaintext []byte) []byte {
-	envelope := p.EncryptEnvelope(plaintext)
-
-	return hexutil.Bytes(cbor.Marshal(envelope))
+func (c X25519DeoxysIICipher) EncryptEncode(plaintext []byte) []byte {
+	envelope := c.EncryptEnvelope(plaintext)
+	return cbor.Marshal(envelope)
 }
 
-func (p X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error) {
+func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error) {
 	var callResult CallResult
 	cbor.MustUnmarshal(response, &callResult)
 
@@ -234,8 +195,7 @@ func (p X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error)
 	}
 
 	if callResult.Unknown != nil {
-		decrypted, err := p.Decrypt(callResult.Unknown.Nonce, callResult.Unknown.Data)
-
+		decrypted, err := c.Decrypt(callResult.Unknown.Nonce, callResult.Unknown.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -263,6 +223,67 @@ func (p X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error)
 	return nil, ErrCallResultDecode
 }
 
-func (p X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {
-	return p.DecryptCallResult(response)
+func (c X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {
+	return c.DecryptCallResult(response)
+}
+
+// GetRuntimePublicKey fetches the runtime calldata public key from the default Sapphire gateway.
+func GetRuntimePublicKey(chainID uint64) (*[32]byte, error) {
+	network, exists := Networks[chainID]
+	if !exists {
+		return nil, fmt.Errorf("could not fetch public key for network with chain id %d", chainID)
+	}
+	request := Request{
+		Version: "2.0",
+		Method:  "oasis_callDataPublicKey",
+		ID:      1,
+	}
+	rawReq, _ := json.Marshal(request)
+
+	req, err := http.NewRequest(http.MethodPost, network.DefaultGateway, bytes.NewBuffer(rawReq))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request for runtime calldata public key: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request runtime calldata public key: %w", err)
+	}
+
+	decoder := json.NewDecoder(res.Body)
+	rpcRes := new(Response)
+	if err := decoder.Decode(&rpcRes); err != nil {
+		return nil, fmt.Errorf("unexpected response to request for runtime calldata public key: %w", err)
+	}
+	res.Body.Close()
+
+	var pubKey oasis.CallDataPublicKey
+	if err := json.Unmarshal(rpcRes.Result, &pubKey); err != nil {
+		return nil, fmt.Errorf("invalid response when fetching runtime calldata public key: %w", err)
+	}
+	if len(pubKey.PublicKey) != 32 {
+		return nil, fmt.Errorf("invalid public key length")
+	}
+	return (*[32]byte)(pubKey.PublicKey), nil
+}
+
+type Request struct {
+	Version string      `json:"jsonrpc"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params"`
+	ID      int         `json:"id"`
+}
+
+type Error struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type Response struct {
+	Error  *Error          `json:"error"`
+	ID     int             `json:"id"`
+	Result json.RawMessage `json:"result,omitempty"`
 }
