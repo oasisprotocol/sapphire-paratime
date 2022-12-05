@@ -176,7 +176,17 @@ func (b WrappedBackend) CallContract(ctx context.Context, call ethereum.CallMsg,
 			return nil, err
 		}
 	} else {
-		header, err := b.backend.HeaderByNumber(ctx, blockNumber)
+		leashBlockNumber := big.NewInt(0)
+		if blockNumber != nil {
+			leashBlockNumber.Sub(blockNumber, big.NewInt(1))
+		} else {
+			latestHeader, err := b.backend.HeaderByNumber(ctx, nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch latest block number: %w", err)
+			}
+			leashBlockNumber.Sub(latestHeader.Number, big.NewInt(1))
+		}
+		header, err := b.backend.HeaderByNumber(ctx, leashBlockNumber)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch leash block header: %w", err)
 		}
