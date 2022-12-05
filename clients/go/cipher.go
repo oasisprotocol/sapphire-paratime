@@ -3,18 +3,18 @@ package sapphire
 import (
 	"bytes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
 
 	"github.com/oasisprotocol/deoxysii"
 	"github.com/oasisprotocol/emerald-web3-gateway/rpc/oasis"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/api"
+	mraeApi "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/api"
 	mrae "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/deoxysii"
-	"github.com/twystd/tweetnacl-go/tweetnacl"
+	"golang.org/x/crypto/curve25519"
 )
 
 type Kind uint64
@@ -124,14 +124,31 @@ func (c PlainCipher) EncryptEncode(plaintext []byte) []byte {
 // This is the default cipher.
 type X25519DeoxysIICipher struct {
 	cipher  cipher.AEAD
-	keypair tweetnacl.KeyPair
+	keypair Curve25519KeyPair
 }
 
-func NewX25519DeoxysIICipher(keypair tweetnacl.KeyPair, peerPublicKey [32]byte) (*X25519DeoxysIICipher, error) {
+type Curve25519KeyPair struct {
+	PublicKey [curve25519.PointSize]byte
+	SecretKey [curve25519.ScalarSize]byte
+}
+
+// NewCurve25519KeyPair generates a random keypair suitable for use with the X25519DeoxysII cipher.
+func NewCurve25519KeyPair() (*Curve25519KeyPair, error) {
+	public, private, err := mraeApi.GenerateKeyPair(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	return &Curve25519KeyPair{
+		PublicKey: *public,
+		SecretKey: *private,
+	}, nil
+}
+
+func NewX25519DeoxysIICipher(keypair Curve25519KeyPair, peerPublicKey [curve25519.PointSize]byte) (*X25519DeoxysIICipher, error) {
 	var sharedKey [deoxysii.KeySize]byte
-	mrae.Box.DeriveSymmetricKey(sharedKey[:], &peerPublicKey, (*[32]byte)(keypair.SecretKey))
+	mrae.Box.DeriveSymmetricKey(sharedKey[:], &peerPublicKey, &keypair.SecretKey)
 	cipher, err := deoxysii.New(sharedKey[:])
-	api.Bzero(sharedKey[:])
+	mraeApi.Bzero(sharedKey[:])
 	if err != nil {
 		return nil, err
 	}
@@ -147,9 +164,10 @@ func (c X25519DeoxysIICipher) Kind() uint64 {
 
 func (c X25519DeoxysIICipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
 	nonce = make([]byte, deoxysii.NonceSize)
-	copy(nonce, []byte(fmt.Sprint(rand.Int())))
-	meta := make([]byte, 0)
-	res := c.cipher.Seal(ciphertext, nonce, plaintext, meta)
+	if _, err := rand.Reader.Read(nonce); err != nil {
+		panic(fmt.Sprintf("crypto/rand is unavailable: %v", err))
+	}
+	res := c.cipher.Seal(ciphertext, nonce, plaintext, []byte{})
 	return res, nonce
 }
 
@@ -174,7 +192,7 @@ func (c X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *EncryptedBodyEn
 		Body: Body{
 			Nonce: nonce,
 			Data:  data,
-			PK:    c.keypair.PublicKey,
+			PK:    c.keypair.PublicKey[:],
 		},
 		Format: c.Kind(),
 	}

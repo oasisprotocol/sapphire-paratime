@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/oasisprotocol/deoxysii"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/twystd/tweetnacl-go/tweetnacl"
 )
 
 var TestData []byte = []byte{1, 2, 3, 4, 5}
@@ -84,9 +83,9 @@ func TestDeoxysIICipher(t *testing.T) {
 
 	originalText := "keep building anyway"
 
-	pair := tweetnacl.KeyPair{
-		PublicKey: publicKey,
-		SecretKey: privateKey,
+	pair := Curve25519KeyPair{
+		PublicKey: *(*[32]byte)(publicKey),
+		SecretKey: *(*[32]byte)(privateKey),
 	}
 
 	cipher, err := NewX25519DeoxysIICipher(pair, *(*[32]byte)(publicKey))
@@ -129,7 +128,7 @@ func TestDeoxysIICipher(t *testing.T) {
 		t.Fatalf("nonce should not be nil")
 	}
 
-	if string(envelope.Body.PK) != string(pair.PublicKey) {
+	if string(envelope.Body.PK) != string(pair.PublicKey[:]) {
 		t.Fatalf("pk enveloped incorrectly: %v %v", envelope.Body.PK, pair.PublicKey)
 	}
 

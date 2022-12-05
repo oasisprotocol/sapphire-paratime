@@ -2,11 +2,10 @@ module github.com/oasisprotocol/sapphire-paratime
 
 go 1.17
 
-require github.com/ethereum/go-ethereum v1.10.26
-
-require github.com/twystd/tweetnacl-go v0.0.0-20210413205227-681aa97ec383
-
-require github.com/oasisprotocol/emerald-web3-gateway v1.3.2-0.20220819151005-ed83ad4ae5be
+require (
+		github.com/ethereum/go-ethereum v1.10.26
+		github.com/oasisprotocol/emerald-web3-gateway v1.3.2-0.20220819151005-ed83ad4ae5be
+)
 
 require (
 	github.com/btcsuite/btcd v0.22.1 // indirect

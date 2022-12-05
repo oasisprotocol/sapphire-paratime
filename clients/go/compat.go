@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fxamacker/cbor/v2"
-	"github.com/twystd/tweetnacl-go/tweetnacl"
 )
 
 const (
@@ -106,7 +105,7 @@ func NewCipher(chainID uint64) (Cipher, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch runtime callata public key: %w", err)
 	}
-	keypair, err := tweetnacl.CryptoBoxKeyPair()
+	keypair, err := NewCurve25519KeyPair()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate ephemeral keypair: %w", err)
 	}
