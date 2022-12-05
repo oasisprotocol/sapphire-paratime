@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	DefaultGasPrice   = 100_000_000_000
-	DefaultGasLimit   = 30_000_000 // Default gas params are assigned in the web3 gateway.
+	DefaultGasPrice = 100_000_000_000
+	// DefaultGasLimit is set on all transactions without explicit gas limit to avoid being set on signed queries by the web3 gateway.
+	DefaultGasLimit   = 30_000_000
 	DefaultBlockRange = 15
 )
 
@@ -116,7 +117,7 @@ func NewCipher(chainID uint64) (Cipher, error) {
 	return cipher, nil
 }
 
-// Wrap wraps an ethclient.Client so that it can talk to Sapphire.
+// WrapClient wraps an ethclient.Client so that it can talk to Sapphire.
 func WrapClient(c ethclient.Client, sign SignerFn) (*WrappedBackend, error) {
 	chainID, err := c.ChainID(context.Background())
 	if err != nil {
@@ -169,8 +170,8 @@ func (b WrappedBackend) CodeAt(ctx context.Context, contract common.Address, blo
 // CallContract implements ContractCaller.
 func (b WrappedBackend) CallContract(ctx context.Context, call ethereum.CallMsg, blockNumber *big.Int) ([]byte, error) {
 	var packedCall *ethereum.CallMsg
-	var err error
 	if call.From == [common.AddressLength]byte{} {
+		var err error
 		if packedCall, err = PackCall(call, b.cipher); err != nil {
 			return nil, err
 		}

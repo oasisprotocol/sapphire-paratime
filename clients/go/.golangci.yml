@@ -1,0 +1,44 @@
+linters-settings:
+  gosec:
+    excludes:
+      # https://github.com/securego/gosec#available-rules
+      - G402
+      - G404
+  govet:
+    check-shadowing: true
+    # Enable once suggested fixes are shown: https://github.com/golangci/golangci-lint/issues/2134
+    #enable:
+    #  - fieldalignment
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - depguard
+    - errcheck
+    - exportloopref
+    - gas
+    - goconst
+    - gocyclo
+    - gofumpt
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - megacheck
+    - misspell
+    - revive
+    - rowserrcheck
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unused
+
+exclude-use-default: false
+
+issues:
+  include:
+    - EXC0014 # un-exclude revive `exported` which warns about incorrect comments on exported items.
+  exclude:
+    - context-as-argument # revive

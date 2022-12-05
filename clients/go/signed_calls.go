@@ -23,7 +23,7 @@ type SignedCallDataPack struct {
 	Signature []byte `json:"signature"`
 }
 
-// Part of the datapack
+// Data is the plain data in the datapack.
 type Data struct {
 	Body []byte `json:"body"`
 }
@@ -56,8 +56,8 @@ type Leash struct {
 // NewDataPack returns a SignedCallDataPack.
 //
 // This method does not encrypt `data`, so that should be done afterwards.
-func NewDataPack(sign SignerFn, chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice, value *big.Int, data []byte, leash Leash) (*SignedCallDataPack, error) {
-	signable := makeSignableCall(chainId, caller, callee, gasLimit, gasPrice, value, data, leash)
+func NewDataPack(sign SignerFn, chainID uint64, caller, callee []byte, gasLimit uint64, gasPrice, value *big.Int, data []byte, leash Leash) (*SignedCallDataPack, error) {
+	signable := makeSignableCall(chainID, caller, callee, gasLimit, gasPrice, value, data, leash)
 	signature, err := signTypedData(sign, signable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign call: %w", err)
@@ -91,7 +91,7 @@ func NewLeash(nonce uint64, blockNumber uint64, blockHash []byte, blockRange uin
 	}
 }
 
-func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, gasPrice *big.Int, value *big.Int, data []byte, leash Leash) apitypes.TypedData {
+func makeSignableCall(chainID uint64, caller, callee []byte, gasLimit uint64, gasPrice *big.Int, value *big.Int, data []byte, leash Leash) apitypes.TypedData {
 	toAddr := ZeroAddress
 	// callee should exist except for contract creation
 	if callee != nil {
@@ -135,7 +135,7 @@ func makeSignableCall(chainId uint64, caller, callee []byte, gasLimit uint64, ga
 		Domain: apitypes.TypedDataDomain{
 			Name:              "oasis-runtime-sdk/evm: signed query",
 			Version:           "1.0.0",
-			ChainId:           math.NewHexOrDecimal256(int64(chainId)),
+			ChainId:           math.NewHexOrDecimal256(int64(chainID)),
 			VerifyingContract: "",
 			Salt:              "",
 		},

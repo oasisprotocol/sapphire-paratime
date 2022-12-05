@@ -121,7 +121,7 @@ func (c PlainCipher) EncryptEncode(plaintext []byte) []byte {
 	return cbor.Marshal(envelope)
 }
 
-// This is the default cipher.
+// X25519DeoxysIICipher is the default cipher that does what it says on the tin.
 type X25519DeoxysIICipher struct {
 	cipher  cipher.AEAD
 	keypair Curve25519KeyPair

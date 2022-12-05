@@ -10,7 +10,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 )
 
-var TestData []byte = []byte{1, 2, 3, 4, 5}
+var TestData = []byte{1, 2, 3, 4, 5}
 
 func TestPlainCipher(t *testing.T) {
 	cipher := NewPlainCipher()
