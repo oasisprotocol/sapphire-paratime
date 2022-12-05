@@ -80,18 +80,25 @@ export abstract class Cipher {
     return { data, nonce };
   }
 
-  /** Decrypts the data contained within call */
+  /**
+   *  Decrypts the data contained within call
+   *
+   *  This is useful for creating tools, and also decoding
+   *  previously-sent transactions that have used the same
+   *  encryption key.
+   */
+
   public async decryptCallData(
     nonce: Uint8Array,
     ciphertext: Uint8Array,
   ): Promise<Uint8Array> {
-    const { body: plainData } = cbor.decode(
-      await this.decrypt(nonce, ciphertext),
-    );
-    return plainData;
+    return cbor.decode(await this.decrypt(nonce, ciphertext)).body;
   }
 
-  /** Encrypts call result */
+  /**
+   * @hidden Encrypts a CallResult in the same way as would be returned by the runtime.
+   * This method is not part of the SemVer interface and may be subject to change.
+   */
   public async encryptCallResult(result: CallResult): Promise<Uint8Array> {
     const encodedResult = cbor.encode(result);
     const { ciphertext, nonce } = await this.encrypt(encodedResult);
