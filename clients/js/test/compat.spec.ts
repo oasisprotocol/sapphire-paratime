@@ -1,8 +1,6 @@
 import { parse as parseTx } from '@ethersproject/transactions';
 import * as cbor from 'cborg';
 import * as ethers from 'ethers';
-import nock from 'nock';
-import nacl from 'tweetnacl';
 
 import {
   wrap,
@@ -295,32 +293,13 @@ describe('ethers provider', () => {
   });
 
   it('real cipher', async () => {
-    const publicKey = nacl.box.keyPair().publicKey;
-    const scope = nock('https://sapphire.oasis.dev', {
-      reqheaders: {
-        'content-type': 'application/json',
-      },
-    })
-      .post('/', (body) => {
-        if (body.jsonrpc !== '2.0') return false;
-        if (!Number.isInteger(parseInt(body.id, 10))) return false;
-        if (body.method !== 'oasis_callDataPublicKey') return false;
-        if (!Array.isArray(body.params) || body.params.length !== 0)
-          return false;
-        return true;
-      })
-      .reply(200, {
-        result: {
-          key: `0x${Buffer.from(publicKey).toString('hex')}`,
-        },
-      });
-
+    jest.clearAllMocks();
+    const upstreamProvider = new MockNonRuntimePublicKeyProvider();
     const provider = new ethers.providers.Web3Provider(upstreamProvider);
     const wrapped = wrap(provider); // no cipher!
     await wrapped.estimateGas({ to, data });
+    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
     upstreamProvider._request.mock.lastCall[0].params![0];
-
-    scope.done();
   });
 });
 
