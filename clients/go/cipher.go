@@ -41,9 +41,9 @@ type Inner struct {
 }
 
 type Failure struct {
-	Module  []byte `json:"module"`
+	Module  string `json:"module"`
 	Code    uint64 `json:"code"`
-	Message []byte `json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type Unknown struct {
@@ -207,9 +207,11 @@ func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error)
 			return innerResult.OK, nil
 		}
 
-		if innerResult.Fail.Message != nil {
-			msg := "Call failed in module" + string(innerResult.Fail.Module) + "with code" + fmt.Sprint(innerResult.Fail.Code)
-
+		if innerResult.Fail != nil {
+			msg := innerResult.Fail.Message
+			if len(msg) == 0 {
+				msg = fmt.Sprintf("Call failed in module %s with code %d", innerResult.Fail.Module, innerResult.Fail.Code)
+			}
 			return nil, errors.New(msg)
 		}
 
