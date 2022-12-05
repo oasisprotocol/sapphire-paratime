@@ -503,13 +503,13 @@ class EnvelopeError extends Error {}
  * Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
  * fall back to manually querying the default gateway.
  */
-async function fetchRuntimePublicKey(
+export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
   const isSigner = isEthersSigner(upstream);
   let chainId: number;
   if (isSigner || isEthersProvider(upstream)) {
-    let provider = isSigner ? upstream['provider'] : upstream;
+    const provider = isSigner ? upstream['provider'] : upstream;
     if (provider && 'send' in provider) {
       // first opportunistically try `send` from the provider
       try {

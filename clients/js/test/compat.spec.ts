@@ -4,9 +4,14 @@ import * as ethers from 'ethers';
 import nock from 'nock';
 import nacl from 'tweetnacl';
 
-import { Mock as MockCipher } from '@oasisprotocol/sapphire-paratime/cipher.js';
-import { wrap } from '@oasisprotocol/sapphire-paratime/compat.js';
-
+import {
+  wrap,
+  fetchRuntimePublicKey,
+} from '@oasisprotocol/sapphire-paratime/compat.js';
+import {
+  Mock as MockCipher,
+  fetchRuntimePublicKeyByChainId,
+} from '@oasisprotocol/sapphire-paratime/cipher.js';
 import { CHAIN_ID, verifySignedCall } from './utils';
 
 const wallet = new ethers.Wallet(
@@ -15,6 +20,13 @@ const wallet = new ethers.Wallet(
 const to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
 const cipher = new MockCipher();
 const data = Buffer.from([1, 2, 3, 4, 5]);
+
+jest.mock('@oasisprotocol/sapphire-paratime/cipher.js', () => ({
+  ...jest.requireActual('@oasisprotocol/sapphire-paratime/cipher.js'),
+  fetchRuntimePublicKeyByChainId: jest
+    .fn()
+    .mockReturnValue(new Uint8Array(Buffer.alloc(32, 8))),
+}));
 
 class MockProvider {
   public readonly _request: jest.Mock<
@@ -113,6 +125,86 @@ class MockLegacyProvider extends MockProvider {
     };
   }
 }
+
+class MockNonRuntimePublicKeyProvider extends MockProvider {
+  public readonly send: (
+    args: { id?: string | number; method: string; params?: any[] },
+    cb: (err: unknown, ok?: unknown) => void,
+  ) => void;
+
+  public constructor() {
+    super();
+    this.send = (args, cb) => {
+      if (args.method == 'oasis_callDataPublicKey')
+        throw new Error(`unhandled web3 call`);
+      this._request(args)
+        .then((res: any) => {
+          cb(null, { jsonrpc: '2.0', id: args.id, result: res });
+        })
+        .catch((err) => cb(err));
+    };
+  }
+}
+
+describe('fetchRuntimePublicKey', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('legacy metamask provider', async () => {
+    const upstream = new ethers.providers.Web3Provider(
+      new MockLegacyProvider(),
+    );
+    const pk = await fetchRuntimePublicKey(upstream);
+    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
+    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
+  });
+
+  it('ethers provider', async () => {
+    const upstream = new ethers.providers.Web3Provider(
+      new MockEIP1193Provider(),
+    );
+    const pk = await fetchRuntimePublicKey(upstream);
+    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
+    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
+  });
+
+  it('non public key provider', async () => {
+    const upstream = new ethers.providers.Web3Provider(
+      new MockNonRuntimePublicKeyProvider(),
+    );
+    const pk = await fetchRuntimePublicKey(upstream);
+    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
+    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 8)));
+  });
+
+  it('legacy signer', async () => {
+    const wrapped = wrap(wallet, cipher).connect(
+      new ethers.providers.Web3Provider(new MockLegacyProvider()),
+    );
+    const pk = await fetchRuntimePublicKey(wrapped);
+    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
+    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
+  });
+
+  it('ethers signer', async () => {
+    const wrapped = wrap(wallet, cipher).connect(
+      new ethers.providers.Web3Provider(new MockEIP1193Provider()),
+    );
+    const pk = await fetchRuntimePublicKey(wrapped);
+    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
+    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
+  });
+
+  it('non public key signer', async () => {
+    const wrapped = wrap(wallet, cipher).connect(
+      new ethers.providers.Web3Provider(new MockNonRuntimePublicKeyProvider()),
+    );
+    const pk = await fetchRuntimePublicKey(wrapped);
+    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
+    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 8)));
+  });
+});
 
 describe('ethers signer', () => {
   it('proxy', async () => {
