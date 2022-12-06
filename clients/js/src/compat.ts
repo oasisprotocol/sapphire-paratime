@@ -18,10 +18,10 @@ import {
   Cipher,
   Kind as CipherKind,
   X25519DeoxysII,
-  fetchRuntimePublicKey,
+  fetchRuntimePublicKeyByChainId,
   lazy as lazyCipher,
 } from './cipher.js';
-import { CallError } from './index.js';
+import { CallError, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 import {
   EthCall,
   SignedCallDataPack,
@@ -227,8 +227,7 @@ function isEthersSend(
 
 function getCipher(provider: UpstreamProvider): Cipher {
   return lazyCipher(async () => {
-    const keySource = await inferRuntimePublicKeySource(provider);
-    const rtPubKey = await fetchRuntimePublicKey(keySource);
+    const rtPubKey = await fetchRuntimePublicKey(provider);
     return X25519DeoxysII.ephemeral(rtPubKey);
   });
 }
@@ -504,20 +503,34 @@ class EnvelopeError extends Error {}
  * Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
  * fall back to manually querying the default gateway.
  */
-async function inferRuntimePublicKeySource(
+export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
-): Promise<Parameters<typeof fetchRuntimePublicKey>[0]> {
+): Promise<Uint8Array> {
   const isSigner = isEthersSigner(upstream);
+  let chainId: number;
   if (isSigner || isEthersProvider(upstream)) {
-    return {
-      chainId: isSigner
-        ? await upstream.getChainId()
-        : (await upstream.getNetwork()).chainId,
-    };
+    const provider = isSigner ? upstream['provider'] : upstream;
+    if (provider && 'send' in provider) {
+      // first opportunistically try `send` from the provider
+      try {
+        const source = provider as {
+          send: (method: string, params: any[]) => Promise<any>;
+        };
+        const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+        if (key) return arrayify(key);
+      } catch {
+        // don't do anything, move on to try chainId
+      }
+    }
+
+    chainId = isSigner
+      ? await upstream.getChainId()
+      : (await upstream.getNetwork()).chainId;
+    return fetchRuntimePublicKeyByChainId(chainId);
   }
-  return {
-    chainId: (await makeWeb3Provider(upstream).getNetwork()).chainId,
-  };
+
+  chainId = (await makeWeb3Provider(upstream).getNetwork()).chainId;
+  return fetchRuntimePublicKeyByChainId(chainId);
 }
 
 function makeWeb3Provider(

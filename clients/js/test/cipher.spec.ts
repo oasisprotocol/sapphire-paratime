@@ -9,7 +9,7 @@ import nacl from 'tweetnacl';
 import {
   Plain,
   X25519DeoxysII,
-  fetchRuntimePublicKey,
+  fetchRuntimePublicKeyByChainId,
   lazy,
 } from '@oasisprotocol/sapphire-paratime/cipher.js';
 
@@ -102,11 +102,11 @@ describe('lazy', () => {
   });
 });
 
-describe('fetchRuntimePublicKey', () => {
+describe('fetchPublicKeyByChainId', () => {
   async function expectFetch(
-    pointer: Parameters<typeof fetchRuntimePublicKey>[0],
+    chainId: Parameters<typeof fetchRuntimePublicKeyByChainId>[0],
     expectedUrl: string,
-    opts?: Parameters<typeof fetchRuntimePublicKey>[1],
+    opts?: Parameters<typeof fetchRuntimePublicKeyByChainId>[1],
   ): Promise<void> {
     const publicKey = nacl.box.keyPair().publicKey;
     const scope = nock(expectedUrl, {
@@ -129,43 +129,19 @@ describe('fetchRuntimePublicKey', () => {
         },
       });
 
-    expect(await fetchRuntimePublicKey(pointer, opts));
+    expect(await fetchRuntimePublicKeyByChainId(chainId, opts));
 
     scope.done();
   }
 
   it('fetches chainId', async () => {
-    await expectFetch({ chainId: 0x5afe }, 'https://sapphire.oasis.dev');
-    await expectFetch(
-      { chainId: 0x5aff },
-      'https://testnet.sapphire.oasis.dev',
-    );
+    await expectFetch(0x5afe, 'https://sapphire.oasis.dev');
+    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev');
   });
 
-  it('fetches URL (node)', async () => {
-    expectFetch(
-      { gatewayUrl: 'https://sapphire.local' },
-      'https://sapphire.local',
-    );
-  });
-
-  it('fetches URL (fetch)', async () => {
-    expectFetch(
-      { gatewayUrl: 'https://sapphire.local' },
-      'https://sapphire.local',
-      { fetch: fetchImpl as unknown as typeof fetch },
-    );
-  });
-
-  it('fetches send', async () => {
-    const calls: Array<{ method: string; params: any[] }> = [];
-    const send = async (method: string, params: any[]) => {
-      calls.push({ method, params });
-      return {
-        key: `0x${Buffer.from(nacl.box.keyPair().publicKey).toString('hex')}`,
-      };
-    };
-    await fetchRuntimePublicKey({ send });
-    expect(calls).toEqual([{ method: 'oasis_callDataPublicKey', params: [] }]);
+  it('fetches chainId (fetch)', async () => {
+    expectFetch(0x5afe, 'https://sapphire.oasis.dev', {
+      fetch: fetchImpl as unknown as typeof fetch,
+    });
   });
 });
