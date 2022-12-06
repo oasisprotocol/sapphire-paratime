@@ -95,7 +95,7 @@ func makeSignableCall(chainID uint64, caller, callee []byte, gasLimit uint64, ga
 	toAddr := ZeroAddress
 	// callee should exist except for contract creation
 	if callee != nil {
-		toAddr = hex.EncodeToString(callee[:])
+		toAddr = hex.EncodeToString(callee)
 	}
 
 	if value == nil {
@@ -140,7 +140,7 @@ func makeSignableCall(chainID uint64, caller, callee []byte, gasLimit uint64, ga
 			Salt:              "",
 		},
 		Message: map[string]interface{}{
-			"from":     hex.EncodeToString(caller[:]),
+			"from":     hex.EncodeToString(caller),
 			"to":       toAddr,
 			"value":    &valueU256,
 			"gasLimit": math.NewHexOrDecimal256(int64(gasLimit)),

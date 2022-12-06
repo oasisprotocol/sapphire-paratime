@@ -2,6 +2,7 @@ package sapphire
 
 import (
 	"bytes"
+	"context"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/json"
@@ -260,7 +261,7 @@ func GetRuntimePublicKey(chainID uint64) (*[32]byte, error) {
 	}
 	rawReq, _ := json.Marshal(request)
 
-	req, err := http.NewRequest(http.MethodPost, network.DefaultGateway, bytes.NewBuffer(rawReq))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, network.DefaultGateway, bytes.NewBuffer(rawReq))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for runtime calldata public key: %w", err)
 	}

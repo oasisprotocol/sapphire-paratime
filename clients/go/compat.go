@@ -49,7 +49,7 @@ var Networks = map[uint64]NetworkParams{
 	},
 }
 
-// PackTx prepares a regular Eth transaction for Sapphire. The transaction returned this function is what must be signed.
+// PackTx prepares a regular Eth transaction for Sapphire. The transaction returned from this function is what must be signed.
 func PackTx(tx types.Transaction, cipher Cipher) (*types.Transaction, error) {
 	if !txNeedsPacking(&tx) {
 		return &tx, nil
@@ -218,12 +218,12 @@ func (b WrappedBackend) PendingNonceAt(ctx context.Context, account common.Addre
 	return b.backend.PendingNonceAt(ctx, account)
 }
 
-// SuggestGasPrice implemennts ContractTransactor.
+// SuggestGasPrice implements ContractTransactor.
 func (b WrappedBackend) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return b.backend.SuggestGasPrice(ctx)
 }
 
-// SuggestGasTipCap implemennts ContractTransactor.
+// SuggestGasTipCap implements ContractTransactor.
 func (b WrappedBackend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
 	return b.backend.SuggestGasTipCap(ctx)
 }

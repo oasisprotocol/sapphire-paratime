@@ -48,7 +48,7 @@ func TestPlainCipher(t *testing.T) {
 	// EncryptEncode
 	hexifiedString := string(hexutil.Bytes(cbor.Marshal(envelope)))
 	if string(cipher.EncryptEncode(TestData)) != hexifiedString {
-		t.Fatalf("encrypt encoded data should be in hex: %d", cipher.EncryptEncode(TestData)[:])
+		t.Fatalf("encrypt encoded data should be in hex: %d", cipher.EncryptEncode(TestData))
 	}
 
 	// Decrypt

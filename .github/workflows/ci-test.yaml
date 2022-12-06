@@ -113,6 +113,23 @@ jobs:
       - name: Test JS client
         run: pnpm test
 
+  test-client-go:
+    name: test-client-go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/go
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
+      - name: Test
+        run: go test -v ./...
+
   test-examples:
     name: test-examples
     runs-on: ubuntu-latest
