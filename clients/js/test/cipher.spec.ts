@@ -89,6 +89,20 @@ describe('X25519DeoxysII', () => {
       }),
     ).toEqual(DATA);
   });
+
+  it('decryptCallData', async () => {
+    const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
+    const envelope = (await cipher.encryptEnvelope(DATA))!;
+    if (!('nonce' in envelope.body)) throw new Error('unenveloped body');
+    const { data, nonce } = envelope.body;
+    expect(await cipher.decryptCallData(nonce, data)).toEqual(DATA);
+  });
+
+  it('encryptCallResult', async () => {
+    const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
+    const res = await cipher.encryptCallResult({ ok: DATA });
+    expect(await cipher.decryptCallResult(cbor.decode(res))).toEqual(DATA);
+  });
 });
 
 describe('lazy', () => {
