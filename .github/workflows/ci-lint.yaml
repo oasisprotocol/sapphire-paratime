@@ -80,6 +80,31 @@ jobs:
       - name: Lint JS client
         run: pnpm --filter '@oasisprotocol/sapphire-*' lint
 
+  lint-client-go:
+    name: lint-client-go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/go
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # Fetch all history so gitlint can check the relevant commits.
+          fetch-depth: '0'
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+        # Always run this step so that all linting errors can be seen at once.
+        if: always()
+      - name: Lint Go
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.49.0
+        # Always run this step so that all linting errors can be seen at once.
+        if: always()
+
   type-test-client-js:
     name: type-test-client-js
     runs-on: ubuntu-latest

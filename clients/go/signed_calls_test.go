@@ -1,7 +1,6 @@
 package sapphire
 
 import (
-	"crypto/ecdsa"
 	"encoding/hex"
 	"math/big"
 	"testing"
@@ -9,14 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 )
-
-type EcdsaSigner struct {
-	*ecdsa.PrivateKey
-}
-
-func (s EcdsaSigner) Sign(digest [32]byte) ([]byte, error) {
-	return crypto.Sign(digest[:], s.PrivateKey)
-}
 
 func TestMakeSignedCall(t *testing.T) {
 	caller, err := hex.DecodeString("11e244400Cf165ade687077984F09c3A037b868F")
@@ -40,7 +31,7 @@ func TestMakeSignedCall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	dataPack, err := NewDataPack(EcdsaSigner{sk}, 0x5afe, caller, callee, 10, big.NewInt(123), big.NewInt(42), []byte{1, 2, 3, 4}, leash)
+	dataPack, err := NewDataPack(func(digest [32]byte) ([]byte, error) { return crypto.Sign(digest[:], sk) }, 0x5afe, caller, callee, 10, big.NewInt(123), big.NewInt(42), []byte{1, 2, 3, 4}, leash)
 	if err != nil {
 		t.Fatal(err)
 	}

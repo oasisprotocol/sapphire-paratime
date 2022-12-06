@@ -85,7 +85,7 @@ export class SignedCallDataPack {
     /**
      * An oasis-sdk `Call` without the optional fields.
      *
-     * After encryption, `body` would be encryped and this field would contain a
+     * After encryption, `body` would be encrypted and this field would contain a
      * `format` field. The runtime would decode the data as a `types::transaction::Call`.
      **/
     public readonly data?: Uint8Array,
