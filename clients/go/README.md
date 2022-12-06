@@ -30,18 +30,18 @@ replacement.
 ```Go
 // key := private key
 c, _ := ethclient.Dial(sapphire.Networks[SapphireChainID.Uint64()].DefaultGateway)
-cipher, _ := sapphire.NewCipher(SapphireChainID.Uint64())
-wb := sapphire.NewWrappedBackend(c, *SapphireChainID, cipher, func(digest [32]byte)([]byte, error) {
+backend := sapphire.WrapClient(*c, func(digest [32]byte)([]byte, error) {
   // Pass in a custom signing function to interact with the signer
   return crypto.Sign(digest[:], key)
 })
 ```
 
-Generated contract functions such as `Deploy{type}` will work now after passing in `wb`.
+Contracts using `go-ethereum`'s `abigen` can be used by passing in `backend` instead of the usual `ethclient`. For example,
 
 ```Go
-// Deploy the contract passing the newly created `auth` and `wb` vars
-address, tx, instance, err := storage.DeployStorage(auth, wb)
+txOpts := backend.Transactor(senderAddr)
+nft, _ := NewNft(addr, backend)
+tx, _ := nft.Transfer(txOpts, tokenId, recipient)
 ```
 
 ### Bring Your Own Signer
@@ -49,10 +49,12 @@ address, tx, instance, err := storage.DeployStorage(auth, wb)
 You can also package an Ethereum transaction for Sapphire by:
 
 ```Go
-sapphire.PackTx(tx, sapphire.NewCipher(SapphireChainID.Uint64()))
+sapphireTestnetChainId := 0x5aff // Sapphire testnet
+packedTx := sapphire.PackTx(tx, sapphire.NewCipher(sapphireTestnetChainId))
+signedTx := sign(packedTx) // using your usual signer
 ```
 
-and sending it with an Ethereum client
+and sending it with an normal, not-wrapped `ethclient`:
 
 ```Go
 ethclient.SendTransaction(ctx, signedTx)
