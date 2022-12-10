@@ -507,22 +507,21 @@ export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
   const isSigner = isEthersSigner(upstream);
+  const provider = isSigner ? upstream['provider'] : upstream;
+  if (provider && 'send' in provider) {
+    // first opportunistically try `send` from the provider
+    try {
+      const source = provider as {
+        send: (method: string, params: any[]) => Promise<any>;
+      };
+      const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+      if (key) return arrayify(key);
+    } catch {
+      // don't do anything, move on to try chainId
+    }
+  }
   let chainId: number;
   if (isSigner || isEthersProvider(upstream)) {
-    const provider = isSigner ? upstream['provider'] : upstream;
-    if (provider && 'send' in provider) {
-      // first opportunistically try `send` from the provider
-      try {
-        const source = provider as {
-          send: (method: string, params: any[]) => Promise<any>;
-        };
-        const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
-        if (key) return arrayify(key);
-      } catch {
-        // don't do anything, move on to try chainId
-      }
-    }
-
     chainId = isSigner
       ? await upstream.getChainId()
       : (await upstream.getNetwork()).chainId;
