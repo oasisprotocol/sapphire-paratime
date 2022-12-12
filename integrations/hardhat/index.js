@@ -1,5 +1,7 @@
 const sapphire = require('@oasisprotocol/sapphire-paratime');
 const { extendEnvironment } = require('hardhat/config');
+require('@nomiclabs/hardhat-ethers');
+require('@nomicfoundation/hardhat-chai-matchers');
 
 extendEnvironment((hre) => {
   const { chainId, url: rpcUrl } = hre.network.config;
