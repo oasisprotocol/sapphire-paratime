@@ -1,12 +1,12 @@
 [package]
 name = "sapphire-paratime"
-version = "0.3.0-testnet"
+version = "0.3.0"
 authors = ["Oasis Protocol Foundation <info@oasisprotocol.org>"]
 edition = "2021"
 license = "Apache-2.0"
 
 [package.metadata.orc.release]
-runtime-id = "0000000000000000000000000000000000000000000000000000000000000000"
+runtime-id = "000000000000000000000000000000000000000000000000f80306c9858e7279"
 
 [package.metadata.orc.test]
 runtime-id = "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
@@ -18,7 +18,7 @@ threads = 6
 debug = false
 
 [dependencies]
-keymanager = { git = "https://github.com/oasisprotocol/keymanager-paratime", tag = "v0.3.2-testnet" }
+keymanager = { git = "https://github.com/oasisprotocol/keymanager-paratime", tag = "v0.3.2" }
 module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "c43daf9d09c0d2c98c7bd6bf83294ced1db62a5c", package = "oasis-runtime-sdk-evm" }
 oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "c43daf9d09c0d2c98c7bd6bf83294ced1db62a5c" }
 
