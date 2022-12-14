@@ -1,6 +1,9 @@
 // We load the plugin here.
 import { HardhatUserConfig } from 'hardhat/types';
 
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
+
 import '../../../index.js';
 
 const config: HardhatUserConfig = {
