@@ -1,7 +1,7 @@
 packages:
   - clients/js
   - clients/js/type-only-test
-  - contracts
+    #  - contracts
   - examples/hardhat
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
