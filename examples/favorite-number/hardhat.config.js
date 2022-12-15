@@ -15,5 +15,12 @@ module.exports = {
         : [],
       chainId: 0x5aff,
     },
+    sapphire_local: {
+      url: "http://localhost:8545",
+      accounts: process.env.PRIVATE_KEY
+        ? [process.env.PRIVATE_KEY]
+        : [],
+      chainId: 0x5aff,
+    },
   }
 };

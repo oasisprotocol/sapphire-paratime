@@ -318,6 +318,7 @@ export class Dapp extends React.Component {
       // If we got here, the transaction was successful, so you may want to
       // update your state. Here, we update the user's balance.
       await this._updateBalance();
+
     } catch (error) {
       // We check the error code to see if this error was produced because the
       // user rejected a tx. If that's the case, we do nothing.

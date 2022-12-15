@@ -23,13 +23,17 @@ async function main() {
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
   const Favorite = await ethers.getContractFactory("Favorite");
-  const favorite = await Favorite.deploy();
-  await favorite.deployed();
+  const Test = await ethers.getContractFactory("Test");
+//  const favorite = await Favorite.deploy();
+//  await favorite.deployed();
+  const test = await Test.deploy();
+  await test.deployed();
 
-  console.log("Favorite number contract address:", favorite.address);
+//  console.log("Favorite number contract address:", favorite.address);
+  console.log("Test contract address:", test.address);
  
   // try some tests
-  const num1 = await favorite.favoriteNumber();
+/*  const num1 = await favorite.favoriteNumber();
   console.log("First favorite number:", num1);
   const num2 = await favorite.favoriteNumber();
   console.log("Second favorite number:", num2);
@@ -38,7 +42,8 @@ async function main() {
     console.log("Congratulations! Random number generator works perfectly!");
   } else {
     console.log("Oops, something went wrong: Random generator returned equal numbers.");
-  }
+  }*/
+  await test.test();
 }
 
 main()
