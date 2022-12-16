@@ -121,7 +121,15 @@ impl sdk::Runtime for Runtime {
                     .to_string(),
             })
         } else {
-            panic!("no trust root defined for Mainnet");
+            // Mainnet.
+            Some(TrustRoot {
+                height: 11681155,
+                hash: "bb89af4a1b707adcb60905d0c3cfdbbc961e86b8f9186d9ffdedf544d7f7bfd3".into(),
+                runtime_id: "000000000000000000000000000000000000000000000000f80306c9858e7279"
+                    .into(),
+                chain_context: "b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535"
+                    .to_string(),
+            })
         }
     }
 
@@ -130,7 +138,7 @@ impl sdk::Runtime for Runtime {
             modules::core::Genesis {
                 parameters: modules::core::Parameters {
                     min_gas_price: { BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]) },
-                    max_batch_gas: if is_testnet() { 30_000_000 } else { 10_000_000 },
+                    max_batch_gas: if is_testnet() { 30_000_000 } else { 15_000_000 },
                     max_tx_size: 300 * 1024,
                     max_tx_signers: 1,
                     max_multisig_signers: 8,
