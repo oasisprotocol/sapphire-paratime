@@ -30,7 +30,6 @@ describe('Hardhat Runtime Environment Oasis Extension', function () {
   });
 
   it('Should deploy to hardhat local node and query for sapphire', async function () {
-    await this.hre.run('compile', { quiet: true });
     const [owner] = await this.hre.ethers.getSigners();
     let signer = sapphire.wrap(owner);
     const Lock = await this.hre.ethers.getContractFactory('Lock', signer);
@@ -44,7 +43,6 @@ describe('Hardhat Runtime Environment Oasis Extension', function () {
   });
 
   it('Should not deploy to hardhat for non-sapphire', async function () {
-    await this.hre.run('compile', { quiet: true });
     const Lock = await this.hre.ethers.getContractFactory('Lock');
     const unlockTime = (await time.latest()) + 60;
     await expect(Lock.deploy(unlockTime, { value: 1_000 })).to.be.rejectedWith(
