@@ -47,6 +47,6 @@ describe('Hardhat Runtime Environment Oasis Extension', function () {
     await this.hre.run('compile', { quiet: true });
     const Lock = await this.hre.ethers.getContractFactory('Lock');
     const unlockTime = (await time.latest()) + 60;
-    await expect(Lock.deploy(unlockTime, { value: 1_000 })).to.be.rejected;
+    await expect(Lock.deploy(unlockTime, { value: 1_000 })).to.be.rejectedWith("CBOR decode error");
   });
 });

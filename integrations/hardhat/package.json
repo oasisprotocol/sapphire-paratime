@@ -20,7 +20,7 @@
     "test": "mocha --exit --recursive 'test/**/*.test.ts'"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "^1.0.13",
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
     "hardhat": "npm:@oasislabs/hardhat@^2.12.4"
   },
   "devDependencies": {
