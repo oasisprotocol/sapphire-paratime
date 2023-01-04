@@ -16,15 +16,29 @@
   "main": "./index.js",
   "scripts": {
     "lint": "prettier --cache --check .",
-    "format": "prettier --cache --write ."
+    "format": "prettier --cache --write .",
+    "test": "mocha --exit --recursive 'test/**/*.test.ts'"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "workspace:^"
-  },
-  "peerDependencies": {
-    "hardhat": "^2.0.0"
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
+    "hardhat": "npm:@oasislabs/hardhat@^2.12.4"
   },
   "devDependencies": {
-    "prettier": "^2.7.1"
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
+    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "@types/chai": "^4.1.7",
+    "@types/fs-extra": "^5.0.4",
+    "@types/mocha": "^9.1.0",
+    "@types/node": ">=12.0.0",
+    "chai": "^4.3.7",
+    "ethers": "^5.7.2",
+    "mocha": "^10.1.0",
+    "prettier": "^2.7.1",
+    "ts-node": "^8.1.0",
+    "tslint": "^5.16.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^4.0.3"
   }
 }

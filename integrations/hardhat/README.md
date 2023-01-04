@@ -4,7 +4,7 @@ A plugin for Hardhat that wraps the provider connected to a Sapphire network.
 
 ## Usage
 
-First install the plugin. Make sure that `hardhat` is also installed.
+First install the plugin.
 
 ```
 npm install -D @oasisprotocol/sapphire-hardhat
