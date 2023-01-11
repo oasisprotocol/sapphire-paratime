@@ -8,11 +8,8 @@ import {
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { BytesLike, arrayify, hexlify } from '@ethersproject/bytes';
 import * as cbor from 'cborg';
-import type {
-  CamelCasedProperties,
-  Promisable,
-  RequireExactlyOne,
-} from 'type-fest';
+import type { CamelCasedProperties, RequireExactlyOne } from 'type-fest';
+import { _TypedDataEncoder } from '@ethersproject/hash';
 
 import { Cipher, Envelope } from './cipher.js';
 
@@ -21,8 +18,68 @@ const DEFAULT_GAS_LIMIT = 30_000_000;
 const DEFAULT_VALUE = 0;
 const DEFAULT_DATA = '0x';
 const zeroAddress = () => `0x${'0'.repeat(40)}`;
+const MAX_SAFE_BIG_NUM = 0x1fffffffffffff - 1;
 
-export type Signer = Pick<EthersSigner, 'getTransactionCount' | 'getChainId'> &
+class SignedCallCacheManager {
+  public enabled = true;
+
+  // for each signer, we cache the signature of the hash of each SignableCall
+  private cachedSignatures = new Map<string, Map<string, Uint8Array>>();
+  // for each ChainId, we cache the base block number to make the same leash
+  private cachedBlockNumbers = new Map<number, BlockTag>();
+
+  public enable() {
+    this.enabled = true;
+  }
+
+  public disable() {
+    this.enabled = false;
+    cachedSignatures.clear();
+    cachedBlockNumbers.clear();
+  }
+
+  public setSignatureCache(
+    address: string,
+    hash: string,
+    signature: Uint8Array,
+  ) {
+    if (!this.enabled) return;
+    if (!this.cachedSignatures.has(address))
+      this.cachedSignatures.set(address, new Map<string, Uint8Array>());
+    this.cachedSignatures.get(address)!.set(hash, signature);
+  }
+
+  public getSignatureCache(
+    address: string,
+    hash: string,
+  ): Uint8Array | undefined {
+    return this.cachedSignatures.get(address)?.get(hash);
+  }
+
+  public setBlockNum(chainId: number, blockNum: BlockTag) {
+    if (!this.enabled) return;
+    this.cachedBlockNumbers.set(chainId, blockNum);
+  }
+
+  public getBlockNum(chainId: number): BlockTag | undefined {
+    return this.cachedBlockNumbers.get(chainId);
+  }
+}
+
+const _cacheManager = new SignedCallCacheManager();
+
+export function enableSignedCallCaches() {
+  _cacheManager.enable();
+}
+
+export function disableSignedCallCaches() {
+  _cacheManager.disable();
+}
+
+export type Signer = Pick<
+  EthersSigner,
+  'getTransactionCount' | 'getChainId' | 'getAddress'
+> &
   TypedDataSigner & {
     provider?: Pick<Provider, 'getBlock'>;
     _checkProvider?: EthersSigner['_checkProvider'];
@@ -116,25 +173,30 @@ async function makeLeash(
   signer: Signer & TypedDataSigner,
   overrides?: LeashOverrides,
 ): Promise<Leash> {
-  const nonceP = overrides?.nonce
-    ? overrides.nonce
-    : signer.getTransactionCount('pending');
-  let blockP: Promisable<BlockId>;
+  const chainId = await signer.getChainId();
+  const nonce = overrides?.nonce ? overrides.nonce : MAX_SAFE_BIG_NUM;
+
+  let block: BlockId;
   if (overrides?.block !== undefined) {
-    blockP = overrides.block;
+    block = overrides.block;
   } else {
     if (signer._checkProvider) signer._checkProvider('getBlock');
-    const latestBlock = await signer.provider!.getBlock('latest');
-    // The latest block is not historical and may not
-    // even be the latest light client verifiable block.
-    blockP = signer.provider!.getBlock(latestBlock.number - 2);
+    let blockNum: BlockTag;
+    if (_cacheManager.getBlockNum(chainId)) {
+      blockNum = cachedBlockNumbers.get(chainId)!;
+    } else {
+      const latestBlock = await signer.provider!.getBlock('latest');
+      blockNum = latestBlock.number - 2;
+      _cacheManager.setBlockNum(chainId, blockNum);
+    }
+    block = await signer.provider!.getBlock(blockNum); // The latest block is not historical.
   }
-  const [nonce, block] = await Promise.all([nonceP, blockP]);
+
   return {
     nonce,
     block_number: block.number,
     block_hash: arrayify(block.hash),
-    block_range: overrides?.blockRange ?? 15 /* ~90s */,
+    block_range: overrides?.blockRange ?? MAX_SAFE_BIG_NUM,
   };
 }
 
@@ -164,9 +226,15 @@ async function signCall(
   signer: Signer & TypedDataSigner,
   overrides?: Partial<{ chainId: number }>,
 ): Promise<Uint8Array> {
+  const address = await signer.getAddress();
   const chainId = overrides?.chainId ?? (await signer.getChainId());
   const { domain, types } = signedCallEIP712Params(chainId);
-  return arrayify(await signer._signTypedData(domain, types, call));
+  const hash = _TypedDataEncoder.hash(domain, types, call);
+  let signature = _cacheManager.getSignatureCache(address, hash);
+  if (signature !== undefined) return signature;
+  signature = arrayify(await signer._signTypedData(domain, types, call));
+  _cacheManager.setSignatureCache(address, hash, signature);
+  return signature;
 }
 
 export type PrepareSignedCallOverrides = Partial<{
