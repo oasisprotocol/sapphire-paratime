@@ -125,7 +125,9 @@ async function makeLeash(
   } else {
     if (signer._checkProvider) signer._checkProvider('getBlock');
     const latestBlock = await signer.provider!.getBlock('latest');
-    blockP = signer.provider!.getBlock(latestBlock.number - 1); // The latest block is not historical.
+    // The latest block is not historical and may not
+    // even be the latest light client verifiable block.
+    blockP = signer.provider!.getBlock(latestBlock.number - 2);
   }
   const [nonce, block] = await Promise.all([nonceP, blockP]);
   return {
