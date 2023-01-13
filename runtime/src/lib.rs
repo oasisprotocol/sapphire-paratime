@@ -26,9 +26,12 @@ const fn is_testnet() -> bool {
     !env!("CARGO_PKG_VERSION_PRE").is_empty()
 }
 
-/// Determine EVM chain ID to use depending on whether the build is for Testnet or Mainnet.
+/// Determine EVM chain ID to use depending on whether the build is for Localnet, Testnet or Mainnet.
 const fn chain_id() -> u64 {
-    if is_testnet() {
+    if option_env!("OASIS_UNSAFE_USE_LOCALNET_CHAINID").is_some() {
+        // Localnet.
+        0x5afd
+    } else if is_testnet() {
         // Testnet.
         0x5aff
     } else {
