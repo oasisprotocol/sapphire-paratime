@@ -44,8 +44,8 @@ var Networks = map[uint64]NetworkParams{
 	0x5afe: {
 		Name:           "mainnet",
 		ChainID:        *big.NewInt(0x5afe),
-		DefaultGateway: "https://sapphire.oasis.dev",
-		RuntimeID:      "0x0000000000000000000000000000000000000000000000000000000000000000",
+		DefaultGateway: "https://sapphire.oasis.io",
+		RuntimeID:      "0x000000000000000000000000000000000000000000000000f80306c9858e7279",
 	},
 }
 
