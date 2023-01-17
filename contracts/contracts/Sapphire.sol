@@ -30,10 +30,10 @@ library Sapphire {
         // Ed25519 signature over the provided prehashed SHA-512 digest.
         Ed25519PrehashedSha512,
         // Secp256k1 signature over the provided message using SHA-512/256 with a domain separator.
-        // Ccan be used to sign transactions for the Oasis consensus layer and SDK paratimes.
+        // Can be used to sign transactions for the Oasis consensus layer and SDK paratimes.
         Secp256k1Oasis,
         // Secp256k1 over the provided Keccak256 digest.
-        // Ccan be used to sign transactions for Ethereum-compatible networks.
+        // Can be used to sign transactions for Ethereum-compatible networks.
         Secp256k1PrehashedKeccak256,
         // Secp256k1 signature over the provided SHA-256 digest.
         Secp256k1PrehashedSha256,
