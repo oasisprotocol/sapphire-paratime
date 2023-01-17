@@ -20,7 +20,7 @@ https://faucet.testnet.oasis.dev/ and request some.
 Next, run this to deploy your contract on Sapphire Testnet:
 
 ```sh
-PRIVATE_KEY=your_sapphire_private_key_in_hex npx hardhat run scripts/deploy.js --network sapphire
+PRIVATE_KEY=your_sapphire_private_key_in_hex npx hardhat run scripts/deploy.js --network sapphire_testnet
 ```
 
 Finally, run the frontend with:
