@@ -149,12 +149,12 @@ describe('fetchPublicKeyByChainId', () => {
   }
 
   it('fetches chainId', async () => {
-    await expectFetch(0x5afe, 'https://sapphire.oasis.dev');
+    await expectFetch(0x5afe, 'https://sapphire.oasis.io');
     await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev');
   });
 
   it('fetches chainId (fetch)', async () => {
-    expectFetch(0x5afe, 'https://sapphire.oasis.dev', {
+    expectFetch(0x5afe, 'https://sapphire.oasis.io', {
       fetch: fetchImpl as unknown as typeof fetch,
     });
   });

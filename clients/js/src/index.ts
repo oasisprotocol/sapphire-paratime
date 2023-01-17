@@ -12,9 +12,9 @@ export * as signedCalls from './signed_calls.js';
 
 const mainnetParams = {
   chainId: 0x5afe,
-  defaultGateway: 'https://sapphire.oasis.dev/',
+  defaultGateway: 'https://sapphire.oasis.io/',
   runtimeId:
-    '0x0000000000000000000000000000000000000000000000000000000000000000',
+    '0x000000000000000000000000000000000000000000000000f80306c9858e7279',
 };
 const testnetParams = {
   chainId: 0x5aff,
