@@ -2,7 +2,7 @@ import { HardhatUserConfig } from 'hardhat/config';
 
 import '@oasisprotocol/sapphire-hardhat';
 import '@typechain/hardhat';
-import '@nomiclabs/hardhat-waffle';
+import '@nomicfoundation/hardhat-chai-matchers';
 import 'hardhat-watcher';
 import 'solidity-coverage';
 
