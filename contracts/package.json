@@ -24,8 +24,8 @@
     "contracts"
   ],
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
-    "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@oasisprotocol/sapphire-hardhat": "workspace:^",
     "@openzeppelin/contracts": "^4.7.3",
     "@typechain/ethers-v5": "^10.1.0",
@@ -38,7 +38,6 @@
     "chai": "^4.3.6",
     "eslint": "^8.23.1",
     "eslint-config-prettier": "^8.5.0",
-    "ethereum-waffle": "^3.4.4",
     "ethers": "^5.7.1",
     "hardhat": "^2.11.2",
     "hardhat-watcher": "^2.5.0",
