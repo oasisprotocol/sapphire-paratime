@@ -45,7 +45,7 @@ describe('Hardhat Runtime Environment Oasis Extension', function () {
   it('Should not deploy to hardhat for non-sapphire', async function () {
     const Lock = await this.hre.ethers.getContractFactory('Lock');
     const unlockTime = (await time.latest()) + 60;
-    await expect(Lock.deploy(unlockTime, { value: 1_000 })).to.be.rejectedWith(
+    await expect(Lock.deploy(unlockTime, { value: 1_000 })).to.be.revertedWith(
       'CBOR decode error',
     );
   });

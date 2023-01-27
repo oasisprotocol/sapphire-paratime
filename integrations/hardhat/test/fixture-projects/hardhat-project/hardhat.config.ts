@@ -4,11 +4,15 @@ import { HardhatUserConfig } from 'hardhat/types';
 import '@nomiclabs/hardhat-ethers';
 import '@nomicfoundation/hardhat-chai-matchers';
 
-import '../../../index.js';
+import '../../../src/index';
 
 const config: HardhatUserConfig = {
   solidity: '0.8.17',
-  defaultNetwork: 'hardhat',
+  networks: {
+    hardhat: {
+      confidential: true,
+    }
+  }
 };
 
 export default config;
