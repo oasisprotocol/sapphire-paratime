@@ -8,7 +8,11 @@ import {
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { BytesLike, arrayify, hexlify } from '@ethersproject/bytes';
 import * as cbor from 'cborg';
-import type { CamelCasedProperties, RequireExactlyOne } from 'type-fest';
+import type {
+  CamelCasedProperties,
+  Promisable,
+  RequireExactlyOne,
+} from 'type-fest';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 
 import { Cipher, Envelope } from './cipher.js';
@@ -28,8 +32,8 @@ class SignedCallCacheManager {
   private cachedLeashes = new Map<number, Leash>();
 
   public clear() {
-    cachedSignatures.clear();
-    cachedBlockNumbers.clear();
+    this.cachedSignatures.clear();
+    this.cachedLeashes.clear();
   }
 
   public cache(
@@ -63,14 +67,6 @@ class SignedCallCacheManager {
 }
 
 const _cacheManager = new SignedCallCacheManager();
-
-export function enableSignedCallCaches() {
-  _cacheManager.enable();
-}
-
-export function disableSignedCallCaches() {
-  _cacheManager.disable();
-}
 
 export type Signer = Pick<
   EthersSigner,
@@ -201,14 +197,16 @@ async function makeLeash(
       return cachedLeash;
     } else {
       // the cached leash has been outdated
-      _cachedManager.clear();
+      _cacheManager.clear();
     }
   }
 
   return {
-    nonce: overrides?.nonce ? overrides.nonce : nonce + DEFAULT_NONCE_RANGE,
+    nonce: overrides?.nonce
+      ? overrides.nonce
+      : pendingNonce + DEFAULT_NONCE_RANGE,
     block_number: block.number,
-    bock_hash: arrayify(block.hash),
+    block_hash: arrayify(block.hash),
     block_range: blockRange,
   };
 }
