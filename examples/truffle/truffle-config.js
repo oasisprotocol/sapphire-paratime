@@ -54,7 +54,15 @@ module.exports = {
     //   network_id: 5,       // Goerli's id
     //   chain_id: 5
     // }
-    emerald: {
+    emerald_mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          [process.env.PRIVATE_KEY],
+          "https://emerald.oasis.dev"
+        ),
+      network_id: 0xa516,
+    },
+    emerald_testnet: {
       provider: () =>
         new HDWalletProvider(
           [process.env.PRIVATE_KEY],
@@ -62,7 +70,25 @@ module.exports = {
         ),
       network_id: 0xa515,
     },
-    sapphire: {
+    emerald_localnet: {
+      provider: () =>
+        new HDWalletProvider(
+          [process.env.PRIVATE_KEY],
+          "http://localhost:8545"
+        ),
+      network_id: 0xa514,
+    },
+    sapphire_mainnet: {
+      provider: () =>
+        sapphire.wrap(
+          new HDWalletProvider(
+            [process.env.PRIVATE_KEY],
+            "https://sapphire.oasis.io"
+          )
+        ),
+      network_id: 0x5afe,
+    },
+    sapphire_testnet: {
       provider: () =>
         sapphire.wrap(
           new HDWalletProvider(
@@ -71,6 +97,16 @@ module.exports = {
           )
         ),
       network_id: 0x5aff,
+    },
+    sapphire_localnet: {
+      provider: () =>
+        sapphire.wrap(
+          new HDWalletProvider(
+            [process.env.PRIVATE_KEY],
+            "http://localhost:8545"
+          )
+        ),
+      network_id: 0x5afd,
     },
   },
 

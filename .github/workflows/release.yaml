@@ -26,13 +26,13 @@ jobs:
           binaries: sapphire-paratime
           clean: no
           setup: |
-            export OASIS_UNSAFE_SKIP_AVR_VERIFY=1 OASIS_UNSAFE_SKIP_KM_POLICY=1 OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES=1
+            export OASIS_UNSAFE_SKIP_AVR_VERIFY=1 OASIS_UNSAFE_SKIP_KM_POLICY=1 OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES=1 OASIS_UNSAFE_USE_LOCALNET_CHAINID=1
 
       - name: Create the debug Oasis Runtime Container
         run: |
           go install github.com/oasisprotocol/oasis-sdk/tools/orc@latest
           pushd runtime
-          orc init ${RUNTIME_EXECUTABLE} --output ../insecure-debug-sapphire-paratime.orc
+          orc init ${RUNTIME_EXECUTABLE} --output ../localnet-sapphire-paratime.orc
           popd
         env:
           RUNTIME_EXECUTABLE: ${{ github.workspace }}/${{ steps.build-debug-elf.outputs.build-path }}/sapphire-paratime
@@ -71,5 +71,5 @@ jobs:
         with:
           # Create a draft since the release requires an offline signing process.
           draft: true
-          artifacts: sapphire-paratime.orc,insecure-debug-sapphire-paratime.orc
+          artifacts: sapphire-paratime.orc,localnet-sapphire-paratime.orc
           token: ${{ secrets.GITHUB_TOKEN }}

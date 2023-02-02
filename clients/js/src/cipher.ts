@@ -7,6 +7,7 @@ import {
 import * as cbor from 'cborg';
 // @ts-expect-error missing declaration
 import deoxysii from 'deoxysii';
+import { IncomingMessage } from 'http';
 import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
@@ -300,7 +301,9 @@ type CallDataPublicKeyResponse = {
 async function fetchRuntimePublicKeyNode(
   gwUrl: string,
 ): Promise<CallDataPublicKeyResponse> {
-  const https = await import(/* webpackIgnore: true */ 'https');
+  // Import http or https, depending on the URI scheme.
+  const https = await import(/* webpackIgnore: true */ gwUrl.split(':')[0]);
+
   const body = makeCallDataPublicKeyBody();
   return new Promise((resolve, reject) => {
     const opts = {
@@ -310,7 +313,7 @@ async function fetchRuntimePublicKeyNode(
         'content-length': body.length,
       },
     };
-    const req = https.request(gwUrl, opts, (res) => {
+    const req = https.request(gwUrl, opts, (res: IncomingMessage) => {
       const chunks: Buffer[] = [];
       res.on('error', (err) => reject(err));
       res.on('data', (chunk) => chunks.push(chunk));
@@ -318,7 +321,7 @@ async function fetchRuntimePublicKeyNode(
         resolve(JSON.parse(Buffer.concat(chunks).toString()));
       });
     });
-    req.on('error', (err) => reject(err));
+    req.on('error', (err: Error) => reject(err));
     req.write(body);
     req.end();
   });
