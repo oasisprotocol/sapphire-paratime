@@ -384,7 +384,8 @@ function hookExternalProvider(
     if (method === 'eth_call' && params) {
       params[0].data = await cipher.encryptEncode(params[0].data);
       if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
-      return provider.send(method, params);
+      const res = await provider.send(method, params);
+      return cipher.decryptEncoded(res);
     }
     return provider.send(method, params ?? []);
   };
