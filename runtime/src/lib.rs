@@ -54,6 +54,8 @@ impl modules::core::Config for Config {
 impl module_evm::Config for Config {
     type Accounts = modules::accounts::Module;
 
+    type AdditionalPrecompileSet = ();
+
     const CHAIN_ID: u64 = chain_id();
 
     const TOKEN_DENOMINATION: Denomination = Denomination::NATIVE;
@@ -116,8 +118,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 13670553,
-                hash: "7e0e12dcdaa9e8a83e27799c03c873a0a2fc720bcef044992578a936ac7da2a2".into(),
+                height: 13893735,
+                hash: "9f2fa627ab41a6b68304ef0a0466ac899f01130ddc5c9655a9b7a9b2fb6e4d54".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
