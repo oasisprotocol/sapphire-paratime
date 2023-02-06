@@ -54,6 +54,8 @@ impl modules::core::Config for Config {
 impl module_evm::Config for Config {
     type Accounts = modules::accounts::Module;
 
+    type AdditionalPrecompileSet = ();
+
     const CHAIN_ID: u64 = chain_id();
 
     const TOKEN_DENOMINATION: Denomination = Denomination::NATIVE;

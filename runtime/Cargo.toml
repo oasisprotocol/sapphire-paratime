@@ -1,6 +1,6 @@
 [package]
 name = "sapphire-paratime"
-version = "0.3.1"
+version = "0.4.0-testnet"
 authors = ["Oasis Protocol Foundation <info@oasisprotocol.org>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -18,11 +18,11 @@ threads = 6
 debug = false
 
 [dependencies]
-keymanager = { git = "https://github.com/oasisprotocol/keymanager-paratime", tag = "v0.3.3" }
+keymanager = { git = "https://github.com/oasisprotocol/keymanager-paratime", tag = "v0.3.3-testnet" }
 
 # SDK.
-module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "45367837bc74540253c8a943cd982583f698be3f", package = "oasis-runtime-sdk-evm" }
-oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", rev = "45367837bc74540253c8a943cd982583f698be3f" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", tag = "runtime-sdk/v0.3.0", package = "oasis-runtime-sdk-evm" }
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", tag = "runtime-sdk/v0.3.0" }
 
 # Third party.
 once_cell = "1.8.0"
