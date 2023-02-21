@@ -14,12 +14,17 @@ library Sapphire {
         0x0100000000000000000000000000000000000003;
     address private constant DECRYPT =
         0x0100000000000000000000000000000000000004;
-    address private constant GENERATE_KEYPAIR =
+    address private constant GENERAGE_SIGNING_KEYPAIR =
         0x0100000000000000000000000000000000000005;
     address private constant SIGN_DIGEST =
         0x0100000000000000000000000000000000000006;
     address private constant VERIFY_DIGEST =
         0x0100000000000000000000000000000000000007;
+    address private constant CURVE25519_PUBLIC_KEY =
+        0x0100000000000000000000000000000000000008;
+
+    type Curve25519PublicKey is bytes32;
+    type Curve25519SecretKey is bytes32;
 
     enum SigningAlg {
         // Ed25519 signature over the provided message using SHA-512/265 with a domain separator.
@@ -60,16 +65,41 @@ library Sapphire {
     }
 
     /**
+     * @dev Generates a Curve25519 keypair.
+     * @param pers An optional personalization string used to add domain separation.
+     * @return pk The Curve25519 public key. Useful for key exchange.
+     * @return sk The Curve25519 secret key. Pairs well with {`deriveSymmetricKey`}.
+     */
+    function generateCurve25519KeyPair(bytes memory pers)
+        internal
+        view
+        returns (Curve25519PublicKey pk, Curve25519SecretKey sk)
+    {
+        bytes memory scalar = randomBytes(32, pers);
+        // Twiddle some bits, as per RFC 7748 §5.
+        scalar[0] &= 0xf8; // Make it a multiple of 8 to avoid small subgroup attacks.
+        scalar[31] &= 0x7f; // Clamp to < 2^255 - 19
+        scalar[31] |= 0x40; // Clamp to >= 2^254
+        (bool success, bytes memory pkBytes) = CURVE25519_PUBLIC_KEY.staticcall(
+            scalar
+        );
+        require(success, "gen curve25519 pk: failed");
+        return (
+            Curve25519PublicKey.wrap(bytes32(pkBytes)),
+            Curve25519SecretKey.wrap(bytes32(scalar))
+        );
+    }
+
+    /**
      * @dev Derive a symmetric key from a pair of keys using x25519.
      * @param peerPublicKey The peer's public key.
      * @param secretKey Your secret key.
      * @return A derived symmetric key.
      */
-    function deriveSymmetricKey(bytes32 peerPublicKey, bytes32 secretKey)
-        internal
-        view
-        returns (bytes32)
-    {
+    function deriveSymmetricKey(
+        Curve25519PublicKey peerPublicKey,
+        Curve25519SecretKey secretKey
+    ) internal view returns (bytes32) {
         (bool success, bytes memory symmetric) = DERIVE_KEY.staticcall(
             abi.encode(peerPublicKey, secretKey)
         );
@@ -126,15 +156,14 @@ library Sapphire {
      * @return publicKey The public half of the keypair.
      * @return secretKey The secret half of the keypair.
      */
-    function generateKeyPair(SigningAlg alg, bytes memory seed)
+    function generateSigningKeyPair(SigningAlg alg, bytes memory seed)
         internal
         view
         returns (bytes memory publicKey, bytes memory secretKey)
     {
-        (bool success, bytes memory keypair) = GENERATE_KEYPAIR.staticcall(
-            abi.encode(alg, seed)
-        );
-        require(success, "generateKeyPair: failed");
+        (bool success, bytes memory keypair) = GENERAGE_SIGNING_KEYPAIR
+            .staticcall(abi.encode(alg, seed));
+        require(success, "gen signing keypair: failed");
         return abi.decode(keypair, (bytes, bytes));
     }
 
