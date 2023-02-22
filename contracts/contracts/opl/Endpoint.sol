@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/Context.sol";
+
 /// Unable to automatically configure OPL. Please use the manual version of the base contract.
 error AutoConfigUnavailable();
 /// The method cannot be called in this context.
@@ -32,7 +34,7 @@ interface ICelerMessageBus {
     ) external payable;
 }
 
-contract BaseEndpoint {
+contract BaseEndpoint is Context {
     address internal immutable messageBus;
     bool private immutable inOrder;
 
@@ -73,20 +75,25 @@ contract BaseEndpoint {
         endpoints[bytes4(keccak256(_method))] = _cb;
     }
 
+    function postMessage(bytes memory _method) internal {
+        return postMessage(_method, "");
+    }
+
     function postMessage(bytes memory _method, bytes memory _message) internal {
         uint256 fee = estimateFee(_message);
         bytes memory envelope = abi.encodeWithSelector(
             bytes4(keccak256(_method)),
             txSeq,
+            _msgActor(),
             _message
         );
         if (messageBus == host && block.chainid == hostChainId) {
             // We're likely on a local network, so call the contract directly.
             BaseEndpoint(messageBus).executeMessage(
-                address(this),
+                address(this), // sender
                 uint64(block.chainid),
                 envelope,
-                address(this)
+                address(this) // executor
             );
             payable(0).transfer(fee); // burn the fee, for fidelity
         }
@@ -218,6 +225,13 @@ contract BaseEndpoint {
             // arbitrum testnet
             return (0x7d43AABC515C356145049227CeE54B608342c0ad, true);
         revert AutoConfigUnavailable();
+    }
+
+    function _msgActor() internal view returns (address) {
+        return
+            msg.sender == messageBus
+                ? address(bytes20(msg.data[36:56]))
+                : _msgSender();
     }
 }
 
