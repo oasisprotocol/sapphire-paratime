@@ -33,7 +33,7 @@ interface ICelerMessageBus {
 }
 
 contract BaseEndpoint {
-    address private immutable bus;
+    address internal immutable messageBus;
     bool private immutable inOrder;
 
     address private host;
@@ -48,15 +48,18 @@ contract BaseEndpoint {
     constructor(
         address _host,
         uint256 _hostChainId,
-        address _bus,
+        address _messageBus,
         bool _inOrder
     ) {
-        if (_host == address(0)) revert InvalidArgument("endpoint ctor");
-        if (_hostChainId == block.chainid || _hostChainId == 0)
-            revert InvalidArgument("endpoint ctor");
+        if (_host == address(0))
+            revert InvalidArgument("BaseEndpoint: empty host");
+        if (_hostChainId == 0)
+            revert InvalidArgument("BaseEndpoint: empty host chainid");
+        if (_messageBus != address(host) && _hostChainId != block.chainid)
+            revert InvalidArgument("BaseEndpoint: cannot self-call");
         host = _host;
         hostChainId = _hostChainId;
-        bus = _bus;
+        messageBus = _messageBus;
         inOrder = _inOrder;
     }
 
@@ -72,10 +75,25 @@ contract BaseEndpoint {
 
     function postMessage(bytes memory _method, bytes memory _message) internal {
         uint256 fee = estimateFee(_message);
-        ICelerMessageBus(bus).sendMessage{value: fee}(
+        bytes memory envelope = abi.encodeWithSelector(
+            bytes4(keccak256(_method)),
+            txSeq,
+            _message
+        );
+        if (messageBus == host && block.chainid == hostChainId) {
+            // We're likely on a local network, so call the contract directly.
+            BaseEndpoint(messageBus).executeMessage(
+                address(this),
+                uint64(block.chainid),
+                envelope,
+                address(this)
+            );
+            payable(0).transfer(fee); // burn the fee, for fidelity
+        }
+        ICelerMessageBus(messageBus).sendMessage{value: fee}(
             host,
             hostChainId,
-            abi.encodeWithSelector(bytes4(keccak256(_method)), txSeq, _message)
+            envelope
         );
         ++txSeq;
     }
@@ -84,14 +102,14 @@ contract BaseEndpoint {
         address _sender,
         uint64 _senderChainId,
         bytes calldata _message,
-        address
+        address // executor
     ) external payable returns (uint256) {
-        if (msg.sender != bus) revert Forbidden("bridge endpoint");
+        if (msg.sender != messageBus) revert Forbidden("bridge endpoint");
         if (_sender != host || _senderChainId != hostChainId)
             revert Forbidden("non-host sender");
         bytes4 epSel = bytes4(_message[:4]);
         uint256 seq = uint256(bytes32(_message[4:36]));
-        bytes calldata message = _message[36:];
+        bytes calldata message = _message[56:];
         if (inOrder) {
             if (seq != rxSeq) revert WrongSeqNum(rxSeq, seq);
             ++rxSeq;
@@ -114,8 +132,8 @@ contract BaseEndpoint {
         view
         returns (uint256)
     {
-        uint256 feeBase = ICelerMessageBus(bus).feeBase();
-        uint256 feePerByte = ICelerMessageBus(bus).feePerByte();
+        uint256 feeBase = ICelerMessageBus(messageBus).feeBase();
+        uint256 feePerByte = ICelerMessageBus(messageBus).feePerByte();
         return
             feeBase +
             (_message.length +
@@ -148,7 +166,7 @@ contract BaseEndpoint {
     function _getChainConfig(uint256 _chainId)
         internal
         pure
-        returns (address _bus, bool _isTestnet)
+        returns (address _messageBus, bool _isTestnet)
     {
         if (_chainId == 1)
             // ethereum
@@ -208,19 +226,35 @@ contract BaseEndpoint {
  */
 contract Endpoint is BaseEndpoint {
     constructor(address _host, bytes32 _hostChain)
-        BaseEndpoint(_host, _chainName2ChainId(_hostChain), _getBus(), false)
+        BaseEndpoint(
+            _host,
+            _chainName2ChainId(_hostChain),
+            _getBus(_host, _hostChain),
+            false
+        )
     {} // solhint-disable-line no-empty-blocks
 
-    function _getBus() internal view returns (address) {
-        (address bus, ) = _getChainConfig(block.chainid);
-        return bus;
+    function _getBus(address _host, bytes32 _hostChain)
+        internal
+        view
+        returns (address)
+    {
+        if (_hostChain == "local") return _host;
+        (address messageBus, ) = _getChainConfig(block.chainid);
+        return messageBus;
     }
 
+    /**
+     * @dev Autoswitch automatically picks the remote network based on the network the contract on which the contract has already been deployed.
+     * @dev When on testnet, the remote chain will be the testnet version of the provided chain.
+     * @dev When running locally, the remote chain will be this one and the contracts will call each other without going through a message bus. This is helpful for debugging logic but does not test gas fee payment and other moving parts.
+     */
     function autoswitch(bytes32 protocol)
         internal
         view
         returns (bytes32 networkName)
     {
+        if (block.chainid == 1337 || block.chainid == 31337) return "local";
         (, bool isTestnet) = _getChainConfig(block.chainid);
         if (isTestnet) {
             if (protocol == "ethereum") return "goerli";

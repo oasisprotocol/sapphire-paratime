@@ -14,4 +14,9 @@ contract Enclave is Endpoint, ERC2771Context {
         Endpoint(_host, _hostChain)
         ERC2771Context(block.chainid == 0x5aff ? address(0) : address(1))
     {} // solhint-disable-line no-empty-blocks
+
+    function _msgSender() internal view override returns (address) {
+        if (msg.sender != messageBus) return ERC2771Context._msgSender();
+        return address(bytes20(msg.data[36:56])); // [bytes4 epsel, uint seq, address actor, data]
+    }
 }
