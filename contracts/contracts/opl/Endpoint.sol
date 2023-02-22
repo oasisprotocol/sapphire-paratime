@@ -163,6 +163,7 @@ contract BaseEndpoint {
         return 0;
     }
 
+    /// Configs from https://im-docs.celer.network/developer/contract-addresses-and-rpc-info.
     function _getChainConfig(uint256 _chainId)
         internal
         pure

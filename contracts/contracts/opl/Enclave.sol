@@ -12,7 +12,7 @@ import "./Endpoint.sol";
 contract Enclave is Endpoint, ERC2771Context {
     constructor(address _host, bytes32 _hostChain)
         Endpoint(_host, _hostChain)
-        ERC2771Context(block.chainid == 0x5aff ? address(0) : address(1))
+        ERC2771Context(block.chainid == 0x5aff ? address(0) : address(0)) // TODO: insert gsn deployment
     {} // solhint-disable-line no-empty-blocks
 
     function _msgSender() internal view override returns (address) {
