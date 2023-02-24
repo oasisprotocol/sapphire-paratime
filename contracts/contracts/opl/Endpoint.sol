@@ -145,12 +145,7 @@ contract BaseEndpoint is Context {
     {
         uint256 feeBase = ICelerMessageBus(messageBus).feeBase();
         uint256 feePerByte = ICelerMessageBus(messageBus).feePerByte();
-        return
-            feeBase +
-            (_message.length +
-                32 + /* seq */
-                4) * /* epsel */
-            feePerByte;
+        return feeBase + (_message.length + 32 + 4) * feePerByte; // 32 is seq#, 4 is epsel
     }
 
     function _msgActor() internal view returns (address) {
@@ -175,6 +170,8 @@ contract Endpoint is BaseEndpoint {
         )
     {} // solhint-disable-line no-empty-blocks
 }
+
+/* solhint-disable func-visibility */
 
 /**
  * @dev Autoswitch automatically picks the remote network based on the network the contract on which the contract has already been deployed.
@@ -223,9 +220,10 @@ function _chainName2ChainId(bytes32 name) pure returns (uint256) {
     if (name == "fantom") return 0xfa;
     if (name == "fantom-testnet") return 0xfa2;
     if (name == "moonriver") return 0x505;
+    if (name == "sapphire") return 0x5afe;
     if (name == "sapphire-testnet") return 0x5aff;
-    if (name == "arbitrum-one") return 1;
-    if (name == "arbitrum-nova") return 1;
+    if (name == "arbitrum-one") return 0xa4b1;
+    if (name == "arbitrum-nova") return 0xa4ba;
     if (name == "sapphire") return 0x5afe;
     if (name == "polygon-mumbai") return 80001;
     if (name == "avalanche") return 43114;
@@ -266,6 +264,9 @@ function _getChainConfig(uint256 _chainId)
     if (_chainId == 0x505)
         // moonriver
         return (0x940dAAbA3F713abFabD79CdD991466fe698CBe54, false);
+    if (_chainId == 0x5afe)
+        // sapphire
+        return (address(0), false); // TODO: insert address once deployed
     if (_chainId == 0x5aff)
         // sapphire testnet
         return (0x9Bb46D5100d2Db4608112026951c9C965b233f4D, true);
