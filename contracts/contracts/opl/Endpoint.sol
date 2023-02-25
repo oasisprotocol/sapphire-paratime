@@ -17,6 +17,10 @@ error MissingRemoteAddr();
 error MissingRemoteChainId();
 /// Calls to contracts on the same chain are not allowed unless on a local testnet.
 error SelfCallDisallowed();
+/// The requested endpoint does not exist.
+error UnknownEndpoint();
+/// Receiving endpoint did not return successfully.
+error ReceiverError();
 
 /// The outcome of the message call.
 enum Result {
@@ -85,30 +89,32 @@ contract BaseEndpoint is Context {
 
     function postMessage(bytes memory _method, bytes memory _message) internal {
         uint256 fee = estimateFee(_message);
-        bytes memory envelope = abi.encodeWithSelector(
+        bytes memory envelope = abi.encodePacked(
             bytes4(keccak256(_method)),
             txSeq,
             _msgActor(),
             _message
         );
-        if (messageBus == remote && block.chainid == remoteChainId) {
-            // We're likely on a local network, so call the contract directly.
-            BaseEndpoint(messageBus).executeMessage(
+        if (_isLocalNetwork()) {
+            uint256 celerStatus = BaseEndpoint(messageBus).executeMessage(
                 address(this), // sender
                 uint64(block.chainid),
                 envelope,
                 address(this) // executor
             );
-            payable(0).transfer(fee); // burn the fee, for fidelity
+            if (celerStatus != 1) revert ReceiverError();
+            if (fee > 0) payable(0).transfer(fee); // burn the fee, for fidelity
+        } else {
+            ICelerMessageBus(messageBus).sendMessage{value: fee}(
+                remote,
+                remoteChainId,
+                envelope
+            );
         }
-        ICelerMessageBus(messageBus).sendMessage{value: fee}(
-            remote,
-            remoteChainId,
-            envelope
-        );
         ++txSeq;
     }
 
+    /// Celer message bus callback function.
     function executeMessage(
         address _sender,
         uint64 _senderChainId,
@@ -126,12 +132,11 @@ contract BaseEndpoint is Context {
             ++rxSeq;
         }
         function(bytes calldata) returns (Result) ep = endpoints[epSel];
-        bool epExists;
+        bool epMissing;
         assembly ("memory-safe") {
-            epExists := not(iszero(ep))
+            epMissing := iszero(ep)
         }
-        Result result = Result.PermanentFailure;
-        if (epExists) result = endpoints[epSel](message);
+        Result result = endpoints[epSel](message);
         // Convert the Result to a Celer ExecutionStatus.
         if (result == Result.TransientFailure) return 2; // ExecutionStatus.Retry
         if (result == Result.Success) return 1; // ExecutionStatus.Success
@@ -143,6 +148,7 @@ contract BaseEndpoint is Context {
         view
         returns (uint256)
     {
+        if (_isLocalNetwork()) return 0;
         uint256 feeBase = ICelerMessageBus(messageBus).feeBase();
         uint256 feePerByte = ICelerMessageBus(messageBus).feePerByte();
         return feeBase + (_message.length + 32 + 4) * feePerByte; // 32 is seq#, 4 is epsel
@@ -153,6 +159,10 @@ contract BaseEndpoint is Context {
             msg.sender == messageBus
                 ? address(bytes20(msg.data[36:56]))
                 : _msgSender();
+    }
+
+    function _isLocalNetwork() internal view returns (bool) {
+        return messageBus == remote && block.chainid == remoteChainId;
     }
 }
 
