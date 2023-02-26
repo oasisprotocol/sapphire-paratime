@@ -65,12 +65,12 @@ contract BaseEndpoint is Context {
     ) {
         if (_remote == address(0)) revert MissingRemoteAddr();
         if (_remoteChainId == 0) revert MissingRemoteChainId();
-        if (_remoteChainId != block.chainid && _messageBus != remote)
-            revert SelfCallDisallowed();
         remote = _remote;
         remoteChainId = _remoteChainId;
         messageBus = _messageBus;
         inOrder = _inOrder;
+        if (!_isLocalNetwork() && _remoteChainId == block.chainid)
+            revert SelfCallDisallowed();
     }
 
     function registerEndpoint(
@@ -88,13 +88,13 @@ contract BaseEndpoint is Context {
     }
 
     function postMessage(bytes memory _method, bytes memory _message) internal {
-        uint256 fee = estimateFee(_message);
         bytes memory envelope = abi.encodePacked(
             bytes4(keccak256(_method)),
             txSeq,
             _msgActor(),
             _message
         );
+        uint256 fee = estimateFee(envelope.length);
         if (_isLocalNetwork()) {
             uint256 celerStatus = BaseEndpoint(messageBus).executeMessage(
                 address(this), // sender
@@ -143,15 +143,11 @@ contract BaseEndpoint is Context {
         return 0; // ExecutionStatus.Fail
     }
 
-    function estimateFee(bytes memory _message)
-        internal
-        view
-        returns (uint256)
-    {
+    function estimateFee(uint256 _msgLen) internal view returns (uint256) {
         if (_isLocalNetwork()) return 0;
         uint256 feeBase = ICelerMessageBus(messageBus).feeBase();
         uint256 feePerByte = ICelerMessageBus(messageBus).feePerByte();
-        return feeBase + (_message.length + 32 + 4) * feePerByte; // 32 is seq#, 4 is epsel
+        return feeBase + _msgLen * feePerByte;
     }
 
     function _msgActor() internal view returns (address) {
