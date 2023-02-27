@@ -91,7 +91,6 @@ contract BaseEndpoint is Context {
         bytes memory envelope = abi.encodePacked(
             bytes4(keccak256(_method)),
             txSeq,
-            _msgActor(),
             _message
         );
         uint256 fee = estimateFee(envelope.length);
@@ -126,7 +125,7 @@ contract BaseEndpoint is Context {
             revert NotRemoteEndpoint();
         bytes4 epSel = bytes4(_message[:4]);
         uint256 seq = uint256(bytes32(_message[4:36]));
-        bytes calldata message = _message[56:];
+        bytes calldata message = _message[36:];
         if (inOrder) {
             if (seq != rxSeq) revert WrongSeqNum(rxSeq, seq);
             ++rxSeq;
@@ -148,13 +147,6 @@ contract BaseEndpoint is Context {
         uint256 feeBase = ICelerMessageBus(messageBus).feeBase();
         uint256 feePerByte = ICelerMessageBus(messageBus).feePerByte();
         return feeBase + _msgLen * feePerByte;
-    }
-
-    function _msgActor() internal view returns (address) {
-        return
-            msg.sender == messageBus
-                ? address(bytes20(msg.data[36:56]))
-                : _msgSender();
     }
 
     function _isLocalNetwork() internal view returns (bool) {
