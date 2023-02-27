@@ -218,11 +218,10 @@ function _chainName2ChainId(bytes32 name) pure returns (uint256) {
     if (name == "fantom") return 0xfa;
     if (name == "fantom-testnet") return 0xfa2;
     if (name == "moonriver") return 0x505;
-    if (name == "sapphire") return 0x5afe;
-    if (name == "sapphire-testnet") return 0x5aff;
     if (name == "arbitrum-one") return 0xa4b1;
     if (name == "arbitrum-nova") return 0xa4ba;
     if (name == "sapphire") return 0x5afe;
+    if (name == "sapphire-testnet") return 0x5aff;
     if (name == "polygon-mumbai") return 80001;
     if (name == "avalanche") return 43114;
     if (name == "avalanche-fuji") return 43313;
@@ -264,7 +263,7 @@ function _getChainConfig(uint256 _chainId)
         return (0x940dAAbA3F713abFabD79CdD991466fe698CBe54, false);
     if (_chainId == 0x5afe)
         // sapphire
-        return (address(0), false); // TODO: insert address once deployed
+        return (0x9Bb46D5100d2Db4608112026951c9C965b233f4D, false);
     if (_chainId == 0x5aff)
         // sapphire testnet
         return (0x9Bb46D5100d2Db4608112026951c9C965b233f4D, true);
