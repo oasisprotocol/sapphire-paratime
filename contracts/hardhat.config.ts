@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
         : [],
     },
     'sapphire-mainnet': {
-      url: 'https://sapphire.oasis.dev',
+      url: 'https://sapphire.oasis.io',
       chainId: 0x5afe,
       accounts: process.env.SAPPHIRE_MAINNET_PRIVATE_KEY
         ? [process.env.SAPPHIRE_MAINNET_PRIVATE_KEY]
