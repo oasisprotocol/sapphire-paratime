@@ -132,7 +132,8 @@ contract BaseEndpoint is Context {
         }
         function(bytes calldata) returns (Result) ep = endpoints[epSel];
         bool epMissing;
-        assembly ("memory-safe") {
+        /// @solidity memory-safe-assembly
+        assembly {
             epMissing := iszero(ep)
         }
         Result result = endpoints[epSel](message);
