@@ -26,7 +26,7 @@ jobs:
         id: build-1
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
-          image: oasisprotocol/runtime-builder:main
+          image: ghcr.io/oasisprotocol/runtime-builder:main
           dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime
 
@@ -34,7 +34,7 @@ jobs:
         id: build-2
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
-          image: oasisprotocol/runtime-builder:main
+          image: ghcr.io/oasisprotocol/runtime-builder:main
           dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime
 
@@ -54,7 +54,7 @@ jobs:
         id: build-1
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
-          image: oasisprotocol/runtime-builder:main
+          image: ghcr.io/oasisprotocol/runtime-builder:main
           dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime.sgxs
           sgx: yes
@@ -63,7 +63,7 @@ jobs:
         id: build-2
         uses: oasisprotocol/oasis-sdk/.github/actions/hash-rust@main
         with:
-          image: oasisprotocol/runtime-builder:main
+          image: ghcr.io/oasisprotocol/runtime-builder:main
           dir: ${{ github.workspace }}/runtime
           binaries: sapphire-paratime.sgxs
           sgx: yes
