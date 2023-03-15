@@ -11,8 +11,8 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       confidential: true,
-    }
-  }
+    },
+  },
 };
 
 export default config;

@@ -26,7 +26,7 @@
     "test": "mocha --exit --recursive 'test/**/*.test.ts'"
   },
   "dependencies": {
-    "@oasislabs/hardhat": "link:/Users/nhynes/Projects/oasis-hardhat/packages/hardhat-core",
+    "@oasislabs/hardhat": "^2.12.3",
     "@oasisprotocol/sapphire-paratime": "workspace:^"
   },
   "devDependencies": {
