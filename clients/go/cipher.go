@@ -31,9 +31,9 @@ var (
 )
 
 type CallResult struct {
-	Fail    *Failure `json:"failure,omitempty"`
-	OK      []byte   `json:"ok,omitempty"`
-	Unknown *Unknown `json:"unknown,omitempty"`
+	Fail    *Failure      `json:"failure,omitempty"`
+	OK      []byte        `json:"ok,omitempty"`
+	Unknown *AeadEnvelope `json:"unknown,omitempty"`
 }
 
 type Inner struct {
@@ -47,7 +47,7 @@ type Failure struct {
 	Message string `json:"message,omitempty"`
 }
 
-type Unknown struct {
+type AeadEnvelope struct {
 	Nonce []byte `json:"nonce"`
 	Data  []byte `json:"data"`
 }
@@ -213,35 +213,38 @@ func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error)
 		return nil, ErrCallFailed
 	}
 
-	if callResult.Unknown != nil {
-		decrypted, err := c.Decrypt(callResult.Unknown.Nonce, callResult.Unknown.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		var innerResult Inner
-		cbor.MustUnmarshal(decrypted, &innerResult)
-
-		if innerResult.OK != nil {
-			return innerResult.OK, nil
-		}
-
-		if innerResult.Fail != nil {
-			msg := innerResult.Fail.Message
-			if len(msg) == 0 {
-				msg = fmt.Sprintf("Call failed in module %s with code %d", innerResult.Fail.Module, innerResult.Fail.Code)
-			}
-			return nil, errors.New(msg)
-		}
-
-		return nil, errors.New("Unexpected inner call result:" + string(callResult.Unknown.Data))
-	}
-
+	var aeadEnvelope AeadEnvelope
 	if callResult.OK != nil {
-		return callResult.OK, nil
+		if err := cbor.Unmarshal(callResult.OK, &aeadEnvelope); err != nil {
+			return callResult.OK, nil
+		}
+	} else if callResult.Unknown != nil {
+		aeadEnvelope = *callResult.Unknown
+	} else {
+		return nil, ErrCallResultDecode
 	}
 
-	return nil, ErrCallResultDecode
+	decrypted, err := c.Decrypt(aeadEnvelope.Nonce, aeadEnvelope.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	var innerResult Inner
+	cbor.MustUnmarshal(decrypted, &innerResult)
+
+	if innerResult.OK != nil {
+		return innerResult.OK, nil
+	}
+
+	if innerResult.Fail != nil {
+		msg := innerResult.Fail.Message
+		if len(msg) == 0 {
+			msg = fmt.Sprintf("Call failed in module %s with code %d", innerResult.Fail.Module, innerResult.Fail.Code)
+		}
+		return nil, errors.New(msg)
+	}
+
+	return nil, errors.New("Unexpected inner call result:" + string(callResult.Unknown.Data))
 }
 
 func (c X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {

@@ -150,7 +150,16 @@ func TestDeoxysIICipher(t *testing.T) {
 		t.Fatalf("decrypt failed: %v", err)
 	}
 
-	data, err := cipher.DecryptCallResult(decrypted)
+	data, err := cipher.DecryptCallResult(decrypted) // A plaintext `OK` gets returned.
+	if err != nil {
+		t.Fatalf("call result parsing failed: %v", err)
+	}
+
+	if string(data) != string(TestData) {
+		t.Fatalf("decrypt failed: %v", decrypted)
+	}
+
+	data, err = cipher.DecryptCallResult(encrypted) // An encrypted `OK` gets decrypted, decoded, then returned.
 	if err != nil {
 		t.Fatalf("call result parsing failed: %v", err)
 	}
