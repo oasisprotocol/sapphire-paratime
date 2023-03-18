@@ -31,10 +31,11 @@ export type Envelope = {
       };
 };
 
+type AeadEnvelope = { nonce: Uint8Array; data: Uint8Array };
 export type CallResult = {
-  ok?: string | Uint8Array;
+  ok?: string | Uint8Array | AeadEnvelope;
   fail?: CallFailure;
-  unknown?: { nonce: Uint8Array; data: Uint8Array };
+  unknown?: AeadEnvelope;
 };
 export type CallFailure = { module: string; code: number; message?: string };
 
@@ -75,7 +76,7 @@ export abstract class Cipher {
 
   protected async encryptCallData(
     plaintext: Uint8Array,
-  ): Promise<{ data: Uint8Array; nonce: Uint8Array }> {
+  ): Promise<AeadEnvelope> {
     const body = cbor.encode({ body: plaintext });
     const { ciphertext: data, nonce } = await this.encrypt(body);
     return { data, nonce };
@@ -100,10 +101,15 @@ export abstract class Cipher {
    * @hidden Encrypts a CallResult in the same way as would be returned by the runtime.
    * This method is not part of the SemVer interface and may be subject to change.
    */
-  public async encryptCallResult(result: CallResult): Promise<Uint8Array> {
+  public async encryptCallResult(
+    result: CallResult,
+    reportUnknown = false,
+  ): Promise<Uint8Array> {
+    if (result.fail) return cbor.encode(result);
     const encodedResult = cbor.encode(result);
     const { ciphertext, nonce } = await this.encrypt(encodedResult);
-    return cbor.encode({ unknown: { nonce, data: ciphertext } });
+    const prop = reportUnknown ? 'unknown' : 'ok';
+    return cbor.encode({ [prop]: { nonce, data: ciphertext } });
   }
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
@@ -119,21 +125,17 @@ export abstract class Cipher {
       if (fail.message) return fail.message;
       return `Call failed in module '${fail.module}' with code '${fail.code}'`;
     }
-    if (res.ok) return arrayify(res.ok);
-    if (res.fail) throw new CallError(formatFailure(res.fail), fail);
-    if (res.unknown) {
-      const inner = cbor.decode(
-        await this.decrypt(res.unknown.nonce, res.unknown.data),
-      );
-      if (inner.ok) return arrayify(inner.ok);
-      if (inner.fail)
-        throw new CallError(formatFailure(inner.fail), inner.fail);
-      throw new CallError(
-        `Unexpected inner call result: ${JSON.stringify(inner)}`,
-        inner,
-      );
-    }
-    throw new CallError(`Unexpected call result: ${JSON.stringify(res)}`, res);
+    if (res.fail) throw new CallError(formatFailure(res.fail), res.fail);
+    if (res.ok && (typeof res.ok === 'string' || res.ok instanceof Uint8Array))
+      return arrayify(res.ok);
+    const { nonce, data } = (res.ok as AeadEnvelope) ?? res.unknown;
+    const inner = cbor.decode(await this.decrypt(nonce, data));
+    if (inner.ok) return arrayify(inner.ok);
+    if (inner.fail) throw new CallError(formatFailure(inner.fail), inner.fail);
+    throw new CallError(
+      `Unexpected inner call result: ${JSON.stringify(inner)}`,
+      inner,
+    );
   }
 }
 
