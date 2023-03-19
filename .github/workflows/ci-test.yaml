@@ -113,6 +113,69 @@ jobs:
       - name: Test JS client
         run: pnpm test
 
+  test-integration-hardhat:
+    name: test-integration-hardhat
+    runs-on: ubuntu-latest
+    needs: [test-client-js]
+    defaults:
+      run:
+        working-directory: ./integrations/hardhat
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: pnpm/action-setup@v2.2.4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Download client-js build
+        uses: actions/download-artifact@v3
+        with:
+          name: client-js
+          path: clients/js/lib
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Build Integration Hardhat
+        run: pnpm build
+
+      - name: Upload integration-hardhat build
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-hardhat
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            integrations/hardhat/dist
+
+      - name: Test Integration Hardhat
+        run: pnpm test
+
+        
   test-client-go:
     name: test-client-go
     runs-on: ubuntu-latest
@@ -133,7 +196,7 @@ jobs:
   test-examples:
     name: test-examples
     runs-on: ubuntu-latest
-    needs: [test-client-js]
+    needs: [test-client-js, test-integration-hardhat]
     strategy:
       matrix:
         example: [hardhat, hardhat-boilerplate, truffle]
@@ -176,6 +239,12 @@ jobs:
           name: client-js
           path: clients/js/lib
 
+      - name: Download integration-hardhat build
+        uses: actions/download-artifact@v3
+        with:
+          name: integration-hardhat
+          path: integrations/hardhat/dist
+          
       - name: Install dependencies
         run: |
           pnpm install

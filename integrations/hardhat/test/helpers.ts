@@ -18,7 +18,7 @@ export function useEnvironment(fixtureProjectName: string) {
         path.join(__dirname, 'fixture-projects', fixtureProjectName),
       );
 
-      this.hre = require('hardhat');
+      this.hre = require('@oasislabs/hardhat');
       await this.hre.run('compile', { quiet: true });
     },
   );
