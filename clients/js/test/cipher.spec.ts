@@ -100,8 +100,21 @@ describe('X25519DeoxysII', () => {
 
   it('encryptCallResult', async () => {
     const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
-    const res = await cipher.encryptCallResult({ ok: DATA });
+    let res = await cipher.encryptCallResult({ ok: DATA });
     expect(await cipher.decryptCallResult(cbor.decode(res))).toEqual(DATA);
+
+    res = await cipher.encryptCallResult(
+      { ok: DATA },
+      true /* report unknown */,
+    );
+    expect(await cipher.decryptCallResult(cbor.decode(res))).toEqual(DATA);
+
+    res = await cipher.encryptCallResult({
+      fail: { module: 'test', code: -1, message: 'out of gas' },
+    });
+    await expect(cipher.decryptCallResult(cbor.decode(res))).rejects.toThrow(
+      'out of gas',
+    );
   });
 });
 
