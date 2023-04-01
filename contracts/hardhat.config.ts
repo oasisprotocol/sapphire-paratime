@@ -1,10 +1,36 @@
-import { HardhatUserConfig } from 'hardhat/config';
+import { HardhatUserConfig, task } from 'hardhat/config';
 
 import '@oasisprotocol/sapphire-hardhat';
 import '@typechain/hardhat';
 import '@nomicfoundation/hardhat-chai-matchers';
 import 'hardhat-watcher';
 import 'solidity-coverage';
+
+task('wrap-rose', 'Wrap some ROSE.')
+  .addParam('wroseAddr')
+  .addParam('amount')
+  .setAction(async (args, hre) => {
+    const ethers = hre.ethers;
+    const WrappedROSE = await ethers.getContractFactory('WrappedROSE');
+    const wrose = WrappedROSE.attach(args.wroseAddr);
+    const value = ethers.utils.parseEther(args.amount);
+    const tx = await wrose.deposit({ value });
+    console.log(tx.hash);
+    await tx.wait();
+  });
+
+task('send-wrose', 'Transfer some wROSE')
+  .addParam('wroseAddr')
+  .addParam('recipient')
+  .addParam('amount')
+  .setAction(async (args, hre) => {
+    const ethers = hre.ethers;
+    const WrappedROSE = await ethers.getContractFactory('WrappedROSE');
+    const wrose = WrappedROSE.attach(args.wroseAddr);
+    const tx = await wrose.transfer(args.recipient, args.amount);
+    console.log(tx.hash);
+    await tx.wait();
+  });
 
 const config: HardhatUserConfig = {
   solidity: {
