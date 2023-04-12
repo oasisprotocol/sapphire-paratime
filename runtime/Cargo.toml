@@ -14,7 +14,7 @@ runtime-id = "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
 [package.metadata.fortanix-sgx]
 heap-size = 268435456 # 256 MiB
 stack-size = 2097152
-threads = 6
+threads = 8
 debug = false
 
 [dependencies]
