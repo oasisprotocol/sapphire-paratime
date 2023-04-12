@@ -2757,7 +2757,7 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "0.5.0-testnet"
+version = "0.5.1-testnet"
 dependencies = [
  "keymanager",
  "oasis-runtime-sdk",
