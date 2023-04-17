@@ -49,6 +49,9 @@ impl modules::core::Config for Config {
     /// Methods which are exempt from minimum gas price requirements.
     const MIN_GAS_PRICE_EXEMPT_METHODS: Lazy<BTreeSet<&'static str>> =
         Lazy::new(|| ["consensus.Deposit"].into());
+
+    /// Default local estimate gas amount to be added to failed transaction simulations.
+    const DEFAULT_LOCAL_ESTIMATE_GAS_EXTRA_FAIL: u64 = 5_000_000;
 }
 
 impl module_evm::Config for Config {
@@ -118,8 +121,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 14444535,
-                hash: "362313a5486ab5819dbfd05fff7e47286a77f9be601174f14f3d32ee8421bd66".into(),
+                height: 14975369,
+                hash: "3c6dd897249e9c84b210e6b81071bd9da89610eebf403bb047aa69aa9a657a95".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
