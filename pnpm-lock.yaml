@@ -12,13 +12,13 @@ importers:
       '@ethersproject/providers': ^5.7.1
       '@ethersproject/rlp': ^5.7.0
       '@ethersproject/transactions': ^5.7.0
+      '@oasisprotocol/deoxysii': ^0.0.5
       '@types/jest': ^28.1.8
       '@types/node': ^18.7.18
       '@types/node-fetch': ^2.6.2
       '@typescript-eslint/eslint-plugin': ^5.38.0
       '@typescript-eslint/parser': ^5.38.0
       cborg: ^1.9.5
-      deoxysii: ^0.0.2
       eslint: ^8.23.1
       eslint-config-prettier: ^8.5.0
       ethers: ^5.7.1
@@ -41,8 +41,8 @@ importers:
       '@ethersproject/providers': 5.7.2
       '@ethersproject/rlp': 5.7.0
       '@ethersproject/transactions': 5.7.0
+      '@oasisprotocol/deoxysii': 0.0.5
       cborg: 1.9.5
-      deoxysii: 0.0.2
       js-sha512: 0.8.0
       tweetnacl: 1.0.3
       type-fest: 2.19.0
@@ -3450,6 +3450,13 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
+    dev: false
+
+  /@oasisprotocol/deoxysii/0.0.5:
+    resolution: {integrity: sha512-a6wYPjk8ALDIiQW/971AKOTSTY1qSdld+Y05F44gVZvlb3FOyHfgbIxXm7CZnUG1A+jK49g5SCWYP+V3/Tc75Q==}
+    dependencies:
+      bsaes: 0.0.2
+      uint32: 0.2.1
     dev: false
 
   /@oasisprotocol/sapphire-paratime/1.0.14:

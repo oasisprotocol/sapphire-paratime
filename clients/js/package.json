@@ -50,8 +50,8 @@
     "@ethersproject/providers": "^5.7.1",
     "@ethersproject/rlp": "^5.7.0",
     "@ethersproject/transactions": "^5.7.0",
+    "@oasisprotocol/deoxysii": "^0.0.5",
     "cborg": "^1.9.5",
-    "deoxysii": "^0.0.2",
     "js-sha512": "^0.8.0",
     "tweetnacl": "^1.0.3",
     "type-fest": "^2.19.0"

@@ -5,8 +5,7 @@ import {
   isBytesLike,
 } from '@ethersproject/bytes';
 import * as cbor from 'cborg';
-// @ts-expect-error missing declaration
-import deoxysii from 'deoxysii';
+import deoxysii from '@oasisprotocol/deoxysii';
 import { IncomingMessage } from 'http';
 import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
