@@ -1,7 +1,6 @@
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import * as cbor from 'cborg';
-// @ts-expect-error missing declaration
-import { TagSize } from 'deoxysii';
+import { TagSize } from '@oasisprotocol/deoxysii';
 import nock from 'nock';
 import fetchImpl from 'node-fetch';
 import nacl from 'tweetnacl';
