@@ -1,6 +1,6 @@
 [package]
 name = "sapphire-paratime"
-version = "0.5.1-testnet"
+version = "0.5.2-testnet"
 authors = ["Oasis Protocol Foundation <info@oasisprotocol.org>"]
 edition = "2021"
 license = "Apache-2.0"
