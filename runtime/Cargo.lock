@@ -2106,7 +2106,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.5.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.5.0#cd7ea90268c754dd672f7c1b95a4e337be66ef86"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.6.0#ca293cbb21480929ae6ab71808e2cdd9565ede2b"
 dependencies = [
  "anyhow",
  "base64",
@@ -2142,7 +2142,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.4.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.5.0#cd7ea90268c754dd672f7c1b95a4e337be66ef86"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.6.0#ca293cbb21480929ae6ab71808e2cdd9565ede2b"
 dependencies = [
  "anyhow",
  "base64",
@@ -2172,7 +2172,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.5.0#cd7ea90268c754dd672f7c1b95a4e337be66ef86"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.6.0#ca293cbb21480929ae6ab71808e2cdd9565ede2b"
 dependencies = [
  "darling",
  "proc-macro2 1.0.56",

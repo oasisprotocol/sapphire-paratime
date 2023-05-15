@@ -50,8 +50,9 @@ impl modules::core::Config for Config {
     const MIN_GAS_PRICE_EXEMPT_METHODS: Lazy<BTreeSet<&'static str>> =
         Lazy::new(|| ["consensus.Deposit"].into());
 
-    /// Default local estimate gas amount to be added to failed transaction simulations.
-    const DEFAULT_LOCAL_ESTIMATE_GAS_EXTRA_FAIL: u64 = 5_000_000;
+    /// Estimated gas amount to be added to failed transaction simulations for selected methods.
+    const ESTIMATE_GAS_EXTRA_FAIL: Lazy<BTreeMap<&'static str, u64>> =
+        Lazy::new(|| [("evm.Create", 5_000_000), ("evm.Call", 5_000_000)].into());
 }
 
 impl module_evm::Config for Config {
