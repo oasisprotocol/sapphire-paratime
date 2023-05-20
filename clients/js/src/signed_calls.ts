@@ -25,7 +25,7 @@ const DEFAULT_BLOCK_RANGE = 4000;
 const DEFAULT_DATA = '0x';
 const zeroAddress = () => `0x${'0'.repeat(40)}`;
 
-class SignedCallCacheManager {
+class SignedCallCache {
   // for each signer, we cache the signature of the hash of each SignableCall
   private cachedSignatures = new Map<string, Map<string, Uint8Array>>();
   // for each ChainId, we cache the base block number to make the same leash
@@ -54,7 +54,7 @@ class SignedCallCacheManager {
     });
   }
 
-  public getSignatureCache(
+  public get(
     address: string,
     hash: string,
   ): Uint8Array | undefined {
@@ -66,7 +66,7 @@ class SignedCallCacheManager {
   }
 }
 
-const _cacheManager = new SignedCallCacheManager();
+const _cache = new SignedCallCache();
 
 export type Signer = Pick<
   EthersSigner,
@@ -167,7 +167,7 @@ async function makeLeash(
 ): Promise<Leash> {
   // simply invalidate signedCall caches if overrided nonce or block are provided
   if (overrides?.nonce !== undefined || overrides?.block !== undefined) {
-    _cacheManager.clear();
+    _cache.clear();
   }
 
   const nonceP = overrides?.nonce
@@ -187,7 +187,7 @@ async function makeLeash(
   // check wether we should use cached leashes
   if (overrides?.nonce === undefined && overrides?.block === undefined) {
     const chainId = await signer.getChainId();
-    const cachedLeash = _cacheManager.getLeash(chainId);
+    const cachedLeash = _cache.getLeash(chainId);
 
     if (cachedLeash !== undefined) {
       // this happens only if neither overried nonce nor block are provided
@@ -200,7 +200,7 @@ async function makeLeash(
         return cachedLeash;
       } else {
         // the cached leash has been outdated
-        _cacheManager.clear();
+        _cache.clear();
       }
     }
   }
@@ -243,10 +243,10 @@ async function signCall(
   const chainId = overrides?.chainId ?? (await signer.getChainId());
   const { domain, types } = signedCallEIP712Params(chainId);
   const hash = _TypedDataEncoder.hash(domain, types, call);
-  let signature = _cacheManager.getSignatureCache(address, hash);
+  let signature = _cache.get(address, hash);
   if (signature !== undefined) return signature;
   signature = arrayify(await signer._signTypedData(domain, types, call));
-  _cacheManager.cache(address, chainId, call, hash, signature);
+  _cache.cache(address, chainId, call, hash, signature);
   return signature;
 }
 
