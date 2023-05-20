@@ -170,7 +170,9 @@ async function makeLeash(
     _cacheManager.clear();
   }
 
-  const pendingNonceP = signer.getTransactionCount('pending');
+  const nonceP = overrides?.nonce
+    ? overrides.nonce
+    : signer.getTransactionCount('pending');
   let blockP: Promisable<BlockId>;
   if (overrides?.block !== undefined) {
     blockP = overrides.block;
@@ -179,32 +181,32 @@ async function makeLeash(
     const latestBlock = await signer.provider!.getBlock('latest');
     blockP = signer.provider!.getBlock(latestBlock.number - 2);
   }
-  const [pendingNonce, block] = await Promise.all([pendingNonceP, blockP]);
-
-  // check wether we should use cached leashes
-  const chainId = await signer.getChainId();
-  const cachedLeash = _cacheManager.getLeash(chainId);
+  const [nonce, block] = await Promise.all([nonceP, blockP]);
   const blockRange = overrides?.blockRange ?? DEFAULT_BLOCK_RANGE;
 
-  if (cachedLeash !== undefined) {
-    // this happens only if neither overried nonce nor block are provided
-    // so the pendingNonce and latestBlock are compared with the cachedLeash
-    if (
-      cachedLeash.nonce > pendingNonce &&
-      cachedLeash.block_number + blockRange > block.number + 2
-    ) {
-      // the cached leash can be still re-usable
-      return cachedLeash;
-    } else {
-      // the cached leash has been outdated
-      _cacheManager.clear();
+  // check wether we should use cached leashes
+  if (overrides?.nonce === undefined && overrides?.block === undefined) {
+    const chainId = await signer.getChainId();
+    const cachedLeash = _cacheManager.getLeash(chainId);
+
+    if (cachedLeash !== undefined) {
+      // this happens only if neither overried nonce nor block are provided
+      // so the pendingNonce and latestBlock are compared with the cachedLeash
+      if (
+        cachedLeash.nonce > nonce &&
+        cachedLeash.block_number + blockRange > block.number + 2
+      ) {
+        // the cached leash can be still re-usable
+        return cachedLeash;
+      } else {
+        // the cached leash has been outdated
+        _cacheManager.clear();
+      }
     }
   }
 
   return {
-    nonce: overrides?.nonce
-      ? overrides.nonce
-      : pendingNonce + DEFAULT_NONCE_RANGE,
+    nonce: overrides?.nonce ? overrides.nonce : nonce + DEFAULT_NONCE_RANGE,
     block_number: block.number,
     block_hash: arrayify(block.hash),
     block_range: blockRange,
