@@ -189,7 +189,6 @@ async function makeLeash(
   if (overrides?.nonce === undefined && overrides?.block === undefined) {
     const chainId = await signer.getChainId();
     const cachedLeash = _cache.getLeash(chainId);
-
     if (cachedLeash !== undefined) {
       // this happens only if neither overried nonce nor block are provided
       // so the pendingNonce and latestBlock are compared with the cachedLeash
@@ -212,6 +211,7 @@ async function makeLeash(
     block_hash: arrayify(block.hash),
     block_range: blockRange,
   };
+  
 }
 
 export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
