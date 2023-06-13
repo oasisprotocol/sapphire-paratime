@@ -87,7 +87,7 @@ contract BaseEndpoint is Context {
         return postMessage(_method, "");
     }
 
-    function postMessage(bytes memory _method, bytes memory _message) internal {
+    function postMessage(bytes memory _method, bytes memory _message) internal returns (uint256) {
         bytes memory envelope = abi.encodePacked(
             bytes4(keccak256(_method)),
             txSeq,
@@ -111,6 +111,7 @@ contract BaseEndpoint is Context {
             );
         }
         ++txSeq;
+        return fee;
     }
 
     /// Celer message bus callback function.
