@@ -54,10 +54,7 @@ class SignedCallCache {
     });
   }
 
-  public get(
-    address: string,
-    hash: string,
-  ): Uint8Array | undefined {
+  public get(address: string, hash: string): Uint8Array | undefined {
     return this.cachedSignatures.get(address)?.get(hash);
   }
 
@@ -65,7 +62,6 @@ class SignedCallCache {
     return this.cachedLeashes.get(chainId);
   }
 }
-
 
 const _cache = new SignedCallCache();
 
@@ -211,7 +207,6 @@ async function makeLeash(
     block_hash: arrayify(block.hash),
     block_range: blockRange,
   };
-  
 }
 
 export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
