@@ -87,7 +87,10 @@ contract BaseEndpoint is Context {
         return postMessage(_method, "");
     }
 
-    function postMessage(bytes memory _method, bytes memory _message) internal returns (uint256) {
+    function postMessage(bytes memory _method, bytes memory _message)
+        internal
+        returns (uint256)
+    {
         bytes memory envelope = abi.encodePacked(
             bytes4(keccak256(_method)),
             txSeq,
