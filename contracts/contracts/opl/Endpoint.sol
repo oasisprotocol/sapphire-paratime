@@ -87,6 +87,7 @@ contract BaseEndpoint is Context {
         return postMessage(_method, "");
     }
 
+    /// Calls the remote endpoint, returning the amount of native token charged for the operation.
     function postMessage(bytes memory _method, bytes memory _message)
         internal
         returns (uint256)
