@@ -23,6 +23,8 @@ library Sapphire {
     address private constant CURVE25519_PUBLIC_KEY =
         0x0100000000000000000000000000000000000008;
 
+    error Precompile_Not_Present();
+
     type Curve25519PublicKey is bytes32;
     type Curve25519SecretKey is bytes32;
 
@@ -61,6 +63,7 @@ library Sapphire {
             abi.encode(numBytes, pers)
         );
         require(success, "randomBytes: failed");
+        if(entropy.length != numBytes) revert Precompile_Not_Present();
         return entropy;
     }
 
