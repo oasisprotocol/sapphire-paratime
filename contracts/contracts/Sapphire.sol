@@ -175,7 +175,7 @@ library Sapphire {
      * @return signature The resulting signature.
      */
     function signDigest(
-        uint256 alg,
+        SigningAlg alg,
         bytes memory secretKey,
         bytes memory digest
     ) internal view returns (bytes memory signature) {
