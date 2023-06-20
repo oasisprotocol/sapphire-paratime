@@ -171,18 +171,24 @@ library Sapphire {
      * @dev Sign a message within the provided context using the specified algorithm, and return the signature.
      * @param alg The signing algorithm to use.
      * @param secretKey The secret key to use for signing. The key must be valid for use with the requested algorithm.
-     * @param digest The hash of the message to sign.
+     * @param contextOrHash Domain-Separator Context, or precomputed hash bytes
+     * @param message Message to sign, should be zero-length if precomputed hash given
      * @return signature The resulting signature.
+     * @custom:see oasis-sdk / confidential.rs / call_sign
      */
-    function signDigest(
+    function sign(
         SigningAlg alg,
         bytes memory secretKey,
-        bytes memory digest
-    ) internal view returns (bytes memory signature) {
+        bytes memory contextOrHash,
+        bytes memory message
+    )
+        internal view
+        returns (bytes memory signature)
+    {
         (bool success, bytes memory sig) = SIGN_DIGEST.staticcall(
-            abi.encode(alg, secretKey, digest)
+            abi.encode(alg, secretKey, contextOrHash, message)
         );
-        require(success, "signDigest: failed");
+        require(success, "sign: failed");
         return sig;
     }
 
@@ -190,20 +196,23 @@ library Sapphire {
      * @dev Verifies that the provided digest was signed with using the secret key corresponding to the provided private key and the specified signing algorithm.
      * @param alg The signing algorithm by which the signature was generated.
      * @param publicKey The public key against which to check the signature.
-     * @param digest The hash of the message that was signed.
+     * @param contextOrHash Domain-Separator Context, or precomputed hash bytes
+     * @param message The hash of the message that was signed, should be zero-length if precomputed hash was given
      * @param signature The signature to check.
      * @return verified Whether the signature is valid for the given parameters.
+     * @custom:see oasis-sdk / confidential.rs / call_verify
      */
-    function verifyDigestSignature(
+    function verify(
         SigningAlg alg,
         bytes memory publicKey,
-        bytes memory digest,
+        bytes memory contextOrHash,
+        bytes memory message,
         bytes memory signature
     ) internal view returns (bool verified) {
         (bool success, bytes memory v) = VERIFY_DIGEST.staticcall(
-            abi.encode(alg, publicKey, digest, signature)
+            abi.encode(alg, publicKey, contextOrHash, message, signature)
         );
-        require(success, "verifyDigestSignature: failed");
+        require(success, "verify: failed");
         return abi.decode(v, (bool));
     }
 }
