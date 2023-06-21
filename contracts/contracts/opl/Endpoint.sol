@@ -83,7 +83,10 @@ contract BaseEndpoint is Context {
         endpoints[bytes4(keccak256(_method))] = _cb;
     }
 
-    function postMessage(bytes memory _method) internal {
+    function postMessage(bytes memory _method)
+        internal
+        returns (uint256)
+    {
         return postMessage(_method, "");
     }
 
