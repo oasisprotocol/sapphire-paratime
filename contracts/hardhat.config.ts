@@ -65,6 +65,17 @@ const config: HardhatUserConfig = {
         ? [process.env.SAPPHIRE_MAINNET_PRIVATE_KEY]
         : [],
     },
+    'sapphire-dev-ci': {
+      url: 'http://sapphire-dev-ci:8545',
+      chainId: 0x5afd,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        path: "m/44'/60'/0'/0",
+        initialIndex: 0,
+        count: 20,
+        passphrase: "",
+      }
+    },
   },
   watcher: {
     compile: {
