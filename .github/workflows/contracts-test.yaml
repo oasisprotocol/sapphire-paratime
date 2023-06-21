@@ -13,6 +13,7 @@ on:
 jobs:
   hardhat-test:
     runs-on: ubuntu-latest
+    container: node:lts
     services:
       sapphire-dev-ci:
         image: ghcr.io/oasisprotocol/sapphire-dev:latest
