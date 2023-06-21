@@ -13,7 +13,6 @@ on:
 jobs:
   hardhat-test:
     runs-on: ubuntu-latest
-    container: node:lts
     services:
       sapphire-local-ci:
         image: ghcr.io/oasisprotocol/sapphire-dev:latest
@@ -27,13 +26,31 @@ jobs:
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
           --health-start-period=90s
     steps:
-      - name: install pnpm
-        run: npm install -g pnpm
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
-      - name: install dependencies
-        run: pnpm install --no-frozen-lockfile
-        working-directory: contracts
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - uses: pnpm/action-setup@v2.2.4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Install dependencies
+        run: pnpm --filter '@oasisprotocol/sapphire-*' install
       - name: hardhat test
         run: pnpm hardhat test --network sapphire_local_ci
         working-directory: contracts
