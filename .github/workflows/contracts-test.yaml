@@ -51,8 +51,9 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: pnpm --filter '@oasisprotocol/sapphire-*' install
-      - name: Build JS client
+      - name: Build hardhat integration
         run: pnpm build
+        working-directory: integrations/hardhat
       - name: hardhat test
         run: pnpm hardhat test --network sapphire_local_ci
         working-directory: contracts
