@@ -181,10 +181,7 @@ library Sapphire {
         bytes memory secretKey,
         bytes memory contextOrHash,
         bytes memory message
-    )
-        internal view
-        returns (bytes memory signature)
-    {
+    ) internal view returns (bytes memory signature) {
         (bool success, bytes memory sig) = SIGN_DIGEST.staticcall(
             abi.encode(alg, secretKey, contextOrHash, message)
         );

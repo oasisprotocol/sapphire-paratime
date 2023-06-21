@@ -69,12 +69,23 @@ const config: HardhatUserConfig = {
       url: 'http://sapphire-dev-ci:8545',
       chainId: 0x5afd,
       accounts: {
-        mnemonic: "test test test test test test test test test test test junk",
+        mnemonic: 'test test test test test test test test test test test junk',
         path: "m/44'/60'/0'/0",
         initialIndex: 0,
         count: 20,
-        passphrase: "",
-      }
+        passphrase: '',
+      },
+    },
+    'sapphire-dev': {
+      url: 'http://localhost:8545',
+      chainId: 0x5afd,
+      accounts: {
+        mnemonic: 'test test test test test test test test test test test junk',
+        path: "m/44'/60'/0'/0",
+        initialIndex: 0,
+        count: 20,
+        passphrase: '',
+      },
     },
   },
   watcher: {
