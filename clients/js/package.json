@@ -47,6 +47,7 @@
     "@ethersproject/address": "^5.7.0",
     "@ethersproject/bignumber": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/hash": "^5.7.0",
     "@ethersproject/providers": "^5.7.1",
     "@ethersproject/rlp": "^5.7.0",
     "@ethersproject/transactions": "^5.7.0",
