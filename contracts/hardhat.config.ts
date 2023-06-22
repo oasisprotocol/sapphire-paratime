@@ -7,7 +7,7 @@ import 'hardhat-watcher';
 import 'solidity-coverage';
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types';
 
-const TEST_HDWALLET : HardhatNetworkHDAccountsUserConfig = {
+const TEST_HDWALLET: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: 'test test test test test test test test test test test junk',
   path: "m/44'/60'/0'/0",
   initialIndex: 0,
@@ -77,12 +77,12 @@ const config: HardhatUserConfig = {
     'sapphire-dev-ci': {
       url: 'http://sapphire-dev-ci:8545',
       chainId: 0x5afd,
-      accounts: TEST_HDWALLET
+      accounts: TEST_HDWALLET,
     },
     'sapphire-dev': {
       url: 'http://localhost:8545',
       chainId: 0x5afd,
-      accounts: TEST_HDWALLET
+      accounts: TEST_HDWALLET,
     },
   },
   watcher: {
