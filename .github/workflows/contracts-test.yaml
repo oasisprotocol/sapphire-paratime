@@ -53,11 +53,11 @@ jobs:
       - name: Install dependencies
         run: pnpm --filter '@oasisprotocol/sapphire-*' install
       - name: Build JS client
-        run: pnpm build
         working-directory: clients/js
-      - name: Build hardhat integration
         run: pnpm build
+      - name: Build hardhat integration
         working-directory: integrations/hardhat
+        run: pnpm build
       - name: hardhat test
-        run: pnpm hardhat test --network sapphire-dev-ci
         working-directory: contracts
+        run: pnpm hardhat test --network sapphire-dev-ci
