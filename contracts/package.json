@@ -15,7 +15,7 @@
     "lint": "npm-run-all lint:**",
     "format:eslint": "eslint --fix --ignore-path .gitignore --ext .ts",
     "format:solhint": "solhint --fix 'contracts/**/*.sol'",
-    "format::prettier": "prettier --cache --write --plugin-search-dir=. --cache '*.json' '**/*.ts' '**/*.sol'",
+    "format::prettier": "prettier --write --plugin-search-dir=. '*.json' '**/*.ts' '**/*.sol'",
     "format": "npm-run-all format:**",
     "build": "hardhat compile",
     "test": "hardhat test"

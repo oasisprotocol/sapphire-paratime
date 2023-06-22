@@ -4,55 +4,100 @@ import { randomBytes } from 'crypto';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { SigningTests__factory } from "../typechain-types/factories/contracts/tests"
+import { SigningTests__factory } from '../typechain-types/factories/contracts/tests';
 import { SigningTests } from '../typechain-types/contracts/tests/SigningTests';
 
 async function testSignThenVerify(
   se: SigningTests,
-  alg:number,
-  keypair:{publicKey:string, secretKey:string},
-  ctx:Buffer,
-  msg:Buffer,
-  ctx_len?:number,
-  msg_len?:number
-)
-{
+  alg: number,
+  keypair: { publicKey: string; secretKey: string },
+  ctx: Buffer,
+  msg: Buffer,
+  ctx_len?: number,
+  msg_len?: number,
+) {
   const sig = await se.testSign(alg, keypair.secretKey, ctx, msg);
 
-  expect(await se.testVerify(alg, keypair.publicKey, ctx, msg, sig)).equal(true);
+  expect(await se.testVerify(alg, keypair.publicKey, ctx, msg, sig)).equal(
+    true,
+  );
 
   // If message is changed, signature will not be valid
-  if( msg.length != 0 ) {
-    expect(await se.testVerify(alg, keypair.publicKey, ctx, randomBytes(msg.length), sig)).equal(false);
+  if (msg.length != 0) {
+    expect(
+      await se.testVerify(
+        alg,
+        keypair.publicKey,
+        ctx,
+        randomBytes(msg.length),
+        sig,
+      ),
+    ).equal(false);
   }
 
   // If context is changed, signature will not be valid
-  if( ctx.length != 0 ) {
-    expect(await se.testVerify(alg, keypair.publicKey, randomBytes(ctx.length), msg, sig)).equal(false);
+  if (ctx.length != 0) {
+    expect(
+      await se.testVerify(
+        alg,
+        keypair.publicKey,
+        randomBytes(ctx.length),
+        msg,
+        sig,
+      ),
+    ).equal(false);
   }
 
-  if( ctx_len !== undefined ) {
-    if( ctx_len > 1 ) {
-      expect(se.testVerify(alg, keypair.publicKey, randomBytes(ctx_len-1), msg, sig)).to.be.reverted;
+  if (ctx_len !== undefined) {
+    if (ctx_len > 1) {
+      expect(
+        se.testVerify(
+          alg,
+          keypair.publicKey,
+          randomBytes(ctx_len - 1),
+          msg,
+          sig,
+        ),
+      ).to.be.reverted;
     }
-    expect(se.testVerify(alg, keypair.publicKey, randomBytes(ctx_len+1), msg, sig)).to.be.reverted;
+    expect(
+      se.testVerify(alg, keypair.publicKey, randomBytes(ctx_len + 1), msg, sig),
+    ).to.be.reverted;
   }
 
-  if( msg_len !== undefined ) {
-    if( msg_len > 1 ) {
-      expect(se.testVerify(alg, keypair.publicKey, ctx, randomBytes(msg_len-1), sig)).to.be.reverted;
+  if (msg_len !== undefined) {
+    if (msg_len > 1) {
+      expect(
+        se.testVerify(
+          alg,
+          keypair.publicKey,
+          ctx,
+          randomBytes(msg_len - 1),
+          sig,
+        ),
+      ).to.be.reverted;
     }
-    expect(se.testVerify(alg, keypair.publicKey, ctx, randomBytes(msg_len+1), sig)).to.be.reverted;
+    expect(
+      se.testVerify(alg, keypair.publicKey, ctx, randomBytes(msg_len + 1), sig),
+    ).to.be.reverted;
   }
 }
 
 const EMPTY_BUFFER = Buffer.from([]);
 
-const VARYING_SIZED_BUFFERS = [EMPTY_BUFFER, randomBytes(1), randomBytes(16), randomBytes(32), randomBytes(64)];
+const VARYING_SIZED_BUFFERS = [
+  EMPTY_BUFFER,
+  randomBytes(1),
+  randomBytes(16),
+  randomBytes(32),
+  randomBytes(64),
+];
 
 describe('Precompiles', function () {
   async function deploy() {
-    const factory = await ethers.getContractFactory("SigningTests") as SigningTests__factory;
+    const factory = (await ethers.getContractFactory(
+      'SigningTests',
+    )) as SigningTests__factory;
     const se = await factory.deploy();
 
     return { se };
@@ -79,7 +124,15 @@ describe('Precompiles', function () {
 
     // Try Ed25519 Prehashed SHA-512 (alg=2)
     const edp512_kp = await se.testKeygen(2, randomBytes(32));
-    await testSignThenVerify(se, 2, edp512_kp, randomBytes(64), EMPTY_BUFFER, 64, 0);
+    await testSignThenVerify(
+      se,
+      2,
+      edp512_kp,
+      randomBytes(64),
+      EMPTY_BUFFER,
+      64,
+      0,
+    );
 
     // Try Secp256k1 Oasis (alg=3)
     // Note: https://github.com/oasisprotocol/oasis-sdk/blob/ca630e7d48986bd102d7aa477a48f8966a3d1d23/runtime-sdk/src/crypto/signature/secp256k1.rs#L51
@@ -94,11 +147,27 @@ describe('Precompiles', function () {
     // Try Secp256k1 prehashed Keccak256 (alg=4)
     // 32 byte context, empty message
     const k256_kp = await se.testKeygen(4, randomBytes(32));
-    await testSignThenVerify(se, 4, k256_kp, randomBytes(32), EMPTY_BUFFER, 32, 0);
+    await testSignThenVerify(
+      se,
+      4,
+      k256_kp,
+      randomBytes(32),
+      EMPTY_BUFFER,
+      32,
+      0,
+    );
 
     // Try Secp256k1 prehashed SHA256 (alg=5)
     // 32 byte context, empty message
     const sha256_kp = await se.testKeygen(5, randomBytes(32));
-    await testSignThenVerify(se, 5, sha256_kp, randomBytes(32), EMPTY_BUFFER, 32, 0);
+    await testSignThenVerify(
+      se,
+      5,
+      sha256_kp,
+      randomBytes(32),
+      EMPTY_BUFFER,
+      32,
+      0,
+    );
   });
 });

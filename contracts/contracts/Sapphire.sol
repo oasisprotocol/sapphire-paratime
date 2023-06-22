@@ -174,7 +174,7 @@ library Sapphire {
      * @param contextOrHash Domain-Separator Context, or precomputed hash bytes
      * @param message Message to sign, should be zero-length if precomputed hash given
      * @return signature The resulting signature.
-     * @custom:see oasis-sdk / confidential.rs / call_sign
+     * @custom:see @oasisprotocol/oasis-sdk :: precompile/confidential.rs :: call_sign
      */
     function sign(
         SigningAlg alg,
@@ -197,7 +197,7 @@ library Sapphire {
      * @param message The hash of the message that was signed, should be zero-length if precomputed hash was given
      * @param signature The signature to check.
      * @return verified Whether the signature is valid for the given parameters.
-     * @custom:see oasis-sdk / confidential.rs / call_verify
+     * @custom:see @oasisprotocol/oasis-sdk :: precompile/confidential.rs :: call_verify
      */
     function verify(
         SigningAlg alg,
