@@ -203,9 +203,13 @@ jobs:
         truffle_version: [none, 5.8.2, 5.10.1]
         exclude:
           - example: hardhat
-            truffle_version: [5.8.2, 5.10.1]
+            truffle_version: 5.8.2
+          - example: hardhat
+            truffle_version: 5.10.1
           - example: hardhat-boilerplate
-            truffle_version: [5.8.2, 5.10.1]
+            truffle_version: 5.8.2
+          - example: hardhat-boilerplate
+            truffle_version: 5.10.1
           - example: truffle
             truffle_version: none
     defaults:
