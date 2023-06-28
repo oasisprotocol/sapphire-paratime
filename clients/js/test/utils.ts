@@ -1,5 +1,5 @@
 import * as cbor from 'cborg';
-import * as ethers from 'ethers';
+import { ethers } from 'ethers5';
 
 import {
   EthCall,

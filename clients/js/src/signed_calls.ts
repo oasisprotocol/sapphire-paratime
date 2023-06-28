@@ -1,19 +1,19 @@
 import { BlockTag, Provider } from '@ethersproject/abstract-provider';
 import {
-  Signer as EthersSigner,
+  Signer as Ethers5Signer,
   TypedDataDomain,
   TypedDataField,
   TypedDataSigner,
 } from '@ethersproject/abstract-signer';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { BytesLike, arrayify, hexlify } from '@ethersproject/bytes';
+import { BytesLike } from '@ethersproject/bytes';
 import * as cbor from 'cborg';
+import { ethers } from 'ethers6';
 import type {
   CamelCasedProperties,
   Promisable,
   RequireExactlyOne,
 } from 'type-fest';
-import { _TypedDataEncoder } from '@ethersproject/hash';
 
 import { Cipher, Envelope } from './cipher.js';
 
@@ -29,7 +29,7 @@ class SignedCallCache {
   // for each signer, we cache the signature of the hash of each SignableCall
   private cachedSignatures = new Map<string, Map<string, Uint8Array>>();
   // for each ChainId, we cache the base block number to make the same leash
-  private cachedLeashes = new Map<number, Leash>();
+  private cachedLeashes = new Map<bigint, Leash>();
 
   public clear() {
     this.cachedSignatures.clear();
@@ -38,7 +38,7 @@ class SignedCallCache {
 
   public cache(
     address: string,
-    chainId: number,
+    chainId: bigint,
     call: SignableEthCall,
     hash: string,
     signature: Uint8Array,
@@ -58,20 +58,23 @@ class SignedCallCache {
     return this.cachedSignatures.get(address)?.get(hash);
   }
 
-  public getLeash(chainId: number): Leash | undefined {
+  public getLeash(chainId: bigint): Leash | undefined {
     return this.cachedLeashes.get(chainId);
   }
 }
 
 const _cache = new SignedCallCache();
 
-export type Signer = Pick<
-  EthersSigner,
+/// @deprecated
+export type Signer = CallSigner;
+export type CallSigner = Ethers5CallSigner | ethers.Signer;
+
+export type Ethers5CallSigner = Pick<
+  Ethers5Signer,
   'getTransactionCount' | 'getChainId' | 'getAddress'
 > &
   TypedDataSigner & {
-    provider?: Pick<Provider, 'getBlock'>;
-    _checkProvider?: EthersSigner['_checkProvider'];
+    provider?: Pick<Provider, 'getBlock' | 'getNetwork'>;
   };
 
 export function signedCallEIP712Params(chainId: number): {
@@ -111,7 +114,7 @@ export function signedCallEIP712Params(chainId: number): {
 export class SignedCallDataPack {
   static async make<C extends EthCall>(
     call: C,
-    signer: Signer & TypedDataSigner,
+    signer: CallSigner,
     overrides?: PrepareSignedCallOverrides,
   ): Promise<SignedCallDataPack> {
     const leash = await makeLeash(signer, overrides?.leash);
@@ -120,7 +123,7 @@ export class SignedCallDataPack {
       await signCall(makeSignableCall(call, leash), signer, {
         chainId: overrides?.chainId,
       }),
-      call.data ? arrayify(call.data, { allowMissingPrefix: true }) : undefined,
+      call.data ? parseBytesLike(call.data) : undefined,
     );
   }
 
@@ -148,7 +151,7 @@ export class SignedCallDataPack {
   }
 
   #encode(data?: Envelope | { body: Uint8Array }): string {
-    return hexlify(
+    return ethers.hexlify(
       cbor.encode({
         data: data ? data : undefined,
         leash: this.leash,
@@ -158,8 +161,18 @@ export class SignedCallDataPack {
   }
 }
 
+function parseBytesLike(data: BytesLike): Uint8Array {
+  if (Array.isArray(data)) return new Uint8Array(data);
+  return ethers.getBytesCopy(data as 'string' | Uint8Array);
+}
+
+function stringifyBytesLike(data: BytesLike): string {
+  if (Array.isArray(data)) return ethers.hexlify(new Uint8Array(data));
+  return ethers.hexlify(data as 'string' | Uint8Array);
+}
+
 async function makeLeash(
-  signer: Signer & TypedDataSigner,
+  signer: CallSigner,
   overrides?: LeashOverrides,
 ): Promise<Leash> {
   // simply invalidate signedCall caches if overrided nonce or block are provided
@@ -169,22 +182,34 @@ async function makeLeash(
 
   const nonceP = overrides?.nonce
     ? overrides.nonce
+    : 'getNonce' in signer
+    ? signer.getNonce('pending')
     : signer.getTransactionCount('pending');
   let blockP: Promisable<BlockId>;
   if (overrides?.block !== undefined) {
     blockP = overrides.block;
   } else {
-    if (signer._checkProvider) signer._checkProvider('getBlock');
-    const latestBlock = await signer.provider!.getBlock('latest');
-    blockP = signer.provider!.getBlock(latestBlock.number - 2);
+    if (!signer.provider)
+      throw new Error(
+        '`sapphire.wrap`ped signer was not connected to a provider',
+      );
+    const latestBlock = await signer.provider.getBlock('latest');
+    if (!latestBlock) throw new Error('unable to get latest block');
+    blockP = signer.provider!.getBlock(
+      latestBlock.number - 2,
+    ) as Promise<BlockId>;
   }
   const [nonce, block] = await Promise.all([nonceP, blockP]);
   const blockRange = overrides?.blockRange ?? DEFAULT_BLOCK_RANGE;
 
   // check wether we should use cached leashes
   if (overrides?.nonce === undefined && overrides?.block === undefined) {
-    const chainId = await signer.getChainId();
-    const cachedLeash = _cache.getLeash(chainId);
+    if (!signer.provider)
+      throw new Error(
+        '`sapphire.wrap`ped signer was not connected to a provider',
+      );
+    const { chainId } = await signer.provider.getNetwork();
+    const cachedLeash = _cache.getLeash(BigInt(chainId));
     if (cachedLeash !== undefined) {
       // this happens only if neither overried nonce nor block are provided
       // so the pendingNonce and latestBlock are compared with the cachedLeash
@@ -204,7 +229,7 @@ async function makeLeash(
   return {
     nonce: overrides?.nonce ? overrides.nonce : nonce + DEFAULT_NONCE_RANGE,
     block_number: block.number,
-    block_hash: arrayify(block.hash),
+    block_hash: ethers.getBytesCopy(block.hash),
     block_range: blockRange,
   };
 }
@@ -218,9 +243,7 @@ export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
     ).toNumber(),
     gasPrice: BigNumber.from(call.gasPrice ?? DEFAULT_GAS_PRICE),
     value: BigNumber.from(call.value ?? DEFAULT_VALUE),
-    data: call.data
-      ? hexlify(call.data, { allowMissingPrefix: true })
-      : DEFAULT_DATA,
+    data: call.data ? stringifyBytesLike(call.data) : DEFAULT_DATA,
     leash: {
       nonce: leash.nonce,
       blockNumber: leash.block_number,
@@ -232,18 +255,68 @@ export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
 
 async function signCall(
   call: SignableEthCall,
-  signer: Signer & TypedDataSigner,
-  overrides?: Partial<{ chainId: number }>,
+  signer: CallSigner,
+  overrides?: Partial<{ chainId: number | bigint }>,
 ): Promise<Uint8Array> {
   const address = await signer.getAddress();
-  const chainId = overrides?.chainId ?? (await signer.getChainId());
-  const { domain, types } = signedCallEIP712Params(chainId);
-  const hash = _TypedDataEncoder.hash(domain, types, call);
+  let chainId: number | bigint;
+  if (overrides?.chainId) {
+    chainId = BigInt(overrides.chainId);
+  } else if (signer.provider) {
+    ({ chainId } = await signer.provider.getNetwork());
+  } else {
+    throw new Error(
+      'must either connect provider or provide manual chainId override',
+    );
+  }
+  const { domain, types } = signedCallEIP712Params(Number(chainId));
+  const upgradedDomain = upgradeDomain(domain);
+  const upgradedCall = upgradeCall(call);
+  const hash = ethers.TypedDataEncoder.hash(
+    upgradedDomain,
+    types,
+    upgradedCall,
+  );
   let signature = _cache.get(address, hash);
-  if (signature !== undefined) return signature;
-  signature = arrayify(await signer._signTypedData(domain, types, call));
-  _cache.cache(address, chainId, call, hash, signature);
+  // if (signature !== undefined) return signature;
+  if ('_signTypedData' in signer) {
+    signature = ethers.getBytes(
+      await signer._signTypedData(domain, types, call),
+    );
+  } else {
+    signature = ethers.getBytes(
+      await signer.signTypedData(upgradedDomain, types, upgradedCall),
+    );
+  }
+  _cache.cache(address, BigInt(chainId), call, hash, signature);
   return signature;
+}
+
+function upgradeDomain(domain: TypedDataDomain): ethers.TypedDataDomain {
+  return {
+    ...domain,
+    salt: domain.salt ? parseBytesLike(domain.salt) : undefined,
+    chainId: domain.chainId
+      ? BigNumber.from(domain.chainId).toHexString()
+      : undefined,
+  };
+}
+
+function upgradeCall(call: SignableEthCall) {
+  const big2int = (
+    b?: BigNumber | bigint | number | string,
+  ): string | undefined => {
+    if (b === undefined || b === null) return undefined;
+    if (typeof b === 'string') return b;
+    if (b instanceof BigNumber) return b.toHexString();
+    return ethers.toQuantity(b);
+  };
+  return {
+    ...call,
+    gasPrice: big2int(call.gasPrice),
+    value: big2int(call.value),
+    data: call.data ? ethers.getBytes(call.data) : undefined,
+  };
 }
 
 export type PrepareSignedCallOverrides = Partial<{

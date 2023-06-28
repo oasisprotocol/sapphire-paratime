@@ -1,5 +1,5 @@
 import { hexlify } from '@ethersproject/bytes';
-import { Wallet, BigNumber } from 'ethers';
+import { Wallet, BigNumber } from 'ethers5';
 
 import {
   PrepareSignedCallOverrides,
