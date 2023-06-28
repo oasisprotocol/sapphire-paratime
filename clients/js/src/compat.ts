@@ -512,9 +512,18 @@ export async function fetchRuntimePublicKey(
     // first opportunistically try `send` from the provider
     try {
       const source = provider as {
-        send: (method: string, params: any[] | ((err:any,ok?:any) => void)) => Promise<any>;
+        send: (
+          method: string,
+          params: any[] | ((err: any, ok?: any) => void),
+        ) => Promise<any>;
       };
-      const arg = 'engine' in provider ? (err:any,ok?:any)=>{} : [];
+      const arg =
+        'engine' in provider
+          ? // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            function (err: any, ok?: any) {
+              return;
+            }
+          : [];
       const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, arg);
       if (key) return arrayify(key);
     } catch {
