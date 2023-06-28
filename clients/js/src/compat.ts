@@ -512,9 +512,10 @@ export async function fetchRuntimePublicKey(
     // first opportunistically try `send` from the provider
     try {
       const source = provider as {
-        send: (method: string, params: any[]) => Promise<any>;
+        send: (method: string, params: any[] | ((err:any,ok?:any) => void)) => Promise<any>;
       };
-      const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+      const arg = 'engine' in provider && provider.engine ? (err:any,ok?:any)=>{} : [];
+      const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, arg);
       if (key) return arrayify(key);
     } catch {
       // don't do anything, move on to try chainId
