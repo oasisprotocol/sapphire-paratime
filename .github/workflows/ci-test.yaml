@@ -175,7 +175,7 @@ jobs:
       - name: Test Integration Hardhat
         run: pnpm test
 
-        
+
   test-client-go:
     name: test-client-go
     runs-on: ubuntu-latest
@@ -200,6 +200,18 @@ jobs:
     strategy:
       matrix:
         example: [hardhat, hardhat-boilerplate, truffle]
+        truffle_version: [none, 5.8.2, 5.10.1]
+        exclude:
+          - example: hardhat
+            truffle_version: 5.8.2
+          - example: hardhat
+            truffle_version: 5.10.1
+          - example: hardhat-boilerplate
+            truffle_version: 5.8.2
+          - example: hardhat-boilerplate
+            truffle_version: 5.10.1
+          - example: truffle
+            truffle_version: none
     defaults:
       run:
         working-directory: examples/${{ matrix.example }}
@@ -244,10 +256,15 @@ jobs:
         with:
           name: integration-hardhat
           path: integrations/hardhat/dist
-          
+
       - name: Install dependencies
         run: |
           pnpm install
+
+      - name: Update Truffle version
+        if: ${{ matrix.example == 'truffle' && matrix.truffle_version != 'none' }}
+        run: |
+          pnpm up truffle@${{matrix.truffle_version}}
 
       - name: Build
         run: |
