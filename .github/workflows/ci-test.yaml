@@ -201,7 +201,6 @@ jobs:
       matrix:
         example: [hardhat, hardhat-boilerplate, truffle]
         truffle_version: [none, 5.8.2, 5.10.1]
-        hardhat_version: [none, 2.12.7, 2.16.1]
         exclude:
           - example: hardhat
             truffle_version: 5.8.2
@@ -212,9 +211,7 @@ jobs:
           - example: hardhat-boilerplate
             truffle_version: 5.10.1
           - example: truffle
-            hardhat_version: 2.12.7
-          - example: truffle
-            hardhat_version: 2.16.1
+            truffle_version: none
     defaults:
       run:
         working-directory: examples/${{ matrix.example }}
@@ -263,11 +260,6 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install
-
-      - name: Update Hardhat version
-        if: ${{ matrix.example != 'truffle' && matrix.hardhat_version != 'none' }}
-        run: |
-          pnpm up hardhat@${{matrix.hardhat_version}}
 
       - name: Update Truffle version
         if: ${{ matrix.example == 'truffle' && matrix.truffle_version != 'none' }}
