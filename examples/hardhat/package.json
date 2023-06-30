@@ -16,10 +16,10 @@
     "@oasisprotocol/sapphire-hardhat": "workspace:^",
     "@openzeppelin/contracts": "^4.4.2",
     "ethers": "^5.5.3",
-    "hardhat": "^2.8.3",
+    "hardhat": "^2.16.1",
     "lodash": "^4.17.21",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.5.4"
+    "ts-node": "10.8.0",
+    "typescript": "4.7.4"
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^9.0.0",

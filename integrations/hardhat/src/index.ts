@@ -47,10 +47,9 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
     const { createProvider } = await import(
       '@oasislabs/hardhat/internal/core/providers/construction'
     );
-    const provider = createProvider(
+    const provider = await createProvider(
+      config,
       HARDHAT_NETWORK_NAME,
-      hardhatNetworkConfig,
-      config.paths,
       artifacts,
     );
 
