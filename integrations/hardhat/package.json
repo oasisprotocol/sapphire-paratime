@@ -1,7 +1,7 @@
 {
   "name": "@oasisprotocol/sapphire-hardhat",
   "license": "Apache-2.0",
-  "version": "1.0.5",
+  "version": "2.16.1",
   "description": "A Hardhat plugin for developing on the Sapphire ParaTime.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/hardhat",
   "repository": {
@@ -38,7 +38,7 @@
     "@types/node": "^18.11.18",
     "chai": "^4.3.7",
     "ethers": "^5.7.2",
-    "hardhat": "^2.12.6",
+    "hardhat": "^2.16.1",
     "mocha": "^10.2.0",
     "prettier": "^2.8.3",
     "ts-node": "^8.10.2",
