@@ -1,7 +1,7 @@
 {
   "name": "@oasisprotocol/sapphire-hardhat",
   "license": "Apache-2.0",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A Hardhat plugin for developing on the Sapphire ParaTime.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/hardhat",
   "repository": {
@@ -26,7 +26,7 @@
     "test": "mocha --exit --recursive 'test/**/*.test.ts'"
   },
   "dependencies": {
-    "@oasislabs/hardhat": "^2.12.3",
+    "@oasislabs/hardhat": "^2.16.1",
     "@oasisprotocol/sapphire-paratime": "workspace:^"
   },
   "devDependencies": {
