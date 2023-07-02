@@ -6,6 +6,7 @@ import { ethers } from 'hardhat';
 
 import { SigningTests__factory } from '../typechain-types/factories/contracts/tests';
 import { SigningTests } from '../typechain-types/contracts/tests/SigningTests';
+import { arrayify } from 'ethers/lib/utils';
 
 async function testSignThenVerify(
   se: SigningTests,
@@ -102,6 +103,28 @@ describe('Precompiles', function () {
 
     return { se };
   }
+
+  it('Ethereum ecrecover Compatibility', async function () {
+    const { se } = await deploy();
+    for (let i = 0; i < 20; i++) {
+      const seed = randomBytes(32);
+      const digest = randomBytes(32);
+      const expected_addr = ethers.utils.computeAddress(seed);
+      const resp = await se.testEthereum(seed, digest);
+      const addr_27 = ethers.utils.recoverAddress(digest, {
+        r: resp.r,
+        s: resp.s,
+        v: 27,
+      });
+      const addr_28 = ethers.utils.recoverAddress(digest, {
+        r: resp.r,
+        s: resp.s,
+        v: 28,
+      });
+      expect(expected_addr).equal(resp.addr);
+      expect([addr_27, addr_28]).to.contain(resp.addr);
+    }
+  });
 
   it('Sign & Verify', async function () {
     const { se } = await deploy();
