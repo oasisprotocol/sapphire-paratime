@@ -6,7 +6,6 @@ import { ethers } from 'hardhat';
 
 import { SigningTests__factory } from '../typechain-types/factories/contracts/tests';
 import { SigningTests } from '../typechain-types/contracts/tests/SigningTests';
-import { arrayify } from 'ethers/lib/utils';
 
 async function testSignThenVerify(
   se: SigningTests,

@@ -96,7 +96,7 @@ library EthereumUtils {
     /**
      * Extracts the `r` and `s` parameters from a DER encoded ECDSA signature.
      *
-     * The signature is an ASN1 encoded SEQUENCE of the variable length `r` and `s` values
+     * The signature is an ASN1 encoded SEQUENCE of the variable length `r` and `s` INTEGERs.
      *
      * | 0x30 | len(z) | 0x02 | len(r) |  r   | 0x02 | len(s) |  s   | = hex value
      * |  1   |   1    |   1  |   1    | 1-33 |  1   |   1    | 1-33 | = byte length
@@ -151,6 +151,10 @@ library EthereumUtils {
             r := mload(add(der, add(32, rOffset)))
             s := mload(add(der, add(32, sOffset)))
         }
+
+        // When length of either `r` or `s` is below 32 bytes
+        // the 32 byte `mload` will suffix it with unknown stuff
+        // shift right to remove the unknown stuff, prefixing with zeros instead
 
         if (rLen < 32) {
             r >>= 8 * (32 - rLen);
