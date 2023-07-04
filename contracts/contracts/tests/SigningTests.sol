@@ -40,19 +40,21 @@ contract SigningTests {
         returns (
             address addr,
             bytes32 r,
-            bytes32 s
+            bytes32 s,
+            uint8 v
         )
     {
         Sapphire.SigningAlg alg = Sapphire
             .SigningAlg
             .Secp256k1PrehashedKeccak256;
+
         (bytes memory pk, bytes memory sk) = Sapphire.generateSigningKeyPair(
             alg,
             seed
         );
-        (uint256 x, uint256 y) = EthereumUtils.k256Decompress(pk);
+
         bytes memory sig = Sapphire.sign(alg, sk, abi.encodePacked(digest), "");
-        addr = EthereumUtils.toEthereumAddress(x, y);
-        (r, s) = EthereumUtils.splitDERSignature(sig);
+
+        (addr, r, s, v) = EthereumUtils.toEthereumSignature(pk, digest, sig);
     }
 }

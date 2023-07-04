@@ -37,6 +37,11 @@ library EthereumUtils {
 
     error k256DeriveY_Invalid_Prefix_Error();
 
+    /**
+     * Recover Y coordinate from X coordinate and sign bit
+     * @param _prefix 0x02 or 0x03 indicates sign bit of compressed point
+     * @param x X coordinate
+     */
     function k256DeriveY(uint8 _prefix, uint256 x)
         internal
         view
@@ -59,6 +64,12 @@ library EthereumUtils {
 
     error k256Decompress_Invalid_Length_Error();
 
+    /**
+     * Decompress SEC P256 k1 point
+     * @param pk 33 byte compressed public key
+     * @return x coordinate
+     * @return y coordinate
+     */
     function k256Decompress(bytes memory pk)
         internal
         view
@@ -81,6 +92,12 @@ library EthereumUtils {
         return toEthereumAddress(x, y);
     }
 
+    /**
+     * Convert SEC P256 k1 curve point to Ethereum address
+     * @param x coordinate
+     * @param y coordinate
+     * @custom:see https://gavwood.com/paper.pdf (212)
+     */
     function toEthereumAddress(uint256 x, uint256 y)
         internal
         pure
@@ -162,6 +179,39 @@ library EthereumUtils {
 
         if (sLen < 32) {
             s >>= 8 * (32 - sLen);
+        }
+    }
+
+    error toEthereumSignature_Error();
+
+    /**
+     * Convert a Secp256k1PrehashedKeccak256 signature to one accepted by ecrecover
+     * @param pubkey 33 byte compressed public key
+     * @param digest 32 byte pre-hashed message digest
+     * @param signature ASN.1 DER encoded signature, as returned from `Sapphire.sign`
+     * @return pubkey_addr 20 byte Ethereum address
+     * @return r
+     * @return s
+     * @return v sign bit / recovery id
+     * @custom:see https://gavwood.com/paper.pdf (206)
+     */
+    function toEthereumSignature(bytes memory pubkey, bytes32 digest, bytes memory signature)
+        internal view
+        returns (address pubkey_addr, bytes32 r, bytes32 s, uint8 v)
+    {
+        pubkey_addr = k256PubkeyToEthereumAddress(pubkey);
+
+        (r, s) = splitDERSignature(signature);
+
+        v = 27;
+
+        if( ecrecover(digest, v, r, s) != pubkey_addr )
+        {
+            v = 28;
+
+            if( ecrecover(digest, v, r, s) != pubkey_addr ) {
+                revert toEthereumSignature_Error();
+            }
         }
     }
 }

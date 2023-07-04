@@ -109,19 +109,16 @@ describe('Precompiles', function () {
       const seed = randomBytes(32);
       const digest = randomBytes(32);
       const expected_addr = ethers.utils.computeAddress(seed);
+
       const resp = await se.testEthereum(seed, digest);
-      const addr_27 = ethers.utils.recoverAddress(digest, {
-        r: resp.r,
-        s: resp.s,
-        v: 27,
-      });
-      const addr_28 = ethers.utils.recoverAddress(digest, {
-        r: resp.r,
-        s: resp.s,
-        v: 28,
-      });
       expect(expected_addr).equal(resp.addr);
-      expect([addr_27, addr_28]).to.contain(resp.addr);
+
+      const addr_v = ethers.utils.recoverAddress(digest, {
+        r: resp.r,
+        s: resp.s,
+        v: resp.v,
+      });
+      expect(addr_v).to.equal(expected_addr);
     }
   });
 
