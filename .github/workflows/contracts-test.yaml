@@ -60,4 +60,4 @@ jobs:
         run: pnpm build
       - name: hardhat test
         working-directory: contracts
-        run: pnpm hardhat test --network sapphire_dev_ci
+        run: pnpm hardhat test --network sapphire-dev-ci
