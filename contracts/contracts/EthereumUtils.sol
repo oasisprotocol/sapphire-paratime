@@ -195,9 +195,19 @@ library EthereumUtils {
      * @return v sign bit / recovery id
      * @custom:see https://gavwood.com/paper.pdf (206)
      */
-    function toEthereumSignature(bytes memory pubkey, bytes32 digest, bytes memory signature)
-        internal view
-        returns (address pubkey_addr, bytes32 r, bytes32 s, uint8 v)
+    function toEthereumSignature(
+        bytes memory pubkey,
+        bytes32 digest,
+        bytes memory signature
+    )
+        internal
+        view
+        returns (
+            address pubkey_addr,
+            bytes32 r,
+            bytes32 s,
+            uint8 v
+        )
     {
         pubkey_addr = k256PubkeyToEthereumAddress(pubkey);
 
@@ -205,11 +215,10 @@ library EthereumUtils {
 
         v = 27;
 
-        if( ecrecover(digest, v, r, s) != pubkey_addr )
-        {
+        if (ecrecover(digest, v, r, s) != pubkey_addr) {
             v = 28;
 
-            if( ecrecover(digest, v, r, s) != pubkey_addr ) {
+            if (ecrecover(digest, v, r, s) != pubkey_addr) {
                 revert toEthereumSignature_Error();
             }
         }
