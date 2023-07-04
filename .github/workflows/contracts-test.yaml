@@ -19,7 +19,7 @@ jobs:
         image: ghcr.io/oasisprotocol/sapphire-dev:latest
         ports:
           - 8545:8545
-          - 8546:8545
+          - 8546:8546
         env:
           OASIS_DEPOSIT: /oasis-deposit -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         options: >-
