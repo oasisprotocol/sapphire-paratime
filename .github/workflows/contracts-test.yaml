@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container: node:lts
     services:
-      sapphire_dev_ci:
+      sapphire-dev-ci:
         image: ghcr.io/oasisprotocol/sapphire-dev:latest
         ports:
           - 8545

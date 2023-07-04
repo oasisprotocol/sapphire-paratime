@@ -74,8 +74,8 @@ const config: HardhatUserConfig = {
         ? [process.env.SAPPHIRE_MAINNET_PRIVATE_KEY]
         : [],
     },
-    sapphire_dev_ci: {
-      url: `http://sapphire_dev_ci:8545`,
+    'sapphire-dev-ci': {
+      url: `http://sapphire-dev-ci:8545`,
       chainId: 0x5afd,
       accounts: TEST_HDWALLET,
     },
