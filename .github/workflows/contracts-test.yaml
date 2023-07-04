@@ -60,7 +60,4 @@ jobs:
         run: pnpm build
       - name: hardhat test
         working-directory: contracts
-        env:
-          SAPPHIRE_DEV_CI_HTTP_HOST: sapphire_dev_ci
-          SAPPHIRE_DEV_CI_HTTP_PORT: 8545
         run: pnpm hardhat test --network sapphire_dev_ci
