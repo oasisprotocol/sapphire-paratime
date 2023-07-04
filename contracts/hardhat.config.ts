@@ -75,7 +75,7 @@ const config: HardhatUserConfig = {
         : [],
     },
     'sapphire-dev-ci': {
-      url: 'http://127.0.0.1:8545',
+      url: `http://${process.env.SAPPHIRE_DEV_CI_HTTP_HOST}:${process.env.SAPPHIRE_DEV_CI_HTTP_PORT}`,
       chainId: 0x5afd,
       accounts: TEST_HDWALLET,
     },
