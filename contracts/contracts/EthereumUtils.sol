@@ -30,7 +30,7 @@ library EthereumUtils {
             )
         );
 
-        if (false == success) revert expmod_Error();
+        if (!success) revert expmod_Error();
 
         out = uint256(bytes32(result));
     }
@@ -39,15 +39,15 @@ library EthereumUtils {
 
     /**
      * Recover Y coordinate from X coordinate and sign bit
-     * @param _prefix 0x02 or 0x03 indicates sign bit of compressed point
+     * @param prefix 0x02 or 0x03 indicates sign bit of compressed point
      * @param x X coordinate
      */
-    function k256DeriveY(uint8 _prefix, uint256 x)
+    function k256DeriveY(uint8 prefix, uint256 x)
         internal
         view
         returns (uint256 y)
     {
-        if (_prefix != 0x02 && _prefix != 0x03)
+        if (prefix != 0x02 && prefix != 0x03)
             revert k256DeriveY_Invalid_Prefix_Error();
 
         // x^3 + ax + b, where a=0, b=7
@@ -57,7 +57,7 @@ library EthereumUtils {
         y = expmod(y, K256_P_PLUS_1_OVER_4, K256_P);
 
         // negate y if indicated by sign bit
-        if ((y + _prefix) % 2 != 0) {
+        if ((y + prefix) % 2 != 0) {
             y = K256_P - y;
         }
     }
