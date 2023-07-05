@@ -103,6 +103,25 @@ describe('Precompiles', function () {
     return { se };
   }
 
+  it('Ethereum ecrecover Compatibility', async function () {
+    const { se } = await deploy();
+    for (let i = 0; i < 20; i++) {
+      const seed = randomBytes(32);
+      const digest = randomBytes(32);
+      const expected_addr = ethers.utils.computeAddress(seed);
+
+      const resp = await se.testEthereum(seed, digest);
+      expect(expected_addr).equal(resp.addr);
+
+      const addr_v = ethers.utils.recoverAddress(digest, {
+        r: resp.r,
+        s: resp.s,
+        v: resp.v,
+      });
+      expect(addr_v).to.equal(expected_addr);
+    }
+  });
+
   it('Sign & Verify', async function () {
     const { se } = await deploy();
 

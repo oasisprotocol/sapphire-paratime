@@ -13,13 +13,12 @@ on:
 jobs:
   hardhat-test:
     runs-on: ubuntu-latest
-    container: node:lts
     services:
       sapphire-dev-ci:
         image: ghcr.io/oasisprotocol/sapphire-dev:latest
         ports:
-          - 8545
-          - 8546
+          - 8545:8545
+          - 8546:8546
         env:
           OASIS_DEPOSIT: /oasis-deposit -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         options: >-
@@ -27,6 +26,10 @@ jobs:
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
           --health-start-period=90s
     steps:
+      - name: attempt to connect to sapphire-dev-ci
+        run: curl -kv http://sapphire-dev-ci:8545/ || true
+      - name: attempt to connect to sapphire-dev-ci via localhost
+        run: curl -kv http://127.0.0.1:8545/ || true
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install Node.js

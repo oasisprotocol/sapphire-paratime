@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../Sapphire.sol";
+import "../EthereumUtils.sol";
 
 contract SigningTests {
     function testKeygen(Sapphire.SigningAlg alg, bytes memory seed)
@@ -31,5 +32,29 @@ contract SigningTests {
     ) external view returns (bool verified) {
         return
             Sapphire.verify(alg, publicKey, contextOrHash, message, signature);
+    }
+
+    function testEthereum(bytes memory seed, bytes32 digest)
+        external
+        view
+        returns (
+            address addr,
+            bytes32 r,
+            bytes32 s,
+            uint8 v
+        )
+    {
+        Sapphire.SigningAlg alg = Sapphire
+            .SigningAlg
+            .Secp256k1PrehashedKeccak256;
+
+        (bytes memory pk, bytes memory sk) = Sapphire.generateSigningKeyPair(
+            alg,
+            seed
+        );
+
+        bytes memory sig = Sapphire.sign(alg, sk, abi.encodePacked(digest), "");
+
+        (addr, r, s, v) = EthereumUtils.toEthereumSignature(pk, digest, sig);
     }
 }
