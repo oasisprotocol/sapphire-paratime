@@ -7,11 +7,14 @@ The Sapphire ParaTime is the official confidential EVM Compatible ParaTime
 providing a smart contract development environment with EVM compatibility
 on the Oasis Network.
 
-This monorepo includes the following Sapphire packages:
+This monorepo includes the source code for the following Sapphire packages:
 
-- [Sapphire Paratime](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime)
-- [Sapphire Contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts)
-- [Hardhat Plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat)
+- TypeScript [client](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime)
+- Golang [client](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime)
+![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod)
+
+- Solidity [smart contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts)
+- Hardhat [plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat)
 
 ## Documentation
 
@@ -42,4 +45,6 @@ See our [Contributing Guidelines](CONTRIBUTING.md).
 ## Build
 
 Oasis remains committed to unlocking the full potential of privacy applications
-on Web3. Join the [Privacy4Web3 Hackathon](https://oasisprotocol.org/p4w3-hackathon) today!
+on Web3.
+
+Join the [Privacy4Web3 Hackathon](https://oasisprotocol.org/p4w3-hackathon) today!
