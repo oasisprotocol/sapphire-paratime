@@ -638,8 +638,8 @@ function defer<T>() {
 export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
-  const isSigner = isEthers5Signer(upstream) || isEthers6Signer(upstream);
-  const provider = isSigner ? upstream['provider'] : upstream;
+  const isEthersSigner = isEthers5Signer(upstream) || isEthers6Signer(upstream);
+  const provider = isEthersSigner ? upstream['provider'] : upstream;
   if (provider && 'send' in provider) {
     // first opportunistically try `send` from the provider
     try {
@@ -647,11 +647,12 @@ export async function fetchRuntimePublicKey(
         send: (
           method: string | {method:string, params:any[]},
           params?: any[] | ((err: any, ok?: any) => void)
-        ) => Promise<any>;
+        ) => Promise<any> | void;
       };
 
+      // For Truffle, turn a callback into an synchronous call
       let deferred = defer<any>();
-      const cb1 = function (err: any, ok?: any) {
+      const truffle_callback = function (err: any, ok?: any) {
         if( ok ) {
           deferred.resolve!(ok.result);
         }
@@ -660,19 +661,22 @@ export async function fetchRuntimePublicKey(
       };
 
       let resp;
-      if( ! isSigner ) {
-        resp = await source.send({method: OASIS_CALL_DATA_PUBLIC_KEY, params: []}, cb1);
+      if( ! isEthersSigner && ! isEthers5Provider(provider) && ! isEthers6Provider(provider) ) {
+        // Truffle HDWallet-Provider and EIP-1193 accept {method:,params:} dict
+        resp = await source.send({method: OASIS_CALL_DATA_PUBLIC_KEY, params: []}, truffle_callback);
         if( resp === undefined ) {
+          // Truffle HDWallet-provider uses a callback instead of returning a promise
           resp = await deferred.promise;
           if( resp === undefined ) {
-            throw Error('Doop!');
+            throw Error('Got unexpected `undefined` from source.send callback!');
           }
         }
-        else if( resp instanceof Promise ) {
-          resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+        else {
+          // Otherwise, EIP-1193 compatible provider will have returned `result` key from promise
         }
       }
       else {
+        // Whereas Ethers accepts (method,params)
         resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
       }
 
@@ -690,9 +694,8 @@ export async function fetchRuntimePublicKey(
     return fetchRuntimePublicKeyByChainId(chainId);
   }
 
-  if (isSigner) {
+  if (isEthersSigner) {
     const chainId = Number((await upstream.provider!.getNetwork()).chainId);
-    //const chainId = await upstream.getChainId();
     return fetchRuntimePublicKeyByChainId(chainId);
   }
 
