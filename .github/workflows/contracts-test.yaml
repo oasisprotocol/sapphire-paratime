@@ -22,7 +22,7 @@ jobs:
           - 8545:8545
           - 8546:8546
         env:
-          OASIS_DEPOSIT: /oasis-deposit -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+          OASIS_DEPOSIT: /oasis-deposit -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 -to 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 -to 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
         options: >-
           --rm
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
