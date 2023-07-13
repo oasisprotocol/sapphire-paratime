@@ -619,6 +619,16 @@ function envelopeFormatOk(
 
 class EnvelopeError extends Error {}
 
+function defer<T>() {
+  var deferred: {promise?:Promise<T>,resolve?:(value:T|PromiseLike<T>)=>void,reject?:(reason?: any) => void} = {};
+  deferred.promise = new Promise((resolve,reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+  });
+  return deferred;
+}
+
+
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
@@ -628,39 +638,62 @@ class EnvelopeError extends Error {}
 export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
-  if (
-    isEthers6Signer(upstream) ||
-    isEthers6Provider(upstream) ||
-    isEthers5Signer(upstream) ||
-    isEthers5Provider(upstream)
-  ) {
-    const isSigner = isEthers5Signer(upstream) || isEthers6Signer(upstream);
-    const provider = isSigner ? upstream['provider'] : upstream;
-    if (provider && 'send' in provider) {
-      // first opportunistically try `send` from the provider
-      try {
-        const source = provider as {
-          send: (
-            method: string,
-            params: any[] | ((err: any, ok?: any) => void),
-          ) => Promise<any>;
-        };
-        const arg =
-          'engine' in provider
-            ? // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              function (err: any, ok?: any) {
-                return;
-              }
-            : [];
-        const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, arg);
-        if (key) return arrayify(key);
-      } catch {
-        // don't do anything, move on to try chainId
+  const isSigner = isEthers5Signer(upstream) || isEthers6Signer(upstream);
+  const provider = isSigner ? upstream['provider'] : upstream;
+  if (provider && 'send' in provider) {
+    // first opportunistically try `send` from the provider
+    try {
+      const source = provider as {
+        send: (
+          method: string | {method:string, params:any[]},
+          params?: any[] | ((err: any, ok?: any) => void)
+        ) => Promise<any>;
+      };
+
+      let deferred = defer<any>();
+      const cb1 = function (err: any, ok?: any) {
+        if( ok ) {
+          deferred.resolve!(ok.result);
+        }
+        deferred.reject!(err);
+        return;
+      };
+
+      let resp;
+      if( ! isSigner ) {
+        resp = await source.send({method: OASIS_CALL_DATA_PUBLIC_KEY, params: []}, cb1);
+        if( resp === undefined ) {
+          resp = await deferred.promise;
+          if( resp === undefined ) {
+            throw Error('Doop!');
+          }
+        }
+        else if( resp instanceof Promise ) {
+          resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+        }
       }
+      else {
+        resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+      }
+
+      if ('key' in resp) {
+        let key = resp.key;
+        return arrayify(key);
+      }
+    } catch (ex) {
+      // don't do anything, move on to try chainId
     }
-    if (!provider) throw new Error('ethers.ContractRunner not connected');
-    const { chainId } = await provider.getNetwork();
-    return fetchRuntimePublicKeyByChainId(Number(chainId));
+  }
+
+  if (isEthers5Provider(upstream) || isEthers6Provider(upstream)) {
+    const chainId = Number((await upstream.getNetwork()).chainId);
+    return fetchRuntimePublicKeyByChainId(chainId);
+  }
+
+  if (isSigner) {
+    const chainId = Number((await upstream.provider!.getNetwork()).chainId);
+    //const chainId = await upstream.getChainId();
+    return fetchRuntimePublicKeyByChainId(chainId);
   }
 
   const chainId = (await makeWeb3Provider(upstream).getNetwork()).chainId;
