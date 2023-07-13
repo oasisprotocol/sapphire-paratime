@@ -66,6 +66,9 @@ jobs:
       - name: hardhat test contracts
         working-directory: contracts
         run: pnpm hardhat test --network sapphire-dev-ci
+      - name: pnpm install examples/hardhat-boilerplate
+        working-directory: examples/hardhat-boilerplate
+        run: pnpm install
       - name: hardhat test examples/hardhat-boilerplate
         working-directory: examples/hardhat-boilerplate
         run: pnpm hardhat test --network sapphire_localnet
