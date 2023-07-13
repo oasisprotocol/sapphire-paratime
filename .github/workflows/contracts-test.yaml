@@ -61,6 +61,9 @@ jobs:
       - name: Build hardhat integration
         working-directory: integrations/hardhat
         run: pnpm build
-      - name: hardhat test
+      - name: hardhat test contracts
         working-directory: contracts
+        run: pnpm hardhat test --network sapphire-dev-ci
+      - name: hardhat test examples/hardhat-boilerplate
+        working-directory: examples/hardhat-boilerplate
         run: pnpm hardhat test --network sapphire-dev-ci
