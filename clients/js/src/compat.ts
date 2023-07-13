@@ -619,6 +619,19 @@ function envelopeFormatOk(
 
 class EnvelopeError extends Error {}
 
+function defer<T>() {
+  const deferred: {
+    promise?: Promise<T>;
+    resolve?: (value: T | PromiseLike<T>) => void;
+    reject?: (reason?: any) => void;
+  } = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+}
+
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
@@ -628,39 +641,72 @@ class EnvelopeError extends Error {}
 export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
-  if (
-    isEthers6Signer(upstream) ||
-    isEthers6Provider(upstream) ||
-    isEthers5Signer(upstream) ||
-    isEthers5Provider(upstream)
-  ) {
-    const isSigner = isEthers5Signer(upstream) || isEthers6Signer(upstream);
-    const provider = isSigner ? upstream['provider'] : upstream;
-    if (provider && 'send' in provider) {
-      // first opportunistically try `send` from the provider
-      try {
-        const source = provider as {
-          send: (
-            method: string,
-            params: any[] | ((err: any, ok?: any) => void),
-          ) => Promise<any>;
-        };
-        const arg =
-          'engine' in provider
-            ? // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              function (err: any, ok?: any) {
-                return;
-              }
-            : [];
-        const { key } = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, arg);
-        if (key) return arrayify(key);
-      } catch {
-        // don't do anything, move on to try chainId
+  const isEthersSigner = isEthers5Signer(upstream) || isEthers6Signer(upstream);
+  const provider = isEthersSigner ? upstream['provider'] : upstream;
+  if (provider && 'send' in provider) {
+    // first opportunistically try `send` from the provider
+    try {
+      const source = provider as {
+        send: (
+          method: string | { method: string; params: any[] },
+          params?: any[] | ((err: any, ok?: any) => void),
+        ) => Promise<any> | void;
+      };
+
+      // For Truffle, turn a callback into an synchronous call
+      const deferred = defer<any>();
+      const truffle_callback = function (err: any, ok?: any) {
+        if (ok) {
+          deferred.resolve!(ok.result);
+        }
+        deferred.reject!(err);
+        return;
+      };
+
+      let resp;
+      if (
+        !isEthersSigner &&
+        !isEthers5Provider(provider) &&
+        !isEthers6Provider(provider)
+      ) {
+        // Truffle HDWallet-Provider and EIP-1193 accept {method:,params:} dict
+        resp = await source.send(
+          { method: OASIS_CALL_DATA_PUBLIC_KEY, params: [] },
+          truffle_callback,
+        );
+        if (resp === undefined) {
+          // Truffle HDWallet-provider uses a callback instead of returning a promise
+          resp = await deferred.promise;
+          if (resp === undefined) {
+            throw Error(
+              'Got unexpected `undefined` from source.send callback!',
+            );
+          }
+        } else {
+          // Otherwise, EIP-1193 compatible provider will have returned `result` key from promise
+        }
+      } else {
+        // Whereas Ethers accepts (method,params)
+        resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
       }
+
+      if ('key' in resp) {
+        const key = resp.key;
+        return arrayify(key);
+      }
+    } catch (ex) {
+      // don't do anything, move on to try chainId
     }
-    if (!provider) throw new Error('ethers.ContractRunner not connected');
-    const { chainId } = await provider.getNetwork();
-    return fetchRuntimePublicKeyByChainId(Number(chainId));
+  }
+
+  if (isEthers5Provider(upstream) || isEthers6Provider(upstream)) {
+    const chainId = Number((await upstream.getNetwork()).chainId);
+    return fetchRuntimePublicKeyByChainId(chainId);
+  }
+
+  if (isEthersSigner) {
+    const chainId = Number((await upstream.provider!.getNetwork()).chainId);
+    return fetchRuntimePublicKeyByChainId(chainId);
   }
 
   const chainId = (await makeWeb3Provider(upstream).getNetwork()).chainId;

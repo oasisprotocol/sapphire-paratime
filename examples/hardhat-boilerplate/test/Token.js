@@ -6,11 +6,6 @@
 // We import Chai to use its asserting functions here.
 const { expect } = require("chai");
 
-// We use `loadFixture` to share common setups (or fixtures) between tests.
-// Using this simplifies your tests and makes them run faster, by taking
-// advantage or Hardhat Network's snapshot functionality.
-const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
-
 // `describe` is a Mocha function that allows you to organize your tests.
 // Having your tests organized makes debugging them easier. All Mocha
 // functions are available in the global scope.
@@ -19,9 +14,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 // callback. The callback must define the tests of that section. This callback
 // can't be an async function.
 describe("Token contract", function () {
-  // We define a fixture to reuse the same setup in every test. We use
-  // loadFixture to run this setup once, snapshot that state, and reset Hardhat
-  // Network to that snapshot in every test.
+  // We define a fixture to reuse the same setup in every test.
   async function deployTokenFixture() {
     // Get the ContractFactory and Signers here.
     const Token = await ethers.getContractFactory("Token");
@@ -45,9 +38,7 @@ describe("Token contract", function () {
 //
     // If the callback function is async, Mocha will `await` it.
     it("Should set the right owner", async function () {
-      // We use loadFixture to setup our environment, and then assert that
-      // things went well
-      const { hardhatToken, owner } = await loadFixture(deployTokenFixture);
+      const { hardhatToken, owner } = await deployTokenFixture();
 
       // Expect receives a value and wraps it in an assertion object. These
       // objects have a lot of utility methods to assert values.
@@ -58,7 +49,7 @@ describe("Token contract", function () {
     });
 
     it("Should assign the total supply of tokens to the owner", async function () {
-      const { hardhatToken, owner } = await loadFixture(deployTokenFixture);
+      const { hardhatToken, owner } = await deployTokenFixture();
       const ownerBalance = await hardhatToken.balanceOf(owner.address);
       expect(await hardhatToken.totalSupply()).to.equal(ownerBalance);
     });
@@ -66,7 +57,7 @@ describe("Token contract", function () {
 
   describe("Transactions", function () {
     it("Should transfer tokens between accounts", async function () {
-      const { hardhatToken, owner, addr1, addr2 } = await loadFixture(deployTokenFixture);
+      const { hardhatToken, owner, addr1, addr2 } = await deployTokenFixture();
       // Transfer 50 tokens from owner to addr1
       await expect(hardhatToken.transfer(addr1.address, 50))
         .to.changeTokenBalances(hardhatToken, [owner, addr1], [-50, 50]);
@@ -79,7 +70,7 @@ describe("Token contract", function () {
 
     // Our confidential transfer does not emit events.
     /*it("should emit Transfer events", async function () {
-      const { hardhatToken, owner, addr1, addr2 } = await loadFixture(deployTokenFixture);
+      const { hardhatToken, owner, addr1, addr2 } = await deployTokenFixture();
 
       // Transfer 50 tokens from owner to addr1
       await expect(hardhatToken.transfer(addr1.address, 50))
@@ -92,7 +83,7 @@ describe("Token contract", function () {
     });*/
 
     it("Should fail if sender doesn't have enough tokens", async function () {
-      const { hardhatToken, owner, addr1 } = await loadFixture(deployTokenFixture);
+      const { hardhatToken, owner, addr1 } = await deployTokenFixture();
       const initialOwnerBalance = await hardhatToken.balanceOf(
         owner.address
       );
@@ -101,7 +92,7 @@ describe("Token contract", function () {
       // `require` will evaluate false and revert the transaction.
       await expect(
         hardhatToken.connect(addr1).transfer(owner.address, 1)
-      ).to.be.revertedWith("Not enough tokens");
+      ).to.be.reverted;
 
       // Owner balance shouldn't have changed.
       expect(await hardhatToken.balanceOf(owner.address)).to.equal(

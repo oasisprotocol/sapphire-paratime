@@ -3,11 +3,13 @@ on:
   push:
     paths:
       - 'contracts/**'
+      - 'clients/js/**'
     branches:
       - main
   pull_request:
     paths:
       - 'contracts/**'
+      - 'clients/js/**'
     branches:
       - main
 jobs:
@@ -54,13 +56,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
-        run: pnpm --filter '@oasisprotocol/sapphire-*' install
+        run: pnpm install
       - name: Build JS client
         working-directory: clients/js
         run: pnpm build
       - name: Build hardhat integration
         working-directory: integrations/hardhat
         run: pnpm build
-      - name: hardhat test
+      - name: hardhat test contracts
         working-directory: contracts
         run: pnpm hardhat test --network sapphire-dev-ci
+      - name: hardhat test examples/truffle
+        working-directory: examples/truffle
+        run: pnpm run test --network sapphire_localnet
+        env:
+          PRIVATE_KEY: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'

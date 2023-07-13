@@ -14,6 +14,8 @@ contract('MetaCoin', (accounts) => {
 
     assert.equal(metaCoinEthBalance, 2 * metaCoinBalance, 'Library function returned unexpected function, linkage may be broken');
   });
+  /*
+  TODO: re-enable after sapphire-dev container in CI has multi-account support
   it('should send coin correctly', async () => {
     const metaCoinInstance = await MetaCoin.deployed();
 
@@ -36,4 +38,5 @@ contract('MetaCoin', (accounts) => {
     assert.equal(accountOneEndingBalance, accountOneStartingBalance - amount, "Amount wasn't correctly taken from the sender");
     assert.equal(accountTwoEndingBalance, accountTwoStartingBalance + amount, "Amount wasn't correctly sent to the receiver");
   });
+  */
 });
