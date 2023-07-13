@@ -68,4 +68,4 @@ jobs:
         run: pnpm hardhat test --network sapphire-dev-ci
       - name: hardhat test examples/hardhat-boilerplate
         working-directory: examples/hardhat-boilerplate
-        run: pnpm hardhat test --network sapphire-dev-ci
+        run: pnpm hardhat test --network sapphire_localnet
