@@ -22,7 +22,7 @@ jobs:
           - 8545:8545
           - 8546:8546
         env:
-          OASIS_DEPOSIT: /oasis-deposit -to test\ test\ test\ test\ test\ test\ test\ test\ test\ test\ test\ junk -n 20
+          OASIS_DEPOSIT: '/oasis-deposit -to "test test test test test test test test test test test junk" -n 20'
         options: >-
           --rm
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
@@ -56,7 +56,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
-        run: pnpm --filter '@oasisprotocol/sapphire-*' install
+        run: pnpm install
       - name: Build JS client
         working-directory: clients/js
         run: pnpm build
@@ -66,9 +66,9 @@ jobs:
       - name: hardhat test contracts
         working-directory: contracts
         run: pnpm hardhat test --network sapphire-dev-ci
-      - name: pnpm install examples/hardhat-boilerplate
-        working-directory: examples/hardhat-boilerplate
-        run: pnpm install
       - name: hardhat test examples/hardhat-boilerplate
         working-directory: examples/hardhat-boilerplate
         run: pnpm hardhat test --network sapphire_localnet
+      - name: hardhat test examples/truffle
+        working-directory: examples/truffle
+        run: pnpm run test --network sapphire_localnet
