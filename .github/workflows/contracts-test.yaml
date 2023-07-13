@@ -3,11 +3,13 @@ on:
   push:
     paths:
       - 'contracts/**'
+      - 'clients/js/**'
     branches:
       - main
   pull_request:
     paths:
       - 'contracts/**'
+      - 'clients/js/**'
     branches:
       - main
 jobs:

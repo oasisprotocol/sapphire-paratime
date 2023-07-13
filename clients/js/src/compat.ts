@@ -620,14 +620,17 @@ function envelopeFormatOk(
 class EnvelopeError extends Error {}
 
 function defer<T>() {
-  var deferred: {promise?:Promise<T>,resolve?:(value:T|PromiseLike<T>)=>void,reject?:(reason?: any) => void} = {};
-  deferred.promise = new Promise((resolve,reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
+  const deferred: {
+    promise?: Promise<T>;
+    resolve?: (value: T | PromiseLike<T>) => void;
+    reject?: (reason?: any) => void;
+  } = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
   });
   return deferred;
 }
-
 
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
@@ -645,15 +648,15 @@ export async function fetchRuntimePublicKey(
     try {
       const source = provider as {
         send: (
-          method: string | {method:string, params:any[]},
-          params?: any[] | ((err: any, ok?: any) => void)
+          method: string | { method: string; params: any[] },
+          params?: any[] | ((err: any, ok?: any) => void),
         ) => Promise<any> | void;
       };
 
       // For Truffle, turn a callback into an synchronous call
-      let deferred = defer<any>();
+      const deferred = defer<any>();
       const truffle_callback = function (err: any, ok?: any) {
-        if( ok ) {
+        if (ok) {
           deferred.resolve!(ok.result);
         }
         deferred.reject!(err);
@@ -661,27 +664,34 @@ export async function fetchRuntimePublicKey(
       };
 
       let resp;
-      if( ! isEthersSigner && ! isEthers5Provider(provider) && ! isEthers6Provider(provider) ) {
+      if (
+        !isEthersSigner &&
+        !isEthers5Provider(provider) &&
+        !isEthers6Provider(provider)
+      ) {
         // Truffle HDWallet-Provider and EIP-1193 accept {method:,params:} dict
-        resp = await source.send({method: OASIS_CALL_DATA_PUBLIC_KEY, params: []}, truffle_callback);
-        if( resp === undefined ) {
+        resp = await source.send(
+          { method: OASIS_CALL_DATA_PUBLIC_KEY, params: [] },
+          truffle_callback,
+        );
+        if (resp === undefined) {
           // Truffle HDWallet-provider uses a callback instead of returning a promise
           resp = await deferred.promise;
-          if( resp === undefined ) {
-            throw Error('Got unexpected `undefined` from source.send callback!');
+          if (resp === undefined) {
+            throw Error(
+              'Got unexpected `undefined` from source.send callback!',
+            );
           }
-        }
-        else {
+        } else {
           // Otherwise, EIP-1193 compatible provider will have returned `result` key from promise
         }
-      }
-      else {
+      } else {
         // Whereas Ethers accepts (method,params)
         resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
       }
 
       if ('key' in resp) {
-        let key = resp.key;
+        const key = resp.key;
         return arrayify(key);
       }
     } catch (ex) {
