@@ -182,17 +182,34 @@ library EthereumUtils {
         }
     }
 
-    error toEthereumSignature_Error();
+    error recoverV_Error();
+
+    function recoverV(
+        address pubkeyAddr,
+        bytes32 digest,
+        bytes32 sigR,
+        bytes32 sigS
+    ) internal pure returns (uint8 sigV) {
+        sigV = 27;
+
+        if (ecrecover(digest, sigV, sigR, sigS) != pubkeyAddr) {
+            sigV = 28;
+
+            if (ecrecover(digest, sigV, sigR, sigS) != pubkeyAddr) {
+                revert recoverV_Error();
+            }
+        }
+    }
 
     /**
      * Convert a Secp256k1PrehashedKeccak256 signature to one accepted by ecrecover
      * @param pubkey 33 byte compressed public key
      * @param digest 32 byte pre-hashed message digest
      * @param signature ASN.1 DER encoded signature, as returned from `Sapphire.sign`
-     * @return pubkey_addr 20 byte Ethereum address
-     * @return r
-     * @return s
-     * @return v sign bit / recovery id
+     * @return pubkeyAddr 20 byte Ethereum address
+     * @return sigR
+     * @return sigS
+     * @return sigV sign bit / recovery id
      * @custom:see https://gavwood.com/paper.pdf (206)
      */
     function toEthereumSignature(
@@ -203,24 +220,63 @@ library EthereumUtils {
         internal
         view
         returns (
-            address pubkey_addr,
-            bytes32 r,
-            bytes32 s,
-            uint8 v
+            address pubkeyAddr,
+            bytes32 sigR,
+            bytes32 sigS,
+            uint8 sigV
         )
     {
-        pubkey_addr = k256PubkeyToEthereumAddress(pubkey);
+        pubkeyAddr = k256PubkeyToEthereumAddress(pubkey);
 
-        (r, s) = splitDERSignature(signature);
+        (sigR, sigS) = splitDERSignature(signature);
 
-        v = 27;
+        sigV = recoverV(pubkeyAddr, digest, sigR, sigS);
+    }
 
-        if (ecrecover(digest, v, r, s) != pubkey_addr) {
-            v = 28;
+    function sign(
+        address pubkeyAddr,
+        bytes32 secretKey,
+        bytes32 digest
+    )
+        internal
+        view
+        returns (
+            bytes32 sigR,
+            bytes32 sigS,
+            uint8 sigV
+        )
+    {
+        bytes memory sig = Sapphire.sign(
+            Sapphire.SigningAlg.Secp256k1PrehashedKeccak256,
+            abi.encodePacked(secretKey),
+            abi.encodePacked(digest),
+            ""
+        );
 
-            if (ecrecover(digest, v, r, s) != pubkey_addr) {
-                revert toEthereumSignature_Error();
-            }
-        }
+        (sigR, sigS) = splitDERSignature(sig);
+
+        sigV = recoverV(pubkeyAddr, digest, sigR, sigS);
+    }
+
+    /**
+     * Generates an Ethereum compatible SEC P256 k1 keypair and corresponding public address
+     * @return pubkeyAddr Ethereum address
+     * @return secretKey Secret key used for signing
+     */
+    function generateKeypair()
+        internal
+        view
+        returns (address pubkeyAddr, bytes32 secretKey)
+    {
+        bytes memory randSeed = Sapphire.randomBytes(32, "");
+
+        secretKey = bytes32(randSeed);
+
+        (bytes memory pk, bytes memory tmp) = Sapphire.generateSigningKeyPair(
+            Sapphire.SigningAlg.Secp256k1PrehashedKeccak256,
+            randSeed
+        );
+
+        pubkeyAddr = k256PubkeyToEthereumAddress(pk);
     }
 }

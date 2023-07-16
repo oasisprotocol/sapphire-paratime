@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "../Sapphire.sol";
-import "../EthereumUtils.sol";
+import {Sapphire} from "../Sapphire.sol";
+import {EthereumUtils} from "../EthereumUtils.sol";
 
 contract SigningTests {
     function testKeygen(Sapphire.SigningAlg alg, bytes memory seed)
