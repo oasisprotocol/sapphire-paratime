@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {Sapphire} from "./Sapphire.sol";
+
 library EthereumUtils {
     uint256 internal constant K256_P =
         0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f;
