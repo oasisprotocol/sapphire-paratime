@@ -9,7 +9,9 @@ describe('EIP-155', function () {
     const factory = (await ethers.getContractFactory(
       'EIP155Tests',
     )) as EIP155Tests__factory;
-    const testContract = await factory.deploy({ value: ethers.utils.parseEther('1') });
+    const testContract = await factory.deploy({
+      value: ethers.utils.parseEther('1'),
+    });
     return { testContract };
   }
 
@@ -31,7 +33,9 @@ describe('EIP-155', function () {
       ethers.provider.connection,
     );
     let plainResp = await plainProvider.sendTransaction(signedTx);
-    let receipt = await testContract.provider.waitForTransaction(plainResp.hash);
+    let receipt = await testContract.provider.waitForTransaction(
+      plainResp.hash,
+    );
     expect(receipt.logs[0].data).equal(
       '0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
     );
