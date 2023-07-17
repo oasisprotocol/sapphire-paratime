@@ -26,7 +26,6 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
-    "@ethersproject/providers": "^5.7.2",
     "@oasisprotocol/sapphire-hardhat": "workspace:^",
     "@openzeppelin/contracts": "^4.7.3",
     "@typechain/ethers-v5": "^10.1.0",
