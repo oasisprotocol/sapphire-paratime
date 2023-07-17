@@ -8,14 +8,15 @@ import {EIP155Signer} from "../EIP155Signer.sol";
 contract EIP155Tests {
     address public immutable publicAddr;
     bytes32 public immutable secretKey;
-    constructor ()
-        payable
-    {
+
+    constructor() payable {
         (publicAddr, secretKey) = EthereumUtils.generateKeypair();
         payable(publicAddr).transfer(msg.value);
     }
+
     function sign(EIP155Signer.EthTx memory transaction)
-        external view
+        external
+        view
         returns (bytes memory)
     {
         transaction.data = abi.encodeWithSelector(this.example.selector);
@@ -25,9 +26,9 @@ contract EIP155Tests {
 
     event ExampleEvent(bytes32 x);
 
-    function example()
-        external
-    {
-        emit ExampleEvent(0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210);
+    function example() external {
+        emit ExampleEvent(
+            0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210
+        );
     }
 }
