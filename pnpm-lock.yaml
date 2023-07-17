@@ -81,6 +81,7 @@ importers:
 
   contracts:
     specifiers:
+      '@ethersproject/providers': ^5.7.2
       '@nomicfoundation/hardhat-chai-matchers': ^1.0.5
       '@nomiclabs/hardhat-ethers': ^2.1.1
       '@oasisprotocol/sapphire-hardhat': workspace:^
@@ -107,12 +108,13 @@ importers:
       typechain: ^8.1.0
       typescript: ^4.8.3
     devDependencies:
+      '@ethersproject/providers': 5.7.2
       '@nomicfoundation/hardhat-chai-matchers': 1.0.6_b5aapq7yti7itqx6wcz3o7bx6q
       '@nomiclabs/hardhat-ethers': 2.2.3_drbn5rr2wg6skrabufgggpzpcu
       '@oasisprotocol/sapphire-hardhat': link:../integrations/hardhat
       '@openzeppelin/contracts': 4.9.2
-      '@typechain/ethers-v5': 10.2.1_kd2jok6auccgi7myntldx3ze7u
-      '@typechain/hardhat': 6.1.6_5baw6cnhn6tns6ldeygt5ylv2i
+      '@typechain/ethers-v5': 10.2.1_behyd5ue2kbktb7mrkw7mlslyu
+      '@typechain/hardhat': 6.1.6_mmhutvpepocg57xpbx6cbqj2xi
       '@types/chai': 4.3.5
       '@types/mocha': 9.1.1
       '@types/node': 18.16.18
@@ -4500,7 +4502,7 @@ packages:
   /@tsconfig/node16/1.0.4:
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  /@typechain/ethers-v5/10.2.1_kd2jok6auccgi7myntldx3ze7u:
+  /@typechain/ethers-v5/10.2.1_behyd5ue2kbktb7mrkw7mlslyu:
     resolution: {integrity: sha512-n3tQmCZjRE6IU4h6lqUGiQ1j866n5MTCBJreNEHHVWXa2u9GJTaeYyU1/k+1qLutkyw+sS6VAN+AbeiTqsxd/A==}
     peerDependencies:
       '@ethersproject/abi': ^5.0.0
@@ -4509,6 +4511,7 @@ packages:
       typechain: ^8.1.1
       typescript: '>=4.3.0'
     dependencies:
+      '@ethersproject/providers': 5.7.2
       ethers: 5.7.2
       lodash: 4.17.21
       ts-essentials: 7.0.3_typescript@4.9.5
@@ -4554,23 +4557,6 @@ packages:
       typescript: 4.7.4
     dev: true
 
-  /@typechain/hardhat/6.1.6_5baw6cnhn6tns6ldeygt5ylv2i:
-    resolution: {integrity: sha512-BiVnegSs+ZHVymyidtK472syodx1sXYlYJJixZfRstHVGYTi8V1O7QG4nsjyb0PC/LORcq7sfBUcHto1y6UgJA==}
-    peerDependencies:
-      '@ethersproject/abi': ^5.4.7
-      '@ethersproject/providers': ^5.4.7
-      '@typechain/ethers-v5': ^10.2.1
-      ethers: ^5.4.7
-      hardhat: ^2.9.9
-      typechain: ^8.1.1
-    dependencies:
-      '@typechain/ethers-v5': 10.2.1_kd2jok6auccgi7myntldx3ze7u
-      ethers: 5.7.2
-      fs-extra: 9.1.0
-      hardhat: 2.16.1_6qtx7vkbdhwvdm4crzlegk4mvi
-      typechain: 8.2.0_typescript@4.9.5
-    dev: true
-
   /@typechain/hardhat/6.1.6_dh4iu7h5wvmdp3xxt5l2yfasdy:
     resolution: {integrity: sha512-BiVnegSs+ZHVymyidtK472syodx1sXYlYJJixZfRstHVGYTi8V1O7QG4nsjyb0PC/LORcq7sfBUcHto1y6UgJA==}
     peerDependencies:
@@ -4603,6 +4589,24 @@ packages:
       '@ethersproject/abi': 5.7.0
       '@ethersproject/providers': 5.7.2
       '@typechain/ethers-v5': 10.2.1_yivnc5nurfvwqckylwurpk6z34
+      ethers: 5.7.2
+      fs-extra: 9.1.0
+      hardhat: 2.16.1_6qtx7vkbdhwvdm4crzlegk4mvi
+      typechain: 8.2.0_typescript@4.9.5
+    dev: true
+
+  /@typechain/hardhat/6.1.6_mmhutvpepocg57xpbx6cbqj2xi:
+    resolution: {integrity: sha512-BiVnegSs+ZHVymyidtK472syodx1sXYlYJJixZfRstHVGYTi8V1O7QG4nsjyb0PC/LORcq7sfBUcHto1y6UgJA==}
+    peerDependencies:
+      '@ethersproject/abi': ^5.4.7
+      '@ethersproject/providers': ^5.4.7
+      '@typechain/ethers-v5': ^10.2.1
+      ethers: ^5.4.7
+      hardhat: ^2.9.9
+      typechain: ^8.1.1
+    dependencies:
+      '@ethersproject/providers': 5.7.2
+      '@typechain/ethers-v5': 10.2.1_behyd5ue2kbktb7mrkw7mlslyu
       ethers: 5.7.2
       fs-extra: 9.1.0
       hardhat: 2.16.1_6qtx7vkbdhwvdm4crzlegk4mvi

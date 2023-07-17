@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2
+// SPDX-License-Identifier: Apache-2.0
 
 import { randomBytes } from 'crypto';
 import { expect } from 'chai';
