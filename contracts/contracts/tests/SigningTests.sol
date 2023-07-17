@@ -37,10 +37,7 @@ contract SigningTests {
     function testEthereum(bytes memory seed, bytes32 digest)
         external
         view
-        returns (
-            address addr,
-            SignatureRSV memory rsv
-        )
+        returns (address addr, SignatureRSV memory rsv)
     {
         Sapphire.SigningAlg alg = Sapphire
             .SigningAlg

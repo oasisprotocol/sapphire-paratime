@@ -226,14 +226,7 @@ library EthereumUtils {
         bytes memory pubkey,
         bytes32 digest,
         bytes memory signature
-    )
-        internal
-        view
-        returns (
-            address pubkeyAddr,
-            SignatureRSV memory rsv
-        )
-    {
+    ) internal view returns (address pubkeyAddr, SignatureRSV memory rsv) {
         pubkeyAddr = k256PubkeyToEthereumAddress(pubkey);
 
         rsv = splitDERSignature(signature);
@@ -245,11 +238,7 @@ library EthereumUtils {
         address pubkeyAddr,
         bytes32 secretKey,
         bytes32 digest
-    )
-        internal
-        view
-        returns (SignatureRSV memory rsv)
-    {
+    ) internal view returns (SignatureRSV memory rsv) {
         bytes memory signature = Sapphire.sign(
             Sapphire.SigningAlg.Secp256k1PrehashedKeccak256,
             abi.encodePacked(secretKey),

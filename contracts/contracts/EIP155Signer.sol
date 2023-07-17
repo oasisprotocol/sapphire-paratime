@@ -53,15 +53,14 @@ library EIP155Signer {
         address pubkeyAddr,
         bytes32 secretKey
     ) internal view returns (SignatureRSV memory ret) {
-        bytes memory encoded = encodeSignedTx(rawTx, SignatureRSV({v: rawTx.chainId, r: 0, s: 0}));
+        bytes memory encoded = encodeSignedTx(
+            rawTx,
+            SignatureRSV({v: rawTx.chainId, r: 0, s: 0})
+        );
 
         bytes32 digest = keccak256(abi.encodePacked(encoded));
 
-        ret = EthereumUtils.sign(
-            pubkeyAddr,
-            secretKey,
-            digest
-        );
+        ret = EthereumUtils.sign(pubkeyAddr, secretKey, digest);
     }
 
     /**
@@ -75,7 +74,11 @@ library EIP155Signer {
         bytes32 secretKey,
         EthTx memory transaction
     ) internal view returns (bytes memory) {
-        SignatureRSV memory rsv = signRawTx(transaction, publicAddress, secretKey);
+        SignatureRSV memory rsv = signRawTx(
+            transaction,
+            publicAddress,
+            secretKey
+        );
         rsv.v = (rsv.v - 27) + (transaction.chainId * 2) + 35;
         return encodeSignedTx(transaction, rsv);
     }
