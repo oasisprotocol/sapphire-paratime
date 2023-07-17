@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2
+// SPDX-License-Identifier: Apache-2.0
 
 import { randomBytes } from 'crypto';
 import { expect } from 'chai';
@@ -114,9 +114,9 @@ describe('Precompiles', function () {
       expect(expected_addr).equal(resp.addr);
 
       const addr_v = ethers.utils.recoverAddress(digest, {
-        r: resp.r,
-        s: resp.s,
-        v: resp.v,
+        r: resp.rsv.r,
+        s: resp.rsv.s,
+        v: Number(resp.rsv.v),
       });
       expect(addr_v).to.equal(expected_addr);
     }
