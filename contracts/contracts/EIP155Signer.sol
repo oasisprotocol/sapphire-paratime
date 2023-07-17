@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Sapphire} from "./Sapphire.sol";
-import {EthereumUtils} from "./EthereumUtils.sol";
+import {EthereumUtils, SignatureRSV} from "./EthereumUtils.sol";
 import {RLPWriter} from "./RLPWriter.sol";
 
 /**
@@ -19,12 +19,6 @@ library EIP155Signer {
         uint256 chainId;
     }
 
-    struct SignatureRSV {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-    }
-
     /**
      * Encode a signed EIP-155 transaction
      * @param rawTx Transaction which was signed
@@ -32,7 +26,7 @@ library EIP155Signer {
      */
     function encodeSignedTx(EthTx memory rawTx, SignatureRSV memory rsv)
         internal
-        view
+        pure
         returns (bytes memory)
     {
         bytes[] memory b = new bytes[](9);
@@ -42,7 +36,7 @@ library EIP155Signer {
         b[3] = RLPWriter.writeAddress(rawTx.to);
         b[4] = RLPWriter.writeUint(rawTx.value);
         b[5] = RLPWriter.writeBytes(rawTx.data);
-        b[6] = RLPWriter.writeUint((rsv.v - 27) + (block.chainid * 2) + 35);
+        b[6] = RLPWriter.writeUint(rsv.v);
         b[7] = RLPWriter.writeUint(uint256(rsv.r));
         b[8] = RLPWriter.writeUint(uint256(rsv.s));
         return RLPWriter.writeList(b);
@@ -59,20 +53,11 @@ library EIP155Signer {
         address pubkeyAddr,
         bytes32 secretKey
     ) internal view returns (SignatureRSV memory ret) {
-        bytes[] memory a = new bytes[](9);
-        a[0] = RLPWriter.writeUint(rawTx.nonce);
-        a[1] = RLPWriter.writeUint(rawTx.gasPrice);
-        a[2] = RLPWriter.writeUint(rawTx.gasLimit);
-        a[3] = RLPWriter.writeAddress(rawTx.to);
-        a[4] = RLPWriter.writeUint(rawTx.value);
-        a[5] = RLPWriter.writeBytes(rawTx.data);
-        a[6] = RLPWriter.writeUint(rawTx.chainId);
-        a[7] = RLPWriter.writeUint(0);
-        a[8] = RLPWriter.writeUint(0);
+        bytes memory encoded = encodeSignedTx(rawTx, SignatureRSV({v: rawTx.chainId, r: 0, s: 0}));
 
-        bytes32 digest = keccak256(RLPWriter.writeList(a));
+        bytes32 digest = keccak256(abi.encodePacked(encoded));
 
-        (ret.r, ret.s, ret.v) = EthereumUtils.sign(
+        ret = EthereumUtils.sign(
             pubkeyAddr,
             secretKey,
             digest
@@ -90,10 +75,8 @@ library EIP155Signer {
         bytes32 secretKey,
         EthTx memory transaction
     ) internal view returns (bytes memory) {
-        return
-            encodeSignedTx(
-                transaction,
-                signRawTx(transaction, publicAddress, secretKey)
-            );
+        SignatureRSV memory rsv = signRawTx(transaction, publicAddress, secretKey);
+        rsv.v = (rsv.v - 27) + (transaction.chainId * 2) + 35;
+        return encodeSignedTx(transaction, rsv);
     }
 }

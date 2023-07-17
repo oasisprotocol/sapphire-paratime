@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Sapphire} from "../Sapphire.sol";
-import {EthereumUtils} from "../EthereumUtils.sol";
+import {EthereumUtils, SignatureRSV} from "../EthereumUtils.sol";
 
 contract SigningTests {
     function testKeygen(Sapphire.SigningAlg alg, bytes memory seed)
@@ -39,9 +39,7 @@ contract SigningTests {
         view
         returns (
             address addr,
-            bytes32 r,
-            bytes32 s,
-            uint8 v
+            SignatureRSV memory rsv
         )
     {
         Sapphire.SigningAlg alg = Sapphire
@@ -55,6 +53,6 @@ contract SigningTests {
 
         bytes memory sig = Sapphire.sign(alg, sk, abi.encodePacked(digest), "");
 
-        (addr, r, s, v) = EthereumUtils.toEthereumSignature(pk, digest, sig);
+        (addr, rsv) = EthereumUtils.toEthereumSignature(pk, digest, sig);
     }
 }

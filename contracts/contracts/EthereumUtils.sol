@@ -4,6 +4,12 @@ pragma solidity ^0.8.0;
 
 import {Sapphire} from "./Sapphire.sol";
 
+struct SignatureRSV {
+    bytes32 r;
+    bytes32 s;
+    uint256 v;
+}
+
 library EthereumUtils {
     uint256 internal constant K256_P =
         0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f;
@@ -126,14 +132,13 @@ library EthereumUtils {
      * This function only works if either `r` or `s` are 256bits or lower.
      *
      * @param der DER encoded ECDSA signature
-     * @return r ECDSA R point X coordinate
-     * @return s ECDSA s scalar
+     * @return rsv ECDSA R point X coordinate, and S scalar
      * @custom:see https://bitcoin.stackexchange.com/questions/58853/how-do-you-figure-out-the-r-and-s-out-of-a-signature-using-python
      */
     function splitDERSignature(bytes memory der)
         internal
         pure
-        returns (bytes32 r, bytes32 s)
+        returns (SignatureRSV memory rsv)
     {
         if (der.length < 8) revert DER_Split_Error();
         if (der[0] != 0x30) revert DER_Split_Error();
@@ -166,6 +171,9 @@ library EthereumUtils {
             sLen -= 1;
         }
 
+        bytes32 r;
+        bytes32 s;
+
         assembly {
             r := mload(add(der, add(32, rOffset)))
             s := mload(add(der, add(32, sOffset)))
@@ -182,6 +190,9 @@ library EthereumUtils {
         if (sLen < 32) {
             s >>= 8 * (32 - sLen);
         }
+
+        rsv.r = r;
+        rsv.s = s;
     }
 
     error recoverV_Error();
@@ -189,15 +200,14 @@ library EthereumUtils {
     function recoverV(
         address pubkeyAddr,
         bytes32 digest,
-        bytes32 sigR,
-        bytes32 sigS
-    ) internal pure returns (uint8 sigV) {
-        sigV = 27;
+        SignatureRSV memory rsv
+    ) internal pure {
+        rsv.v = 27;
 
-        if (ecrecover(digest, sigV, sigR, sigS) != pubkeyAddr) {
-            sigV = 28;
+        if (ecrecover(digest, uint8(rsv.v), rsv.r, rsv.s) != pubkeyAddr) {
+            rsv.v = 28;
 
-            if (ecrecover(digest, sigV, sigR, sigS) != pubkeyAddr) {
+            if (ecrecover(digest, uint8(rsv.v), rsv.r, rsv.s) != pubkeyAddr) {
                 revert recoverV_Error();
             }
         }
@@ -209,9 +219,7 @@ library EthereumUtils {
      * @param digest 32 byte pre-hashed message digest
      * @param signature ASN.1 DER encoded signature, as returned from `Sapphire.sign`
      * @return pubkeyAddr 20 byte Ethereum address
-     * @return sigR
-     * @return sigS
-     * @return sigV sign bit / recovery id
+     * @return rsv Ethereum EcDSA RSV signature values
      * @custom:see https://gavwood.com/paper.pdf (206)
      */
     function toEthereumSignature(
@@ -223,16 +231,14 @@ library EthereumUtils {
         view
         returns (
             address pubkeyAddr,
-            bytes32 sigR,
-            bytes32 sigS,
-            uint8 sigV
+            SignatureRSV memory rsv
         )
     {
         pubkeyAddr = k256PubkeyToEthereumAddress(pubkey);
 
-        (sigR, sigS) = splitDERSignature(signature);
+        rsv = splitDERSignature(signature);
 
-        sigV = recoverV(pubkeyAddr, digest, sigR, sigS);
+        recoverV(pubkeyAddr, digest, rsv);
     }
 
     function sign(
@@ -242,22 +248,18 @@ library EthereumUtils {
     )
         internal
         view
-        returns (
-            bytes32 sigR,
-            bytes32 sigS,
-            uint8 sigV
-        )
+        returns (SignatureRSV memory rsv)
     {
-        bytes memory sig = Sapphire.sign(
+        bytes memory signature = Sapphire.sign(
             Sapphire.SigningAlg.Secp256k1PrehashedKeccak256,
             abi.encodePacked(secretKey),
             abi.encodePacked(digest),
             ""
         );
 
-        (sigR, sigS) = splitDERSignature(sig);
+        rsv = splitDERSignature(signature);
 
-        sigV = recoverV(pubkeyAddr, digest, sigR, sigS);
+        recoverV(pubkeyAddr, digest, rsv);
     }
 
     /**
