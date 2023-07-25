@@ -265,7 +265,7 @@ library EthereumUtils {
 
         secretKey = bytes32(randSeed);
 
-        (bytes memory pk,) = Sapphire.generateSigningKeyPair(
+        (bytes memory pk, ) = Sapphire.generateSigningKeyPair(
             Sapphire.SigningAlg.Secp256k1PrehashedKeccak256,
             randSeed
         );
