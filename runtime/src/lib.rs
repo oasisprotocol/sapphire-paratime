@@ -75,7 +75,7 @@ impl sdk::Runtime for Runtime {
     const VERSION: Version = sdk::version_from_cargo!();
     /// Current version of the global state (e.g. parameters). Any parameter updates should bump
     /// this version in order for the migrations to be executed.
-    const STATE_VERSION: u32 = 0;
+    const STATE_VERSION: u32 = 1;
 
     /// Schedule control configuration.
     const SCHEDULE_CONTROL: config::ScheduleControl = config::ScheduleControl {
@@ -122,8 +122,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 15413160,
-                hash: "766a9e90c395e8b0355a5a5364d6d444a8c7288d6685d83287b61b9d0fb33308".into(),
+                height: 16857999,
+                hash: "deab6066c16b2c6bdaa28681e0831affe646e3bb9e2677dae02161bffbdc9b11".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
@@ -188,7 +188,13 @@ impl sdk::Runtime for Runtime {
                     gas_costs: modules::consensus_accounts::GasCosts {
                         tx_deposit: 10_000,
                         tx_withdraw: 10_000,
+                        tx_delegate: 10_000,
+                        tx_undelegate: 30_000,
                     },
+                    disable_delegate: false,
+                    disable_undelegate: false,
+                    disable_deposit: false,
+                    disable_withdraw: false,
                 },
             },
             modules::rewards::Genesis {
@@ -211,27 +217,23 @@ impl sdk::Runtime for Runtime {
         )
     }
 
-    fn migrate_state<C: sdk::Context>(ctx: &mut C) {
+    fn migrate_state<C: sdk::Context>(_ctx: &mut C) {
         // State migration from by copying over parameters from updated genesis state.
         let genesis = Self::genesis_state();
 
         // Core.
-        modules::core::Module::<Config>::set_params(ctx.runtime_state(), genesis.0.parameters);
+        modules::core::Module::<Config>::set_params(genesis.0.parameters);
         // Accounts.
-        modules::accounts::Module::set_params(ctx.runtime_state(), genesis.1.parameters);
+        modules::accounts::Module::set_params(genesis.1.parameters);
         // Consensus layer interface.
-        modules::consensus::Module::set_params(ctx.runtime_state(), genesis.2.parameters);
+        modules::consensus::Module::set_params(genesis.2.parameters);
         // Consensus layer accounts.
         modules::consensus_accounts::Module::<modules::accounts::Module, modules::consensus::Module>::set_params(
-            ctx.runtime_state(),
             genesis.3.parameters,
         );
         // Rewards.
-        modules::rewards::Module::<modules::accounts::Module>::set_params(
-            ctx.runtime_state(),
-            genesis.4.parameters,
-        );
+        modules::rewards::Module::<modules::accounts::Module>::set_params(genesis.4.parameters);
         // EVM.
-        module_evm::Module::<Config>::set_params(ctx.runtime_state(), genesis.5.parameters);
+        module_evm::Module::<Config>::set_params(genesis.5.parameters);
     }
 }
