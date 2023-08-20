@@ -1,15 +1,11 @@
-import {
-  BytesLike,
-  arrayify,
-  hexlify,
-  isBytesLike,
-} from '@ethersproject/bytes';
+// @ts-expect-error
 import * as cbor from 'cborg';
 import deoxysii from '@oasisprotocol/deoxysii';
 import { IncomingMessage } from 'http';
 import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
+import { isBytes, isHex, toBytes, toHex } from 'viem';
 
 import { CallError, NETWORKS, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 
@@ -52,9 +48,9 @@ export abstract class Cipher {
   ): Promise<Uint8Array>;
 
   /** Encrypts the plaintext and encodes it for sending. */
-  public async encryptEncode(plaintext?: BytesLike): Promise<string> {
+  public async encryptEncode(plaintext?: BytesLike): Promise<`0x${string}`> {
     const envelope = await this.encryptEnvelope(plaintext);
-    return envelope ? hexlify(cbor.encode(envelope)) : '';
+    return envelope ? toHex(cbor.encode(envelope)) : '0x';
   }
 
   /** Encrypts the plaintext and formats it into an envelope. */
@@ -113,7 +109,7 @@ export abstract class Cipher {
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
   public async decryptEncoded(callResult: BytesLike): Promise<string> {
-    return hexlify(
+    return toHex(
       await this.decryptCallResult(cbor.decode(arrayify(callResult))),
     );
   }
@@ -186,7 +182,7 @@ export class X25519DeoxysII extends Cipher {
     const keypair = nacl.box.keyPair();
     return new X25519DeoxysII(
       keypair,
-      arrayify(peerPublicKey, { allowMissingPrefix: true }),
+      arrayify(peerPublicKey),
     );
   }
 
@@ -245,7 +241,7 @@ export class Mock extends Cipher {
     nonce: Uint8Array,
     ciphertext: Uint8Array,
   ): Promise<Uint8Array> {
-    if (hexlify(nonce) !== hexlify(Mock.NONCE))
+    if (toHex(nonce) !== toHex(Mock.NONCE))
       throw new Error('incorrect nonce');
     return ciphertext;
   }
@@ -351,4 +347,21 @@ function makeCallDataPublicKeyBody(): string {
     method: OASIS_CALL_DATA_PUBLIC_KEY,
     params: [],
   });
+}
+
+type BytesLike = string | Uint8Array;
+
+function isBytesLike(byteslike: any): byteslike is BytesLike {
+  return isHex(byteslike) || isBytes(byteslike);
+
+}
+
+function arrayify(byteslike: BytesLike): Uint8Array {
+  if (isBytes(byteslike)) {
+    return byteslike;
+  } else if (isHex(byteslike)) {
+    return toBytes(byteslike.startsWith('0x') ? `0x${byteslike}` : byteslike);
+  } else {
+    throw new Error('attempted to decode non-byteslike data');
+  }
 }

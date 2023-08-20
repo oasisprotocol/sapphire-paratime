@@ -10,6 +10,7 @@ import {
   TransactionRequest,
   Web3Provider,
 } from '@ethersproject/providers';
+// @ts-expect-error
 import * as cbor from 'cborg';
 import { ethers as ethers6 } from 'ethers6';
 import { RequireAtLeastOne } from 'type-fest';
@@ -351,7 +352,7 @@ function hookEthers5Call(
     return provider[method](
       {
         ...callP,
-        data: cipher.encryptEncode(await callP.data),
+        data: cipher.encryptEncode(arrayify(await callP.data ?? '0x')),
       },
       blockTag,
     );
@@ -428,7 +429,7 @@ function hookEthers6Call(
 function hookEthers5Send(send: Ethers5Call, cipher: Cipher): Ethers5Call {
   return async (tx: Deferrable<TransactionRequest>, ...rest) => {
     const data = await tx.data;
-    tx.data = cipher.encryptEncode(data);
+    tx.data = cipher.encryptEncode(arrayify(data ?? '0x'));
     return send(tx, ...rest);
   };
 }
@@ -598,7 +599,7 @@ function envelopeFormatOk(
 ): boolean {
   if (Object.keys(extra).length > 0) return false;
   if (!body) return false;
-  if (format && format !== CipherKind.Plain) {
+  if (format && format as CipherKind !== CipherKind.Plain) {
     if (isBytesLike(body) || !isBytesLike(body.data)) return false;
   }
   return true;
