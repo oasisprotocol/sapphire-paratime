@@ -1,8 +1,9 @@
+import { hmac } from '@noble/hashes/hmac';
+import { sha512_256 } from '@noble/hashes/sha512';
+import deoxysii from '@oasisprotocol/deoxysii';
 // @ts-expect-error
 import * as cbor from 'cborg';
-import deoxysii from '@oasisprotocol/deoxysii';
 import { IncomingMessage } from 'http';
-import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
 import { isBytes, isHex, toBytes, toHex } from 'viem';
@@ -180,10 +181,7 @@ export class X25519DeoxysII extends Cipher {
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
   static ephemeral(peerPublicKey: BytesLike): X25519DeoxysII {
     const keypair = nacl.box.keyPair();
-    return new X25519DeoxysII(
-      keypair,
-      arrayify(peerPublicKey),
-    );
+    return new X25519DeoxysII(keypair, arrayify(peerPublicKey));
   }
 
   static fromSecretKey(
@@ -198,11 +196,10 @@ export class X25519DeoxysII extends Cipher {
     super();
     this.publicKey = keypair.publicKey;
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
-    const keyBytes = sha512_256.hmac
-      .create('MRAE_Box_Deoxys-II-256-128')
+    this.key = hmac
+      .create(sha512_256, 'MRAE_Box_Deoxys-II-256-128')
       .update(nacl.scalarMult(keypair.secretKey, peerPublicKey))
-      .arrayBuffer();
-    this.key = new Uint8Array(keyBytes);
+      .digest();
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }
 
@@ -241,8 +238,7 @@ export class Mock extends Cipher {
     nonce: Uint8Array,
     ciphertext: Uint8Array,
   ): Promise<Uint8Array> {
-    if (toHex(nonce) !== toHex(Mock.NONCE))
-      throw new Error('incorrect nonce');
+    if (toHex(nonce) !== toHex(Mock.NONCE)) throw new Error('incorrect nonce');
     return ciphertext;
   }
 }
@@ -353,7 +349,6 @@ type BytesLike = string | Uint8Array;
 
 function isBytesLike(byteslike: any): byteslike is BytesLike {
   return isHex(byteslike) || isBytes(byteslike);
-
 }
 
 function arrayify(byteslike: BytesLike): Uint8Array {
