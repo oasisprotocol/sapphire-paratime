@@ -1,4 +1,10 @@
-import { Chain, EIP1193Provider, WalletClient, http, toBytes } from 'viem';
+import {
+  Chain,
+  EIP1193Provider,
+  PublicClient,
+  WalletClient,
+  toBytes,
+} from 'viem';
 
 import {
   Cipher,
@@ -8,7 +14,7 @@ import {
 } from '../cipher.js';
 import { Hooks, makeProxy } from './utils.js';
 
-export default function <U extends WalletClient>(
+export function wrapPublicClient<U extends PublicClient>(
   upstream: U,
   overrides?: Partial<{
     cipher: Cipher;
@@ -29,7 +35,40 @@ export default function <U extends WalletClient>(
     });
   return makeProxy(
     upstream,
-    {} as any,
+    cipher,
+    {
+      async call(req) {
+        return upstream.call({
+          ...req,
+          data: await cipher.encryptEncode(req.data),
+        });
+      },
+    } as Hooks<U>,
+  );
+}
+
+export function wrapWalletClient<U extends WalletClient>(
+  upstream: U,
+  overrides?: Partial<{
+    cipher: Cipher;
+    transport: { request: EIP1193Provider['request'] };
+  }>,
+): U {
+  const transport = overrides?.transport ?? upstream.transport;
+  if (!transport)
+    throw new Error(
+      'unknown transport. please configure one on the wallet client or pass it as an override',
+    );
+  upstream.transport.request;
+  const cipher =
+    overrides?.cipher ??
+    lazyCipher(async () => {
+      const rtPubKey = await fetchRuntimePublicKey(transport, upstream.chain);
+      return X25519DeoxysII.ephemeral(rtPubKey);
+    });
+  return makeProxy(
+    upstream,
+    cipher,
     {
       async sendTransaction(req) {
         return upstream.sendTransaction({
@@ -39,6 +78,10 @@ export default function <U extends WalletClient>(
       },
     } as Hooks<U>,
   );
+}
+
+export async function getDefaultCipher(pc: PublicClient): Promise<Cipher> {
+  return X25519DeoxysII.ephemeral(await fetchRuntimePublicKey(pc.transport, pc.chain))
 }
 
 async function fetchRuntimePublicKey(
