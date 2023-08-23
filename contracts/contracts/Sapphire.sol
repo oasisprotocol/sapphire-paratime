@@ -266,7 +266,6 @@ function sha512_256(bytes memory input)
     (bool success, bytes memory output) = Sapphire.SHA512_256.staticcall(input);
 
     require( success, "sha512_256" );
-    //require( output.length == 32, "sha512_256.length" );
 
     return bytes32(output);
 }
@@ -288,5 +287,4 @@ function sha512(bytes memory input)
     (success, output) = Sapphire.SHA512.staticcall(input);
 
     require( success, "sha512" );
-    //require( output.length == 64, "sha512.length" );
 }
