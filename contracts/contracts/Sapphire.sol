@@ -237,7 +237,9 @@ library Sapphire {
         internal
         returns (bytes memory data)
     {
-        (bool success, bytes memory tmp) = SUBCALL.call(abi.encode(method, body));
+        (bool success, bytes memory tmp) = SUBCALL.call(
+            abi.encode(method, body)
+        );
 
         require(success, "subcall");
 
@@ -259,13 +261,10 @@ library Sapphire {
  * @param input Bytes to hash
  * @return result 32 byte digest
  */
-function sha512_256(bytes memory input)
-    view
-    returns (bytes32 result)
-{
+function sha512_256(bytes memory input) view returns (bytes32 result) {
     (bool success, bytes memory output) = Sapphire.SHA512_256.staticcall(input);
 
-    require( success, "sha512_256" );
+    require(success, "sha512_256");
 
     return bytes32(output);
 }
@@ -278,13 +277,10 @@ function sha512_256(bytes memory input)
  * @param input Bytes to hash
  * @return output 64 byte digest
  */
-function sha512(bytes memory input)
-    view
-    returns (bytes memory output)
-{
+function sha512(bytes memory input) view returns (bytes memory output) {
     bool success;
 
     (success, output) = Sapphire.SHA512.staticcall(input);
 
-    require( success, "sha512" );
+    require(success, "sha512");
 }
