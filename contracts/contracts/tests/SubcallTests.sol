@@ -6,9 +6,8 @@ import {Sapphire} from "../Sapphire.sol";
 
 contract SubcallTests {
     event SubcallResult(uint64 status, bytes data);
-    function testSubcall(string memory method, bytes memory data)
-        external
-    {
+
+    function testSubcall(string memory method, bytes memory data) external {
         uint64 status;
 
         (status, data) = Sapphire.subcall(method, data);
