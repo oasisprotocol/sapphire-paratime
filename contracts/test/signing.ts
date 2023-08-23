@@ -199,7 +199,7 @@ describe('Signing', function () {
 
   // TODO: implement Sr25519
 
-  it('Secp256r1', async () => {
+  it('Secp256r1 (Prehashed SHA256)', async () => {
     // Try Secp256r1 (alg=7)
     // 32 byte context, empty message
     const sha256_kp = await se.testKeygen(7, randomBytes(32));

@@ -18,7 +18,7 @@ describe('Hashes', () => {
             const data = randomBytes(i);
             const hash = createHash('SHA512-256').update(data).digest('hex');
             const result = await contract.testSHA512_256(data);
-            expect(result).eq(hash);
+            expect(result).eq('0x' + hash);
         }
     });
 
@@ -27,7 +27,7 @@ describe('Hashes', () => {
             const data = randomBytes(i);
             const hash = createHash('SHA512').update(data).digest('hex');
             const result = await contract.testSHA512(data);
-            expect(result).eq(hash);
+            expect(result).eq('0x' + hash);
         }
     });
 });
