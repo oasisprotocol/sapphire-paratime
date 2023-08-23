@@ -225,25 +225,24 @@ library Sapphire {
     }
 
     /**
-     * Submit a native Oasis message to the consensus layer
+     * Submit a native message to the Oasis runtime layer
      *
      * Messages which re-enter the EVM module are forbidden: evm.*
      *
      * @param method Native message type
      * @param body CBOR encoded body
+     * @return status_code Result of call
      * @return data CBOR encoded result
      */
-    function subcall(bytes calldata method, bytes calldata body)
+    function subcall(string memory method, bytes memory body)
         internal
-        returns (bytes memory data)
+        returns (uint64 status_code, bytes memory data)
     {
         (bool success, bytes memory tmp) = SUBCALL.call(
             abi.encode(method, body)
         );
 
         require(success, "subcall");
-
-        uint64 status_code;
 
         (status_code, data) = abi.decode(tmp, (uint64, bytes));
     }

@@ -92,6 +92,8 @@ importers:
       '@types/node': ^18.7.18
       '@typescript-eslint/eslint-plugin': ^5.37.0
       '@typescript-eslint/parser': ^5.37.0
+      bech32: ^2.0.0
+      cborg: ^1.9.5
       chai: ^4.3.6
       eslint: ^8.23.1
       eslint-config-prettier: ^8.5.0
@@ -118,6 +120,8 @@ importers:
       '@types/node': 18.16.18
       '@typescript-eslint/eslint-plugin': 5.60.1_2mcdevolkkvjpqnuwsqd5ntrqi
       '@typescript-eslint/parser': 5.60.1_2jcgcerbs6bi4debdtwega5q6u
+      bech32: 2.0.0
+      cborg: 1.10.2
       chai: 4.3.7
       eslint: 8.43.0
       eslint-config-prettier: 8.8.0_eslint@8.43.0
@@ -6371,6 +6375,10 @@ packages:
   /bech32/1.1.4:
     resolution: {integrity: sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==}
 
+  /bech32/2.0.0:
+    resolution: {integrity: sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==}
+    dev: true
+
   /bfj/7.0.2:
     resolution: {integrity: sha512-+e/UqUzwmzJamNF50tBV6tZPTORow7gQ96iFow+8b562OdMpEK0BcJEq2OSPEDmAbSMBQ7PKZ87ubFkgxpYWgw==}
     engines: {node: '>= 8.0.0'}
@@ -6793,7 +6801,6 @@ packages:
   /cborg/1.10.2:
     resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
     hasBin: true
-    dev: false
 
   /chai-as-promised/7.1.1_chai@4.3.7:
     resolution: {integrity: sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==}
