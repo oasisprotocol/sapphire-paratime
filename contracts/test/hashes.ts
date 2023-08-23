@@ -14,7 +14,8 @@ describe('Hashes', () => {
     });
 
     it('SHA512/256', async () => {
-        for( let i = 0; i < 512; i += 20 ) {
+        for( let i = 0; i < 512; i += 64 ) {
+            console.log('      ', i)
             const data = randomBytes(i);
             const hash = createHash('SHA512-256').update(data).digest('hex');
             const result = await contract.testSHA512_256(data);
@@ -23,7 +24,8 @@ describe('Hashes', () => {
     });
 
     it('SHA512', async () => {
-        for( let i = 0; i < 512; i += 20 ) {
+        for( let i = 0; i < 512; i += 64 ) {
+            console.log('      ', i)
             const data = randomBytes(i);
             const hash = createHash('SHA512').update(data).digest('hex');
             const result = await contract.testSHA512(data);
