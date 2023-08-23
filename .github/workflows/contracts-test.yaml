@@ -16,7 +16,7 @@ jobs:
           - 8545:8545
           - 8546:8546
         env:
-          OASIS_DEPOSIT: /oasis-deposit -test-mnemonic
+          OASIS_DEPOSIT: /oasis-deposit -test-mnemonic -n 5
         options: >-
           --rm
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
