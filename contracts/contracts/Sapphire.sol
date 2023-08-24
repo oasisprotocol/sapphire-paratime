@@ -1,27 +1,36 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.8;
+pragma solidity ^0.8.0;
 
 /**
  * @title Sapphire
  * @dev Convenient wrapper methods for Sapphire's cryptographic primitives.
  */
 library Sapphire {
-    address private constant RANDOM_BYTES =
+    // Oasis-specific, confidential precompiles
+    address internal constant RANDOM_BYTES =
         0x0100000000000000000000000000000000000001;
-    address private constant DERIVE_KEY =
+    address internal constant DERIVE_KEY =
         0x0100000000000000000000000000000000000002;
-    address private constant ENCRYPT =
+    address internal constant ENCRYPT =
         0x0100000000000000000000000000000000000003;
-    address private constant DECRYPT =
+    address internal constant DECRYPT =
         0x0100000000000000000000000000000000000004;
-    address private constant GENERAGE_SIGNING_KEYPAIR =
+    address internal constant GENERATE_SIGNING_KEYPAIR =
         0x0100000000000000000000000000000000000005;
-    address private constant SIGN_DIGEST =
+    address internal constant SIGN_DIGEST =
         0x0100000000000000000000000000000000000006;
-    address private constant VERIFY_DIGEST =
+    address internal constant VERIFY_DIGEST =
         0x0100000000000000000000000000000000000007;
-    address private constant CURVE25519_PUBLIC_KEY =
+    address internal constant CURVE25519_PUBLIC_KEY =
         0x0100000000000000000000000000000000000008;
+
+    // Oasis-specific, general precompiles
+    address internal constant SHA512_256 =
+        0x0100000000000000000000000000000000000101;
+    address internal constant SHA512 =
+        0x0100000000000000000000000000000000000102;
+    address internal constant SUBCALL =
+        0x0100000000000000000000000000000000000103;
 
     type Curve25519PublicKey is bytes32;
     type Curve25519SecretKey is bytes32;
@@ -43,7 +52,9 @@ library Sapphire {
         // Secp256k1 signature over the provided SHA-256 digest.
         Secp256k1PrehashedSha256,
         // Sr25519 signature over the provided message.
-        Sr25519
+        Sr25519,
+        // Secp256r1 signature over the provided SHA-256 digest.
+        Secp256r1PrehashedSha256
     }
 
     /**
@@ -161,7 +172,7 @@ library Sapphire {
         view
         returns (bytes memory publicKey, bytes memory secretKey)
     {
-        (bool success, bytes memory keypair) = GENERAGE_SIGNING_KEYPAIR
+        (bool success, bytes memory keypair) = GENERATE_SIGNING_KEYPAIR
             .staticcall(abi.encode(alg, seed));
         require(success, "gen signing keypair: failed");
         return abi.decode(keypair, (bytes, bytes));
@@ -212,4 +223,63 @@ library Sapphire {
         require(success, "verify: failed");
         return abi.decode(v, (bool));
     }
+
+    /**
+     * Submit a native message to the Oasis runtime layer
+     *
+     * Messages which re-enter the EVM module are forbidden: evm.*
+     *
+     * @param method Native message type
+     * @param body CBOR encoded body
+     * @return status_code Result of call
+     * @return data CBOR encoded result
+     */
+    function subcall(string memory method, bytes memory body)
+        internal
+        returns (uint64 status_code, bytes memory data)
+    {
+        (bool success, bytes memory tmp) = SUBCALL.call(
+            abi.encode(method, body)
+        );
+
+        require(success, "subcall");
+
+        (status_code, data) = abi.decode(tmp, (uint64, bytes));
+    }
+}
+
+/**
+ * Hash the input data with SHA-512/256
+ *
+ * SHA-512 is vulnerable to length-extension attacks, which are relevant if you
+ * are computing the hash of a secret message. The SHA-512/256 variant is
+ * **not** vulnerable to length-extension attacks.
+ *
+ * @custom:standard https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+ * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha512.rs :: call_sha512_256
+ * @param input Bytes to hash
+ * @return result 32 byte digest
+ */
+function sha512_256(bytes memory input) view returns (bytes32 result) {
+    (bool success, bytes memory output) = Sapphire.SHA512_256.staticcall(input);
+
+    require(success, "sha512_256");
+
+    return bytes32(output);
+}
+
+/**
+ * Hash the input data with SHA-512
+ *
+ * @custom:standard https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+ * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha512.rs :: call_sha512
+ * @param input Bytes to hash
+ * @return output 64 byte digest
+ */
+function sha512(bytes memory input) view returns (bytes memory output) {
+    bool success;
+
+    (success, output) = Sapphire.SHA512.staticcall(input);
+
+    require(success, "sha512");
 }

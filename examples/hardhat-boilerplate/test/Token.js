@@ -69,7 +69,8 @@ describe("Token contract", function () {
     });
 
     // Our confidential transfer does not emit events.
-    /*it("should emit Transfer events", async function () {
+    /*
+    it("should emit Transfer events", async function () {
       const { hardhatToken, owner, addr1, addr2 } = await deployTokenFixture();
 
       // Transfer 50 tokens from owner to addr1
@@ -80,7 +81,8 @@ describe("Token contract", function () {
       // We use .connect(signer) to send a transaction from another account
       await expect(hardhatToken.connect(addr1).transfer(addr2.address, 50))
         .to.emit(hardhatToken, "Transfer").withArgs(addr1.address, addr2.address, 50)
-    });*/
+    });
+    */
 
     it("Should fail if sender doesn't have enough tokens", async function () {
       const { hardhatToken, owner, addr1 } = await deployTokenFixture();

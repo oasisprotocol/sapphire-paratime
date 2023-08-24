@@ -93,18 +93,17 @@ const VARYING_SIZED_BUFFERS = [
   randomBytes(64),
 ];
 
-describe('Precompiles', function () {
-  async function deploy() {
+describe('Signing', function () {
+  let se: SigningTests;
+
+  before(async () => {
     const factory = (await ethers.getContractFactory(
       'SigningTests',
     )) as SigningTests__factory;
-    const se = await factory.deploy();
-
-    return { se };
-  }
+    se = await factory.deploy();
+  });
 
   it('Ethereum ecrecover Compatibility', async function () {
-    const { se } = await deploy();
     for (let i = 0; i < 20; i++) {
       const seed = randomBytes(32);
       const digest = randomBytes(32);
@@ -122,9 +121,7 @@ describe('Precompiles', function () {
     }
   });
 
-  it('Sign & Verify', async function () {
-    const { se } = await deploy();
-
+  it('Ed25519 (Oasis)', async () => {
     // Try Ed25519 Oasis (alg=0)
     // Varying sized message and context
     const edo_kp = await se.testKeygen(1, randomBytes(32));
@@ -133,14 +130,18 @@ describe('Precompiles', function () {
         await testSignThenVerify(se, 0, edo_kp, edo_ctx, edo_msg);
       }
     }
+  });
 
+  it('Ed25519 (Pure)', async () => {
     // Try Ed25519 Pure (alg=1)
     // Variying sized message, no context
     const ed_kp = await se.testKeygen(1, randomBytes(32));
     for (const ed_msg of VARYING_SIZED_BUFFERS) {
       await testSignThenVerify(se, 1, ed_kp, EMPTY_BUFFER, ed_msg, 0);
     }
+  });
 
+  it('Ed25519 (Prehashed SHA-512)', async () => {
     // Try Ed25519 Prehashed SHA-512 (alg=2)
     const edp512_kp = await se.testKeygen(2, randomBytes(32));
     await testSignThenVerify(
@@ -152,7 +153,9 @@ describe('Precompiles', function () {
       64,
       0,
     );
+  });
 
+  it('Secp256k1 (Oasis)', async () => {
     // Try Secp256k1 Oasis (alg=3)
     // Note: https://github.com/oasisprotocol/oasis-sdk/blob/ca630e7d48986bd102d7aa477a48f8966a3d1d23/runtime-sdk/src/crypto/signature/secp256k1.rs#L51
     // Uses SHA512-256 to digest the context then the message, so no pre-hashing (full message must be available, unless it's explicitly pre-hashed)
@@ -162,7 +165,9 @@ describe('Precompiles', function () {
         await testSignThenVerify(se, 3, k1oasis_kp, k1oasis_ctx, k1oasis_msg);
       }
     }
+  });
 
+  it('Secp256k1 (Prehashed Keccak256', async () => {
     // Try Secp256k1 prehashed Keccak256 (alg=4)
     // 32 byte context, empty message
     const k256_kp = await se.testKeygen(4, randomBytes(32));
@@ -175,13 +180,32 @@ describe('Precompiles', function () {
       32,
       0,
     );
+  });
 
+  it('Secp256k1 (Prehashed SHA256)', async () => {
     // Try Secp256k1 prehashed SHA256 (alg=5)
     // 32 byte context, empty message
     const sha256_kp = await se.testKeygen(5, randomBytes(32));
     await testSignThenVerify(
       se,
       5,
+      sha256_kp,
+      randomBytes(32),
+      EMPTY_BUFFER,
+      32,
+      0,
+    );
+  });
+
+  // TODO: implement Sr25519
+
+  it('Secp256r1 (Prehashed SHA256)', async () => {
+    // Try Secp256r1 (alg=7)
+    // 32 byte context, empty message
+    const sha256_kp = await se.testKeygen(7, randomBytes(32));
+    await testSignThenVerify(
+      se,
+      7,
       sha256_kp,
       randomBytes(32),
       EMPTY_BUFFER,
