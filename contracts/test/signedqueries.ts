@@ -14,7 +14,7 @@ describe('Signed Queries', () => {
     await contract.deployed();
   });
 
-  it('Works', async () => {
+  it('msg.sender is signer', async () => {
     const [owner] = await ethers.getSigners();
     const who = await contract.testSignedQueries();
     expect(who).eq(await owner.getAddress());
