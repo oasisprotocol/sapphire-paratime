@@ -1,4 +1,4 @@
-//import '@oasisprotocol/sapphire-hardhat';
+import '@oasisprotocol/sapphire-hardhat';
 import { HardhatUserConfig, task } from 'hardhat/config';
 import '@typechain/hardhat';
 import '@nomicfoundation/hardhat-chai-matchers';
