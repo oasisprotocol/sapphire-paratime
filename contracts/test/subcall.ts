@@ -12,29 +12,32 @@ export function fromBigInt(bi: BigNumberish) : Uint8Array {
 
 describe('Subcall', () => {
   let contract: SubcallTests;
+  let ownerAddr: string;
+  let ownerNativeAddr: Uint8Array;
+
   before(async () => {
     const factory = await ethers.getContractFactory('SubcallTests');
     contract = (await factory.deploy({value: parseEther('1.0')})) as SubcallTests;
-  });
-  it('account.Transfer', async () => {
+
     const [owner] = await ethers.getSigners();
-    const ownerAddr = await owner.getAddress();
+    ownerAddr = await owner.getAddress();
 
     // Convert Ethereum address to native bytes with version prefix (V1=0x00)
-    const ownerNativeAddr = ethers.utils.arrayify(ethers.utils.zeroPad(ownerAddr, 21));
+    ownerNativeAddr = ethers.utils.arrayify(ethers.utils.zeroPad(ownerAddr, 21));
     expect(ownerNativeAddr.length).eq(21);
+  });
+
+  it('accounts.Transfer', async () => {
     expect(await contract.provider.getBalance(contract.address)).eq(parseEther('1'));
 
-    // transfer balance-1 back to owner
+    // transfer balance-1 back to owner, then wait for transaction to be mined
     const balance = await contract.provider.getBalance(contract.address);
-    const transfer = cborg.encode({
+    const message = cborg.encode({
       to: ownerNativeAddr,
       amount: [fromBigInt(balance.sub(1)), new Uint8Array()]
     });
-
-    // Wait for transaction to be mined
-    const tx = await contract.testSubcall('accounts.Transfer', transfer);
-    const receipt = await tx.wait();
+    let tx = await contract.testSubcall('accounts.Transfer', message);
+    let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null
     const event = receipt.events![0].args! as unknown as {status:number, data:string};
@@ -43,5 +46,12 @@ describe('Subcall', () => {
 
     // Ensure contract only has 1 wei left
     expect(await contract.provider.getBalance(contract.address)).eq(1);
+
+    // Transfer using the Subcall.accounts_Transfer method
+    tx = await contract.testAccountsTransfer(ownerAddr, 1);
+    receipt = await tx.wait();
+
+    // Ensure contract only no wei left
+    expect(await contract.provider.getBalance(contract.address)).eq(0);
   });
 });
