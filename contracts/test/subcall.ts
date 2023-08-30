@@ -1,6 +1,5 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { BinaryLike, createHash } from 'crypto';
 import * as oasis from '@oasisprotocol/client';
 import * as cborg from 'cborg';
 import { SubcallTests } from '../typechain-types/contracts/tests/SubcallTests';
@@ -51,6 +50,18 @@ describe('Subcall', () => {
     };
   });
 
+  it('Derive Staking Addresses', async () => {
+    const newKeypair = await contract.generateRandomAddress();
+
+    // Verify @oasisprotocol/client matches Solidity
+    const alice = oasis.signature.NaclSigner.fromSeed(
+      ethers.utils.arrayify(newKeypair.secretKey), 'this key is not important',
+    );
+    const computedPublicKey = ethers.utils.hexlify(await oasis.staking.addressFromPublicKey(alice.public()));
+
+    expect(computedPublicKey).eq(ethers.utils.hexlify(newKeypair.publicKey));
+  });
+
   it('accounts.Transfer', async () => {
     // Ensure contract has an initial balance
     const initialBalance = parseEther('1.0');
@@ -74,7 +85,7 @@ describe('Subcall', () => {
     expect(await contract.provider.getBalance(contract.address)).eq(1);
 
     // Transfer using the Subcall.accounts_Transfer method
-    tx = await contract.testAccountsTransfer(ownerNativeAddr, 1);
+    tx = await contract.testAccountsTransfer(ownerAddr, 1);
     receipt = await tx.wait();
 
     // Ensure contract only no wei left
@@ -110,18 +121,6 @@ describe('Subcall', () => {
 
     // Ensure contract only no wei left
     //expect(await contract.provider.getBalance(contract.address)).eq(0);
-  });
-
-  it('Derives Staking Addresses', async () => {
-    const newKeypair = await contract.generateRandomAddress();
-
-    // Verify @oasisprotocol/client matches Solidity
-    const alice = oasis.signature.NaclSigner.fromSeed(
-      ethers.utils.arrayify(newKeypair.secretKey), 'this key is not important',
-    );
-    const computedPublicKey = ethers.utils.hexlify(await oasis.staking.addressFromPublicKey(alice.public()));
-
-    expect(computedPublicKey).eq(ethers.utils.hexlify(newKeypair.publicKey));
   });
 
   it('consensus.Undelegate', async () => {

@@ -35,7 +35,7 @@ contract SubcallTests {
         emit SubcallResult(status, data);
     }
 
-    function testAccountsTransfer (StakingPublicKey to, uint128 value)
+    function testAccountsTransfer (address to, uint128 value)
         external
     {
         Subcall.accounts_Transfer(to, value);

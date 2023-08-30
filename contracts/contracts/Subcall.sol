@@ -8,6 +8,7 @@ type StakingPublicKey is bytes21;
 
 type StakingSecretKey is bytes32;
 
+
 library ConsensusUtils {
     string constant private ADDRESS_V0_CONTEXT_IDENTIFIER = "oasis-core/address: staking";
     uint8 constant private ADDRESS_V0_CONTEXT_VERSION = 0;
@@ -59,6 +60,7 @@ library ConsensusUtils {
     }
 }
 
+
 library Subcall {
     address internal constant SUBCALL =
         0x0100000000000000000000000000000000000103;
@@ -72,12 +74,12 @@ library Subcall {
      *
      * @param method Native message type
      * @param body CBOR encoded body
-     * @return status_code Result of call
+     * @return status Result of call
      * @return data CBOR encoded result
      */
     function subcall(string memory method, bytes memory body)
         internal
-        returns (uint64 status_code, bytes memory data)
+        returns (uint64 status, bytes memory data)
     {
         (bool success, bytes memory tmp) = SUBCALL.call(
             abi.encode(method, body)
@@ -87,28 +89,9 @@ library Subcall {
             revert Subcall_Error();
         }
 
-        (status_code, data) = abi.decode(tmp, (uint64, bytes));
+        (status, data) = abi.decode(tmp, (uint64, bytes));
     }
 
-
-    error ConsensusUndelegate_Error(uint64 status_code, bytes data);
-
-    function consensus_Undelegate(
-        StakingPublicKey from,
-        uint128 shares
-    )
-        internal
-    {
-        (uint64 status_code, bytes memory data) = subcall(
-            "consensus.Undelegate",
-            abi.encodePacked(
-                hex"a26466726f6d55", from, hex"6673686172657350", shares
-            ));
-
-        if( status_code != 0 ) {
-            revert ConsensusUndelegate_Error(status_code, data);
-        }
-    }
 
     function _subcall_to_amount (
         string memory method,
@@ -116,81 +99,125 @@ library Subcall {
         uint128 value
     )
         internal
-        returns (uint64 status_code, bytes memory data)
+        returns (uint64 status, bytes memory data)
     {
-        (status_code, data) = subcall(method, abi.encodePacked(
-            hex"a262746f55", to, hex"66616d6f756e748250", value, hex"40"
-        ));
+        (status, data) = subcall(
+            method,
+            abi.encodePacked(
+                hex"a262", "to", hex"55", to,
+                hex"66", "amount", hex"8250", value, hex"40"
+            ));
     }
 
 
-    error ConsensusDelegate_Error(uint64 status_code, bytes data);
+    error ConsensusUndelegate_Error(uint64 status, string data);
 
-    function consensus_Delegate(StakingPublicKey to, uint128 value)
+    /**
+     * Start the undelegation process of the given number of shares from
+     * consensus staking account to runtime account.
+     *
+     * @param from Public key which shares were delegated to
+     * @param shares Number of shares to withdraw back to us
+     */
+    function consensus_Undelegate(
+        StakingPublicKey from,
+        uint128 shares
+    )
         internal
     {
-        (uint64 status_code, bytes memory data) = _subcall_to_amount("consensus.Delegate", to, value);
+        (uint64 status, bytes memory data) = subcall(
+            "consensus.Undelegate",
+            abi.encodePacked(
+                hex"a264", "from", hex"55", from,
+                hex"66", "shares", hex"50", shares
+            ));
 
-        if( status_code != 0 ) {
-            revert ConsensusDelegate_Error(status_code, data);
+        if( status != 0 ) {
+            revert ConsensusUndelegate_Error(status, string(data));
         }
     }
 
 
-    error ConsensusDeposit_Error(uint64 status_code, bytes data);
+    error ConsensusDelegate_Error(uint64 status, string data);
 
     /**
-     * Deposit into runtime call.
+     * Delegate native token to consensus level
      *
-     * Transfer from consensus staking to an account in this runtime.
+     * @param to Staking account
+     * @param value native token amount (in wei)
+     */
+    function consensus_Delegate(StakingPublicKey to, uint128 value)
+        internal
+    {
+        (uint64 status, bytes memory data) = _subcall_to_amount("consensus.Delegate", to, value);
+
+        if( status != 0 ) {
+            revert ConsensusDelegate_Error(status, string(data));
+        }
+    }
+
+
+    error ConsensusDeposit_Error(uint64 status, bytes data);
+
+    /**
+     * Transfer from consensus staking account to an account in this runtime.
      *
      * The transaction signer has a consensus layer allowance benefiting this
      * runtime's staking address.
      *
-     * @param to runtime account gets the tokens
-     * @param value native token amount
+     * @param to runtime account which gets the tokens
+     * @param value native token amount (in wei)
      */
     function consensus_Deposit(StakingPublicKey to, uint128 value)
         internal
     {
-        (uint64 status_code, bytes memory data) = _subcall_to_amount("consensus.Deposit", to, value);
+        (uint64 status, bytes memory data) = _subcall_to_amount("consensus.Deposit", to, value);
 
-        if( status_code != 0 ) {
-            revert ConsensusDeposit_Error(status_code, data);
+        if( status != 0 ) {
+            revert ConsensusDeposit_Error(status, data);
         }
     }
 
 
-    error ConsensusWithdraw_Error(uint64 status_code, bytes data);
+    error ConsensusWithdraw_Error(uint64 status, string data);
 
     /**
-     * Withdraw from runtime call.
-     *
-     * Transfer from an account in this runtime to consensus staking.
+     * Transfer from an account in this runtime to a consensus staking account.
      *
      * @param to consensus staking account which gets the tokens
-     * @param value native token amount
+     * @param value native token amount (in wei)
      */
     function consensus_Withdraw(StakingPublicKey to, uint128 value)
         internal
     {
-        (uint64 status_code, bytes memory data) = _subcall_to_amount("consensus.Withdraw", to, value);
+        (uint64 status, bytes memory data) = _subcall_to_amount("consensus.Withdraw", to, value);
 
-        if( status_code != 0 ) {
-            revert ConsensusDeposit_Error(status_code, data);
+        if( status != 0 ) {
+            revert ConsensusWithdraw_Error(status, string(data));
         }
     }
 
 
-    error AccountsTransfer_Error(uint64 status_code, bytes data);
+    error AccountsTransfer_Error(uint64 status, string data);
 
-    function accounts_Transfer(StakingPublicKey to, uint128 value)
+    /**
+     * Perform a transfer to another account
+     *
+     * This is equivalent of `payable(to).transfer(value);`
+     *
+     * @param to Destination account
+     * @param value native token amount (in wei)
+     */
+    function accounts_Transfer(address to, uint128 value)
         internal
     {
-        (uint64 status_code, bytes memory data) = _subcall_to_amount("accounts.Transfer", to, value);
+        (uint64 status, bytes memory data) = _subcall_to_amount(
+            "accounts.Transfer",
+            StakingPublicKey.wrap(bytes21(abi.encodePacked(uint8(0x00), to))),
+            value);
 
-        if( status_code != 0 ) {
-            revert AccountsTransfer_Error(status_code, data);
+        if( status != 0 ) {
+            revert AccountsTransfer_Error(status, string(data));
         }
     }
 }
