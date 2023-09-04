@@ -26,7 +26,7 @@ jobs:
         working-directory: ./runtime
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Rust
         run: rustup show
@@ -45,7 +45,7 @@ jobs:
         working-directory: ./runtime
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # gcc-multilib is required for bindgen to work for SGX.
       - name: Install dependencies
@@ -67,7 +67,7 @@ jobs:
         working-directory: ./clients/js
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -122,7 +122,7 @@ jobs:
         working-directory: ./integrations/hardhat
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -183,7 +183,7 @@ jobs:
       run:
         working-directory: ./clients/go
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -217,7 +217,7 @@ jobs:
         working-directory: examples/${{ matrix.example }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
         uses: actions/setup-node@v3
