@@ -2153,7 +2153,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.7.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.7.1#1f8edd8a50100b2dc2e3a790d72fa886fa24f439"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.7.2#43bb365683b5fc545be50d09643175becb5f540f"
 dependencies = [
  "anyhow",
  "base64",
@@ -2192,7 +2192,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.5.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.7.1#1f8edd8a50100b2dc2e3a790d72fa886fa24f439"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.7.2#43bb365683b5fc545be50d09643175becb5f540f"
 dependencies = [
  "anyhow",
  "base64",
@@ -2224,7 +2224,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.7.1#1f8edd8a50100b2dc2e3a790d72fa886fa24f439"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.7.2#43bb365683b5fc545be50d09643175becb5f540f"
 dependencies = [
  "darling",
  "proc-macro2 1.0.66",
@@ -2870,7 +2870,7 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "0.6.1-testnet"
+version = "0.6.2-testnet"
 dependencies = [
  "keymanager",
  "oasis-runtime-sdk",
