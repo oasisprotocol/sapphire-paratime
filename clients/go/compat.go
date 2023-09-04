@@ -15,9 +15,7 @@ import (
 )
 
 const (
-	DefaultGasPrice = 100_000_000_000
-	// DefaultGasLimit is set on all transactions without explicit gas limit to avoid being set on signed queries by the web3 gateway.
-	DefaultGasLimit   = 30_000_000
+	DefaultGasPrice   = 100_000_000_000
 	DefaultBlockRange = 15
 )
 
@@ -76,7 +74,7 @@ func PackCall(msg ethereum.CallMsg, cipher Cipher) (*ethereum.CallMsg, error) {
 
 // PackSignedCall prepares `msg` in-place for being sent to Sapphire. The call will be end-to-end encrypted and a signature will be used to authenticate the `from` address.
 func PackSignedCall(msg ethereum.CallMsg, cipher Cipher, sign SignerFn, chainID big.Int, leash Leash) (*ethereum.CallMsg, error) {
-	dataPack, err := NewDataPack(sign, chainID.Uint64(), msg.From[:], msg.To[:], DefaultGasLimit, msg.GasPrice, msg.Value, msg.Data, leash)
+	dataPack, err := NewDataPack(sign, chainID.Uint64(), msg.From[:], msg.To[:], 0, msg.GasPrice, msg.Value, msg.Data, leash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signed call data back: %w", err)
 	}
@@ -158,7 +156,7 @@ func (b WrappedBackend) Transactor(from common.Address) *bind.TransactOpts {
 		From:     from,
 		Signer:   signFn,
 		GasPrice: big.NewInt(DefaultGasPrice),
-		GasLimit: DefaultGasLimit,
+		GasLimit: 0,
 	}
 }
 
@@ -230,16 +228,8 @@ func (b WrappedBackend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) 
 
 // EstimateGas implements ContractTransactor.
 func (b WrappedBackend) EstimateGas(ctx context.Context, call ethereum.CallMsg) (gas uint64, err error) {
-	return DefaultGasLimit, nil
-	// TODO(#39)
-	// header, err := b.backend.HeaderByNumber(ctx, blockNumber)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if err = packContractCall(header, &call, b.ChainID.Uint64(), b.Signer, b.Cipher); err != nil {
-	// 	return nil, err
-	// }
-	// return b.backend.EstimateGas(ctx, call)
+	// Assume latest round in oasis-web3-gateway RPC call
+	return b.backend.EstimateGas(ctx, call)
 }
 
 func txNeedsPacking(tx *types.Transaction) bool {
