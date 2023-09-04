@@ -27,7 +27,7 @@ jobs:
       - name: attempt to connect to sapphire-dev-ci via localhost
         run: curl -kv http://127.0.0.1:8545/ || true
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
