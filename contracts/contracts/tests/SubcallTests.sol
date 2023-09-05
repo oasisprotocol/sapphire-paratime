@@ -44,10 +44,6 @@ contract SubcallTests {
         Subcall.consensusUndelegate(to, value);
     }
 
-    function testConsensusDeposit(StakingPublicKey to, uint128 value) external {
-        Subcall.consensusDeposit(to, value);
-    }
-
     function testConsensusWithdraw(StakingPublicKey to, uint128 value)
         external
     {

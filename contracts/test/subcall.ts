@@ -190,22 +190,4 @@ describe('Subcall', () => {
       initialBalance,
     );
   });
-
-  it('consensus.Deposit', async () => {
-    // Ensure contract has an initial balance
-    const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
-
-    const message = cborg.encode({
-      to: kp.publicKey,
-      amount: [fromBigInt(0), new Uint8Array()],
-    });
-    const tx = await contract.testSubcall('consensus.Deposit', message);
-    let result = decodeResult(await tx.wait());
-
-    // consensus.Deposit cannot be called from Solidity
-    // It requires the transaction signer to be a consensus account!
-    expect(result.status).eq(4);
-    expect(result.data).eq('consensus');
-  });
 });

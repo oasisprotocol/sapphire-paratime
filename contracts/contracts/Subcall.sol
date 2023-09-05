@@ -175,29 +175,6 @@ library Subcall {
         }
     }
 
-    error ConsensusDepositError(uint64 status, bytes data);
-
-    /**
-     * Transfer from consensus staking account to an account in this runtime.
-     *
-     * The transaction signer has a consensus layer allowance benefiting this
-     * runtime's staking address.
-     *
-     * @param to runtime account which gets the tokens
-     * @param value native token amount (in wei)
-     */
-    function consensusDeposit(StakingPublicKey to, uint128 value) internal {
-        (uint64 status, bytes memory data) = _subcallWithToAndAmount(
-            "consensus.Deposit",
-            to,
-            value
-        );
-
-        if (status != 0) {
-            revert ConsensusDepositError(status, data);
-        }
-    }
-
     error ConsensusWithdrawError(uint64 status, string data);
 
     /**
