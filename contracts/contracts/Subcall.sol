@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {StakingPublicKey, StakingSecretKey} from "./ConsensusUtils.sol";
+import {StakingAddress, StakingSecretKey} from "./ConsensusUtils.sol";
 
 library Subcall {
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
@@ -42,7 +42,7 @@ library Subcall {
 
     function _subcallWithToAndAmount(
         string memory method,
-        StakingPublicKey to,
+        StakingAddress to,
         uint128 value
     ) internal returns (uint64 status, bytes memory data) {
         (status, data) = subcall(
@@ -70,9 +70,7 @@ library Subcall {
      * @param from Public key which shares were delegated to
      * @param shares Number of shares to withdraw back to us
      */
-    function consensusUndelegate(StakingPublicKey from, uint128 shares)
-        internal
-    {
+    function consensusUndelegate(StakingAddress from, uint128 shares) internal {
         (uint64 status, bytes memory data) = subcall(
             CONSENSUS_UNDELEGATE,
             abi.encodePacked(
@@ -100,7 +98,7 @@ library Subcall {
      * @param to Staking account
      * @param value native token amount (in wei)
      */
-    function consensusDelegate(StakingPublicKey to, uint128 value) internal {
+    function consensusDelegate(StakingAddress to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
             CONSENSUS_DELEGATE,
             to,
@@ -120,7 +118,7 @@ library Subcall {
      * @param to consensus staking account which gets the tokens
      * @param value native token amount (in wei)
      */
-    function consensusWithdraw(StakingPublicKey to, uint128 value) internal {
+    function consensusWithdraw(StakingAddress to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
             CONSENSUS_WITHDRAW,
             to,
@@ -145,7 +143,7 @@ library Subcall {
     function accountsTransfer(address to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
             ACCOUNTS_TRANSFER,
-            StakingPublicKey.wrap(bytes21(abi.encodePacked(uint8(0x00), to))),
+            StakingAddress.wrap(bytes21(abi.encodePacked(uint8(0x00), to))),
             value
         );
 

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {ConsensusUtils, StakingPublicKey, StakingSecretKey} from "../ConsensusUtils.sol";
+import {ConsensusUtils, StakingAddress, StakingSecretKey} from "../ConsensusUtils.sol";
 import {Subcall} from "../Subcall.sol";
 
 contract SubcallTests {
@@ -15,7 +15,7 @@ contract SubcallTests {
     function generateRandomAddress()
         external
         view
-        returns (StakingPublicKey publicKey, StakingSecretKey secretKey)
+        returns (StakingAddress publicKey, StakingSecretKey secretKey)
     {
         return ConsensusUtils.generateStakingAddress("");
     }
@@ -32,21 +32,17 @@ contract SubcallTests {
         Subcall.accountsTransfer(to, value);
     }
 
-    function testConsensusDelegate(StakingPublicKey to, uint128 value)
-        external
-    {
+    function testConsensusDelegate(StakingAddress to, uint128 value) external {
         Subcall.consensusDelegate(to, value);
     }
 
-    function testConsensusUndelegate(StakingPublicKey to, uint128 value)
+    function testConsensusUndelegate(StakingAddress to, uint128 value)
         external
     {
         Subcall.consensusUndelegate(to, value);
     }
 
-    function testConsensusWithdraw(StakingPublicKey to, uint128 value)
-        external
-    {
+    function testConsensusWithdraw(StakingAddress to, uint128 value) external {
         Subcall.consensusWithdraw(to, value);
     }
 }

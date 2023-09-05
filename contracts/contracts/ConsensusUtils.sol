@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {sha512_256, Sapphire} from "./Sapphire.sol";
 
-type StakingPublicKey is bytes21;
+type StakingAddress is bytes21;
 
 type StakingSecretKey is bytes32;
 
@@ -16,7 +16,7 @@ library ConsensusUtils {
     function generateStakingAddress(bytes memory personalization)
         internal
         view
-        returns (StakingPublicKey publicKey, StakingSecretKey secretKey)
+        returns (StakingAddress publicAddress, StakingSecretKey secretKey)
     {
         bytes memory sk = Sapphire.randomBytes(32, personalization);
 
@@ -25,7 +25,7 @@ library ConsensusUtils {
             sk
         );
 
-        publicKey = StakingPublicKey.wrap(
+        publicAddress = StakingAddress.wrap(
             _stakingAddressFromPublicKey(bytes32(pk))
         );
 
