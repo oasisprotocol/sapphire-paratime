@@ -38,7 +38,7 @@ contract SubcallTests {
         Subcall.consensusDelegate(to, value);
     }
 
-    function tesaccountsTransferate(StakingPublicKey to, uint128 value)
+    function testConsensusUndelegate(StakingPublicKey to, uint128 value)
         external
     {
         Subcall.consensusUndelegate(to, value);
