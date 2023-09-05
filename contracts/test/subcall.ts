@@ -98,10 +98,13 @@ describe('Subcall', () => {
 
     // transfer balance-1 back to owner, then wait for transaction to be mined
     const balance = await contract.provider.getBalance(contract.address);
-    let tx = await contract.testSubcall('accounts.Transfer', cborg.encode({
-      to: ownerNativeAddr,
-      amount: [fromBigInt(balance.sub(1)), new Uint8Array()],
-    }));
+    let tx = await contract.testSubcall(
+      'accounts.Transfer',
+      cborg.encode({
+        to: ownerNativeAddr,
+        amount: [fromBigInt(balance.sub(1)), new Uint8Array()],
+      }),
+    );
     let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null
@@ -133,10 +136,13 @@ describe('Subcall', () => {
     );
 
     // Manually encode & submit consensus.Delegate message
-    tx = await contract.testSubcall('consensus.Delegate', cborg.encode({
-      to: kp.publicKey,
-      amount: [fromBigInt(0), new Uint8Array()],
-    }));
+    tx = await contract.testSubcall(
+      'consensus.Delegate',
+      cborg.encode({
+        to: kp.publicKey,
+        amount: [fromBigInt(0), new Uint8Array()],
+      }),
+    );
     let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null

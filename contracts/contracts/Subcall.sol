@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {StakingPublicKey,StakingSecretKey} from "./ConsensusUtils.sol";
+import {StakingPublicKey, StakingSecretKey} from "./ConsensusUtils.sol";
 
 library Subcall {
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
