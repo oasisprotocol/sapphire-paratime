@@ -98,20 +98,16 @@ describe('Subcall', () => {
 
     // transfer balance-1 back to owner, then wait for transaction to be mined
     const balance = await contract.provider.getBalance(contract.address);
-    const message = cborg.encode({
+    let tx = await contract.testSubcall('accounts.Transfer', cborg.encode({
       to: ownerNativeAddr,
       amount: [fromBigInt(balance.sub(1)), new Uint8Array()],
-    });
-    let tx = await contract.testSubcall('accounts.Transfer', message);
+    }));
     let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null
-    const event = receipt.events![0].args! as unknown as {
-      status: number;
-      data: string;
-    };
+    const event = decodeResult(receipt);
     expect(event.status).eq(0);
-    expect(cborg.decode(ethers.utils.arrayify(event.data))).is.null;
+    expect(event.data).is.null;
 
     // Ensure contract only has 1 wei left
     expect(await contract.provider.getBalance(contract.address)).eq(1);
@@ -137,27 +133,16 @@ describe('Subcall', () => {
     );
 
     // Manually encode & submit consensus.Delegate message
-    const message = cborg.encode({
+    tx = await contract.testSubcall('consensus.Delegate', cborg.encode({
       to: kp.publicKey,
       amount: [fromBigInt(0), new Uint8Array()],
-    });
-    tx = await contract.testSubcall('consensus.Delegate', message);
+    }));
     let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null
-    const event = receipt.events![0].args! as unknown as {
-      status: number;
-      data: string;
-    };
-    const decodedEvent = {
-      status: event.status,
-      data:
-        event.status == 0
-          ? cborg.decode(ethers.utils.arrayify(event.data))
-          : new TextDecoder().decode(ethers.utils.arrayify(event.data)),
-    };
+    const event = decodeResult(receipt);
     expect(event.status).eq(0);
-    expect(cborg.decode(ethers.utils.arrayify(event.data))).is.null;
+    expect(event.data).is.null;
 
     // Ensure contract only no wei left
     //expect(await contract.provider.getBalance(contract.address)).eq(0);

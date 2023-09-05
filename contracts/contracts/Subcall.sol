@@ -2,77 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import {sha512_256, Sapphire} from "./Sapphire.sol";
-
-type StakingPublicKey is bytes21;
-
-type StakingSecretKey is bytes32;
-
-library ConsensusUtils {
-    string private constant ADDRESS_V0_CONTEXT_IDENTIFIER =
-        "oasis-core/address: staking";
-    uint8 private constant ADDRESS_V0_CONTEXT_VERSION = 0;
-
-    string internal constant V0_SECP256K1ETH_CONTEXT_IDENTIFIER =
-        "oasis-runtime-sdk/address: secp256k1eth";
-    uint8 internal constant V0_SECP256K1ETH_CONTEXT_VERSION = 0;
-
-    function generateStakingAddress(bytes memory personalization)
-        internal
-        view
-        returns (StakingPublicKey publicKey, StakingSecretKey secretKey)
-    {
-        bytes memory sk = Sapphire.randomBytes(32, personalization);
-
-        (bytes memory pk, ) = Sapphire.generateSigningKeyPair(
-            Sapphire.SigningAlg.Ed25519Oasis,
-            sk
-        );
-
-        publicKey = StakingPublicKey.wrap(
-            _stakingAddressFromPublicKey(bytes32(pk))
-        );
-
-        secretKey = StakingSecretKey.wrap(bytes32(sk));
-    }
-
-    function _stakingAddressFromPublicKey(bytes32 ed25519publicKey)
-        internal
-        view
-        returns (bytes21)
-    {
-        return
-            _addressFromData(
-                ADDRESS_V0_CONTEXT_IDENTIFIER,
-                ADDRESS_V0_CONTEXT_VERSION,
-                abi.encodePacked(ed25519publicKey)
-            );
-    }
-
-    function _addressFromData(
-        string memory contextIdentifier,
-        uint8 contextVersion,
-        bytes memory data
-    ) internal view returns (bytes21) {
-        return
-            bytes21(
-                abi.encodePacked(
-                    contextVersion,
-                    bytes20(
-                        sha512_256(
-                            abi.encodePacked(
-                                contextIdentifier,
-                                contextVersion,
-                                data
-                            )
-                        )
-                    )
-                )
-            );
-    }
-}
+import {StakingPublicKey,StakingSecretKey} from "./ConsensusUtils.sol";
 
 library Subcall {
+    string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
+    string private constant CONSENSUS_UNDELEGATE = "consensus.Undelegate";
+    string private constant CONSENSUS_WITHDRAW = "consensus.Withdraw";
+    string private constant ACCOUNTS_TRANSFER = "accounts.Transfer";
+
     address internal constant SUBCALL =
         0x0100000000000000000000000000000000000103;
 
@@ -96,7 +33,7 @@ library Subcall {
             abi.encode(method, body)
         );
 
-        if (false == success) {
+        if (!success) {
             revert Subcall_Error();
         }
 
@@ -137,7 +74,7 @@ library Subcall {
         internal
     {
         (uint64 status, bytes memory data) = subcall(
-            "consensus.Undelegate",
+            CONSENSUS_UNDELEGATE,
             abi.encodePacked(
                 hex"a264",
                 "from",
@@ -165,7 +102,7 @@ library Subcall {
      */
     function consensusDelegate(StakingPublicKey to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
-            "consensus.Delegate",
+            CONSENSUS_DELEGATE,
             to,
             value
         );
@@ -185,7 +122,7 @@ library Subcall {
      */
     function consensusWithdraw(StakingPublicKey to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
-            "consensus.Withdraw",
+            CONSENSUS_WITHDRAW,
             to,
             value
         );
@@ -207,7 +144,7 @@ library Subcall {
      */
     function accountsTransfer(address to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
-            "accounts.Transfer",
+            ACCOUNTS_TRANSFER,
             StakingPublicKey.wrap(bytes21(abi.encodePacked(uint8(0x00), to))),
             value
         );
