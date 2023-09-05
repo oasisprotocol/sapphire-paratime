@@ -67,7 +67,7 @@ library Subcall {
      * Start the undelegation process of the given number of shares from
      * consensus staking account to runtime account.
      *
-     * @param from Public key which shares were delegated to
+     * @param from Consensus address which shares were delegated to
      * @param shares Number of shares to withdraw back to us
      */
     function consensusUndelegate(StakingAddress from, uint128 shares) internal {
@@ -95,8 +95,8 @@ library Subcall {
     /**
      * Delegate native token to consensus level
      *
-     * @param to Staking account
-     * @param value native token amount (in wei)
+     * @param to Consensus address shares are delegated to
+     * @param value Native token amount (in wei)
      */
     function consensusDelegate(StakingAddress to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
@@ -115,8 +115,8 @@ library Subcall {
     /**
      * Transfer from an account in this runtime to a consensus staking account.
      *
-     * @param to consensus staking account which gets the tokens
-     * @param value native token amount (in wei)
+     * @param to Consensus address which gets the tokens
+     * @param value Native token amount (in wei)
      */
     function consensusWithdraw(StakingAddress to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
