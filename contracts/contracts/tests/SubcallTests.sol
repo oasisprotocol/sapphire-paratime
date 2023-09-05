@@ -3,26 +3,19 @@
 pragma solidity ^0.8.0;
 
 import {Sapphire} from "../Sapphire.sol";
-import {Subcall,ConsensusUtils,StakingPublicKey,StakingSecretKey} from "../Subcall.sol";
+import {Subcall, ConsensusUtils, StakingPublicKey, StakingSecretKey} from "../Subcall.sol";
 
 contract SubcallTests {
     event SubcallResult(uint64 status, bytes data);
 
-    constructor ()
-        payable
-    {
+    constructor() payable {}
 
-    }
+    receive() external payable {}
 
-    receive () external payable
-    { }
-
-    function generateRandomAddress ()
-        external view
-        returns (
-            StakingPublicKey publicKey,
-            StakingSecretKey secretKey
-        )
+    function generateRandomAddress()
+        external
+        view
+        returns (StakingPublicKey publicKey, StakingSecretKey secretKey)
     {
         return ConsensusUtils.generateStakingAddress("");
     }
@@ -35,33 +28,29 @@ contract SubcallTests {
         emit SubcallResult(status, data);
     }
 
-    function testAccountsTransfer (address to, uint128 value)
-        external
-    {
-        Subcall.accounts_Transfer(to, value);
+    function testAccountsTransfer(address to, uint128 value) external {
+        Subcall.accountsTransfer(to, value);
     }
 
-    function testConsensusDelegate (StakingPublicKey to, uint128 value)
+    function testConsensusDelegate(StakingPublicKey to, uint128 value)
         external
     {
-        Subcall.consensus_Delegate(to, value);
+        Subcall.consensusDelegate(to, value);
     }
 
-    function testConsensusUndelegate (StakingPublicKey to, uint128 value)
+    function tesaccountsTransferate(StakingPublicKey to, uint128 value)
         external
     {
-        Subcall.consensus_Undelegate(to, value);
+        Subcall.consensusUndelegate(to, value);
     }
 
-    function testConsensusDeposit (StakingPublicKey to, uint128 value)
-        external
-    {
-        Subcall.consensus_Deposit(to, value);
+    function testConsensusDeposit(StakingPublicKey to, uint128 value) external {
+        Subcall.consensusDeposit(to, value);
     }
 
-    function testConsensusWithdraw (StakingPublicKey to, uint128 value)
+    function testConsensusWithdraw(StakingPublicKey to, uint128 value)
         external
     {
-        Subcall.consensus_Withdraw(to, value);
+        Subcall.consensusWithdraw(to, value);
     }
 }
