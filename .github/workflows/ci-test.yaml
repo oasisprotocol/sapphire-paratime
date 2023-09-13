@@ -111,6 +111,8 @@ jobs:
             clients/js/lib
 
       - name: Test JS client
+        env:
+          NODE_OPTIONS: "--no-experimental-fetch" # https://github.com/nock/nock/issues/2397
         run: pnpm test
 
   test-integration-hardhat:
