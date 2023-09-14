@@ -246,6 +246,11 @@ jobs:
           name: integration-hardhat
           path: integrations/hardhat/dist
 
+      - name: Build integrations/hardhat
+        working-directory: integrations/hardhat
+        run: |
+          pnpm build
+
       - name: Install dependencies
         run: |
           pnpm install
