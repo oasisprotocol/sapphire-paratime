@@ -155,7 +155,9 @@ describe('fetchPublicKeyByChainId', () => {
         },
       });
 
-    expect(await fetchRuntimePublicKeyByChainId(chainId, opts));
+    expect(
+      await fetchRuntimePublicKeyByChainId(chainId, opts),
+    ).not.toHaveLength(0);
 
     scope.done();
   }

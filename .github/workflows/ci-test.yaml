@@ -72,7 +72,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - uses: pnpm/action-setup@v2.4.0
         name: Install pnpm
@@ -111,6 +111,8 @@ jobs:
             clients/js/lib
 
       - name: Test JS client
+        env:
+          NODE_OPTIONS: "--no-experimental-fetch" # https://github.com/nock/nock/issues/2397
         run: pnpm test
 
   test-integration-hardhat:
@@ -127,7 +129,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - uses: pnpm/action-setup@v2.4.0
         name: Install pnpm
@@ -222,7 +224,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - uses: pnpm/action-setup@v2.4.0
         name: Install pnpm
