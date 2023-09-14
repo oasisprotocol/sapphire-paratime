@@ -143,6 +143,7 @@ jobs:
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
       - uses: actions/cache@v3
         name: Setup pnpm cache
         with:
@@ -150,6 +151,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
+
       - name: Download client-js build
         uses: actions/download-artifact@v3
         with:
@@ -159,6 +161,7 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install
+
       - name: Build Integration Hardhat
         run: pnpm build
 
@@ -245,11 +248,6 @@ jobs:
         with:
           name: integration-hardhat
           path: integrations/hardhat/dist
-
-      - name: Build integrations/hardhat
-        working-directory: integrations/hardhat
-        run: |
-          pnpm build
 
       - name: Install dependencies
         run: |
