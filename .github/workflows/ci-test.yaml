@@ -201,19 +201,13 @@ jobs:
     needs: [test-client-js, test-integration-hardhat]
     strategy:
       matrix:
-        example: [hardhat, hardhat-boilerplate, truffle, onchain-signer]
-        truffle_version: [none, 5.8.2, 5.10.1]
-        exclude:
-          - example: hardhat
-            truffle_version: 5.8.2
-          - example: hardhat
-            truffle_version: 5.10.1
-          - example: hardhat-boilerplate
-            truffle_version: 5.8.2
-          - example: hardhat-boilerplate
-            truffle_version: 5.10.1
+        example: [hardhat, hardhat-boilerplate, onchain-signer]
+        include:
           - example: truffle
-            truffle_version: none
+          - example: truffle
+            truffle_version: 5.8.2
+          - example: truffle
+            truffle_version: 5.10.1
     defaults:
       run:
         working-directory: examples/${{ matrix.example }}
@@ -264,7 +258,7 @@ jobs:
           pnpm install
 
       - name: Update Truffle version
-        if: ${{ matrix.example == 'truffle' && matrix.truffle_version != 'none' }}
+        if: ${{ matrix.example == 'truffle' && matrix.truffle_version }}
         run: |
           pnpm up truffle@${{matrix.truffle_version}}
 
