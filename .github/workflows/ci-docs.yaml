@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - clients/js/**
+      - contracts/**
     branches:
       - main
 
@@ -67,3 +68,34 @@ jobs:
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
 
+  sol-docs:
+    name: sol-docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contracts
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Build docs
+        run: |
+          forge doc --build
+          # Inject another /contracts/ for github.com URLs.
+          find sol/sapphire-contracts/book -name *.html | xargs sed -i -E "s+(blob/.*/contracts)+\1/contracts+"
+          # Remove /src/ from "Inherits" links.
+          find sol/sapphire-contracts/book -name *.html | xargs sed -i "s+/src/+/+"
+
+      - name: Deploy to api-reference branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: contracts/sol/sapphire-contracts/book
+          publish_branch: api-reference
+          destination_dir: sol/sapphire-contracts
+          commit_message: Deploy sol API reference ${{ github.event.head_commit.message }}
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
