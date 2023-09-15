@@ -38,7 +38,6 @@
     "build:cjs": "tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
     "test": "jest",
     "coverage": "jest --coverage",
-    "doc": "typedoc --excludeInternal --excludePrivate src/index.ts",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
@@ -70,7 +69,7 @@
     "node-fetch": "^2.6.7",
     "prettier": "^2.7.1",
     "ts-jest": "^28.0.8",
-    "typedoc": "^0.23.15",
+    "typedoc": "^0.25.1",
     "typescript": "^4.8.3"
   }
 }
