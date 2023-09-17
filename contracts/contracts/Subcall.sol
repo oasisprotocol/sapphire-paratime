@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 
 import {StakingAddress, StakingSecretKey} from "./ConsensusUtils.sol";
 
+/**
+ * @title SDK Subcall wrappers
+ * @dev Interact with Oasis Runtime SDK modules from Sapphire
+ */
 library Subcall {
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
     string private constant CONSENSUS_UNDELEGATE = "consensus.Undelegate";
@@ -13,6 +17,7 @@ library Subcall {
     address internal constant SUBCALL =
         0x0100000000000000000000000000000000000103;
 
+    /// Only raised if the underlying subcall precompile does not succeed
     error Subcall_Error();
 
     /**

@@ -4,15 +4,29 @@ pragma solidity ^0.8.0;
 
 import {sha512_256, Sapphire} from "./Sapphire.sol";
 
+// 21 byte version-prefixed address (1 byte version, 20 bytes truncated digest )
 type StakingAddress is bytes21;
 
+/// 32 byte secret key
 type StakingSecretKey is bytes32;
 
+/**
+ * @title Consensus-level utilities
+ * @dev Generate Oasis wallets for use with staking at the consensus level
+ */
 library ConsensusUtils {
+    /// The unique context for v0 staking account addresses.
+    /// https://github.com/oasisprotocol/oasis-core/blob/master/go/staking/api/address.go#L16
     string private constant ADDRESS_V0_CONTEXT_IDENTIFIER =
         "oasis-core/address: staking";
     uint8 private constant ADDRESS_V0_CONTEXT_VERSION = 0;
 
+    /**
+     * @dev Generate a random Ed25519 wallet for Oasis consensus-layer staking
+     * @param personalization Optional user-specified entropy
+     * @return publicAddress Public address of the keypair
+     * @return secretKey Secret key for the keypair
+     */
     function generateStakingAddress(bytes memory personalization)
         internal
         view
@@ -32,6 +46,10 @@ library ConsensusUtils {
         secretKey = StakingSecretKey.wrap(bytes32(sk));
     }
 
+    /**
+     * @dev Derive the staking address from the public key
+     * @param ed25519publicKey Ed25519 public key
+     */
     function _stakingAddressFromPublicKey(bytes32 ed25519publicKey)
         internal
         view
@@ -45,6 +63,12 @@ library ConsensusUtils {
             );
     }
 
+    /**
+     * @dev Derive an Oasis-style address
+     * @param contextIdentifier Domain separator
+     * @param contextVersion Domain version
+     * @param data Public point of the keypair
+     */
     function _addressFromData(
         string memory contextIdentifier,
         uint8 contextVersion,
