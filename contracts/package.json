@@ -24,6 +24,8 @@
     "contracts"
   ],
   "devDependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
     "@oasisprotocol/sapphire-hardhat": "workspace:^",

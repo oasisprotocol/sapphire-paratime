@@ -24,6 +24,20 @@ contract EIP155Tests {
         return EIP155Signer.sign(publicAddr, secretKey, transaction);
     }
 
+    function signWithSecret(
+        EIP155Signer.EthTx memory transaction,
+        address fromPublicAddr,
+        bytes32 fromSecret
+    )
+        external
+        view
+        returns (bytes memory)
+    {
+        transaction.data = abi.encodeWithSelector(this.example.selector);
+        transaction.chainId = block.chainid;
+        return EIP155Signer.sign(fromPublicAddr, fromSecret, transaction);
+    }
+
     event ExampleEvent(bytes32 x);
 
     function example() external {
