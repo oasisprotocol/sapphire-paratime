@@ -17,16 +17,6 @@ function entropy(str:string) {
     }, 0);
 };
 
-/*
- * Test cases:
- *   Sign with different 'from' address
- *    - This requires a separate provider?
- *   Sign with same 'from' address
- *    - This should automagically encrypt
- *
- *  TODO: verify that transaction calldata was submitted encrypted on-chian
- */
-
 describe('EIP-155', function () {
   let testContract: EIP155Tests;
   before(async () => {
