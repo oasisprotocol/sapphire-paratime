@@ -14,6 +14,7 @@ library Subcall {
     string private constant CONSENSUS_WITHDRAW = "consensus.Withdraw";
     string private constant ACCOUNTS_TRANSFER = "accounts.Transfer";
 
+    /// Address of the SUBCALL precompile
     address internal constant SUBCALL =
         0x0100000000000000000000000000000000000103;
 
@@ -45,6 +46,14 @@ library Subcall {
         (status, data) = abi.decode(tmp, (uint64, bytes));
     }
 
+    /**
+     * @dev Generic method to call `{to:address, amount:uint128}`
+     * @param method Runtime SDK method name ('module.Action')
+     * @param to Destination address
+     * @param value Amount specified
+     * @return status Non-zero on error
+     * @return data Module name on error
+     */
     function _subcallWithToAndAmount(
         string memory method,
         StakingAddress to,
