@@ -28,11 +28,7 @@ contract EIP155Tests {
         EIP155Signer.EthTx memory transaction,
         address fromPublicAddr,
         bytes32 fromSecret
-    )
-        external
-        view
-        returns (bytes memory)
-    {
+    ) external view returns (bytes memory) {
         transaction.data = abi.encodeWithSelector(this.example.selector);
         transaction.chainId = block.chainid;
         return EIP155Signer.sign(fromPublicAddr, fromSecret, transaction);

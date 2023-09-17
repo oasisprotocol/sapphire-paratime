@@ -6,16 +6,16 @@ import { EIP155Tests__factory } from '../typechain-types/factories/contracts/tes
 import { EIP155Tests } from '../typechain-types/contracts/tests/EIP155Tests';
 
 // Shannon entropy
-function entropy(str:string) {
+function entropy(str: string) {
   return [...new Set(str)]
-    .map(chr => {
+    .map((chr) => {
       return str.match(new RegExp(chr, 'g'))!.length;
     })
     .reduce((sum, frequency) => {
       let p = frequency / str.length;
       return sum + p * Math.log2(1 / p);
     }, 0);
-};
+}
 
 describe('EIP-155', function () {
   let testContract: EIP155Tests;
@@ -32,7 +32,9 @@ describe('EIP-155', function () {
   it('Wrapper encrypts transaction calldata', async function () {
     const tx = await testContract.example();
     expect(entropy(tx.data)).gte(3.8);
-    expect(tx.data).not.eq(testContract.interface.encodeFunctionData("example"));
+    expect(tx.data).not.eq(
+      testContract.interface.encodeFunctionData('example'),
+    );
     expect(tx.data.length).eq(218);
   });
 
@@ -56,7 +58,9 @@ describe('EIP-155', function () {
     let receipt = await testContract.provider.waitForTransaction(
       plainResp.hash,
     );
-    expect(plainResp.data).eq(testContract.interface.encodeFunctionData("example"));
+    expect(plainResp.data).eq(
+      testContract.interface.encodeFunctionData('example'),
+    );
     expect(receipt.logs[0].data).equal(
       '0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
     );
