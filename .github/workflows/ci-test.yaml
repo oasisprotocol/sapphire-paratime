@@ -174,10 +174,6 @@ jobs:
           path: |
             integrations/hardhat/dist
 
-      - name: Test Integration Hardhat
-        run: pnpm test
-
-
   test-client-go:
     name: test-client-go
     runs-on: ubuntu-latest

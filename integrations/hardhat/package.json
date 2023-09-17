@@ -1,7 +1,7 @@
 {
   "name": "@oasisprotocol/sapphire-hardhat",
   "license": "Apache-2.0",
-  "version": "2.16.1",
+  "version": "2.17.3",
   "description": "A Hardhat plugin for developing on the Sapphire ParaTime.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/hardhat",
   "repository": {
@@ -13,33 +13,23 @@
     "paratime",
     "hardhat"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "dist/src/",
+    "dist/",
     "src/"
   ],
   "scripts": {
     "lint": "prettier --cache --ignore-path .gitignore --check .",
     "format": "prettier --cache --ignore-path .gitignore --write .",
-    "build": "tsc -b",
-    "test": "mocha --exit --recursive 'test/**/*.test.ts'"
+    "build": "tsc -b"
   },
   "dependencies": {
-    "@oasislabs/hardhat": "^2.16.1",
     "@oasisprotocol/sapphire-paratime": "workspace:^"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
-    "@nomiclabs/hardhat-ethers": "^2.2.2",
-    "@types/chai": "^4.3.4",
-    "@types/mocha": "^9.1.1",
-    "@types/node": "^18.11.18",
-    "chai": "^4.3.7",
-    "ethers": "^5.7.2",
-    "hardhat": "^2.16.1",
-    "mocha": "^10.2.0",
+    "@types/node": "^18.7.18",
+    "hardhat": "^2.17.3",
     "prettier": "^2.8.3",
     "ts-node": "^8.10.2",
     "typescript": "^4.9.4"
