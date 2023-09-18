@@ -573,11 +573,13 @@ async function repackRawTx(
     );
   } catch (e) {
     if (e instanceof EnvelopeError) throw e;
-    if (globalThis?.process?.env?.NODE_ENV !== 'test') {
-      console.trace(REPACK_ERROR);
-    }
   }
   const tx = ethers6.Transaction.from(raw);
+  if( tx.isSigned() && (!signer || await signer!.getAddress() != tx.from!) ) {
+    // us we are be unable to re-sign the encrypted tx, so must passthrough when
+    // they submit a transaction signed by another keypair
+    return tx.serialized;
+  }
   const q = (v: bigint | null | undefined): string | undefined => {
     if (!v) return undefined;
     return ethers6.toQuantity(v);
@@ -592,14 +594,17 @@ async function repackRawTx(
     value: q(tx.value),
     chainId: Number(tx.chainId),
   };
-  if (!signer) throw new CallError(REPACK_ERROR, null);
   if (!parsed.gasLimit) parsed.gasLimit = q(BigInt(DEFAULT_GAS)); // TODO(39)
   try {
-    return signer.signTransaction({
+    return signer!.signTransaction({
       ...parsed,
       data: await cipher.encryptEncode(data),
     });
   } catch (e) {
+    // Many JSON-RPC providers, Ethers included, will not let you directly
+    // sign transactions, which is necessary to re-encrypt the calldata!
+    // Throw an error here to prevent calls which should've been encrypted
+    // from being submitted unencrypted.
     throw new CallError(REPACK_ERROR, e);
   }
 }
