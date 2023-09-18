@@ -29,8 +29,6 @@ library Sapphire {
         0x0100000000000000000000000000000000000101;
     address internal constant SHA512 =
         0x0100000000000000000000000000000000000102;
-    address internal constant SUBCALL =
-        0x0100000000000000000000000000000000000103;
 
     type Curve25519PublicKey is bytes32;
     type Curve25519SecretKey is bytes32;
@@ -222,29 +220,6 @@ library Sapphire {
         );
         require(success, "verify: failed");
         return abi.decode(v, (bool));
-    }
-
-    /**
-     * Submit a native message to the Oasis runtime layer
-     *
-     * Messages which re-enter the EVM module are forbidden: evm.*
-     *
-     * @param method Native message type
-     * @param body CBOR encoded body
-     * @return status_code Result of call
-     * @return data CBOR encoded result
-     */
-    function subcall(string memory method, bytes memory body)
-        internal
-        returns (uint64 status_code, bytes memory data)
-    {
-        (bool success, bytes memory tmp) = SUBCALL.call(
-            abi.encode(method, body)
-        );
-
-        require(success, "subcall");
-
-        (status_code, data) = abi.decode(tmp, (uint64, bytes));
     }
 }
 
