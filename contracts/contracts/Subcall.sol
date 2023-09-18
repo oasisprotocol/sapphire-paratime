@@ -6,7 +6,7 @@ import {StakingAddress, StakingSecretKey} from "./ConsensusUtils.sol";
 
 /**
  * @title SDK Subcall wrappers
- * @dev Interact with Oasis Runtime SDK modules from Sapphire
+ * @dev Interact with Oasis Runtime SDK modules from Sapphire.
  */
 library Subcall {
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
@@ -18,11 +18,19 @@ library Subcall {
     address internal constant SUBCALL =
         0x0100000000000000000000000000000000000103;
 
-    /// Only raised if the underlying subcall precompile does not succeed
-    error Subcall_Error();
+    /// Raised if the underlying subcall precompile does not succeed
+    error SubcallError();
+
+    error ConsensusUndelegateError(uint64 status, string data);
+
+    error ConsensusDelegateError(uint64 status, string data);
+
+    error ConsensusWithdrawError(uint64 status, string data);
+
+    error AccountsTransferError(uint64 status, string data);
 
     /**
-     * Submit a native message to the Oasis runtime layer
+     * Submit a native message to the Oasis runtime layer.
      *
      * Messages which re-enter the EVM module are forbidden: evm.*
      *
@@ -40,7 +48,7 @@ library Subcall {
         );
 
         if (!success) {
-            revert Subcall_Error();
+            revert SubcallError();
         }
 
         (status, data) = abi.decode(tmp, (uint64, bytes));
@@ -75,8 +83,6 @@ library Subcall {
         );
     }
 
-    error ConsensusUndelegateError(uint64 status, string data);
-
     /**
      * Start the undelegation process of the given number of shares from
      * consensus staking account to runtime account.
@@ -104,10 +110,8 @@ library Subcall {
         }
     }
 
-    error ConsensusDelegateError(uint64 status, string data);
-
     /**
-     * Delegate native token to consensus level
+     * Delegate native token to consensus level.
      *
      * @param to Consensus address shares are delegated to
      * @param value Native token amount (in wei)
@@ -123,8 +127,6 @@ library Subcall {
             revert ConsensusDelegateError(status, string(data));
         }
     }
-
-    error ConsensusWithdrawError(uint64 status, string data);
 
     /**
      * Transfer from an account in this runtime to a consensus staking account.
@@ -144,10 +146,8 @@ library Subcall {
         }
     }
 
-    error AccountsTransferError(uint64 status, string data);
-
     /**
-     * Perform a transfer to another account
+     * Perform a transfer to another account.
      *
      * This is equivalent of `payable(to).transfer(value);`
      *

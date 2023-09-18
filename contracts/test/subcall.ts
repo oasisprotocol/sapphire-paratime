@@ -79,7 +79,7 @@ describe('Subcall', () => {
   it('Derive Staking Addresses', async () => {
     const newKeypair = await contract.generateRandomAddress();
 
-    // Verify @oasisprotocol/client matches Solidity
+    // Verify `@oasisprotocol/client` matches Solidity.
     const alice = oasis.signature.NaclSigner.fromSeed(
       ethers.utils.arrayify(newKeypair.secretKey),
       'this key is not important',
@@ -92,11 +92,11 @@ describe('Subcall', () => {
   });
 
   it('accounts.Transfer', async () => {
-    // Ensure contract has an initial balance
+    // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
     await ensureBalance(contract, initialBalance, owner);
 
-    // transfer balance-1 back to owner, then wait for transaction to be mined
+    // transfer balance-1 back to owner, then wait for transaction to be mined.
     const balance = await contract.provider.getBalance(contract.address);
     let tx = await contract.testSubcall(
       'accounts.Transfer',
@@ -112,30 +112,30 @@ describe('Subcall', () => {
     expect(event.status).eq(0);
     expect(event.data).is.null;
 
-    // Ensure contract only has 1 wei left
+    // Ensure contract only has 1 wei left.
     expect(await contract.provider.getBalance(contract.address)).eq(1);
 
-    // Transfer using the Subcall.accounts_Transfer method
+    // Transfer using the Subcall.accounts_Transfer method.
     tx = await contract.testAccountsTransfer(ownerAddr, 1);
     receipt = await tx.wait();
 
-    // Ensure contract only no wei left
+    // Ensure contract only no wei left.
     expect(await contract.provider.getBalance(contract.address)).eq(0);
   });
 
   it('consensus.Delegate', async () => {
-    // Ensure contract has an initial balance
+    // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
     await ensureBalance(contract, initialBalance, owner);
 
-    // Delegate 0, ensure balance does not change
+    // Delegate 0, ensure balance does not change.
     let tx = await contract.testConsensusDelegate(kp.publicKey, 0);
     await tx.wait();
     expect(await contract.provider.getBalance(contract.address)).eq(
       initialBalance,
     );
 
-    // Manually encode & submit consensus.Delegate message
+    // Manually encode & submit `consensus.Delegate` message.
     tx = await contract.testSubcall(
       'consensus.Delegate',
       cborg.encode({
@@ -149,13 +149,10 @@ describe('Subcall', () => {
     const event = decodeResult(receipt);
     expect(event.status).eq(0);
     expect(event.data).is.null;
-
-    // Ensure contract only no wei left
-    //expect(await contract.provider.getBalance(contract.address)).eq(0);
   });
 
   it('consensus.Undelegate', async () => {
-    // Ensure contract has an initial balance
+    // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
     await ensureBalance(contract, initialBalance, owner);
 
@@ -167,7 +164,7 @@ describe('Subcall', () => {
   });
 
   it('consensus.Withdraw', async () => {
-    // Ensure contract has an initial balance
+    // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
     await ensureBalance(contract, initialBalance, owner);
 

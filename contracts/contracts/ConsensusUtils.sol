@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 
 import {sha512_256, Sapphire} from "./Sapphire.sol";
 
-// 21 byte version-prefixed address (1 byte version, 20 bytes truncated digest )
+/// 21 byte version-prefixed address (1 byte version, 20 bytes truncated digest).
 type StakingAddress is bytes21;
 
-/// 32 byte secret key
+/// 32 byte secret key.
 type StakingSecretKey is bytes32;
 
 /**
