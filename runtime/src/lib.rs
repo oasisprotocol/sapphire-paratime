@@ -40,6 +40,17 @@ const fn chain_id() -> u64 {
     }
 }
 
+/// Determine state version on weather the build is for Testnet or Mainnet.
+const fn state_version() -> u32 {
+    if is_testnet() {
+        // Testnet.
+        2
+    } else {
+        // Mainnet.
+        1
+    }
+}
+
 impl modules::core::Config for Config {
     /// Default local minimum gas price configuration that is used in case no overrides are set in
     /// local per-node configuration.
@@ -75,7 +86,7 @@ impl sdk::Runtime for Runtime {
     const VERSION: Version = sdk::version_from_cargo!();
     /// Current version of the global state (e.g. parameters). Any parameter updates should bump
     /// this version in order for the migrations to be executed.
-    const STATE_VERSION: u32 = 1;
+    const STATE_VERSION: u32 = state_version();
 
     /// Schedule control configuration.
     const SCHEDULE_CONTROL: config::ScheduleControl = config::ScheduleControl {
@@ -186,10 +197,10 @@ impl sdk::Runtime for Runtime {
             modules::consensus_accounts::Genesis {
                 parameters: modules::consensus_accounts::Parameters {
                     gas_costs: modules::consensus_accounts::GasCosts {
-                        tx_deposit: 10_000,
-                        tx_withdraw: 10_000,
-                        tx_delegate: 10_000,
-                        tx_undelegate: 30_000,
+                        tx_deposit: 60_000,
+                        tx_withdraw: 60_000,
+                        tx_delegate: 60_000,
+                        tx_undelegate: 120_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
