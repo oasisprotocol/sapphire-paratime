@@ -40,6 +40,17 @@ const fn chain_id() -> u64 {
     }
 }
 
+/// Determine state version on weather the build is for Testnet or Mainnet.
+const fn state_version() -> u32 {
+    if is_testnet() {
+        // Testnet.
+        2
+    } else {
+        // Mainnet.
+        1
+    }
+}
+
 impl modules::core::Config for Config {
     /// Default local minimum gas price configuration that is used in case no overrides are set in
     /// local per-node configuration.
@@ -75,7 +86,7 @@ impl sdk::Runtime for Runtime {
     const VERSION: Version = sdk::version_from_cargo!();
     /// Current version of the global state (e.g. parameters). Any parameter updates should bump
     /// this version in order for the migrations to be executed.
-    const STATE_VERSION: u32 = 1;
+    const STATE_VERSION: u32 = state_version();
 
     /// Schedule control configuration.
     const SCHEDULE_CONTROL: config::ScheduleControl = config::ScheduleControl {
@@ -122,8 +133,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 17155743,
-                hash: "098e590c6b5502882374418b488d8d798ec939ddf450786c8bff2741e3d8c6f5".into(),
+                height: 17422276,
+                hash: "f1786d6cdce85a4351dde8c4694985c6e8ae2c8e14b75e3eaf2bf127fe2b9759".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
@@ -186,10 +197,10 @@ impl sdk::Runtime for Runtime {
             modules::consensus_accounts::Genesis {
                 parameters: modules::consensus_accounts::Parameters {
                     gas_costs: modules::consensus_accounts::GasCosts {
-                        tx_deposit: 10_000,
-                        tx_withdraw: 10_000,
-                        tx_delegate: 10_000,
-                        tx_undelegate: 30_000,
+                        tx_deposit: 60_000,
+                        tx_withdraw: 60_000,
+                        tx_delegate: 60_000,
+                        tx_undelegate: 120_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
