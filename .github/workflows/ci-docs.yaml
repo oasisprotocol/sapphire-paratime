@@ -1,0 +1,69 @@
+name: ci-docs
+
+on:
+  push:
+    paths:
+      - clients/js/**
+    branches:
+      - main
+
+# Cancel in-progress jobs on same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js-docs:
+    name: js-docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/js
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - uses: pnpm/action-setup@v2.4.0
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm --filter @oasisprotocol/sapphire-paratime install
+
+      - name: Build docs
+        run: |
+          pnpm typedoc
+
+      - name: Deploy to api-reference branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: clients/js/docs/api
+          publish_branch: api-reference
+          destination_dir: js/sapphire-paratime
+          commit_message: Deploy js API reference ${{ github.event.head_commit.message }}
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+

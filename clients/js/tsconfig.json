@@ -16,5 +16,11 @@
     "sourceMap": true,
     "strict": true,
     "target": "es6"
+  },
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"],
+    "out": "docs/api",
+    "excludeInternal": true,
+    "excludePrivate": true
   }
 }
