@@ -49,6 +49,8 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
       - name: Install dependencies
         run: pnpm install
       - name: Build JS client
@@ -60,6 +62,10 @@ jobs:
       - name: hardhat test contracts
         working-directory: contracts
         run: pnpm hardhat test --network sapphire-dev-ci
+      - name: Build docs
+        working-directory: contracts
+        run: |
+          forge doc --build
       - name: hardhat test examples/truffle
         working-directory: examples/truffle
         run: pnpm run test --network sapphire_localnet
