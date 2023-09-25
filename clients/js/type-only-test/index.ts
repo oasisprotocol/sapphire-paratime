@@ -4,7 +4,6 @@ import * as sapphire from '../src/index';
 import Web3 from 'web3';
 import { ethers as ethers5 } from 'ethers5';
 import { ethers as ethers6 } from 'ethers6';
-import HDWalletProvider from '@truffle/hdwallet-provider';
 
 declare global {
   interface Window {
@@ -69,10 +68,4 @@ test('EIP-1193', () => {
   if (window.ethereum) {
     const provider = sapphire.wrap(window.ethereum);
   }
-});
-
-test('truffle', () => {
-  const provider = sapphire.wrap(
-    new HDWalletProvider([''], 'https://testnet.sapphire.oasis.dev'),
-  );
 });
