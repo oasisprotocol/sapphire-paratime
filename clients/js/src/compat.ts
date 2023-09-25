@@ -624,19 +624,6 @@ function envelopeFormatOk(
 
 class EnvelopeError extends Error {}
 
-function defer<T>() {
-  const deferred: {
-    promise?: Promise<T>;
-    resolve?: (value: T | PromiseLike<T>) => void;
-    reject?: (reason?: any) => void;
-  } = {};
-  deferred.promise = new Promise((resolve, reject) => {
-    deferred.resolve = resolve;
-    deferred.reject = reject;
-  });
-  return deferred;
-}
-
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
@@ -658,38 +645,17 @@ export async function fetchRuntimePublicKey(
         ) => Promise<any> | void;
       };
 
-      // For Truffle, turn a callback into an synchronous call
-      const deferred = defer<any>();
-      const truffle_callback = function (err: any, ok?: any) {
-        if (ok) {
-          deferred.resolve!(ok.result);
-        }
-        deferred.reject!(err);
-        return;
-      };
-
       let resp;
       if (
         !isEthersSigner &&
         !isEthers5Provider(provider) &&
         !isEthers6Provider(provider)
       ) {
-        // Truffle HDWallet-Provider and EIP-1193 accept {method:,params:} dict
-        resp = await source.send(
-          { method: OASIS_CALL_DATA_PUBLIC_KEY, params: [] },
-          truffle_callback,
-        );
-        if (resp === undefined) {
-          // Truffle HDWallet-provider uses a callback instead of returning a promise
-          resp = await deferred.promise;
-          if (resp === undefined) {
-            throw Error(
-              'Got unexpected `undefined` from source.send callback!',
-            );
-          }
-        } else {
-          // Otherwise, EIP-1193 compatible provider will have returned `result` key from promise
-        }
+        // EIP-1193 accepts {method:,params:} dict
+        resp = await source.send({
+          method: OASIS_CALL_DATA_PUBLIC_KEY,
+          params: [],
+        });
       } else {
         // Whereas Ethers accepts (method,params)
         resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
