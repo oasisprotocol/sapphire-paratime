@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        2
+        3
     } else {
         // Mainnet.
         1
@@ -192,6 +192,8 @@ impl sdk::Runtime for Runtime {
                     consensus_denomination: Denomination::NATIVE,
                     // Scale to 18 decimal places as this is what is expected in the EVM ecosystem.
                     consensus_scaling_factor: 1_000_000_000,
+                    // Minimum delegation amount that matches the consensus layer.
+                    min_delegate_amount: 100_000_000_000,
                 },
             },
             modules::consensus_accounts::Genesis {
@@ -201,6 +203,9 @@ impl sdk::Runtime for Runtime {
                         tx_withdraw: 60_000,
                         tx_delegate: 60_000,
                         tx_undelegate: 120_000,
+
+                        store_receipt: 20_000,
+                        take_receipt: 15_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
