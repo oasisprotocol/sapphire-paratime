@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        2
+        3
     } else {
         // Mainnet.
         1
@@ -133,8 +133,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 17422276,
-                hash: "f1786d6cdce85a4351dde8c4694985c6e8ae2c8e14b75e3eaf2bf127fe2b9759".into(),
+                height: 17500584,
+                hash: "f93d453a2f3fda4e06e5f098d5b9853fa063fd652e758b680155aa72a873166c".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
@@ -192,6 +192,8 @@ impl sdk::Runtime for Runtime {
                     consensus_denomination: Denomination::NATIVE,
                     // Scale to 18 decimal places as this is what is expected in the EVM ecosystem.
                     consensus_scaling_factor: 1_000_000_000,
+                    // Minimum delegation amount that matches the consensus layer.
+                    min_delegate_amount: 100_000_000_000,
                 },
             },
             modules::consensus_accounts::Genesis {
@@ -201,6 +203,9 @@ impl sdk::Runtime for Runtime {
                         tx_withdraw: 60_000,
                         tx_delegate: 60_000,
                         tx_undelegate: 120_000,
+
+                        store_receipt: 20_000,
+                        take_receipt: 15_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
