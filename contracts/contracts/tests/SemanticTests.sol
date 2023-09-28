@@ -21,4 +21,14 @@ contract SemanticTests {
     function testCustomViewRevert () external pure returns (uint) {
         revert CustomError(ERROR_NUM);
     }
+
+    function testViewRevert () external pure returns (uint) {
+        require(false, "ThisIsAnError");
+        return ERROR_NUM;
+    }
+
+    function testRevert () external {
+        x += 1;
+        require(false, "ThisIsAnError");
+    }
 }
