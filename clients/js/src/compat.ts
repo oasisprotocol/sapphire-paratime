@@ -576,7 +576,7 @@ async function repackRawTx(
   }
   const tx = ethers6.Transaction.from(raw);
   if (tx.isSigned() && (!signer || (await signer!.getAddress()) != tx.from!)) {
-    // us we are be unable to re-sign the encrypted tx, so must passthrough when
+    // we are be unable to re-sign the encrypted tx, so must passthrough when
     // they submit a transaction signed by another keypair
     return tx.serialized;
   }
