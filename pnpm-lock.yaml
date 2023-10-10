@@ -129,6 +129,9 @@ importers:
       '@oasisprotocol/sapphire-hardhat':
         specifier: workspace:^
         version: link:../integrations/hardhat
+      '@oasisprotocol/sapphire-paratime':
+        specifier: workspace:^
+        version: link:../clients/js
       '@openzeppelin/contracts':
         specifier: ^4.7.3
         version: 4.9.2

@@ -26,6 +26,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
     "@oasisprotocol/sapphire-hardhat": "workspace:^",
     "@oasisprotocol/client": "^0.1.1-alpha.2",
     "@openzeppelin/contracts": "^4.7.3",

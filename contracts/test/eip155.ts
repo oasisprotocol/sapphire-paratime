@@ -10,6 +10,8 @@ import { HardhatNetworkHDAccountsConfig } from 'hardhat/types';
 const EXPECTED_EVENT =
   '0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
 
+const EXPECTED_ENTROPY_ENCRYPTED = 3.8;
+
 // Shannon entropy
 function entropy(str: string) {
   return [...new Set(str)]
@@ -47,11 +49,12 @@ describe('EIP-155', function () {
 
   it('Wrapper encrypts self-signed transaction calldata', async function () {
     const tx = await testContract.example();
-    expect(entropy(tx.data)).gte(3.8);
+    expect(entropy(tx.data)).gte(EXPECTED_ENTROPY_ENCRYPTED);
     expect(tx.data).not.eq(calldata);
     expect(tx.data.length).eq(218);
   });
 
+  /// Verifies that contract can sign a transaction, and we submit it via unwrapped provider
   it('Other-Signed transaction submission via un-wrapped provider', async function () {
     const provider = testContract.provider;
     const signedTx = await testContract.sign({
@@ -78,6 +81,8 @@ describe('EIP-155', function () {
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
 
+  /// Verifies that a contract can sign a transaction, and we can submit it via a wrapped provider
+  /// This lets transactions signed by other accounts pass-through the wrapped provider
   it('Other-Signed transaction submission via wrapped provider', async function () {
     const provider = testContract.provider;
     const signedTx = await testContract.sign({
@@ -98,6 +103,7 @@ describe('EIP-155', function () {
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
 
+  /// Verifies that submitting a manually signed transaction will be encrypted
   it('Self-Signed transaction submission via wrapped wallet', async function () {
     const provider = testContract.provider;
     const wallet = sapphire.wrap(getWallet(0).connect(provider));
@@ -114,12 +120,10 @@ describe('EIP-155', function () {
 
     // Calldata should be encrypted when we wrap the wallet provider
     let x = await provider.sendTransaction(signedTx);
-    expect(entropy(x.data)).gte(3.8);
+    expect(entropy(x.data)).gte(EXPECTED_ENTROPY_ENCRYPTED);
     expect(x.data).not.eq(calldata);
 
     let r = await provider.waitForTransaction(x.hash);
     expect(r.logs[0].data).equal(EXPECTED_EVENT);
   });
-
-  // TODO: test error conditions?
 });
