@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Subcall,StakingAddress} from "./Subcall.sol";
-
-contract StakeManager {
+contract Staking {
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
     string private constant CONSENSUS_UNDELEGATE = "consensus.Undelegate";
     string private constant CONSENSUS_TAKE_RECEIPT = "consensus.TakeReceipt";
@@ -17,24 +15,31 @@ contract StakeManager {
 
     address private constant SUBCALL = 0x0100000000000000000000000000000000000103;
 
+    // -------------------------------------------------------------------------
+
+    /// An error was returned from the subcall
     error SubcallFailed(uint64 code, bytes module);
 
-    error DelegateSubcallError(bytes21 to, uint128 amount);
+    /// There was an error parsing the receipt
+    error ParseReceiptError(uint64 receiptId);
 
-    error TakeReceiptSubcallError(uint8 kind, uint64 receiptId);
+    // -------------------------------------------------------------------------
 
-    error UndelegateDoneFailed(uint64 receiptId);
-
+    /// Incremented counter to determine receipt IDs
     uint64 private lastReceiptId;
 
     mapping(uint64 receiptId => PendingDelegation) private pendingDelegations;
 
-    // (from, to) => shares
+    /// (from, to) => shares
     mapping(address => mapping(bytes21 => uint128)) private delegations;
 
-    mapping(uint64 receiptId => PendingUndelegation) private pendingUndelegations;
+    /// (receiptId => PendingUndelegation)
+    mapping(uint64 => PendingUndelegation) private pendingUndelegations;
 
-    mapping(uint64 endReceiptId => UndelegationPool) private undelegationPools;
+    /// (endReceiptId => UndelegationPool)
+    mapping(uint64 => UndelegationPool) private undelegationPools;
+
+    // -------------------------------------------------------------------------
 
     struct PendingDelegation {
         address from;
@@ -88,7 +93,7 @@ contract StakeManager {
                         kind                // uint8 <= 23.
             )
         ));
-        if( ! success ) revert TakeReceiptSubcallError(kind, receiptId);
+        require( success );
 
         (uint64 status, bytes memory result) = abi.decode(data, (uint64, bytes));
         if (status != 0) {
@@ -98,16 +103,20 @@ contract StakeManager {
         return result;
     }
 
+    /**
+     *
+     * @param to
+     */
     function delegate(bytes21 to)
         public payable
         returns (uint64)
     {
         // Whatever is sent to the contract is delegated.
         require(msg.value < type(uint128).max);
+
         uint128 amount = uint128(msg.value);
 
-        lastReceiptId++;
-        uint64 receiptId = lastReceiptId;
+        uint64 receiptId = ++lastReceiptId;
 
         // Delegate to target address.
         (bool success, bytes memory data) = SUBCALL.call(abi.encode(
@@ -124,7 +133,7 @@ contract StakeManager {
                         hex"1b", receiptId  // Unsigned 64bit integer
             )
         ));
-        if( ! success ) revert DelegateSubcallError(to, amount);
+        require( success );
 
         (uint64 status, bytes memory result) = abi.decode(data, (uint64, bytes));
         if (status != 0) {
@@ -159,7 +168,7 @@ contract StakeManager {
             // Add to given number of shares.
             delegations[pending.from][pending.to] += shares;
         } else {
-            revert();
+            revert ParseReceiptError(receiptId);
         }
 
         // Remove pending delegation.
@@ -190,7 +199,7 @@ contract StakeManager {
                         hex"1b", receiptId  // 64bit unsigned int
             )
         ));
-        require(success, "undelegate subcall failed");
+        require(success);
 
         (uint64 status, bytes memory result) = abi.decode(data, (uint64, bytes));
         if (status != 0) {
@@ -202,8 +211,6 @@ contract StakeManager {
 
         return receiptId;
     }
-
-    error UndelegateStartFailed(uint64 receiptId);
 
     function undelegateStart(uint64 receiptId)
         public
@@ -245,7 +252,7 @@ contract StakeManager {
         }
         else {
             // Undelegation failed to start, return the shares.
-            revert UndelegateStartFailed(receiptId);
+            revert ParseReceiptError(receiptId);
         }
     }
 
@@ -279,7 +286,7 @@ contract StakeManager {
                 pool.totalAmount = amount;
             } else {
                 // Should never fail.
-                revert UndelegateDoneFailed(receiptId);
+                revert ParseReceiptError(receiptId);
             }
         }
 
