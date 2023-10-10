@@ -23,11 +23,30 @@ async function main() {
     console.log('failed to fetch secret:', e.message);
   }
   console.log('Waiting...');
+
+  // Manually generate some transactions to increment local Docker
+  // container block
+  if ((await ethers.provider.getNetwork()).name == 'sapphire_localnet') {
+    await generateTraffic(10);
+  }
+
+  await generateTraffic(10);
   await new Promise((resolve) => setTimeout(resolve, 30_000));
   console.log('Checking the secret again');
   await (await vigil.revealSecret(0)).wait(); // Reveal the secret.
   const secret = await vigil.callStatic.revealSecret(0); // Get the value.
   console.log('The secret ingredient is', Buffer.from(secret.slice(2), 'hex').toString());
+}
+
+async function generateTraffic(n: number) {
+  const signer = await ethers.provider.getSigner();
+  for (let i = 0; i < n; i++) {
+    await signer.sendTransaction({
+      to: "0x000000000000000000000000000000000000dEaD",
+      value: ethers.utils.parseEther("1.0"),
+      data: "0x"
+    });
+  };
 }
 
 main().catch((error) => {
