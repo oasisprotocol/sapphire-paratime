@@ -54,7 +54,7 @@ describe('EIP-155', function () {
     expect(tx.data.length).eq(218);
   });
 
-  /// Verifies that contract can sign a transaction, and we submit it via unwrapped provider
+  /// Verify that contracts can sign transactions for submission with an unwrapped provider
   it('Other-Signed transaction submission via un-wrapped provider', async function () {
     const provider = testContract.provider;
     const signedTx = await testContract.sign({
