@@ -81,7 +81,7 @@ describe('EIP-155', function () {
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
 
-  /// Verifies that a contract can sign a transaction, and we can submit it via a wrapped provider
+  /// Verify that contracts can sign transactions for submission with a wrapped provider
   /// This lets transactions signed by other accounts pass-through the wrapped provider
   it('Other-Signed transaction submission via wrapped provider', async function () {
     const provider = testContract.provider;
