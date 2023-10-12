@@ -69,7 +69,7 @@ describe('EIP-155', function () {
       chainId: 0,
     });
 
-    // Submit signed transaction via plain JSON-RPC provider (avoiding saphire.wrap)
+    // Submit signed transaction via plain JSON-RPC provider (avoiding sapphire.wrap)
     const plainProvider = new ethers.providers.StaticJsonRpcProvider(
       ethers.provider.connection,
     );
