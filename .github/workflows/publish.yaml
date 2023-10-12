@@ -1,0 +1,26 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - clients/js/[0-9].[0-9]+.[0-9]+
+      - contracts/[0-9].[0-9]+.[0-9]+
+      - integrations/hardhat/[0-9].[0-9]+.[0-9]+
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - name: Extract package from tag
+        id: extract-tag
+        run: |
+          echo "NPM_PACKAGE=$(echo ${{ github.ref_name }} | grep -oE '(clients/js|contracts|integrations/hardhat)')" >> $GITHUB_OUTPUT
+      - name: Publish ${{ github.ref_name }} to NPM
+        uses: JS-DevTools/npm-publish@v2
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ${{ steps.extract-tag.outputs.NPM_PACKAGE }}
