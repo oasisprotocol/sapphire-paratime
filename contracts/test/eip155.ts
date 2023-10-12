@@ -103,7 +103,7 @@ describe('EIP-155', function () {
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
 
-  /// Verifies that submitting a manually signed transaction will be encrypted
+  /// Verify that the wrapped wallet will encrypt a manually signed transaction
   it('Self-Signed transaction submission via wrapped wallet', async function () {
     const provider = testContract.provider;
     const wallet = sapphire.wrap(getWallet(0).connect(provider));
