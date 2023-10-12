@@ -82,7 +82,7 @@ describe('EIP-155', function () {
   });
 
   /// Verify that contracts can sign transactions for submission with a wrapped provider
-  /// This lets transactions signed by other accounts pass-through the wrapped provider
+  /// Transactions signed by other accounts should pass-through the wrapped provider
   it('Other-Signed transaction submission via wrapped provider', async function () {
     const provider = testContract.provider;
     const signedTx = await testContract.sign({
