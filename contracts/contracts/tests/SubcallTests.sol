@@ -20,7 +20,7 @@ contract SubcallTests {
         return ConsensusUtils.generateStakingAddress("");
     }
 
-    function testSubcall(string memory method, bytes memory data) external {
+    function testSubcall(string memory method, bytes memory data) external payable {
         uint64 status;
 
         (status, data) = Subcall.subcall(method, data);
@@ -28,12 +28,43 @@ contract SubcallTests {
         emit SubcallResult(status, data);
     }
 
+    function testTakeReceipt(Subcall.ReceiptKind kind, uint64 receiptId)
+        external
+        returns (bytes memory result)
+    {
+        result = Subcall.consensusTakeReceipt(kind, receiptId);
+
+        emit Result(result);
+    }
+
+    function testDecodeReceiptDelegateDone(bytes memory receipt)
+        external pure
+        returns (uint128)
+    {
+        return Subcall.decodeReceiptDelegateDone(0, receipt);
+    }
+
     function testAccountsTransfer(address to, uint128 value) external {
         Subcall.accountsTransfer(to, value);
     }
 
-    function testConsensusDelegate(StakingAddress to, uint128 value) external {
+    function testConsensusDelegate(StakingAddress to, uint128 value) external payable {
         Subcall.consensusDelegate(to, value);
+    }
+
+    event Result(bytes data);
+
+    function testConsensusDelegateWithReceipt(
+        StakingAddress to,
+        uint128 value,
+        uint64 receiptId
+    )
+        external payable
+        returns (bytes memory result)
+    {
+        result = Subcall.consensusDelegate(to, value, receiptId);
+
+        emit Result(result);
     }
 
     function testConsensusUndelegate(StakingAddress to, uint128 value)
