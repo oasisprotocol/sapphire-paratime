@@ -32,6 +32,7 @@ contract Staking {
         address payable to;
         uint128 shares;
         uint64 endReceiptId;
+        uint64 epoch;
     }
 
     struct UndelegationPool {
@@ -98,12 +99,13 @@ contract Staking {
 
         delegations[msg.sender][from] -= shares;
 
-        pendingUndelegations[receiptId] = PendingUndelegation(
-            from,
-            payable(msg.sender),
-            shares,
-            0
-        );
+        pendingUndelegations[receiptId] = PendingUndelegation({
+            from: from,
+            to: payable(msg.sender),
+            shares: shares,
+            endReceiptId: 0,
+            epoch: 0
+        });
 
         return receiptId;
     }
@@ -111,15 +113,17 @@ contract Staking {
     function undelegateStart(uint64 receiptId)
         public
     {
-        PendingUndelegation memory pending = pendingUndelegations[receiptId];
+        PendingUndelegation storage pending = pendingUndelegations[receiptId];
 
         require(pending.to != address(0), "unknown receipt");
 
         (uint64 epoch, uint64 endReceipt) = Subcall.consensusTakeReceiptUndelegateStart(receiptId);
 
-        pendingUndelegations[receiptId].endReceiptId = endReceipt;
+        pending.endReceiptId = endReceipt;
 
-        undelegationPools[uint64(endReceipt)].totalShares += pending.shares;
+        pending.epoch = epoch;
+
+        undelegationPools[endReceipt].totalShares += pending.shares;
     }
 
     function undelegateDone(uint64 receiptId) public {
@@ -141,7 +145,7 @@ contract Staking {
         }
 
         // Compute how much we get from the pool and transfer the amount.
-        uint128 transferAmount = (pending.shares * pool.totalAmount) /
+        uint transferAmount = (uint256(pending.shares) * uint256(pool.totalAmount)) /
             pool.totalShares;
 
         pending.to.transfer(transferAmount);

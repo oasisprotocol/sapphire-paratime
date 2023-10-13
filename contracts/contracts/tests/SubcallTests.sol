@@ -97,6 +97,12 @@ contract SubcallTests {
         Subcall.consensusUndelegate(to, value);
     }
 
+    function testConsensusUndelegateWithReceipt(StakingAddress to, uint128 value, uint64 receiptId)
+        external
+    {
+        Subcall.consensusUndelegate(to, value, receiptId);
+    }
+
     function testConsensusWithdraw(StakingAddress to, uint128 value) external {
         Subcall.consensusWithdraw(to, value);
     }

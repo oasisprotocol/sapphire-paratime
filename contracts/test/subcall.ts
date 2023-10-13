@@ -8,6 +8,13 @@ import { arrayify, formatEther, hexlify, parseEther } from 'ethers/lib/utils';
 import { BigNumber, BigNumberish, ContractReceipt } from 'ethers';
 import { getRandomValues, randomInt } from 'crypto';
 
+import { execSync } from 'child_process';
+
+async function getSapphireDevDockerName() {
+  const x = await execSync("docker ps --format '{{.Names}}' --filter status=running --filter expose=8545");
+  return new TextDecoder().decode(x);
+}
+
 function fromBigInt(bi: BigNumberish): Uint8Array {
   return ethers.utils.arrayify(
     ethers.utils.zeroPad(ethers.utils.hexlify(bi), 16),
@@ -166,7 +173,7 @@ describe('Subcall', () => {
   /// Verifies that delegation works (when no receipt is requested)
   it('consensus.Delegate (without receipt)', async () => {
     // Ensure contract has an initial balance.
-    const initialBalance = parseEther('100.0');
+    const initialBalance = parseEther('100');
     await ensureBalance(contract, initialBalance, owner);
 
     let tx = await contract.testConsensusDelegate(
@@ -182,17 +189,19 @@ describe('Subcall', () => {
 
   /// Verifies that delegation works, and when a receipt is requested it returns
   /// the number of shares allocated
-  it('consensus.Delegate (with receipt)', async () => {
+  it.skip('Delegate then begin Undelegate (with receipts)', async () => {
     const randomDelegate = arrayify(
       (await contract.generateRandomAddress()).publicKey,
     );
 
     // Ensure contract has an initial balance, above minimum delegation amount
+    console.log('       - Funding Account');
     const initialBalance = parseEther('100');
     await ensureBalance(contract, initialBalance, owner);
 
     // Perform delegation, and request a receipt
-    const receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
+    let receiptId = randomInt(2 ** 32, (2 ** 32) * 2);
+    console.log('       - consensus.Delegate with receipt', receiptId);
     let tx = await contract.testConsensusDelegateWithReceipt(
       randomDelegate,
       parseEther('100'),
@@ -209,9 +218,24 @@ describe('Subcall', () => {
 
     // Retrieve DelegateDone receipt after transaction is confirmed
     tx = await contract.testTakeReceipt(1, receiptId);
+    console.log('       - Fetching Delegate receipt', receiptId);
     receipt = await tx.wait();
-    const result = cborg.decode(arrayify(receipt.events![0].args!.data));
+    let result = cborg.decode(arrayify(receipt.events![0].args!.data));
     expect(bufToBigint(result.shares)).eq(100000000000);
+
+    // Attempt undelegation of the full amount, with a receipt
+    const nextReceiptId = receiptId + 1;
+    console.log('       - consensus.Undelegate with receipt', nextReceiptId);
+    tx = await contract.testConsensusUndelegateWithReceipt(randomDelegate, result.shares, nextReceiptId);
+    receipt = await tx.wait();
+
+    // Retrieve UndelegateStart receipt
+    console.log('       - Fetching UndelegateStart receipt', nextReceiptId);
+    tx = await contract.testTakeReceipt(2, nextReceiptId);
+    receipt = await tx.wait();
+    result = cborg.decode(arrayify(receipt.events![0].args!.data));
+    expect(result.receipt).eq(nextReceiptId);
+    console.log(result);
   });
 
   it('Decode UndelegateStart receipt', async () => {

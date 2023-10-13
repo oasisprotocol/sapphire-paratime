@@ -177,6 +177,8 @@ library Subcall {
 
         (newOffset, tmp) = _parseCBORUint(result, offset);
 
+        require( tmp <= type(uint64).max );
+
         value = uint64(tmp);
     }
 
@@ -187,6 +189,8 @@ library Subcall {
         uint tmp;
 
         (newOffset, tmp) = _parseCBORUint(result, offset);
+
+        require( tmp <= type(uint128).max );
 
         value = uint128(tmp);
     }
@@ -371,6 +375,9 @@ library Subcall {
     )
         internal
     {
+        // XXX: due to weirdness in oasis-cbor, `0x1b || 8 bytes` requires `value >= 2**32`
+        require(receiptId >= 4294967296);
+
         (uint64 status, bytes memory data) = subcall(
             CONSENSUS_UNDELEGATE,
             abi.encodePacked(
@@ -458,6 +465,7 @@ library Subcall {
                 hex"82",        // Array, 2 elements
                 hex"50",        // byte string, 16 bytes
                 amount,
+                // TODO: handle non-native token!
                 hex"40",        // byte string, 0 to 23 bytes
                 // pair 3
                 hex"67",
