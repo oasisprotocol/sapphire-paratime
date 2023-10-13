@@ -46,10 +46,7 @@ contract Staking {
         lastReceiptId = 4294967296;
     }
 
-    function delegate(StakingAddress to)
-        public payable
-        returns (uint64)
-    {
+    function delegate(StakingAddress to) public payable returns (uint64) {
         // Whatever is sent to the contract is delegated.
         require(msg.value < type(uint128).max);
 
@@ -68,10 +65,7 @@ contract Staking {
         return receiptId;
     }
 
-    function delegateDone(uint64 receiptId)
-        public
-        returns (uint128 shares)
-    {
+    function delegateDone(uint64 receiptId) public returns (uint128 shares) {
         PendingDelegation memory pending = pendingDelegations[receiptId];
 
         require(pending.from != address(0), "unknown receipt");
@@ -110,14 +104,13 @@ contract Staking {
         return receiptId;
     }
 
-    function undelegateStart(uint64 receiptId)
-        public
-    {
+    function undelegateStart(uint64 receiptId) public {
         PendingUndelegation storage pending = pendingUndelegations[receiptId];
 
         require(pending.to != address(0), "unknown receipt");
 
-        (uint64 epoch, uint64 endReceipt) = Subcall.consensusTakeReceiptUndelegateStart(receiptId);
+        (uint64 epoch, uint64 endReceipt) = Subcall
+            .consensusTakeReceiptUndelegateStart(receiptId);
 
         pending.endReceiptId = endReceipt;
 
@@ -137,7 +130,9 @@ contract Staking {
 
         if (pool.totalAmount == 0) {
             // Did not fetch the end receipt yet, do it now.
-            uint128 amount = Subcall.consensusTakeReceiptUndelegateDone(pending.endReceiptId);
+            uint128 amount = Subcall.consensusTakeReceiptUndelegateDone(
+                pending.endReceiptId
+            );
 
             undelegationPools[pending.endReceiptId].totalAmount = amount;
 
@@ -145,8 +140,8 @@ contract Staking {
         }
 
         // Compute how much we get from the pool and transfer the amount.
-        uint transferAmount = (uint256(pending.shares) * uint256(pool.totalAmount)) /
-            pool.totalShares;
+        uint256 transferAmount = (uint256(pending.shares) *
+            uint256(pool.totalAmount)) / pool.totalShares;
 
         pending.to.transfer(transferAmount);
 

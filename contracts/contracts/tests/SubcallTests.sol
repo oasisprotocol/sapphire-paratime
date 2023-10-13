@@ -55,7 +55,7 @@ contract SubcallTests {
     function testDecodeReceiptUndelegateStart(bytes memory receipt)
         external
         pure
-        returns (uint, uint)
+        returns (uint256, uint256)
     {
         return Subcall._decodeReceiptUndelegateStart(receipt);
     }
@@ -63,7 +63,7 @@ contract SubcallTests {
     function testDecodeReceiptUndelegateDone(bytes memory receipt)
         external
         pure
-        returns (uint)
+        returns (uint256)
     {
         return Subcall._decodeReceiptUndelegateDone(receipt);
     }
@@ -97,9 +97,11 @@ contract SubcallTests {
         Subcall.consensusUndelegate(to, value);
     }
 
-    function testConsensusUndelegateWithReceipt(StakingAddress to, uint128 value, uint64 receiptId)
-        external
-    {
+    function testConsensusUndelegateWithReceipt(
+        StakingAddress to,
+        uint128 value,
+        uint64 receiptId
+    ) external {
         Subcall.consensusUndelegate(to, value, receiptId);
     }
 

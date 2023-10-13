@@ -11,7 +11,9 @@ import { getRandomValues, randomInt } from 'crypto';
 import { execSync } from 'child_process';
 
 async function getSapphireDevDockerName() {
-  const x = await execSync("docker ps --format '{{.Names}}' --filter status=running --filter expose=8545");
+  const x = await execSync(
+    "docker ps --format '{{.Names}}' --filter status=running --filter expose=8545",
+  );
   return new TextDecoder().decode(x);
 }
 
@@ -200,7 +202,7 @@ describe('Subcall', () => {
     await ensureBalance(contract, initialBalance, owner);
 
     // Perform delegation, and request a receipt
-    let receiptId = randomInt(2 ** 32, (2 ** 32) * 2);
+    let receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
     console.log('       - consensus.Delegate with receipt', receiptId);
     let tx = await contract.testConsensusDelegateWithReceipt(
       randomDelegate,
@@ -226,7 +228,11 @@ describe('Subcall', () => {
     // Attempt undelegation of the full amount, with a receipt
     const nextReceiptId = receiptId + 1;
     console.log('       - consensus.Undelegate with receipt', nextReceiptId);
-    tx = await contract.testConsensusUndelegateWithReceipt(randomDelegate, result.shares, nextReceiptId);
+    tx = await contract.testConsensusUndelegateWithReceipt(
+      randomDelegate,
+      result.shares,
+      nextReceiptId,
+    );
     receipt = await tx.wait();
 
     // Retrieve UndelegateStart receipt
@@ -245,19 +251,19 @@ describe('Subcall', () => {
       for (let j = 1; j <= 8; j++) {
         const numJ = new Uint8Array(j);
         let payload;
-        if( k % 2 == 0 ) {
+        if (k % 2 == 0) {
           payload = cborg.encode({
             epoch: getRandomValues(numI),
-            receipt: getRandomValues(numJ)
+            receipt: getRandomValues(numJ),
           });
-        }
-        else {
+        } else {
           payload = cborg.encode({
             receipt: getRandomValues(numJ),
-            epoch: getRandomValues(numI)
+            epoch: getRandomValues(numI),
           });
         }
-        const [epoch, receipt] = await contract.testDecodeReceiptUndelegateStart(payload);
+        const [epoch, receipt] =
+          await contract.testDecodeReceiptUndelegateStart(payload);
         expect(epoch).eq(bufToBigint(numI));
         expect(receipt).eq(bufToBigint(numJ));
         k += 1;
@@ -269,7 +275,7 @@ describe('Subcall', () => {
     for (let i = 1; i <= 16; i++) {
       const numI = new Uint8Array(i);
       const payload = cborg.encode({
-        amount: getRandomValues(numI)
+        amount: getRandomValues(numI),
       });
       const amount = await contract.testDecodeReceiptUndelegateDone(payload);
       expect(amount).eq(bufToBigint(numI));
