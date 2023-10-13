@@ -4,6 +4,13 @@ pragma solidity ^0.8.0;
 
 import {StakingAddress, StakingSecretKey} from "./ConsensusUtils.sol";
 
+enum SubcallReceiptKind {
+    Invalid,
+    Delegate,
+    UndelegateStart,
+    UndelegateDone
+}
+
 /**
  * @title SDK Subcall wrappers
  * @dev Interact with Oasis Runtime SDK modules from Sapphire.
@@ -14,13 +21,6 @@ library Subcall {
     string private constant CONSENSUS_WITHDRAW = "consensus.Withdraw";
     string private constant CONSENSUS_TAKE_RECEIPT = "consensus.TakeReceipt";
     string private constant ACCOUNTS_TRANSFER = "accounts.Transfer";
-
-    enum ReceiptKind {
-        Invalid,
-        Delegate,
-        UndelegateStart,
-        UndelegateDone
-    }
 
     /// Address of the SUBCALL precompile
     address internal constant SUBCALL =
@@ -80,10 +80,7 @@ library Subcall {
         StakingAddress to,
         uint128 value,
         bytes memory token
-    )
-        internal
-        returns (uint64 status, bytes memory data)
-    {
+    ) internal returns (uint64 status, bytes memory data) {
         (status, data) = subcall(
             method,
             abi.encodePacked(
@@ -118,26 +115,34 @@ library Subcall {
      * @param kind 1=Delegate, 2=UndelegateStart, 3=UndelegateDone
      * @param receiptId ID of receipt
      */
-    function consensusTakeReceipt(ReceiptKind kind, uint64 receiptId)
+    function consensusTakeReceipt(SubcallReceiptKind kind, uint64 receiptId)
         internal
         returns (bytes memory)
     {
-        require( receiptId != 0 );
-        require( kind != ReceiptKind.Invalid );
+        require(receiptId != 0);
 
-        (bool success, bytes memory data) = SUBCALL.call(abi.encode(
-            CONSENSUS_TAKE_RECEIPT,
-            abi.encodePacked(
-                hex"a2",                    // Map, 2 pairs
-                    hex"62", "id",          // Byte string, 2 bytes
-                        hex"1b", receiptId, // Unsigned 64bit integer
-                    hex"64", "kind",        // Byte string, 4 bytes
-                        uint8(kind)         // uint8 <= 23.
+        require(uint8(kind) > 0 && uint8(kind) <= 23);
+
+        (bool success, bytes memory data) = SUBCALL.call(
+            abi.encode(
+                CONSENSUS_TAKE_RECEIPT,
+                abi.encodePacked(
+                    hex"a2", // Map, 2 pairs
+                    hex"62",
+                    "id", // Byte string, 2 bytes
+                    hex"1b",
+                    receiptId, // Unsigned 64bit integer
+                    hex"64",
+                    "kind", // Byte string, 4 bytes
+                    uint8(kind) // uint8 <= 23.
+                )
             )
-        ));
-        require( success );
+        );
 
-        (uint64 status, bytes memory result) = abi.decode(data, (uint64, bytes));
+        require(success);
+
+        (uint64 status, bytes memory result) = abi.decode(data,(uint64, bytes));
+
         if (status != 0) {
             revert ConsensusTakeReceiptError(status, string(result));
         }
@@ -145,32 +150,188 @@ library Subcall {
         return result;
     }
 
+    function _parseCBORUint(bytes memory result, uint offset)
+        public pure
+        returns (uint newOffset, uint value)
+    {
+        require( result[offset] & 0x40 == 0x40, "invalid len" );
+
+        uint len = uint8(result[offset++]) ^ 0x40;
+
+        require( len < 0x20 );
+
+        assembly {
+            value := mload(add(add(0x20,result),offset))
+        }
+
+        value = value >> (256-(len*8));
+
+        newOffset = offset + len;
+    }
+
+    function _parseCBORUint64(bytes memory result, uint offset)
+        public pure
+        returns (uint newOffset, uint64 value)
+    {
+        uint tmp;
+
+        (newOffset, tmp) = _parseCBORUint(result, offset);
+
+        value = uint64(tmp);
+    }
+
+    function _parseCBORUint128(bytes memory result, uint offset)
+        public pure
+        returns (uint newOffset, uint128 value)
+    {
+        uint tmp;
+
+        (newOffset, tmp) = _parseCBORUint(result, offset);
+
+        value = uint128(tmp);
+    }
+
+    function _parseCBORKey(
+        bytes memory result,
+        uint offset
+    )
+        internal pure
+        returns (uint newOffset, bytes32 keyDigest)
+    {
+        require( result[offset] & 0x60 == 0x60, "invalid key" );
+
+        uint8 len = uint8(result[offset++]) ^ 0x60;
+
+        assembly {
+            keyDigest := keccak256(add(add(0x20,result),offset),len)
+        }
+
+        newOffset = offset + len;
+    }
+
+    function _decodeReceiptUndelegateStart (bytes memory result)
+        internal pure
+        returns (uint64 epoch, uint64 endReceipt)
+    {
+        uint offset = 1;
+
+        bool hasEpoch = false;
+
+        bool hasReceipt = false;
+
+        require( result[0] == 0xA2, "invalid map" );
+
+        while( offset < result.length )
+        {
+            bytes32 keyDigest;
+
+            (offset, keyDigest) = _parseCBORKey(result, offset);
+
+            if( keyDigest == keccak256("epoch") )
+            {
+                (offset, epoch) = _parseCBORUint64(result, offset);
+
+                hasEpoch = true;
+            }
+            else if( keyDigest == keccak256("receipt") )
+            {
+                (offset, endReceipt) = _parseCBORUint64(result, offset);
+
+                hasReceipt = true;
+            }
+            else {
+                // TODO: skip unknown keys & values? For forward compatibility
+                require( false, "Invalid key" );
+            }
+        }
+
+        require( hasEpoch && hasReceipt );
+    }
+
+    function _decodeReceiptUndelegateDone (bytes memory result)
+        internal pure
+        returns (uint128 amount)
+    {
+        uint offset = 1;
+
+        bool hasAmount = false;
+
+        require( result[0] == 0xA1, "invalid map" );
+
+        while( offset < result.length )
+        {
+            bytes32 keyDigest;
+
+            (offset, keyDigest) = _parseCBORKey(result, offset);
+
+            if( keyDigest == keccak256("amount") )
+            {
+                (offset, amount) = _parseCBORUint128(result, offset);
+
+                hasAmount = true;
+            }
+            else {
+                // TODO: skip unknown keys & values? For forward compatibility
+                require( false, "Invalid key" );
+            }
+        }
+
+        require( hasAmount );
+    }
+
     /**
-     *
+     * Decodes a 'Delegate' receipt
      * @param receiptId Previously unretrieved receipt
      * @param result CBOR encoded {shares: u128}
      */
-    function decodeReceiptDelegateDone (uint64 receiptId, bytes memory result)
-        internal pure
+    function _decodeReceiptDelegate(uint64 receiptId, bytes memory result)
+        internal
+        pure
         returns (uint128 shares)
     {
-        if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s")
-        {
+        require( result[0] == 0xA1, "invalid map" );
+
+        if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s") {
             // Delegation succeeded, decode number of shares.
             uint8 sharesLen = uint8(result[8]) & 0x1f; // Assume shares field is never greater than 16 bytes.
 
-            require( 9 + sharesLen == result.length );
+            require(9 + sharesLen == result.length);
 
-            for (uint offset = 0; offset < sharesLen; offset++)
-            {
+            for (uint256 offset = 0; offset < sharesLen; offset++) {
                 uint8 v = uint8(result[9 + offset]);
 
-                shares += uint128(v) << 8*uint128(sharesLen - offset - 1);
+                shares += uint128(v) << (8 * uint128(sharesLen - offset - 1));
             }
-        }
-        else {
+        } else {
             revert ParseReceiptError(receiptId);
         }
+    }
+
+    function consensusTakeReceiptDelegate(uint64 receiptId)
+        internal
+        returns (uint128 shares)
+    {
+        bytes memory result = consensusTakeReceipt(SubcallReceiptKind.Delegate, receiptId);
+
+        shares = _decodeReceiptDelegate(receiptId, result);
+    }
+
+    function consensusTakeReceiptUndelegateStart (uint64 receiptId)
+        internal
+        returns (uint64 epoch, uint64 endReceipt)
+    {
+        bytes memory result = consensusTakeReceipt(SubcallReceiptKind.UndelegateStart, receiptId);
+
+        (epoch, endReceipt) = _decodeReceiptUndelegateStart(result);
+    }
+
+    function consensusTakeReceiptUndelegateDone (uint64 receiptId)
+        internal
+        returns (uint128 amount)
+    {
+        bytes memory result = consensusTakeReceipt(SubcallReceiptKind.UndelegateStart, receiptId);
+
+        (amount) = _decodeReceiptUndelegateDone(result);
     }
 
     /**
@@ -184,14 +345,51 @@ library Subcall {
         (uint64 status, bytes memory data) = subcall(
             CONSENSUS_UNDELEGATE,
             abi.encodePacked(
-                hex"a264",
+                hex"a2",    // map, 2 pairs
+                // pair 1
+                hex"64",    // UTF-8 string, 4 bytes
                 "from",
-                hex"55",
+                hex"55",    // 21 bytes
                 from,
-                hex"66",
+                // pair 2
+                hex"66",    // UTF-8 string, 6 bytes
                 "shares",
-                hex"50",
+                hex"50",    // 128bit unsigned int (16 bytes)
                 shares
+            )
+        );
+
+        if (status != 0) {
+            revert ConsensusUndelegateError(status, string(data));
+        }
+    }
+
+    function consensusUndelegate(
+        StakingAddress from,
+        uint128 shares,
+        uint64 receiptId
+    )
+        internal
+    {
+        (uint64 status, bytes memory data) = subcall(
+            CONSENSUS_UNDELEGATE,
+            abi.encodePacked(
+                hex"a3",    // map, 3 pairs
+                // pair 1
+                hex"64",    // UTF-8 string, 4 bytes
+                "from",
+                hex"55",    // 21 bytes
+                from,
+                // pair 2
+                hex"66",    // UTF-8 string, 6 bytes
+                "shares",
+                hex"50",    // 16 bytes
+                shares,
+                // pair 3
+                hex"67",    // UTF-8 string, 7 bytes
+                "receipt",
+                hex"1b",    // 64bit unsigned int
+                receiptId
             )
         );
 
@@ -239,27 +437,33 @@ library Subcall {
         StakingAddress to,
         uint128 amount,
         uint64 receiptId
-    )
-        internal
-        returns (bytes memory data)
-    {
+    ) internal returns (bytes memory data) {
         // XXX: due to weirdness in oasis-cbor, `0x1b || 8 bytes` requires `value >= 2**32`
-        require( receiptId >= 4294967296 );
+        require(receiptId >= 4294967296);
 
         uint64 status;
 
         (status, data) = subcall(
             CONSENSUS_DELEGATE,
-            abi.encodePacked(               // CBOR encoded, {to: w, amount: [x, y], receipt: z}
-                hex"a3",                    // map, 3 pairs
-                    hex"62", "to",          // UTF-8 string, 2 byte
-                        hex"55", to,        // byte string, 21 bytes
-                    hex"66", "amount",      // UTF-8 string, 6 bytes
-                        hex"82",            // Array, 2 elements
-                            hex"50", amount,// byte string, 16 bytes
-                            hex"40",        // byte string, 0 to 23 bytes
-                    hex"67", "receipt",     // UTF-8 string, 7 bytes
-                        hex"1b", receiptId  // uint64
+            abi.encodePacked(   // CBOR encoded, {to: w, amount: [x, y], receipt: z}
+                hex"a3",        // map, 3 pairs
+                // pair 1
+                hex"62",        // UTF-8 string, 2 byte
+                "to",
+                hex"55",        // byte string, 21 bytes
+                to,
+                // pair 2
+                hex"66",        // UTF-8 string, 6 bytes
+                "amount",
+                hex"82",        // Array, 2 elements
+                hex"50",        // byte string, 16 bytes
+                amount,
+                hex"40",        // byte string, 0 to 23 bytes
+                // pair 3
+                hex"67",
+                "receipt",      // UTF-8 string, 7 bytes
+                hex"1b",
+                receiptId       // uint64, 8 bytes
             )
         );
 

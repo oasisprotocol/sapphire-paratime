@@ -3,14 +3,18 @@
 pragma solidity ^0.8.0;
 
 import {ConsensusUtils, StakingAddress, StakingSecretKey} from "../ConsensusUtils.sol";
-import {Subcall} from "../Subcall.sol";
+import {Subcall, SubcallReceiptKind} from "../Subcall.sol";
 
 contract SubcallTests {
     event SubcallResult(uint64 status, bytes data);
 
-    constructor() payable {}
+    constructor() payable {
+        // Do nothing, but allow balances to be sent on construction
+    }
 
-    receive() external payable {}
+    receive() external payable {
+        // Do nothing, but allow contract to receive native ROSE
+    }
 
     function generateRandomAddress()
         external
@@ -20,7 +24,10 @@ contract SubcallTests {
         return ConsensusUtils.generateStakingAddress("");
     }
 
-    function testSubcall(string memory method, bytes memory data) external payable {
+    function testSubcall(string memory method, bytes memory data)
+        external
+        payable
+    {
         uint64 status;
 
         (status, data) = Subcall.subcall(method, data);
@@ -28,7 +35,7 @@ contract SubcallTests {
         emit SubcallResult(status, data);
     }
 
-    function testTakeReceipt(Subcall.ReceiptKind kind, uint64 receiptId)
+    function testTakeReceipt(SubcallReceiptKind kind, uint64 receiptId)
         external
         returns (bytes memory result)
     {
@@ -37,18 +44,38 @@ contract SubcallTests {
         emit Result(result);
     }
 
-    function testDecodeReceiptDelegateDone(bytes memory receipt)
-        external pure
+    function testDecodeReceiptDelegate(bytes memory receipt)
+        external
+        pure
         returns (uint128)
     {
-        return Subcall.decodeReceiptDelegateDone(0, receipt);
+        return Subcall._decodeReceiptDelegate(0, receipt);
+    }
+
+    function testDecodeReceiptUndelegateStart(bytes memory receipt)
+        external
+        pure
+        returns (uint, uint)
+    {
+        return Subcall._decodeReceiptUndelegateStart(receipt);
+    }
+
+    function testDecodeReceiptUndelegateDone(bytes memory receipt)
+        external
+        pure
+        returns (uint)
+    {
+        return Subcall._decodeReceiptUndelegateDone(receipt);
     }
 
     function testAccountsTransfer(address to, uint128 value) external {
         Subcall.accountsTransfer(to, value);
     }
 
-    function testConsensusDelegate(StakingAddress to, uint128 value) external payable {
+    function testConsensusDelegate(StakingAddress to, uint128 value)
+        external
+        payable
+    {
         Subcall.consensusDelegate(to, value);
     }
 
@@ -58,10 +85,7 @@ contract SubcallTests {
         StakingAddress to,
         uint128 value,
         uint64 receiptId
-    )
-        external payable
-        returns (bytes memory result)
-    {
+    ) external payable returns (bytes memory result) {
         result = Subcall.consensusDelegate(to, value, receiptId);
 
         emit Result(result);

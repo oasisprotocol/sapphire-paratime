@@ -14,12 +14,12 @@ function fromBigInt(bi: BigNumberish): Uint8Array {
   );
 }
 
-function bufToBigint (buf: Uint8Array): bigint {
+function bufToBigint(buf: Uint8Array): bigint {
   let ret = 0n;
   for (const i of buf.values()) {
     ret = (ret << 8n) + BigInt(i);
   }
-  return ret
+  return ret;
 }
 
 async function ensureBalance(
@@ -37,10 +37,7 @@ async function ensureBalance(
     await resp.wait();
   }
   const newBalance = await contract.provider.getBalance(contract.address);
-  console.log("New Balance", formatEther(newBalance));
-  expect(newBalance).eq(
-    initialBalance,
-  );
+  expect(newBalance).eq(initialBalance);
 }
 
 function decodeResult(receipt: ContractReceipt) {
@@ -102,6 +99,8 @@ describe('Subcall', () => {
     expect(computedPublicKey).eq(ethers.utils.hexlify(newKeypair.publicKey));
   });
 
+  /// Verify that the 'accounts.Transfer' subcall operates similarly to
+  /// native EVM transfers
   it('accounts.Transfer', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
@@ -146,6 +145,8 @@ describe('Subcall', () => {
     );
   });
 
+  /// Verifies that the 'consensus.Withdraw' operation can be parsed
+  /// Currently it is not possble to withdraw anything
   it('consensus.Withdraw', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
@@ -162,22 +163,16 @@ describe('Subcall', () => {
     );
   });
 
-  it('Decode DelegateDone receipt', async () => {
-    expect(await contract.testDecodeReceiptDelegateDone(ethers.utils.arrayify('0xa16673686172657345174876e800'))).eq(100000000000);
-    for( let i = 1; i <= 16; i++ ) {
-      const num = new Uint8Array(i);
-      const payload = cborg.encode({shares: getRandomValues(num)})
-      const shares = await contract.testDecodeReceiptDelegateDone(payload);
-      expect(shares).eq(bufToBigint(num));
-    }
-  });
-
+  /// Verifies that delegation works (when no receipt is requested)
   it('consensus.Delegate (without receipt)', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('100.0');
     await ensureBalance(contract, initialBalance, owner);
 
-    let tx = await contract.testConsensusDelegate(kp.publicKey, parseEther('100'));
+    let tx = await contract.testConsensusDelegate(
+      kp.publicKey,
+      parseEther('100'),
+    );
     await tx.wait();
 
     expect(await contract.provider.getBalance(contract.address)).eq(
@@ -185,21 +180,31 @@ describe('Subcall', () => {
     );
   });
 
+  /// Verifies that delegation works, and when a receipt is requested it returns
+  /// the number of shares allocated
   it('consensus.Delegate (with receipt)', async () => {
-    const randomDelegate = arrayify((await contract.generateRandomAddress()).publicKey);
+    const randomDelegate = arrayify(
+      (await contract.generateRandomAddress()).publicKey,
+    );
 
     // Ensure contract has an initial balance, above minimum delegation amount
     const initialBalance = parseEther('100');
     await ensureBalance(contract, initialBalance, owner);
 
     // Perform delegation, and request a receipt
-    const receiptId = randomInt(2**32, (2**32) * 2);
-    let tx = await contract.testConsensusDelegateWithReceipt(randomDelegate, parseEther('100'), receiptId);
+    const receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
+    let tx = await contract.testConsensusDelegateWithReceipt(
+      randomDelegate,
+      parseEther('100'),
+      receiptId,
+    );
     let receipt = await tx.wait();
     expect(cborg.decode(arrayify(receipt.events![0].args!.data))).is.null;
 
     // Ensure everything has been delegated
-    const contractBalance = await contract.provider.getBalance(contract.address);
+    const contractBalance = await contract.provider.getBalance(
+      contract.address,
+    );
     expect(contractBalance).eq(parseEther('0'));
 
     // Retrieve DelegateDone receipt after transaction is confirmed
@@ -207,5 +212,59 @@ describe('Subcall', () => {
     receipt = await tx.wait();
     const result = cborg.decode(arrayify(receipt.events![0].args!.data));
     expect(bufToBigint(result.shares)).eq(100000000000);
+  });
+
+  it('Decode UndelegateStart receipt', async () => {
+    let k = 0;
+    for (let i = 1; i <= 8; i++) {
+      const numI = new Uint8Array(i);
+      for (let j = 1; j <= 8; j++) {
+        const numJ = new Uint8Array(j);
+        let payload;
+        if( k % 2 == 0 ) {
+          payload = cborg.encode({
+            epoch: getRandomValues(numI),
+            receipt: getRandomValues(numJ)
+          });
+        }
+        else {
+          payload = cborg.encode({
+            receipt: getRandomValues(numJ),
+            epoch: getRandomValues(numI)
+          });
+        }
+        const [epoch, receipt] = await contract.testDecodeReceiptUndelegateStart(payload);
+        expect(epoch).eq(bufToBigint(numI));
+        expect(receipt).eq(bufToBigint(numJ));
+        k += 1;
+      }
+    }
+  });
+
+  it('Decode UndelegateDone receipt', async () => {
+    for (let i = 1; i <= 16; i++) {
+      const numI = new Uint8Array(i);
+      const payload = cborg.encode({
+        amount: getRandomValues(numI)
+      });
+      const amount = await contract.testDecodeReceiptUndelegateDone(payload);
+      expect(amount).eq(bufToBigint(numI));
+    }
+  });
+
+  /// Verifies that a variety of DelegateDone receipts can be parsed
+  it('Decode Delegate receipt', async () => {
+    expect(
+      await contract.testDecodeReceiptDelegate(
+        ethers.utils.arrayify('0xa16673686172657345174876e800'),
+      ),
+    ).eq(100000000000);
+
+    for (let i = 1; i <= 16; i++) {
+      const num = new Uint8Array(i);
+      const payload = cborg.encode({ shares: getRandomValues(num) });
+      const shares = await contract.testDecodeReceiptDelegate(payload);
+      expect(shares).eq(bufToBigint(num));
+    }
   });
 });
