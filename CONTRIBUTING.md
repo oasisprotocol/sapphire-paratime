@@ -65,9 +65,9 @@ if the issue is not reported yet, [file a new one].
 
 ## Development
 
-### Building and Testing
+### Building
 
-Building and testing are documented in our
+Building documentation lies at the top-level
 [README](https://github.com/oasisprotocol/sapphire-paratime/blob/main/README.md).
 
 ### Contributing Code

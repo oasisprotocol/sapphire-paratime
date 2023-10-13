@@ -34,6 +34,15 @@ development environments
 - [`runtime`](./runtime/): the Sapphire Paratime as based off of the
 [Oasis SDK](https://github.com/oasisprotocol/oasis-sdk)
 
+## Release
+
+### Clients
+
+JS libraries should be updated with a version bump in the `package.json`
+file and a respective tag in the pattern of `{{path}}/v{{semver}}`, such as
+`clients/js/v1.1.1`.
+
+
 ## Contributing
 
 Developers are encouraged to contribute their improvements to the Sapphire
@@ -47,4 +56,4 @@ See our [Contributing Guidelines](CONTRIBUTING.md).
 Oasis remains committed to unlocking the full potential of privacy applications
 on Web3.
 
-Join the [Privacy4Web3 Hackathon](https://oasisprotocol.org/p4w3-hackathon) today!
+Build with [us](https://oasisprotocol.org/opl#how-to-get-started) today!
