@@ -4,17 +4,47 @@ import * as oasis from '@oasisprotocol/client';
 import * as cborg from 'cborg';
 import { SubcallTests } from '../typechain-types/contracts/tests/SubcallTests';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { arrayify, formatEther, hexlify, parseEther } from 'ethers/lib/utils';
+import { arrayify, parseEther } from 'ethers/lib/utils';
 import { BigNumber, BigNumberish, ContractReceipt } from 'ethers';
 import { getRandomValues, randomInt } from 'crypto';
 
 import { execSync } from 'child_process';
 
-async function getSapphireDevDockerName() {
-  const x = await execSync(
-    "docker ps --format '{{.Names}}' --filter status=running --filter expose=8545",
-  );
-  return new TextDecoder().decode(x);
+async function sapphireDockerName() {
+  const cmd = "docker ps --format '{{.Names}}' --filter status=running --filter expose=8545";
+  const name = new TextDecoder().decode(execSync(cmd));
+  return name.replace(/\n|\r/g, '');
+}
+
+async function sapphireGetEpoch(dockerName:string) {
+  const cmd =`docker exec ${dockerName} /oasis-node control status -a unix:/serverdir/node/net-runner/network/client-0/internal.sock  | jq '.consensus.latest_epoch'`;
+  return Number.parseInt(new TextDecoder().decode(execSync(cmd)));
+}
+
+async function sapphireGetDebondingInterval(dockerName:string) {
+  const cmd =`docker exec ${dockerName} cat /serverdir/node/fixture.json | jq .network.staking_genesis.params.debonding_interval`;
+  return Number.parseInt(new TextDecoder().decode(execSync(cmd)));
+}
+
+async function sapphireSetEpoch(dockerName:string, epoch:number) {
+  const cmd = `docker exec ${dockerName} /oasis-node debug control set-epoch --epoch ${epoch} -a unix:/serverdir/node/net-runner/network/client-0/internal.sock`;
+  execSync(cmd);
+}
+
+async function sapphireSkipEpochs(args:{nEpochs?:number, dockerName?:string, targetEpoch?:number}) {
+  let {nEpochs, dockerName, targetEpoch} = args;
+  dockerName = dockerName || await sapphireDockerName();
+  nEpochs = nEpochs || await sapphireGetDebondingInterval(dockerName);
+  let currentEpoch = await sapphireGetEpoch(dockerName);
+  targetEpoch = targetEpoch || currentEpoch + nEpochs;
+  const stride = 1;
+  while( currentEpoch < targetEpoch ) {
+    currentEpoch += stride;
+    if( currentEpoch >= targetEpoch ) {
+      currentEpoch = targetEpoch;
+    }
+    await sapphireSetEpoch(dockerName, currentEpoch);
+  }
 }
 
 function fromBigInt(bi: BigNumberish): Uint8Array {
@@ -191,7 +221,7 @@ describe('Subcall', () => {
 
   /// Verifies that delegation works, and when a receipt is requested it returns
   /// the number of shares allocated
-  it.skip('Delegate then begin Undelegate (with receipts)', async () => {
+  it('Delegate then begin Undelegate (with receipts)', async () => {
     const randomDelegate = arrayify(
       (await contract.generateRandomAddress()).publicKey,
     );
@@ -241,6 +271,15 @@ describe('Subcall', () => {
     receipt = await tx.wait();
     result = cborg.decode(arrayify(receipt.events![0].args!.data));
     expect(result.receipt).eq(nextReceiptId);
+
+    console.log('       - Skipping until undelegation epoch', result.epoch);
+    await sapphireSkipEpochs({targetEpoch: result.epoch + 1});
+
+    // Retrieve UndelegateStart receipt
+    console.log('       - Fetching UndelegateDone receipt', result.receipt);
+    tx = await contract.testTakeReceipt(3, result.receipt);
+    receipt = await tx.wait();
+    result = cborg.decode(arrayify(receipt.events![0].args!.data));
     console.log(result);
   });
 
