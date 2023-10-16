@@ -21,6 +21,11 @@ This monorepo includes the source code for the following Sapphire packages:
 The Sapphire Paratime documentation is deployed as part of the full set of Oasis [docs](https://docs.oasis.io/dapp/sapphire/)
 based on this open source [repository](https://github.com/oasisprotocol/docs).
 
+Auto-generated API Documentation is available at:
+
+ * https://api.docs.oasis.io/js/sapphire-paratime/
+ * https://api.docs.oasis.io/sol/sapphire-contracts/
+
 ## Layout
 
 This repository includes all relevant Sapphire and dependencies organized into
@@ -28,7 +33,7 @@ the following directories:
 
 - [`clients`](./clients): the Go and TypeScript clients
 - [`contracts`](./contracts): Sapphire and [OPL](https://docs.oasis.io/dapp/opl/) smart contracts
-- [`examples`](./examples/): sample code snippets in popular Ethereum 
+- [`examples`](./examples/): sample code snippets in popular Ethereum
 development environments
 - [`integrations`](./integrations/): plugins with popular Solidity tools
 - [`runtime`](./runtime/): the Sapphire Paratime as based off of the
