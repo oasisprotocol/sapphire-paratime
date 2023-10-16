@@ -11,36 +11,41 @@ import { getRandomValues, randomInt } from 'crypto';
 import { execSync } from 'child_process';
 
 async function sapphireDockerName() {
-  const cmd = "docker ps --format '{{.Names}}' --filter status=running --filter expose=8545";
+  const cmd =
+    "docker ps --format '{{.Names}}' --filter status=running --filter expose=8545";
   const name = new TextDecoder().decode(execSync(cmd));
   return name.replace(/\n|\r/g, '');
 }
 
-async function sapphireGetEpoch(dockerName:string) {
-  const cmd =`docker exec ${dockerName} /oasis-node control status -a unix:/serverdir/node/net-runner/network/client-0/internal.sock  | jq '.consensus.latest_epoch'`;
+async function sapphireGetEpoch(dockerName: string) {
+  const cmd = `docker exec ${dockerName} /oasis-node control status -a unix:/serverdir/node/net-runner/network/client-0/internal.sock  | jq '.consensus.latest_epoch'`;
   return Number.parseInt(new TextDecoder().decode(execSync(cmd)));
 }
 
-async function sapphireGetDebondingInterval(dockerName:string) {
-  const cmd =`docker exec ${dockerName} cat /serverdir/node/fixture.json | jq .network.staking_genesis.params.debonding_interval`;
+async function sapphireGetDebondingInterval(dockerName: string) {
+  const cmd = `docker exec ${dockerName} cat /serverdir/node/fixture.json | jq .network.staking_genesis.params.debonding_interval`;
   return Number.parseInt(new TextDecoder().decode(execSync(cmd)));
 }
 
-async function sapphireSetEpoch(dockerName:string, epoch:number) {
+async function sapphireSetEpoch(dockerName: string, epoch: number) {
   const cmd = `docker exec ${dockerName} /oasis-node debug control set-epoch --epoch ${epoch} -a unix:/serverdir/node/net-runner/network/client-0/internal.sock`;
   execSync(cmd);
 }
 
-async function sapphireSkipEpochs(args:{nEpochs?:number, dockerName?:string, targetEpoch?:number}) {
-  let {nEpochs, dockerName, targetEpoch} = args;
-  dockerName = dockerName || await sapphireDockerName();
-  nEpochs = nEpochs || await sapphireGetDebondingInterval(dockerName);
+async function sapphireSkipEpochs(args: {
+  nEpochs?: number;
+  dockerName?: string;
+  targetEpoch?: number;
+}) {
+  let { nEpochs, dockerName, targetEpoch } = args;
+  dockerName = dockerName || (await sapphireDockerName());
+  nEpochs = nEpochs || (await sapphireGetDebondingInterval(dockerName));
   let currentEpoch = await sapphireGetEpoch(dockerName);
   targetEpoch = targetEpoch || currentEpoch + nEpochs;
   const stride = 1;
-  while( currentEpoch < targetEpoch ) {
+  while (currentEpoch < targetEpoch) {
     currentEpoch += stride;
-    if( currentEpoch >= targetEpoch ) {
+    if (currentEpoch >= targetEpoch) {
       currentEpoch = targetEpoch;
     }
     await sapphireSetEpoch(dockerName, currentEpoch);
@@ -270,7 +275,7 @@ describe('Subcall', () => {
     result = cborg.decode(arrayify(receipt.events![0].args!.data));
     expect(result.receipt).eq(nextReceiptId);
 
-    await sapphireSkipEpochs({targetEpoch: result.epoch});
+    await sapphireSkipEpochs({ targetEpoch: result.epoch });
 
     // Retrieve UndelegateStart receipt
     tx = await contract.testTakeReceipt(3, result.receipt);
