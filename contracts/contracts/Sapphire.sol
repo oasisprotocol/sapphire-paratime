@@ -23,6 +23,10 @@ library Sapphire {
         0x0100000000000000000000000000000000000007;
     address internal constant CURVE25519_PUBLIC_KEY =
         0x0100000000000000000000000000000000000008;
+    address internal constant GAS_USED =
+        0x0100000000000000000000000000000000000009;
+    address internal constant GAS_PAD =
+        0x010000000000000000000000000000000000000a;
 
     // Oasis-specific, general precompiles
     address internal constant SHA512_256 =
@@ -224,6 +228,32 @@ library Sapphire {
         );
         require(success, "verify: failed");
         return abi.decode(v, (bool));
+    }
+
+    /**
+     * @dev Set the current transactions gas usage to a specific amount
+     * @param toAmount Gas usage will be set to this amount
+     * @custom:see @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_pad_gas
+     *
+     * Will cause a reversion if the current usage is more than the amount
+     */
+    function gaspad(uint128 toAmount) internal view
+    {
+        (bool success,) = GAS_PAD.staticcall(
+            abi.encode(toAmount)
+        );
+        require(success, "verify: failed");
+    }
+
+    /**
+     * @dev Returns the amount of gas currently used by the transaction
+     * @custom:see @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_gas_used
+     */
+    function gasused() internal view returns (uint64)
+    {
+        (bool success, bytes memory v) = GAS_USED.staticcall("");
+        require(success, "gasused: failed");
+        return abi.decode(v, (uint64));
     }
 }
 
