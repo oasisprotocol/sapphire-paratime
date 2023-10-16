@@ -237,11 +237,8 @@ library Sapphire {
      *
      * Will cause a reversion if the current usage is more than the amount
      */
-    function gaspad(uint128 toAmount) internal view
-    {
-        (bool success,) = GAS_PAD.staticcall(
-            abi.encode(toAmount)
-        );
+    function gaspad(uint128 toAmount) internal view {
+        (bool success, ) = GAS_PAD.staticcall(abi.encode(toAmount));
         require(success, "verify: failed");
     }
 
@@ -249,8 +246,7 @@ library Sapphire {
      * @dev Returns the amount of gas currently used by the transaction
      * @custom:see @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_gas_used
      */
-    function gasused() internal view returns (uint64)
-    {
+    function gasused() internal view returns (uint64) {
         (bool success, bytes memory v) = GAS_USED.staticcall("");
         require(success, "gasused: failed");
         return abi.decode(v, (uint64));
