@@ -19,9 +19,7 @@ This monorepo includes the source code for the following Sapphire packages:
 ## Documentation
 
 The Sapphire Paratime documentation is deployed as part of the full set of Oasis [docs](https://docs.oasis.io/dapp/sapphire/)
-based on this open source [repository](https://github.com/oasisprotocol/docs).
-
-Auto-generated API Documentation is available at:
+based on this open source [repository](https://github.com/oasisprotocol/docs). Auto-generated API documentation is available at:
 
  * https://api.docs.oasis.io/js/sapphire-paratime/
  * https://api.docs.oasis.io/sol/sapphire-contracts/
