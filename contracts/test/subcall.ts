@@ -227,13 +227,11 @@ describe('Subcall', () => {
     );
 
     // Ensure contract has an initial balance, above minimum delegation amount
-    console.log('       - Funding Account');
     const initialBalance = parseEther('100');
     await ensureBalance(contract, initialBalance, owner);
 
     // Perform delegation, and request a receipt
     let receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
-    console.log('       - consensus.Delegate with receipt', receiptId);
     let tx = await contract.testConsensusDelegateWithReceipt(
       randomDelegate,
       parseEther('100'),
@@ -241,6 +239,9 @@ describe('Subcall', () => {
     );
     let receipt = await tx.wait();
     expect(cborg.decode(arrayify(receipt.events![0].args!.data))).is.null;
+    expect(await contract.provider.getBalance(contract.address)).eq(
+      parseEther('0'),
+    );
 
     // Ensure everything has been delegated
     const contractBalance = await contract.provider.getBalance(
@@ -250,14 +251,12 @@ describe('Subcall', () => {
 
     // Retrieve DelegateDone receipt after transaction is confirmed
     tx = await contract.testTakeReceipt(1, receiptId);
-    console.log('       - Fetching Delegate receipt', receiptId);
     receipt = await tx.wait();
     let result = cborg.decode(arrayify(receipt.events![0].args!.data));
     expect(bufToBigint(result.shares)).eq(100000000000);
 
     // Attempt undelegation of the full amount, with a receipt
     const nextReceiptId = receiptId + 1;
-    console.log('       - consensus.Undelegate with receipt', nextReceiptId);
     tx = await contract.testConsensusUndelegateWithReceipt(
       randomDelegate,
       result.shares,
@@ -266,21 +265,20 @@ describe('Subcall', () => {
     receipt = await tx.wait();
 
     // Retrieve UndelegateStart receipt
-    console.log('       - Fetching UndelegateStart receipt', nextReceiptId);
     tx = await contract.testTakeReceipt(2, nextReceiptId);
     receipt = await tx.wait();
     result = cborg.decode(arrayify(receipt.events![0].args!.data));
     expect(result.receipt).eq(nextReceiptId);
 
-    console.log('       - Skipping until undelegation epoch', result.epoch);
-    await sapphireSkipEpochs({targetEpoch: result.epoch + 1});
+    await sapphireSkipEpochs({targetEpoch: result.epoch});
 
     // Retrieve UndelegateStart receipt
-    console.log('       - Fetching UndelegateDone receipt', result.receipt);
     tx = await contract.testTakeReceipt(3, result.receipt);
     receipt = await tx.wait();
     result = cborg.decode(arrayify(receipt.events![0].args!.data));
-    console.log(result);
+    expect(await contract.provider.getBalance(contract.address)).eq(
+      parseEther('100'),
+    );
   });
 
   it('Decode UndelegateStart receipt', async () => {
