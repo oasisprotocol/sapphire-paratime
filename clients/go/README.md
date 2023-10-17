@@ -5,7 +5,7 @@ You can port over a Go Ethereum application by using a `sapphire.WrappedBackend`
 or by packing native Ethereum transactions Sapphire style.
 
 [@oasisprotocol/sapphire-paratime]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/go/
-[sapphire paratime]: https://docs.oasis.dev/general/developer-resources/sapphire-paratime/
+[sapphire paratime]: https://docs.oasis.io/general/developer-resources/sapphire-paratime/
 
 _If your dapp doesn't port in under 10 minutes, it's a bug!_  
 
