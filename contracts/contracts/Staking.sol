@@ -78,9 +78,7 @@ contract Staking {
 
         uint128 amount = uint128(msg.value);
 
-        lastReceiptId = lastReceiptId + 1;
-
-        uint64 receiptId = lastReceiptId;
+        uint64 receiptId = lastReceiptId++;
 
         Subcall.consensusDelegate(to, amount, receiptId);
 
@@ -135,9 +133,7 @@ contract Staking {
             "must have enough delegated shares"
         );
 
-        lastReceiptId = lastReceiptId + 1;
-
-        uint64 receiptId = lastReceiptId;
+        uint64 receiptId = lastReceiptId++;
 
         Subcall.consensusUndelegate(from, shares, receiptId);
 

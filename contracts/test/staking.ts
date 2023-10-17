@@ -39,7 +39,7 @@ describe('Staking', () => {
     }
   });
 
-  it.skip('Delegate', async () => {
+  it('Delegate', async () => {
     // Submit the first delegation
     let tx = await stakers[0].delegate(delegateTargets[0], {
       value: parseEther('100'),
@@ -62,7 +62,6 @@ describe('Staking', () => {
     args = receipt.events![0].args!;
     const secondReceiptId = Number.parseInt(args.receiptId);
     expect(secondReceiptId).eq(firstReceiptId + 1);
-    console.log(args);
   });
 
   // Note: this will not work!
@@ -71,7 +70,6 @@ describe('Staking', () => {
     const m = 2;
     const d = delegateTargets.slice(0, m);
     const tx = await contract.delegate(d, {value: parseEther('200')});
-    //const receipt = ;
     expect(tx.wait()).revertedWithoutReason();
   });
 });
