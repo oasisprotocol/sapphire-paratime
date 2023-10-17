@@ -3,10 +3,10 @@ import { expect } from 'chai';
 import { getRandomValues } from 'crypto';
 import * as oasis from '@oasisprotocol/client';
 import { Staking, Staking__factory } from '../typechain-types';
-import { StakingTests } from "../typechain-types/contracts/tests";
+import { StakingTests } from '../typechain-types/contracts/tests';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 
-async function randomStakingAddress () {
+async function randomStakingAddress() {
   const secretKey = new Uint8Array(32);
   getRandomValues(secretKey);
   const alice = oasis.signature.NaclSigner.fromSeed(
@@ -31,10 +31,13 @@ describe('Staking', () => {
     }
 
     const factory = await ethers.getContractFactory('StakingTests');
-    contract = await factory.deploy(n) as StakingTests;
+    contract = (await factory.deploy(n)) as StakingTests;
 
-    for( let i = 0; i < n; i++ ) {
-      const staker = Staking__factory.connect(await contract.stakers(i), factory.signer);
+    for (let i = 0; i < n; i++) {
+      const staker = Staking__factory.connect(
+        await contract.stakers(i),
+        factory.signer,
+      );
       stakers.push(staker);
     }
   });
@@ -69,7 +72,7 @@ describe('Staking', () => {
   it('Multi Delegate', async () => {
     const m = 2;
     const d = delegateTargets.slice(0, m);
-    const tx = await contract.delegate(d, {value: parseEther('200')});
+    const tx = await contract.delegate(d, { value: parseEther('200') });
     expect(tx.wait()).revertedWithoutReason();
   });
 });

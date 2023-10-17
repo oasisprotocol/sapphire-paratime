@@ -48,11 +48,21 @@ contract Staking {
 
     // -------------------------------------------------------------------------
 
-    event OnDelegateStart(address indexed who, StakingAddress to, uint256 amount, uint64 receiptId);
+    event OnDelegateStart(
+        address indexed who,
+        StakingAddress to,
+        uint256 amount,
+        uint64 receiptId
+    );
 
     event OnDelegateDone(uint64 indexed receiptId, address who, uint128 shares);
 
-    event OnUndelegateStart(uint64 indexed receiptId, address who, uint64 epoch, uint128 shares);
+    event OnUndelegateStart(
+        uint64 indexed receiptId,
+        address who,
+        uint64 epoch,
+        uint128 shares
+    );
 
     // -------------------------------------------------------------------------
 
