@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/oasisprotocol/deoxysii"
-	"github.com/oasisprotocol/emerald-web3-gateway/rpc/oasis"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	mraeApi "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/api"
 	mrae "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/deoxysii"
@@ -283,7 +283,7 @@ func GetRuntimePublicKey(chainID uint64) (*[32]byte, error) {
 	}
 	res.Body.Close()
 
-	var pubKey oasis.CallDataPublicKey
+	var pubKey CallDataPublicKey
 	if err := json.Unmarshal(rpcRes.Result, &pubKey); err != nil {
 		return nil, fmt.Errorf("invalid response when fetching runtime calldata public key: %w", err)
 	}
@@ -310,4 +310,19 @@ type Response struct {
 	Error  *Error          `json:"error"`
 	ID     int             `json:"id"`
 	Result json.RawMessage `json:"result,omitempty"`
+}
+
+// CallDataPublicKey is the public key alongside the key manager's signature.
+// See Web3 gateway repository for more information
+// https://github.com/oasisprotocol/oasis-web3-gateway/blob/d29efdafe4e07a9f0f9a0fd13379c58eb5b89723/rpc/oasis/api.go#L21-L33
+// This is a flattened `core.CallDataPublicKeyResponse` with hex-encoded bytes for easy consumption by Web3 clients.
+type CallDataPublicKey struct {
+	// PublicKey is the requested public key.
+	PublicKey hexutil.Bytes `json:"key"`
+	// Checksum is the checksum of the key manager state.
+	Checksum hexutil.Bytes `json:"checksum"`
+	// Signature is the Sign(sk, (key || checksum)) from the key manager.
+	Signature hexutil.Bytes `json:"signature"`
+	// Epoch is the epoch of the ephemeral runtime key.
+	Epoch uint64 `json:"epoch,omitempty"`
 }

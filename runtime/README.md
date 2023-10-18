@@ -15,7 +15,7 @@ ParaTime for the [Oasis Network] built using the [Oasis SDK]. It's chock-full
 of Oasis.
 
 [Oasis Protocol Foundation]: https://oasisprotocol.org/
-[Oasis Network]: https://docs.oasis.dev/oasis-network-primer/
+[Oasis Network]: https://docs.oasis.io/oasis-network-primer/
 [Oasis SDK]: https://github.com/oasisprotocol/oasis-sdk
 
 ## Note
@@ -79,7 +79,7 @@ rustc 1.60.0-nightly (09cb29c64 2022-02-15)
 [Rust]: https://www.rust-lang.org/
 [rustup]: https://rustup.rs/
 [Oasis Core's Development Setup Prerequisites]:
-  https://docs.oasis.dev/oasis-core/development-setup/prerequisites
+  https://docs.oasis.io/oasis-core/development-setup/prerequisites
 [rust-toolchain.toml]: rust-toolchain.toml
 [rust-toolchain-precedence]:
   https://github.com/rust-lang/rustup/blob/master/README.md#override-precedence
