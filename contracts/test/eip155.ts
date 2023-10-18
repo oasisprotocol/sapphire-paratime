@@ -47,6 +47,20 @@ describe('EIP-155', function () {
     calldata = testContract.interface.encodeFunctionData('example');
   });
 
+  it('Has correct block.chainid', async () => {
+    const provider = testContract.provider;
+    const expectedChainId = (await provider.getNetwork()).chainId;
+
+    // Emitted via transaction
+    const tx = await testContract.emitChainId();
+    const receipt = await tx.wait();
+    expect(receipt.events![0].args![0]).eq(expectedChainId);
+
+    // Returned from view call
+    const onchainChainId = await testContract.getChainId();
+    expect(onchainChainId).eq(expectedChainId);
+  });
+
   it('Wrapper encrypts self-signed transaction calldata', async function () {
     const tx = await testContract.example();
     expect(entropy(tx.data)).gte(EXPECTED_ENTROPY_ENCRYPTED);

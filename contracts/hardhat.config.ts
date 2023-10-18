@@ -64,7 +64,7 @@ const config: HardhatUserConfig = {
       chainId: 0x5aff,
       accounts: process.env.SAPPHIRE_TESTNET_PRIVATE_KEY
         ? [process.env.SAPPHIRE_TESTNET_PRIVATE_KEY]
-        : [],
+        : TEST_HDWALLET,
     },
     'sapphire-mainnet': {
       url: 'https://sapphire.oasis.io',

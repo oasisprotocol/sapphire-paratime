@@ -14,6 +14,17 @@ contract EIP155Tests {
         payable(publicAddr).transfer(msg.value);
     }
 
+    function getChainId () external view returns (uint)
+    {
+        return block.chainid;
+    }
+
+    event HasChainId (uint);
+
+    function emitChainId () external {
+        emit HasChainId(block.chainid);
+    }
+
     function sign(EIP155Signer.EthTx memory transaction)
         external
         view
