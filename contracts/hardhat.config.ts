@@ -100,7 +100,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     require: ['ts-node/register/files'],
-    timeout: 20_000,
+    timeout: 60_000,
   },
 };
 

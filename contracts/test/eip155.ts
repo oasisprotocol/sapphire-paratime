@@ -27,6 +27,9 @@ function entropy(str: string) {
 function getWallet(index: number) {
   const accounts = hre.network.config
     .accounts as HardhatNetworkHDAccountsConfig;
+  if( ! accounts.mnemonic ) {
+    return new ethers.Wallet((accounts as unknown as string[])[0]);
+  }
   return ethers.Wallet.fromMnemonic(
     accounts.mnemonic,
     accounts.path + `/${index}`,
@@ -84,10 +87,7 @@ describe('EIP-155', function () {
     });
 
     // Submit signed transaction via plain JSON-RPC provider (avoiding sapphire.wrap)
-    const plainProvider = new ethers.providers.StaticJsonRpcProvider(
-      ethers.provider.connection,
-    );
-    let plainResp = await plainProvider.sendTransaction(signedTx);
+    let plainResp = await provider.sendTransaction(signedTx);
     let receipt = await testContract.provider.waitForTransaction(
       plainResp.hash,
     );
