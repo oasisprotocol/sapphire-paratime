@@ -14,6 +14,16 @@ contract EIP155Tests {
         payable(publicAddr).transfer(msg.value);
     }
 
+    function getChainId() external view returns (uint256) {
+        return block.chainid;
+    }
+
+    event HasChainId(uint256);
+
+    function emitChainId() external {
+        emit HasChainId(block.chainid);
+    }
+
     function sign(EIP155Signer.EthTx memory transaction)
         external
         view
@@ -22,6 +32,16 @@ contract EIP155Tests {
         transaction.data = abi.encodeWithSelector(this.example.selector);
         transaction.chainId = block.chainid;
         return EIP155Signer.sign(publicAddr, secretKey, transaction);
+    }
+
+    function signWithSecret(
+        EIP155Signer.EthTx memory transaction,
+        address fromPublicAddr,
+        bytes32 fromSecret
+    ) external view returns (bytes memory) {
+        transaction.data = abi.encodeWithSelector(this.example.selector);
+        transaction.chainId = block.chainid;
+        return EIP155Signer.sign(fromPublicAddr, fromSecret, transaction);
     }
 
     event ExampleEvent(bytes32 x);
