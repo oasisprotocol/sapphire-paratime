@@ -14,14 +14,13 @@ contract EIP155Tests {
         payable(publicAddr).transfer(msg.value);
     }
 
-    function getChainId () external view returns (uint)
-    {
+    function getChainId() external view returns (uint256) {
         return block.chainid;
     }
 
-    event HasChainId (uint);
+    event HasChainId(uint256);
 
-    function emitChainId () external {
+    function emitChainId() external {
         emit HasChainId(block.chainid);
     }
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 contract CommentBox {
     string[] public comments;
 
-    function commentCount() external view returns (uint) {
+    function commentCount() external view returns (uint256) {
         return comments.length;
     }
 

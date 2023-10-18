@@ -4,8 +4,8 @@ import { CommentBox, Gasless } from '../typechain-types';
 import { HDAccountsUserConfig } from 'hardhat/types';
 
 describe('CommentBox', function () {
-  let commentBox : CommentBox;
-  let gasless : Gasless;
+  let commentBox: CommentBox;
+  let gasless: Gasless;
 
   before(async () => {
     const CommentBoxFactory = await ethers.getContractFactory('CommentBox');
@@ -17,7 +17,8 @@ describe('CommentBox', function () {
     await gasless.deployed();
 
     // Derive the private key of the 1st (counting from 0) builtin hardhat test account.
-    const accounts = (config.networks.hardhat.accounts as unknown) as HDAccountsUserConfig;
+    const accounts = config.networks.hardhat
+      .accounts as unknown as HDAccountsUserConfig;
     const wallet1 = ethers.Wallet.fromMnemonic(
       accounts.mnemonic,
       accounts.path + `/1`,

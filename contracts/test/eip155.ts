@@ -27,7 +27,7 @@ function entropy(str: string) {
 function getWallet(index: number) {
   const accounts = hre.network.config
     .accounts as HardhatNetworkHDAccountsConfig;
-  if( ! accounts.mnemonic ) {
+  if (!accounts.mnemonic) {
     return new ethers.Wallet((accounts as unknown as string[])[0]);
   }
   return ethers.Wallet.fromMnemonic(
