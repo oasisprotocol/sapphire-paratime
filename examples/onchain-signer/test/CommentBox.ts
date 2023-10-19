@@ -1,19 +1,37 @@
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import { ethers, config } from 'hardhat';
 import { CommentBox, Gasless } from '../typechain-types';
+import { EthereumKeypairStruct } from "../typechain-types/contracts/Gasless"
 import { parseEther } from 'ethers/lib/utils';
+import { HDAccountsUserConfig } from 'hardhat/types';
 
 describe('CommentBox', function () {
   let commentBox: CommentBox;
   let gasless: Gasless;
 
   before(async () => {
+    // Derive the private key of the 1st (counting from 0) builtin hardhat test account.
+    const accounts = config.networks.hardhat
+      .accounts as unknown as HDAccountsUserConfig;
+    const wallet1 = ethers.Wallet.fromMnemonic(
+      accounts.mnemonic,
+      accounts.path + `/1`,
+    );
+
+    // Use it as the relayer private key.
+    // NOTE can be done by the contract with EthereumUtils.generateKeypair()
+    const keypair : EthereumKeypairStruct = {
+      addr: wallet1.address,
+      secret: wallet1.privateKey,
+      nonce: ethers.provider.getTransactionCount(wallet1.address),
+    };
+
     const CommentBoxFactory = await ethers.getContractFactory('CommentBox');
     commentBox = await CommentBoxFactory.deploy();
     await commentBox.deployed();
 
     const GaslessFactory = await ethers.getContractFactory('Gasless');
-    gasless = await GaslessFactory.deploy({value: parseEther('0.1')});
+    gasless = await GaslessFactory.deploy(keypair, {value: parseEther('0.1')});
     await gasless.deployed();
   });
 

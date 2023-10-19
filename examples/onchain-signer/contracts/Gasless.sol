@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import {EIP155Signer} from "@oasisprotocol/sapphire-contracts/contracts/EIP155Signer.sol";
-import {EthereumUtils} from "@oasisprotocol/sapphire-contracts/contracts/EthereumUtils.sol";
 
 struct EthereumKeypair {
     address addr;
@@ -12,14 +11,13 @@ struct EthereumKeypair {
 
 // Proxy for gasless transaction.
 contract Gasless {
-    error KeyPairNotSet();
-
     EthereumKeypair private kp;
 
-    constructor () payable {
-        (kp.addr, kp.secret) = EthereumUtils.generateKeypair();
-
-        payable(kp.addr).transfer(msg.value);
+    constructor (EthereumKeypair memory keypair) payable {
+        kp = keypair;
+        if( msg.value > 0 ) {
+            payable(kp.addr).transfer(msg.value);
+        }
     }
 
     function makeProxyTx(address innercallAddr, bytes memory innercall)
@@ -28,9 +26,6 @@ contract Gasless {
         returns (bytes memory output)
     {
         bytes memory data = abi.encode(innercallAddr, innercall);
-        if (kp.secret == 0) {
-            revert KeyPairNotSet();
-        }
 
         // Call will invoke proxy().
         return
