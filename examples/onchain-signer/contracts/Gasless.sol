@@ -9,22 +9,15 @@ struct EthereumKeypair {
     uint64 nonce;
 }
 
-struct EthTx {
-    uint64 nonce;
-    uint256 gasPrice;
-    uint64 gasLimit;
-    address to;
-    uint256 value;
-    bytes data;
-    uint256 chainId;
-}
-
 // Proxy for gasless transaction.
 contract Gasless {
     EthereumKeypair private kp;
 
-    function setKeypair(EthereumKeypair memory keypair) external payable {
+    constructor (EthereumKeypair memory keypair) payable {
         kp = keypair;
+        if( msg.value > 0 ) {
+            payable(kp.addr).transfer(msg.value);
+        }
     }
 
     function makeProxyTx(address innercallAddr, bytes memory innercall)

@@ -38,6 +38,9 @@ const config: HardhatUserConfig = {
     },
   },
   solidity: '0.8.19',
+  mocha: {
+    timeout: 120_000_000, // Sapphire Mainnet/Testnet require more time.
+  },
 };
 
 export default config;
