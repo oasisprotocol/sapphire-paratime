@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        3
+        4
     } else {
         // Mainnet.
         1
@@ -158,6 +158,11 @@ impl sdk::Runtime for Runtime {
             modules::core::Genesis {
                 parameters: modules::core::Parameters {
                     min_gas_price: { BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]) },
+                    dynamic_min_gas_price: modules::core::DynamicMinGasPrice {
+                        enabled: false,
+                        target_block_gas_usage_percentage: 50,
+                        min_price_max_change_denominator: 8,
+                    },
                     max_batch_gas: if is_testnet() { 30_000_000 } else { 15_000_000 },
                     max_tx_size: 300 * 1024,
                     max_tx_signers: 1,
