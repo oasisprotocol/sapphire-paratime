@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        3
+        4
     } else {
         // Mainnet.
         1
@@ -133,11 +133,11 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 17500584,
-                hash: "f93d453a2f3fda4e06e5f098d5b9853fa063fd652e758b680155aa72a873166c".into(),
+                height: 17860795,
+                hash: "6d17b10ad769a4ee22b96c07d7f0b30cec0bccd91fd5abb27d5e8f92f74162df".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
-                chain_context: "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a"
+                chain_context: "0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76"
                     .to_string(),
             })
         } else {
@@ -158,6 +158,11 @@ impl sdk::Runtime for Runtime {
             modules::core::Genesis {
                 parameters: modules::core::Parameters {
                     min_gas_price: { BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]) },
+                    dynamic_min_gas_price: modules::core::DynamicMinGasPrice {
+                        enabled: false,
+                        target_block_gas_usage_percentage: 50,
+                        min_price_max_change_denominator: 8,
+                    },
                     max_batch_gas: if is_testnet() { 30_000_000 } else { 15_000_000 },
                     max_tx_size: 300 * 1024,
                     max_tx_signers: 1,
