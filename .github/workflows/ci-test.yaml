@@ -201,12 +201,6 @@ jobs:
     strategy:
       matrix:
         example: [hardhat, hardhat-boilerplate, onchain-signer]
-        include:
-          - example: truffle
-          - example: truffle
-            truffle_version: 5.8.2
-          - example: truffle
-            truffle_version: 5.10.1
     defaults:
       run:
         working-directory: examples/${{ matrix.example }}
@@ -255,11 +249,6 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install
-
-      - name: Update Truffle version
-        if: ${{ matrix.example == 'truffle' && matrix.truffle_version }}
-        run: |
-          pnpm up truffle@${{matrix.truffle_version}}
 
       - name: Build
         run: |
