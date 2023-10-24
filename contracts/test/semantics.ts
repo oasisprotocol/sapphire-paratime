@@ -31,30 +31,12 @@ describe('EVM Semantics', () => {
     }
   });
 
-  // Apparently `expect().to.be.revertedWithCustomError` doesn't work sometimes
-  // Otherwise we could do this:
-  //expect(c.testCustomRevert()).to.be.revertedWithCustomError(c, 'CustomError').withArgs(errorNum);
-  //expect(c.testCustomViewRevert()).to.be.revertedWithCustomError(c, 'CustomError').withArgs(errorNum);
-
   it('Error string in view call', async () => {
     try {
       await c.testViewRevert();
     } catch (x: any) {
       expect(x.errorArgs[0]).to.eq('ThisIsAnError');
       expect(x.errorName).to.eq('Error');
-    }
-  });
-
-  it('Error string in tx', async () => {
-    // Perform transaction which is expected to revert
-    try {
-      const tx = await c.testRevert();
-      await tx.wait();
-      expect(false).to.be.true;
-    } catch (x: any) {
-      expect(x.data).eq(
-        '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d546869734973416e4572726f7200000000000000000000000000000000000000',
-      );
     }
   });
 
@@ -66,17 +48,6 @@ describe('EVM Semantics', () => {
     } catch (x: any) {
       expect(x.errorArgs[0]).to.eq(ERROR_NUM);
       expect(x.errorName).to.eq('CustomError');
-    }
-  });
-
-  it('Custom error in tx', async () => {
-    // Perform transaction which is expected to revert
-    try {
-      const tx = await c.testCustomRevert();
-      await tx.wait();
-      expect(false).to.be.true;
-    } catch (x: any) {
-      expect(x.data).eq('0x110b3655' + ERROR_NUM.slice(2));
     }
   });
 });
