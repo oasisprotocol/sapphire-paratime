@@ -263,7 +263,6 @@ function sha512(bytes memory input) view returns (bytes memory output) {
     require(success, "sha512");
 }
 
-
 /**
  * Hash the input data with SHA-384
  *

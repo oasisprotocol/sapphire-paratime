@@ -6,7 +6,10 @@ import { HashTests__factory } from '../typechain-types/factories/contracts/tests
 import { PromiseOrValue } from '../typechain-types/common';
 import { BytesLike, CallOverrides } from 'ethers';
 
-type HasherTestT = (data: PromiseOrValue<BytesLike>, overrides?: CallOverrides | undefined) => Promise<string>;
+type HasherTestT = (
+  data: PromiseOrValue<BytesLike>,
+  overrides?: CallOverrides | undefined,
+) => Promise<string>;
 
 describe('Hashes', () => {
   let contract: HashTests;
@@ -19,7 +22,7 @@ describe('Hashes', () => {
     await contract.deployed();
   });
 
-  async function testHashes(algname:string, method: HasherTestT) {
+  async function testHashes(algname: string, method: HasherTestT) {
     for (let i = 0; i < 512; i += 64) {
       const data = randomBytes(i);
       const hash = createHash(algname).update(data).digest('hex');
