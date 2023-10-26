@@ -267,7 +267,7 @@ function sha512(bytes memory input) view returns (bytes memory output) {
  * Hash the input data with SHA-384
  *
  * @custom:standard https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
- * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha512.rs :: call_sha512
+ * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha384
  * @param input Bytes to hash
  * @return output 48 byte digest
  */
