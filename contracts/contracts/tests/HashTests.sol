@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {sha512, sha512_256} from "../Sapphire.sol";
+import {sha512, sha512_256, sha384} from "../Sapphire.sol";
 
 contract HashTests {
     function testSHA512(bytes memory data)
@@ -11,6 +11,14 @@ contract HashTests {
         returns (bytes memory)
     {
         return sha512(data);
+    }
+
+    function testSHA384(bytes memory data)
+        external
+        view
+        returns (bytes memory)
+    {
+        return sha384(data);
     }
 
     function testSHA512_256(bytes memory data) external view returns (bytes32) {
