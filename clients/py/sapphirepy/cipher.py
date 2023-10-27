@@ -1,11 +1,16 @@
 from typing import Optional, TypedDict, cast
 from binascii import unhexlify
+import hmac
 
 from os import urandom
-from nacl.public import PrivateKey, Box, PublicKey
+from nacl.bindings.crypto_scalarmult import crypto_scalarmult
+from nacl.public import PrivateKey, PublicKey
 import cbor2
 
 from .deoxysii import DeoxysII, NonceSize, TagSize
+
+###############################################################################
+# CBOR encoded envelope formats
 
 FORMAT_Encrypted_X25519DeoxysII = 1
 
@@ -24,8 +29,21 @@ class ResultInner(TypedDict):
 
 class ResultOuter(TypedDict):
     failure: Optional[Failure]
-    ok: Optional[bytes]
+    ok: Optional[AeadEnvelope]
     unknown: Optional[AeadEnvelope]
+
+class RequestBody(TypedDict):
+    pk: bytes
+    data: bytes
+    nonce: bytes
+    epoch: Optional[int]
+
+class RequestEnvelope(TypedDict):
+    body: dict
+    format: int
+
+###############################################################################
+# Errors relating to encryption, decryption & envelope format
 
 class SapphireBaseError(Exception):
     pass
@@ -36,35 +54,47 @@ class SapphireFailError(SapphireBaseError):
 class SapphireUnknownError(SapphireBaseError):
     pass
 
+###############################################################################
+
+def _deriveSharedSecret(pk:PublicKey, sk:PrivateKey):
+    key = b'MRAE_Box_Deoxys-II-256-128'
+    msg = crypto_scalarmult(sk.encode(), pk._public_key)
+    return hmac.new(key, msg, digestmod='sha512_256').digest()
+
 class TransactionEncrypter:
-    def __init__(self, peerPublicKey:PublicKey|str, sk:PrivateKey|None=None):
-        if sk is None:
-            sk = PrivateKey.generate()
+    epoch:int|None
+    cipher:DeoxysII
+    myPublicKey:bytes
+    def __init__(self, peerPublicKey:PublicKey|str, peerEpoch:int|None=None):
         if isinstance(peerPublicKey, str):
             if len(peerPublicKey) != 66 or peerPublicKey[:2] != "0x":
                 raise RuntimeError('peerPublicKey.invalid', peerPublicKey)
             peerPublicKey = PublicKey(unhexlify(peerPublicKey[2:]))
-        box = Box(private_key=sk, public_key=peerPublicKey)
+        sk = PrivateKey.generate()
         self.myPublicKey = sk.public_key.encode()
-        self.cipher = DeoxysII(box.shared_key())
+        self.cipher = DeoxysII(_deriveSharedSecret(peerPublicKey, sk))
+        self.epoch = peerEpoch
 
     def _encryptCallData(self, calldata: bytes):
         nonce = urandom(NonceSize)
-        plaintext = cbor2.dumps({'body': calldata})
+        plaintext = cbor2.dumps({'body': calldata}, canonical=True)
         ciphertext = bytearray(len(plaintext) + TagSize)
         self.cipher.E(nonce=nonce, dst=ciphertext, ad=b"", msg=plaintext)
         return ciphertext, nonce
 
     def encrypt(self, plaintext: bytes):
-        data, nonce = self._encryptCallData(plaintext)
-        return cbor2.dumps({
+        ciphertext, nonce = self._encryptCallData(plaintext)
+        envelope:RequestEnvelope = {
             'body': {
-                'nonce': nonce,
-                'data': data,
-                'pk': self.myPublicKey
+                'pk': self.myPublicKey,
+                'data': ciphertext,
+                'nonce': nonce
             },
             'format': FORMAT_Encrypted_X25519DeoxysII
-        })
+        }
+        if self.epoch:
+            envelope['body']['epoch'] = self.epoch
+        return cbor2.dumps(envelope, canonical=True)
 
     def _decodeInner(self, plaintext:bytes) -> bytes:
         innerResult = cast(ResultInner, cbor2.loads(plaintext))
@@ -85,10 +115,9 @@ class TransactionEncrypter:
 
     def decrypt(self, response: bytes):
         callResult = cast(ResultOuter, cbor2.loads(response))
-        if callResult['failure']:
+        if callResult.get('failure', None) is not None:
             raise SapphireFailError(callResult['failure'])
         ok = callResult.get('ok', None)
         if ok is not None:
-            envelope = cast(AeadEnvelope, cbor2.loads(ok))
-            return self._decryptInner(envelope)
+            return self._decryptInner(ok)
         raise RuntimeError("No 'ok in call result!")

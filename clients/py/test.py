@@ -13,8 +13,6 @@ compiled_sol = compile_source(
     contract Greeter {
         string public greeting;
 
-        event Fallbacked(bytes data);
-
         constructor() public {
             greeting = 'Hello';
         }
@@ -27,9 +25,10 @@ compiled_sol = compile_source(
             return greeting;
         }
 
-        fallback(bytes calldata data) external returns (bytes memory) {
-            emit Fallbacked(data);
-            return abi.encodePacked(data);
+        event Greeting(string g);
+
+        function blah() external {
+            emit Greeting(greeting);
         }
     }
     ''',
@@ -45,22 +44,17 @@ w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
 w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 w3 = sapphire.wrap(w3)
 
-#import sys; sys.exit(0)
-
 w3.eth.default_account = account.address
 
 Greeter = w3.eth.contract(abi=abi, bytecode=bytecode)
 tx_hash = Greeter.constructor().transact({'gasPrice': w3.eth.gas_price})
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-print('Deployed', tx_receipt.transactionHash.hex())
-print(tx_receipt)
+
 greeter = w3.eth.contract(address=tx_receipt.contractAddress, abi=abi)
 
-print()
-print()
-#print(greeter.functions.greet().call())
-x = greeter.functions.greet().transact({'gasPrice': w3.eth.gas_price})
+assert greeter.functions.greet().call() == 'Hello'
+
+x = greeter.functions.blah().transact({'gasPrice': w3.eth.gas_price})
 y = w3.eth.wait_for_transaction_receipt(x)
-print(y)
-print()
-print('Parsed Receipt', greeter.events.Fallbacked().process_receipt(y))
+z = greeter.events.Greeting().process_receipt(y)
+assert z[0].args['g'] == 'Hello'

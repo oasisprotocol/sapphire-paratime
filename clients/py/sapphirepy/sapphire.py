@@ -15,9 +15,9 @@ EPOCH_LIMIT = 5
 
 class CalldataPublicKey(TypedDict):
     epoch: int
-    checksum: bytes
-    signature: bytes
-    key: bytes
+    checksum: HexStr
+    signature: HexStr
+    key: HexStr
 
 class CalldataPublicKeyManager:
     _keys: list[CalldataPublicKey]
@@ -46,12 +46,12 @@ def _shouldIntercept(method: RPCEndpoint, params: Any):
     if not ENCRYPT_DEPLOYS:
         if method in ('eth_sendTransaction', 'eth_estimateGas'):
             # When 'to' flag is missing, we assume it's a deployment
-            if params[0].get('to', '') == '':
+            if not params[0].get('to', None):
                 return False
     return method in ('eth_estimateGas', 'eth_sendTransaction', 'eth_call')
 
-def _encryptRequestParams(key: str, params: tuple[TxParams]):
-    c = TransactionEncrypter(key)
+def _encryptTxParams(pk:CalldataPublicKey, params: tuple[TxParams]):
+    c = TransactionEncrypter(peerPublicKey=pk['key'], peerEpoch=pk['epoch'])
     data = params[0]['data']
     if isinstance(data, bytes):
         dataBytes = data
@@ -71,30 +71,41 @@ def sapphire_middleware(
     manager = CalldataPublicKeyManager()
     def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
         if _shouldIntercept(method, params):
+            doFetch = True
             pk = manager.newest
-            if not pk:
-                # If no calldata public key exists, fetch one
-                cdpk = cast(RPCResponse, make_request(RPCEndpoint('oasis_callDataPublicKey'), []))
-                pk = cast(CalldataPublicKey|None, cdpk.get('result', None))
-                if pk:
-                    manager.add(pk)
-            if not pk:
-                raise RuntimeError('Could not retrieve callDataPublicKey!')
+            while doFetch:
+                if not pk:
+                    # If no calldata public key exists, fetch one
+                    cdpk = cast(RPCResponse, make_request(RPCEndpoint('oasis_callDataPublicKey'), []))
+                    pk = cast(CalldataPublicKey|None, cdpk.get('result', None))
+                    if pk:
+                        manager.add(pk)
+                if not pk:
+                    raise RuntimeError('Could not retrieve callDataPublicKey!')
+                doFetch = False
 
-            c = _encryptRequestParams(pk['key'], params)
-            print('Submitting encrypted', method, params)
+                c = _encryptTxParams(pk, params)
 
-            result = make_request(method, params)
+                # We may encounter three errors here:
+                # core: invalid call format: epoch too far in the past
+                # core: invalid call format: Tag verification failed
+                # core: invalid call format: epoch in the future
+                result = cast(RPCResponse, make_request(method, params))
+                if result.get('error', None) is not None:
+                    error = result['error']
+                    if not isinstance(error, str) and error['code'] == -32000:
+                        if error['message'] == 'core: invalid call format: epoch too far in the past':
+                            # We can only handle this, we have outdated key
+                            # force the re-fetch, and re-try submitting encrypted
+                            doFetch = True
+                            pk = None
+                            continue
 
             # Only eth_call is decrypted
-            if method == 'eth_call' and result.get('data', '0x') != '0x':
-                print('Decrypting Result', method, result)
-                resultData = result['data']
-                resultDataBytes = unhexlify(resultData[2:])
-                decryptedResultData = c.decrypt(resultDataBytes)
-                result['data'] = '0x' + hexlify(decryptedResultData).decode('ascii')
+            if method == 'eth_call' and result.get('result', '0x') != '0x':
+                decrypted = c.decrypt(unhexlify(result['result'][2:]))
+                result['result'] = HexStr('0x' + hexlify(decrypted).decode('ascii'))
 
-            print('Got Result', method, result)
             return result
         return make_request(method, params)
     return middleware
