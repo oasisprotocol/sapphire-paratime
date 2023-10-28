@@ -24,6 +24,7 @@ SOFTWARE.
 
 import struct
 import array
+import hmac
 
 BlockSize = 16
 
@@ -377,10 +378,10 @@ class DeoxysII:
         self.derivedKs = STKDeriveK(key)
 
     @property
-    def name(self):
+    def implementation(self):
         return "vartime"
 
-    def E(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray, msg:bytes|bytearray):
+    def E(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, msg:bytes|bytearray):
         assert len(nonce) == (BlockSize-1)
         tweak = bytearray(TweakSize)
         tmp = bytearray(BlockSize)
@@ -460,7 +461,7 @@ class DeoxysII:
 
         dst[len(dst)-TagSize:] = tag
 
-    def D(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray, ciphertext:bytes|bytearray):
+    def D(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, ciphertext:bytes|bytearray):
         assert len(nonce) == TagSize-1
         assert len(dst) == len(ciphertext) - TagSize
 
@@ -542,8 +543,8 @@ class DeoxysII:
         decNonce[0] = PrefixTag << PrefixShift
         bcEncrypt(tagP, self.derivedKs, decNonce, tagP)
 
-        # Tag verification, XXX: variable time
-        return tag == tagP
+        # Tag verification
+        return hmac.compare_digest(tag, tagP)
 
 def deriveSubTweakKeys(derivedKs:list[bytearray], t:bytearray):
     assert len(derivedKs) == STKCount
