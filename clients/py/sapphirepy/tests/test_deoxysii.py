@@ -1,11 +1,10 @@
 import os
-import sys
 import json
 import unittest
 from base64 import b64decode
 from dataclasses import dataclass
 
-from sapphirepy.deoxysii import DeoxysII, TagSize
+from sapphirepy.deoxysii import DeoxysII, TAG_SIZE
 
 TESTDATA = os.path.join(os.path.dirname(__file__), 'testdata')
 
@@ -33,34 +32,34 @@ class TestDeoxysII(unittest.TestCase):
         off = 0
 
         for row in data['KnownAnswers']:
-            ptLen = int(row['Length'])
-            m, a = msg[:ptLen], ad[:ptLen]
+            pt_len = int(row['Length'])
+            m, a = msg[:pt_len], ad[:pt_len]
 
-            expectedDst = bytearray()
-            expectedDst += b64decode(row['Ciphertext'])
-            expectedDst += b64decode(row['Tag'])
-            expectedC = expectedDst[off:]
+            expected_dst = bytearray()
+            expected_dst += b64decode(row['Ciphertext'])
+            expected_dst += b64decode(row['Tag'])
+            expected_ciphertext = expected_dst[off:]
 
-            dst = bytearray(ptLen + TagSize)
+            dst = bytearray(pt_len + TAG_SIZE)
             x.E(nonce, dst, a, m)
             c = dst[off:]
-            self.assertEqual(c[:ptLen], expectedC[:ptLen])
+            self.assertEqual(c[:pt_len], expected_ciphertext[:pt_len])
 
-            p = bytearray(ptLen)
+            p = bytearray(pt_len)
             self.assertTrue(x.D(nonce, p, a, c))
 
             # Test malformed ciphertext (or tag).
-            badC = c[:]
-            badC[ptLen] ^= 0x23
-            p = bytearray(ptLen)
-            self.assertFalse(x.D(nonce, p, a, badC))
+            bad_ciphertext = c[:]
+            bad_ciphertext[pt_len] ^= 0x23
+            p = bytearray(pt_len)
+            self.assertFalse(x.D(nonce, p, a, bad_ciphertext))
 
             # Test malformed AD.
-            if ptLen > 0:
-                badA = bytearray(a[:])
-                badA[ptLen-1] ^= 0x23
-                p = bytearray(ptLen)
-                self.assertFalse(x.D(nonce, p, badA, c))
+            if pt_len > 0:
+                bad_ad = bytearray(a[:])
+                bad_ad[pt_len-1] ^= 0x23
+                p = bytearray(pt_len)
+                self.assertFalse(x.D(nonce, p, bad_ad, c))
 
     def test_official(self):
         fn = os.path.join(TESTDATA, 'Deoxys-II-256-128-official-20190608.json')

@@ -12,5 +12,8 @@ test:
 clean:
 	rm -rf sapphirepy/__pycache__ build dist sapphire.py.egg-info .mypy_cache
 
+lint:
+	$(PYTHON) -mpylint $(MODULE) -d line-too-long,missing-module-docstring,missing-class-docstring,missing-function-docstring
+
 wheel:
 	$(PYTHON) setup.py bdist_wheel

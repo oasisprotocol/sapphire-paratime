@@ -26,60 +26,60 @@ import struct
 import array
 import hmac
 
-BlockSize = 16
+BLOCK_SIZE = 16
 
-KeySize   = 32
-Rounds    = 16
-TweakSize = 16
-TagSize   = 16
-NonceSize = 15
+KEY_SIZE   = 32
+ROUNDS    = 16
+TWEAK_SIZE = 16
+TAG_SIZE   = 16
+NONCE_SIZE = 15
 
-STKSize  = 16
-STKCount = Rounds + 1
+STK_SIZE  = 16
+STK_COUNT = ROUNDS + 1
 
-PrefixADBlock  = 0x2 # 0010
-PrefixADFinal  = 0x6 # 0110
-PrefixMsgBlock = 0x0 # 0000
-PrefixMsgFinal = 0x4 # 0100
-PrefixTag      = 0x1 # 0001
+PREFIX_AD_BLOCK  = 0x2 # 0010
+PREFIX_AD_FINAL  = 0x6 # 0110
+PREFIX_MSG_BLOCK = 0x0 # 0000
+PREFIX_MSG_FINAL = 0x4 # 0100
+PREFIX_TAG      = 0x1 # 0001
 
-PrefixShift = 4
+PREFIX_SHIFT = 4
 
-def XORBytes(out:bytearray, a:bytearray|bytes, b:bytearray|bytes, n:int):
+def xor_bytes(out:bytearray, a:bytearray|bytes, b:bytearray|bytes, n:int):
     assert len(out) >= n
     assert len(a) >= n
     assert len(b) >= n
     for i in range(n):
         out[i] = a[i] ^ b[i]
 
-def EncodeTagTweak(out:bytearray, prefix:int, blockNr:int):
+def encode_tag_tweak(out:bytearray, prefix:int, block_nr:int):
     assert prefix <= 0xFF
-    assert blockNr < (2**64)
-    assert len(out) >= TweakSize
-    out[8:] = struct.pack('>Q', blockNr)
-    out[0] = prefix << PrefixShift
+    assert block_nr < (2**64)
+    assert len(out) >= TWEAK_SIZE
+    out[8:] = struct.pack('>Q', block_nr)
+    out[0] = prefix << PREFIX_SHIFT
 
-def EncodeEncTweak(out:bytearray, tag:bytes, blockNr:int):
-    assert len(out) == TweakSize
-    tmp = bytearray(struct.pack('>Q', blockNr))
-    out[:min(len(tag),TweakSize)] = tag
+def encode_enc_tweak(out:bytearray, tag:bytes, block_nr:int):
+    assert len(out) == TWEAK_SIZE
+    tmp = bytearray(struct.pack('>Q', block_nr))
+    out[:min(len(tag),TWEAK_SIZE)] = tag
     out[0] |= 0x80
     for i in range(8):
         out[8+i] = out[8+i] ^ tmp[i]
 
-Rcons = bytes([
+RCONS = bytes([
     0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a,
 	0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
 	0x72
 ])
-assert len(Rcons) == STKCount
+assert len(RCONS) == STK_COUNT
 
 def H(t: bytearray):
-    assert len(t) == STKSize
+    assert len(t) == STK_SIZE
     t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10], t[11], t[12], t[13], t[14], t[15] = t[1], t[6], t[11], t[12], t[5], t[10], t[15], t[0], t[9], t[14], t[3], t[4], t[13], t[2], t[7], t[8]
 
 def lfsr2(t: bytearray):
-    assert len(t) == STKSize
+    assert len(t) == STK_SIZE
     for i, x in enumerate(t):
         x7, x5 = x>>7, (x>>5)&1
         t[i] = ((x << 1) | (x7 ^ x5)) % 256
@@ -89,31 +89,31 @@ def lfsr3(t: bytearray):
         x0, x6 = x&1, (x>>6)&1
         t[i] = (x >> 1) | ((x0 ^ x6) << 7)
 
-def xorRC(t: bytearray, i: int):
-    assert len(t) == STKSize
-    assert i < STKCount
-    rcon = Rcons[i]
+def xor_rc(t: bytearray, i: int):
+    assert len(t) == STK_SIZE
+    assert i < STK_COUNT
+    rcon = RCONS[i]
     rc = bytearray([
         1,    2,    4,    8,
         rcon, rcon, rcon, rcon,
         0,    0,    0,    0,
         0,    0,    0,    0,
     ])
-    XORBytes(t, t, rc, 8)
+    xor_bytes(t, t, rc, 8)
 
-def STKDeriveK(key:bytes|bytearray):
-    derivedKs = [bytearray(STKSize) for _ in range(STKCount)]
+def stk_derive_k(key:bytes|bytearray):
+    derived_k = [bytearray(STK_SIZE) for _ in range(STK_COUNT)]
 
     tk2 = bytearray(key[16:32])  # Tk2 = W2
     tk3 = bytearray(key[:16])    # Tk3 = W3
 
     # i == 0
-    XORBytes(derivedKs[0], tk2, tk3, STKSize)
-    xorRC(derivedKs[0], 0)
+    xor_bytes(derived_k[0], tk2, tk3, STK_SIZE)
+    xor_rc(derived_k[0], 0)
 
     # i == 0 ... i == 16
     i = 1
-    while i <= Rounds:
+    while i <= ROUNDS:
         # Tk2(i+1) = h(LFSR2(Tk2(i)))
         lfsr2(tk2)
         H(tk2)
@@ -122,15 +122,15 @@ def STKDeriveK(key:bytes|bytearray):
         lfsr3(tk3)
         H(tk3)
 
-        XORBytes(derivedKs[i], tk2, tk3, STKSize)
-        xorRC(derivedKs[i], i)
+        xor_bytes(derived_k[i], tk2, tk3, STK_SIZE)
+        xor_rc(derived_k[i], i)
         i += 1
 
-    return derivedKs
+    return derived_k
 
 # Errytime make Te/Td table AES, angel lose wing ;_;
 
-te0 = array.array('I', [
+TE0 = array.array('I', [
     0xc66363a5, 0xf87c7c84, 0xee777799, 0xf67b7b8d, 0xfff2f20d, 0xd66b6bbd,
     0xde6f6fb1, 0x91c5c554, 0x60303050, 0x02010103, 0xce6767a9, 0x562b2b7d,
     0xe7fefe19, 0xb5d7d762, 0x4dababe6, 0xec76769a, 0x8fcaca45, 0x1f82829d,
@@ -176,7 +176,7 @@ te0 = array.array('I', [
     0x7bb0b0cb, 0xa85454fc, 0x6dbbbbd6, 0x2c16163a,
 ])
 
-te1 = array.array('I', [
+TE1 = array.array('I', [
     0xa5c66363, 0x84f87c7c, 0x99ee7777, 0x8df67b7b, 0x0dfff2f2, 0xbdd66b6b,
     0xb1de6f6f, 0x5491c5c5, 0x50603030, 0x03020101, 0xa9ce6767, 0x7d562b2b,
     0x19e7fefe, 0x62b5d7d7, 0xe64dabab, 0x9aec7676, 0x458fcaca, 0x9d1f8282,
@@ -222,7 +222,7 @@ te1 = array.array('I', [
     0xcb7bb0b0, 0xfca85454, 0xd66dbbbb, 0x3a2c1616,
 ])
 
-te2 = array.array('I', [
+TE2 = array.array('I', [
     0x63a5c663, 0x7c84f87c, 0x7799ee77, 0x7b8df67b, 0xf20dfff2, 0x6bbdd66b,
     0x6fb1de6f, 0xc55491c5, 0x30506030, 0x01030201, 0x67a9ce67, 0x2b7d562b,
     0xfe19e7fe, 0xd762b5d7, 0xabe64dab, 0x769aec76, 0xca458fca, 0x829d1f82,
@@ -268,7 +268,7 @@ te2 = array.array('I', [
     0xb0cb7bb0, 0x54fca854, 0xbbd66dbb, 0x163a2c16,
 ])
 
-te3 = array.array('I', [
+TE3 = array.array('I', [
     0x6363a5c6, 0x7c7c84f8, 0x777799ee, 0x7b7b8df6, 0xf2f20dff, 0x6b6bbdd6,
     0x6f6fb1de, 0xc5c55491, 0x30305060, 0x01010302, 0x6767a9ce, 0x2b2b7d56,
     0xfefe19e7, 0xd7d762b5, 0xababe64d, 0x76769aec, 0xcaca458f, 0x82829d1f,
@@ -317,14 +317,14 @@ te3 = array.array('I', [
 def uint8(x:int):
     return x & 0xFF
 
-def bcEncrypt(ciphertext:bytearray, derivedKs:list[bytearray], tweak:bytearray, plaintext:bytes|bytearray):
+def bc_encrypt(ciphertext:bytearray, derived_k:list[bytearray], tweak:bytearray, plaintext:bytes|bytearray):
     assert len(plaintext) >= 16
-    assert len(derivedKs) == STKCount
-    assert len(derivedKs[0]) == STKSize
-    assert len(tweak) == TweakSize
+    assert len(derived_k) == STK_COUNT
+    assert len(derived_k[0]) == STK_SIZE
+    assert len(tweak) == TWEAK_SIZE
 
     # Derive all the Sub-Tweak Keys.
-    stks = deriveSubTweakKeys(derivedKs, tweak)
+    stks = derive_sub_tweak_keys(derived_k, tweak)
 
     # AddRoundTweakKey (AES -> AddRoundKey)
     s0, s1, s2, s3 = struct.unpack('>LLLL', plaintext[:16])
@@ -334,34 +334,34 @@ def bcEncrypt(ciphertext:bytearray, derivedKs:list[bytearray], tweak:bytearray, 
     s3 = s3 ^ stks[0][3]
 
     i = 1
-    while i <= Rounds:
+    while i <= ROUNDS:
         # SubBytes, ShiftRows, MixBytes (AES -> MixColumns),
         # AddRoundTweakKey (AES -> AddRoundKey).
         #
         # In AES-NI terms, this is *exactly* equivalent to AESENC (though
         # Intel's notation transposes ShiftRows, and SubBytes).
-        t0 = (te0[uint8(s0>>24)] ^
-              te1[uint8(s1>>16)] ^
-              te2[uint8(s2>>8)] ^
-              te3[uint8(s3)] ^
+        t0 = (TE0[uint8(s0>>24)] ^
+              TE1[uint8(s1>>16)] ^
+              TE2[uint8(s2>>8)] ^
+              TE3[uint8(s3)] ^
               stks[i][0])
 
-        t1 = (te0[uint8(s1>>24)] ^
-              te1[uint8(s2>>16)] ^
-              te2[uint8(s3>>8)] ^
-              te3[uint8(s0)] ^
+        t1 = (TE0[uint8(s1>>24)] ^
+              TE1[uint8(s2>>16)] ^
+              TE2[uint8(s3>>8)] ^
+              TE3[uint8(s0)] ^
               stks[i][1])
 
-        t2 = (te0[uint8(s2>>24)] ^
-              te1[uint8(s3>>16)] ^
-              te2[uint8(s0>>8)] ^
-              te3[uint8(s1)] ^
+        t2 = (TE0[uint8(s2>>24)] ^
+              TE1[uint8(s3>>16)] ^
+              TE2[uint8(s0>>8)] ^
+              TE3[uint8(s1)] ^
               stks[i][2])
 
-        t3 = (te0[uint8(s3>>24)] ^
-              te1[uint8(s0>>16)] ^
-              te2[uint8(s1>>8)] ^
-              te3[uint8(s2)] ^
+        t3 = (TE0[uint8(s3>>24)] ^
+              TE1[uint8(s0>>16)] ^
+              TE2[uint8(s1>>8)] ^
+              TE3[uint8(s2)] ^
               stks[i][3])
 
         s0 = t0
@@ -373,188 +373,188 @@ def bcEncrypt(ciphertext:bytearray, derivedKs:list[bytearray], tweak:bytearray, 
     ciphertext[:16] = struct.pack('>LLLL', s0, s1, s2, s3)
 
 class DeoxysII:
-    derivedKs:list[bytearray]
+    derived_k:list[bytearray]
     def __init__(self, key:bytes|bytearray):
-        self.derivedKs = STKDeriveK(key)
+        self.derived_k = stk_derive_k(key)
 
     @property
     def implementation(self):
         return "vartime"
 
     def E(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, msg:bytes|bytearray):
-        assert len(nonce) == (BlockSize-1)
-        tweak = bytearray(TweakSize)
-        tmp = bytearray(BlockSize)
+        assert len(nonce) == (BLOCK_SIZE-1)
+        tweak = bytearray(TWEAK_SIZE)
+        tmp = bytearray(BLOCK_SIZE)
 
         # Associated data.
-        auth = bytearray(TagSize)
+        auth = bytearray(TAG_SIZE)
         if ad is not None:
-            adLen = len(ad)
+            ad_len = len(ad)
             i = 0
-            while adLen >= BlockSize:
+            while ad_len >= BLOCK_SIZE:
                 # 5. Auth <- Auth ^ Ek(0010||i, Ai+1)
-                EncodeTagTweak(tweak, PrefixADBlock, i)
-                bcEncrypt(tmp, self.derivedKs, tweak, ad[i*16:])
-                XORBytes(auth, auth, tmp, 16)
-                adLen -= BlockSize
+                encode_tag_tweak(tweak, PREFIX_AD_BLOCK, i)
+                bc_encrypt(tmp, self.derived_k, tweak, ad[i*16:])
+                xor_bytes(auth, auth, tmp, 16)
+                ad_len -= BLOCK_SIZE
                 i += 1
-            if adLen > 0:
+            if ad_len > 0:
                 # 8. Auth <- Auth ^ Ek(0110||la, pad10*(A*))
-                EncodeTagTweak(tweak, PrefixADFinal, i)
-                aStar = bytearray(16)
-                for a,b in enumerate(ad[len(ad)-adLen:]):
-                    aStar[a] = b
-                aStar[adLen] = 0x80
-                bcEncrypt(tmp, self.derivedKs, tweak, aStar)
-                XORBytes(auth, auth, tmp, 16)
+                encode_tag_tweak(tweak, PREFIX_AD_FINAL, i)
+                a_star = bytearray(16)
+                for a,b in enumerate(ad[len(ad)-ad_len:]):
+                    a_star[a] = b
+                a_star[ad_len] = 0x80
+                bc_encrypt(tmp, self.derived_k, tweak, a_star)
+                xor_bytes(auth, auth, tmp, 16)
 
         # Message authentication and tag generation.
         tag = auth[:]
         if msg is not None:
-            msgLen = len(msg)
+            msg_len = len(msg)
             j = 0
-            while msgLen >= BlockSize:
+            while msg_len >= BLOCK_SIZE:
                 # 15. tag <- tag ^ Ek(0000||j, Mj+1)
-                EncodeTagTweak(tweak, PrefixMsgBlock, j)
-                bcEncrypt(tmp, self.derivedKs, tweak, msg[j*BlockSize:])
-                XORBytes(tag, tag, tmp, BlockSize)
-                msgLen -= BlockSize
+                encode_tag_tweak(tweak, PREFIX_MSG_BLOCK, j)
+                bc_encrypt(tmp, self.derived_k, tweak, msg[j*BLOCK_SIZE:])
+                xor_bytes(tag, tag, tmp, BLOCK_SIZE)
+                msg_len -= BLOCK_SIZE
                 j += 1
-            if msgLen > 0:
+            if msg_len > 0:
                 # 18. tag <- tag & Ek(0100||l, pad10*(M*))
-                EncodeTagTweak(tweak, PrefixMsgFinal, j)
+                encode_tag_tweak(tweak, PREFIX_MSG_FINAL, j)
 
-                mStar = bytearray(BlockSize)
-                for a, b in enumerate(msg[len(msg)-msgLen:]):
-                    mStar[a] = b
-                mStar[msgLen] = 0x80
+                m_star = bytearray(BLOCK_SIZE)
+                for a, b in enumerate(msg[len(msg)-msg_len:]):
+                    m_star[a] = b
+                m_star[msg_len] = 0x80
 
-                bcEncrypt(tmp, self.derivedKs, tweak, mStar)
-                XORBytes(tag, tag, tmp, BlockSize)
+                bc_encrypt(tmp, self.derived_k, tweak, m_star)
+                xor_bytes(tag, tag, tmp, BLOCK_SIZE)
 
         # 20. tag <- Ek(0001||0000||N, tag)
-        encNonce = bytearray(BlockSize)
-        encNonce[1:] = nonce[:BlockSize-1]
-        encNonce[0] = PrefixTag << PrefixShift
-        bcEncrypt(tag, self.derivedKs, encNonce, tag)
+        enc_nonce = bytearray(BLOCK_SIZE)
+        enc_nonce[1:] = nonce[:BLOCK_SIZE-1]
+        enc_nonce[0] = PREFIX_TAG << PREFIX_SHIFT
+        bc_encrypt(tag, self.derived_k, enc_nonce, tag)
 
         # Message encryption.
-        encBlk = bytearray(BlockSize)
-        encNonce[0] = 0 # 0x00 || nonce
+        enc_blk = bytearray(BLOCK_SIZE)
+        enc_nonce[0] = 0 # 0x00 || nonce
         if msg is not None:
-            msgLen = len(msg)
+            msg_len = len(msg)
             j = 0
-            while msgLen >= BlockSize:
+            while msg_len >= BLOCK_SIZE:
                 # 24. Cj <- Mj ^ Ek(1||tag^j, 00000000||N)
-                EncodeEncTweak(tweak, tag, j)
-                bcEncrypt(encBlk, self.derivedKs, tweak, encNonce)
+                encode_enc_tweak(tweak, tag, j)
+                bc_encrypt(enc_blk, self.derived_k, tweak, enc_nonce)
                 for k in range(16):
-                    dst[(j*16)+k] = msg[(j*16)+k] ^ encBlk[k]
-                msgLen -= BlockSize
+                    dst[(j*16)+k] = msg[(j*16)+k] ^ enc_blk[k]
+                msg_len -= BLOCK_SIZE
                 j += 1
-            if msgLen > 0:
+            if msg_len > 0:
                 # 24. C* <- M* ^ Ek(1||tag^l, 00000000||N)
-                EncodeEncTweak(tweak, tag, j)
-                bcEncrypt(encBlk, self.derivedKs, tweak, encNonce)
-                for k in range(msgLen):
-                    dst[(j*16)+k] = msg[(j*16)+k] ^ encBlk[k]
+                encode_enc_tweak(tweak, tag, j)
+                bc_encrypt(enc_blk, self.derived_k, tweak, enc_nonce)
+                for k in range(msg_len):
+                    dst[(j*16)+k] = msg[(j*16)+k] ^ enc_blk[k]
 
-        dst[len(dst)-TagSize:] = tag
+        dst[len(dst)-TAG_SIZE:] = tag
 
     def D(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, ciphertext:bytes|bytearray):
-        assert len(nonce) == TagSize-1
-        assert len(dst) == len(ciphertext) - TagSize
+        assert len(nonce) == TAG_SIZE-1
+        assert len(dst) == len(ciphertext) - TAG_SIZE
 
         # Split out ct into ciphertext and tag.
-        ctLen = len(ciphertext) - TagSize
-        ciphertext, tag = ciphertext[:ctLen], ciphertext[ctLen:]
+        ct_len = len(ciphertext) - TAG_SIZE
+        ciphertext, tag = ciphertext[:ct_len], ciphertext[ct_len:]
 
-        decTweak = bytearray(TweakSize)
-        decBlk = bytearray(BlockSize)
-        decNonce = bytearray(BlockSize)
-        decNonce[1:] = nonce  # 0x00 || nonce
+        dec_tweak = bytearray(TWEAK_SIZE)
+        dec_blk = bytearray(BLOCK_SIZE)
+        dec_nonce = bytearray(BLOCK_SIZE)
+        dec_nonce[1:] = nonce  # 0x00 || nonce
         j = 0
-        while ctLen >= BlockSize:
+        while ct_len >= BLOCK_SIZE:
             # 4. Mj <- Cj ^ Ek(1||tag^j, 00000000||N)
-            EncodeEncTweak(decTweak, tag, j)
-            bcEncrypt(decBlk, self.derivedKs, decTweak, decNonce)
+            encode_enc_tweak(dec_tweak, tag, j)
+            bc_encrypt(dec_blk, self.derived_k, dec_tweak, dec_nonce)
             for k in range(16):
-                dst[(j*16)+k] = ciphertext[(j*16)+k] ^ decBlk[k]
-            ctLen -= BlockSize
+                dst[(j*16)+k] = ciphertext[(j*16)+k] ^ dec_blk[k]
+            ct_len -= BLOCK_SIZE
             j += 1
-        if ctLen > 0:
+        if ct_len > 0:
             # 7. M* <- C* ^ Ek(1||tag^l, 00000000||N)
-            EncodeEncTweak(decTweak, tag, j)
-            bcEncrypt(decBlk, self.derivedKs, decTweak, decNonce)
-            for k in range(ctLen):
-                dst[(j*16)+k] = ciphertext[(j*16)+k] ^ decBlk[k]
+            encode_enc_tweak(dec_tweak, tag, j)
+            bc_encrypt(dec_blk, self.derived_k, dec_tweak, dec_nonce)
+            for k in range(ct_len):
+                dst[(j*16)+k] = ciphertext[(j*16)+k] ^ dec_blk[k]
 
         # Associated data.
-        auth = bytearray(TagSize)
-        tweak = bytearray(TweakSize)
-        tmp = bytearray(BlockSize)
+        auth = bytearray(TAG_SIZE)
+        tweak = bytearray(TWEAK_SIZE)
+        tmp = bytearray(BLOCK_SIZE)
 
         if ad is not None:
-            adLen = len(ad)
+            ad_len = len(ad)
             i = 0
-            while adLen >= BlockSize:
+            while ad_len >= BLOCK_SIZE:
                 # 14. Auth <- Auth ^ Ek(0010||i, Ai+1)
-                EncodeTagTweak(tweak, PrefixADBlock, i)
-                bcEncrypt(tmp, self.derivedKs, tweak, ad[i*BlockSize:])
-                XORBytes(auth, auth, tmp, BlockSize)
-                adLen -= BlockSize
+                encode_tag_tweak(tweak, PREFIX_AD_BLOCK, i)
+                bc_encrypt(tmp, self.derived_k, tweak, ad[i*BLOCK_SIZE:])
+                xor_bytes(auth, auth, tmp, BLOCK_SIZE)
+                ad_len -= BLOCK_SIZE
                 i += 1
-            if adLen > 0:
+            if ad_len > 0:
                 # 17. Auth <- Auth ^ Ek(0110||la, pad10*(A*))
-                EncodeTagTweak(tweak, PrefixADFinal, i)
+                encode_tag_tweak(tweak, PREFIX_AD_FINAL, i)
 
-                aStar = bytearray(BlockSize)
-                for a, b in enumerate(ad[len(ad)-adLen:]):
-                    aStar[a] = b
-                aStar[adLen] = 0x80
+                a_star = bytearray(BLOCK_SIZE)
+                for a, b in enumerate(ad[len(ad)-ad_len:]):
+                    a_star[a] = b
+                a_star[ad_len] = 0x80
 
-                bcEncrypt(tmp, self.derivedKs, tweak, aStar)
-                XORBytes(auth, auth, tmp, BlockSize)
+                bc_encrypt(tmp, self.derived_k, tweak, a_star)
+                xor_bytes(auth, auth, tmp, BLOCK_SIZE)
 
         # Message authentication and tag generation.
-        msgLen = len(dst)
-        tagP = auth[:]
+        msg_len = len(dst)
+        tag_p = auth[:]
         j = 0
-        while msgLen >= BlockSize:
+        while msg_len >= BLOCK_SIZE:
             # 24. tag' <- tag' ^ Ek(0000||j, Mj+1)
-            EncodeTagTweak(tweak, PrefixMsgBlock, j)
-            bcEncrypt(tmp, self.derivedKs, tweak, dst[j*BlockSize:])
-            XORBytes(tagP, tagP, tmp, BlockSize)
-            msgLen -= BlockSize
+            encode_tag_tweak(tweak, PREFIX_MSG_BLOCK, j)
+            bc_encrypt(tmp, self.derived_k, tweak, dst[j*BLOCK_SIZE:])
+            xor_bytes(tag_p, tag_p, tmp, BLOCK_SIZE)
+            msg_len -= BLOCK_SIZE
             j += 1
-        if msgLen > 0:
+        if msg_len > 0:
             # 27. tag <- tag & Ek(0100||l, pad10*(M*))
-            EncodeTagTweak(tweak, PrefixMsgFinal, j)
+            encode_tag_tweak(tweak, PREFIX_MSG_FINAL, j)
 
-            mStar = bytearray(BlockSize)
-            for a, b in enumerate(dst[len(dst)-msgLen:]):
-                mStar[a] = b
-            mStar[msgLen] = 0x80
+            m_star = bytearray(BLOCK_SIZE)
+            for a, b in enumerate(dst[len(dst)-msg_len:]):
+                m_star[a] = b
+            m_star[msg_len] = 0x80
 
-            bcEncrypt(tmp, self.derivedKs, tweak, mStar)
-            XORBytes(tagP, tagP, tmp, TagSize)
+            bc_encrypt(tmp, self.derived_k, tweak, m_star)
+            xor_bytes(tag_p, tag_p, tmp, TAG_SIZE)
 
         # 29. tag' <- Ek(0001||0000||N, tag')
-        decNonce[0] = PrefixTag << PrefixShift
-        bcEncrypt(tagP, self.derivedKs, decNonce, tagP)
+        dec_nonce[0] = PREFIX_TAG << PREFIX_SHIFT
+        bc_encrypt(tag_p, self.derived_k, dec_nonce, tag_p)
 
         # Tag verification
-        return hmac.compare_digest(tag, tagP)
+        return hmac.compare_digest(tag, tag_p)
 
-def deriveSubTweakKeys(derivedKs:list[bytearray], t:bytearray):
-    assert len(derivedKs) == STKCount
-    assert len(t) >= TweakSize
+def derive_sub_tweak_keys(derived_k:list[bytearray], t:bytearray):
+    assert len(derived_k) == STK_COUNT
+    assert len(t) >= TWEAK_SIZE
 
-    stks = [[0] * 4 for _ in range(STKCount)]
+    stks = [[0] * 4 for _ in range(STK_COUNT)]
 
-    stk = bytearray(STKSize)
+    stk = bytearray(STK_SIZE)
 
-    def writeStk(idx:int):
+    def write_stk(idx:int):
         # Convert stk to a format that is easier to use with the
         # table driven AES round function.
         #
@@ -562,19 +562,19 @@ def deriveSubTweakKeys(derivedKs:list[bytearray], t:bytearray):
         # Sub-Tweak Key as a 16 byte value.
         stks[idx] = list(struct.unpack('>LLLL', stk[:16]))
 
-    tk1 = t[:TweakSize] # Tk1 = W1
+    tk1 = t[:TWEAK_SIZE] # Tk1 = W1
 
     # i == 0
-    XORBytes(stk, derivedKs[0], tk1, STKSize)
-    writeStk(0)
+    xor_bytes(stk, derived_k[0], tk1, STK_SIZE)
+    write_stk(0)
 
     # i == 1 ... i == 16
     i = 1
-    while i <= Rounds:
+    while i <= ROUNDS:
         # Tk1(i+1) = h(Tk1(i))
         H(tk1)
-        XORBytes(stk, derivedKs[i], tk1, STKSize)
-        writeStk(i)
+        xor_bytes(stk, derived_k[i], tk1, STK_SIZE)
+        write_stk(i)
         i += 1
 
     return stks

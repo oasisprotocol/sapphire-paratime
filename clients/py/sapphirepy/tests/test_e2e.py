@@ -17,25 +17,26 @@ GREETER_ABI = os.path.join(TESTDATA, 'Greeter.abi')
 GREETER_BIN = os.path.join(TESTDATA, 'Greeter.bin')
 GREETER_SOL = os.path.join(TESTDATA, 'Greeter.sol')
 
-def compiledTestContract():
+def compiled_test_contract():
     if not os.path.exists(GREETER_ABI):
+        # pylint: disable=import-outside-toplevel
         from solcx import compile_source    # type: ignore
-        with open(GREETER_SOL, 'r') as handle:
+        with open(GREETER_SOL, 'rb') as handle:
             compiled_sol = compile_source(
                 handle.read(),
                 output_values=['abi', 'bin']
             )
             _, contract_interface = compiled_sol.popitem()
-        with open(GREETER_ABI, 'w') as handle:
+        with open(GREETER_ABI, 'wb') as handle:
             handle.write(json.dumps(contract_interface['abi']))
-        with open(GREETER_BIN, 'w') as handle:
+        with open(GREETER_BIN, 'wb') as handle:
             handle.write(json.dumps(contract_interface['bin']))
         return {
             'abi': contract_interface['abi'],
             'bin': contract_interface['bin'],
         }
-    with open(GREETER_ABI, 'r') as abi_handle:
-        with open(GREETER_BIN, 'r') as bin_handle:
+    with open(GREETER_ABI, 'rb') as abi_handle:
+        with open(GREETER_BIN, 'rb') as bin_handle:
             return {
                 'abi': json.load(abi_handle),
                 'bin': json.load(bin_handle)
@@ -46,7 +47,7 @@ class TestEndToEnd(unittest.TestCase):
     w3: Web3
 
     def setUp(self):
-        account: LocalAccount = Account.from_key("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
+        account: LocalAccount = Account.from_key("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")  # pylint: disable=no-value-for-parameter
 
         w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
         w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
@@ -54,25 +55,25 @@ class TestEndToEnd(unittest.TestCase):
 
         w3.eth.default_account = account.address
 
-        iface = compiledTestContract()
+        iface = compiled_test_contract()
 
-        Greeter = w3.eth.contract(abi=iface['abi'], bytecode=iface['bin'])
-        tx_hash = Greeter.constructor().transact({'gasPrice': w3.eth.gas_price})
+        contract = w3.eth.contract(abi=iface['abi'], bytecode=iface['bin'])
+        tx_hash = contract.constructor().transact({'gasPrice': w3.eth.gas_price})
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
         self.greeter = w3.eth.contract(address=tx_receipt['contractAddress'], abi=iface['abi'])
 
-    def test_viewCallRevertCustom(self):
+    def test_viewcall_revert_custom(self):
         with self.assertRaises(ContractCustomError) as cm:
             self.greeter.functions.revertWithCustomError().call()
         self.assertEqual(cm.exception.args[0], '0xb98c01130000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c746869734973437573746f6d0000000000000000000000000000000000000000')
 
-    def test_viewCallRevertWithReason(self):
+    def test_viewcall_revert_reason(self):
         with self.assertRaises(ContractLogicError) as cm:
             self.greeter.functions.revertWithReason().call()
         self.assertEqual(cm.exception.message, 'execution reverted: reasonGoesHere')
 
-    def test_viewCall(self):
+    def test_viewcall(self):
         self.assertEqual(self.greeter.functions.greet().call(), 'Hello')
 
     def test_transaction(self):

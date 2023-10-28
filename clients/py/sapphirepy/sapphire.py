@@ -22,27 +22,28 @@ class CalldataPublicKey(TypedDict):
 class CalldataPublicKeyManager:
     _keys: list[CalldataPublicKey]
     def __init__(self):
-        self._keys = list()
+        self._keys = []
 
-    def _trim_and_sort(self, latestEpoch:int):
+    def _trim_and_sort(self, newest_epoch:int):
         self._keys = sorted([v for v in self._keys
-                             if v['epoch'] >= latestEpoch - EPOCH_LIMIT],
+                             if v['epoch'] >= newest_epoch - EPOCH_LIMIT],
                             key=lambda o: o['epoch'])[-EPOCH_LIMIT:]
 
     @property
     def newest(self):
-        if len(self._keys):
+        if self._keys:
             return self._keys[-1]
+        return None
 
     def add(self, pk:CalldataPublicKey):
-        if len(self._keys):
+        if self._keys:
             if self.newest['epoch'] < pk['epoch']:
                 self._keys.append(pk)
             self._trim_and_sort(pk['epoch'])
         else:
             self._keys.append(pk)
 
-def _shouldIntercept(method: RPCEndpoint, params:tuple[TxParams]):
+def _should_intercept(method: RPCEndpoint, params:tuple[TxParams]):
     if not ENCRYPT_DEPLOYS:
         if method in ('eth_sendTransaction', 'eth_estimateGas'):
             # When 'to' flag is missing, we assume it's a deployment
@@ -50,23 +51,23 @@ def _shouldIntercept(method: RPCEndpoint, params:tuple[TxParams]):
                 return False
     return method in ('eth_estimateGas', 'eth_sendTransaction', 'eth_call')
 
-def _encryptTxParams(pk:CalldataPublicKey, params:tuple[TxParams]):
-    c = TransactionCipher(peerPublicKey=pk['key'], peerEpoch=pk['epoch'])
+def _encrypt_tx_params(pk:CalldataPublicKey, params:tuple[TxParams]):
+    c = TransactionCipher(peer_pubkey=pk['key'], peer_epoch=pk['epoch'])
     data = params[0]['data']
     if isinstance(data, bytes):
-        dataBytes = data
+        data_bytes = data
     elif isinstance(data, str):
         if len(data) < 2 or data[:2] != '0x':
             raise ValueError('Data is not hex encoded!', data)
-        dataBytes = unhexlify(data[2:])
+        data_bytes = unhexlify(data[2:])
     else:
         raise TypeError("Invalid 'data' type", type(data))
-    encryptedData = c.encrypt(dataBytes)
-    params[0]['data'] = HexStr('0x' + hexlify(encryptedData).decode('ascii'))
+    encrypted_data = c.encrypt(data_bytes)
+    params[0]['data'] = HexStr('0x' + hexlify(encrypted_data).decode('ascii'))
     return c
 
 def sapphire_middleware(
-    make_request: Callable[[RPCEndpoint, Any], Any], w3: "Web3"
+    make_request: Callable[[RPCEndpoint, Any], Any], _: "Web3"
 ) -> Callable[[RPCEndpoint, Any], RPCResponse]:
     """
     Transparently encrypt the calldata for:
@@ -88,10 +89,10 @@ def sapphire_middleware(
     """
     manager = CalldataPublicKeyManager()
     def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
-        if _shouldIntercept(method, params):
-            doFetch = True
+        if _should_intercept(method, params):
+            do_fetch = True
             pk = manager.newest
-            while doFetch:
+            while do_fetch:
                 if not pk:
                     # If no calldata public key exists, fetch one
                     cdpk = cast(RPCResponse, make_request(RPCEndpoint('oasis_callDataPublicKey'), []))
@@ -100,9 +101,9 @@ def sapphire_middleware(
                         manager.add(pk)
                 if not pk:
                     raise RuntimeError('Could not retrieve callDataPublicKey!')
-                doFetch = False
+                do_fetch = False
 
-                c = _encryptTxParams(pk, params)
+                c = _encrypt_tx_params(pk, params)
 
                 # We may encounter three errors here:
                 #  'core: invalid call format: epoch too far in the past'
@@ -115,7 +116,7 @@ def sapphire_middleware(
                     if not isinstance(error, str) and error['code'] == -32000:
                         if error['message'] == 'core: invalid call format: epoch too far in the past':
                             # force the re-fetch, and encrypt with new key
-                            doFetch = True
+                            do_fetch = True
                             pk = None
                             continue
 
