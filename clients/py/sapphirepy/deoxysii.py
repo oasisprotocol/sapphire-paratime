@@ -381,7 +381,7 @@ class DeoxysII:
     def implementation(self):
         return "vartime"
 
-    def E(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, msg:bytes|bytearray):
+    def encrypt(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, msg:bytes|bytearray|None):
         assert len(nonce) == (BLOCK_SIZE-1)
         tweak = bytearray(TWEAK_SIZE)
         tmp = bytearray(BLOCK_SIZE)
@@ -461,7 +461,7 @@ class DeoxysII:
 
         dst[len(dst)-TAG_SIZE:] = tag
 
-    def D(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, ciphertext:bytes|bytearray):
+    def decrypt(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, ciphertext:bytes|bytearray):
         assert len(nonce) == TAG_SIZE-1
         assert len(dst) == len(ciphertext) - TAG_SIZE
 

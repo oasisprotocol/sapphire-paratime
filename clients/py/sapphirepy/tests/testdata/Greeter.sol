@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: CC-PDDC
+
 pragma solidity ^0.8.0;
 
 contract Greeter {
@@ -21,13 +23,13 @@ contract Greeter {
         emit Greeting(greeting);
     }
 
-    function revertWithReason() external view {
+    function revertWithReason() external pure {
         require(false, "reasonGoesHere");
     }
 
     error MyCustomError(string blah);
 
-    function revertWithCustomError() external view {
+    function revertWithCustomError() external pure {
         revert MyCustomError("thisIsCustom");
     }
 }

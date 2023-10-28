@@ -21,16 +21,16 @@ def compiled_test_contract():
     if not os.path.exists(GREETER_ABI):
         # pylint: disable=import-outside-toplevel
         from solcx import compile_source    # type: ignore
-        with open(GREETER_SOL, 'rb') as handle:
+        with open(GREETER_SOL, 'r', encoding='utf-8') as handle:
             compiled_sol = compile_source(
                 handle.read(),
                 output_values=['abi', 'bin']
             )
             _, contract_interface = compiled_sol.popitem()
-        with open(GREETER_ABI, 'wb') as handle:
-            handle.write(json.dumps(contract_interface['abi']))
-        with open(GREETER_BIN, 'wb') as handle:
-            handle.write(json.dumps(contract_interface['bin']))
+        with open(GREETER_ABI, 'w', encoding='utf-8') as handle:
+            json.dump(contract_interface['abi'], handle)
+        with open(GREETER_BIN, 'w', encoding='utf-8') as handle:
+            json.dump(contract_interface['bin'], handle)
         return {
             'abi': contract_interface['abi'],
             'bin': contract_interface['bin'],
@@ -66,7 +66,10 @@ class TestEndToEnd(unittest.TestCase):
     def test_viewcall_revert_custom(self):
         with self.assertRaises(ContractCustomError) as cm:
             self.greeter.functions.revertWithCustomError().call()
-        self.assertEqual(cm.exception.args[0], '0xb98c01130000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c746869734973437573746f6d0000000000000000000000000000000000000000')
+        data = self.greeter.encodeABI(
+            fn_name="MyCustomError", args=["thisIsCustom"]
+        )
+        self.assertEqual(cm.exception.args[0], data)
 
     def test_viewcall_revert_reason(self):
         with self.assertRaises(ContractLogicError) as cm:

@@ -81,7 +81,7 @@ class TransactionCipher:
         nonce = random(NONCE_SIZE)
         plaintext = cbor2.dumps({'body': calldata}, canonical=True)
         ciphertext = bytearray(len(plaintext) + TAG_SIZE)
-        self.cipher.E(nonce=nonce, dst=ciphertext, ad=None, msg=plaintext)
+        self.cipher.encrypt(nonce=nonce, dst=ciphertext, ad=None, msg=plaintext)
         return ciphertext, nonce
 
     def encrypt(self, plaintext: bytes):
@@ -105,7 +105,7 @@ class TransactionCipher:
 
     def _decrypt_inner(self, envelope: AeadEnvelope):
         plaintext = bytearray(len(envelope['data']) - TAG_SIZE)
-        decrypt_ok = self.cipher.D(
+        decrypt_ok = self.cipher.decrypt(
             nonce=envelope['nonce'],
             dst=plaintext,
             ad=None,

@@ -14,7 +14,7 @@ class OfficialTestVector:
     key: bytes
     nonce: bytes
     ad: bytes|None
-    msg: bytes
+    msg: bytes|None
     sealed: bytes
 
 class TestDeoxysII(unittest.TestCase):
@@ -41,25 +41,25 @@ class TestDeoxysII(unittest.TestCase):
             expected_ciphertext = expected_dst[off:]
 
             dst = bytearray(pt_len + TAG_SIZE)
-            x.E(nonce, dst, a, m)
+            x.encrypt(nonce, dst, a, m)
             c = dst[off:]
             self.assertEqual(c[:pt_len], expected_ciphertext[:pt_len])
 
             p = bytearray(pt_len)
-            self.assertTrue(x.D(nonce, p, a, c))
+            self.assertTrue(x.decrypt(nonce, p, a, c))
 
             # Test malformed ciphertext (or tag).
             bad_ciphertext = c[:]
             bad_ciphertext[pt_len] ^= 0x23
             p = bytearray(pt_len)
-            self.assertFalse(x.D(nonce, p, a, bad_ciphertext))
+            self.assertFalse(x.decrypt(nonce, p, a, bad_ciphertext))
 
             # Test malformed AD.
             if pt_len > 0:
                 bad_ad = bytearray(a[:])
                 bad_ad[pt_len-1] ^= 0x23
                 p = bytearray(pt_len)
-                self.assertFalse(x.D(nonce, p, bad_ad, c))
+                self.assertFalse(x.decrypt(nonce, p, bad_ad, c))
 
     def test_official(self):
         fn = os.path.join(TESTDATA, 'Deoxys-II-256-128-official-20190608.json')
@@ -85,13 +85,13 @@ class TestDeoxysII(unittest.TestCase):
 
                 # Verify encryption matches
                 ciphertext = bytearray(len(t.sealed))
-                x.E(t.nonce, ciphertext, t.ad, t.msg)
+                x.encrypt(t.nonce, ciphertext, t.ad, t.msg)
                 #print('\t   Enc:', ciphertext == t.sealed)
                 self.assertEqual(ciphertext, t.sealed)
 
                 # Verify decryption matches
                 plaintext = bytearray(len(t.msg) if t.msg else 0)
-                result = x.D(t.nonce, plaintext, t.ad, t.sealed)
+                result = x.decrypt(t.nonce, plaintext, t.ad, t.sealed)
                 #print('\t   Dec:', result, plaintext == t.msg)
                 #print('\t    PT:', plaintext.hex())
                 self.assertTrue(result)
