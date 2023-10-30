@@ -18,6 +18,6 @@ contract GasTests {
             tmp = x;
         }
 
-        Sapphire.gaspad(padGasAmount);
+        Sapphire.padGas(padGasAmount);
     }
 }
