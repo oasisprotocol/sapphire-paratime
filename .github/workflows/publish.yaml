@@ -20,7 +20,7 @@ jobs:
         run: |
           echo "NPM_PACKAGE=$(echo ${{ github.ref_name }} | grep -oE '(clients/js|contracts|integrations/hardhat)')" >> $GITHUB_OUTPUT
       - name: Publish ${{ github.ref_name }} to NPM
-        uses: JS-DevTools/npm-publish@v2
+        uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ${{ steps.extract-tag.outputs.NPM_PACKAGE }}
