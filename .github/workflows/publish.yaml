@@ -22,5 +22,7 @@ jobs:
       - name: Publish ${{ github.ref_name }} to NPM
         uses: JS-DevTools/npm-publish@v3
         with:
+          # Build runs as a prepublish script
+          ignore-scripts: false
           token: ${{ secrets.NPM_TOKEN }}
           package: ${{ steps.extract-tag.outputs.NPM_PACKAGE }}
