@@ -90,6 +90,7 @@ const VARYING_SIZED_BUFFERS = [
   randomBytes(1),
   randomBytes(16),
   randomBytes(32),
+  randomBytes(48),
   randomBytes(64),
 ];
 
@@ -210,6 +211,21 @@ describe('Signing', function () {
       randomBytes(32),
       EMPTY_BUFFER,
       32,
+      0,
+    );
+  });
+
+  it('Secp384r1 (Prehashed SHA384)', async () => {
+    // Try Secp384r1 (alg=8)
+    // 48 byte context, empty message
+    const sha384_kp = await se.testKeygen(8, randomBytes(48));
+    await testSignThenVerify(
+      se,
+      8,
+      sha384_kp,
+      randomBytes(48),
+      EMPTY_BUFFER,
+      48,
       0,
     );
   });

@@ -29,6 +29,8 @@ library Sapphire {
         0x0100000000000000000000000000000000000101;
     address internal constant SHA512 =
         0x0100000000000000000000000000000000000102;
+    address internal constant SHA384 =
+        0x0100000000000000000000000000000000000103;
 
     type Curve25519PublicKey is bytes32;
     type Curve25519SecretKey is bytes32;
@@ -52,7 +54,9 @@ library Sapphire {
         // Sr25519 signature over the provided message.
         Sr25519,
         // Secp256r1 signature over the provided SHA-256 digest.
-        Secp256r1PrehashedSha256
+        Secp256r1PrehashedSha256,
+        // Secp384r1 signature over the provided SHA-384 digest.
+        Secp384r1PrehashedSha384
     }
 
     /**
@@ -231,7 +235,7 @@ library Sapphire {
  * **not** vulnerable to length-extension attacks.
  *
  * @custom:standard https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
- * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha512.rs :: call_sha512_256
+ * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha512_256
  * @param input Bytes to hash
  * @return result 32 byte digest
  */
@@ -247,7 +251,7 @@ function sha512_256(bytes memory input) view returns (bytes32 result) {
  * Hash the input data with SHA-512
  *
  * @custom:standard https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
- * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha512.rs :: call_sha512
+ * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha512
  * @param input Bytes to hash
  * @return output 64 byte digest
  */
@@ -257,4 +261,20 @@ function sha512(bytes memory input) view returns (bytes memory output) {
     (success, output) = Sapphire.SHA512.staticcall(input);
 
     require(success, "sha512");
+}
+
+/**
+ * Hash the input data with SHA-384
+ *
+ * @custom:standard https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+ * @custom:see @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha384
+ * @param input Bytes to hash
+ * @return output 48 byte digest
+ */
+function sha384(bytes memory input) view returns (bytes memory output) {
+    bool success;
+
+    (success, output) = Sapphire.SHA384.staticcall(input);
+
+    require(success, "sha384");
 }
