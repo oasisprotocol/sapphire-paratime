@@ -30,7 +30,6 @@ async function main() {
     await generateTraffic(10);
   }
 
-  await generateTraffic(10);
   await new Promise((resolve) => setTimeout(resolve, 30_000));
   console.log('Checking the secret again');
   await (await vigil.revealSecret(0)).wait(); // Reveal the secret.
