@@ -7,7 +7,7 @@ on:
     branches:
       - main
 jobs:
-  hardhat-test:
+  contracts-test:
     runs-on: ubuntu-latest
     services:
       sapphire-dev-ci:
@@ -59,7 +59,7 @@ jobs:
       - name: Build hardhat integration
         working-directory: integrations/hardhat
         run: pnpm build
-      - name: hardhat test contracts
+      - name: Test contracts with Hardhat
         working-directory: contracts
         run: pnpm hardhat test --network sapphire-dev-ci
       - name: Build docs

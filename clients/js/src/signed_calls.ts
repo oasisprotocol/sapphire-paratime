@@ -202,7 +202,7 @@ async function makeLeash(
   const [nonce, block] = await Promise.all([nonceP, blockP]);
   const blockRange = overrides?.blockRange ?? DEFAULT_BLOCK_RANGE;
 
-  // check wether we should use cached leashes
+  // check whether we should use cached leashes
   if (overrides?.nonce === undefined && overrides?.block === undefined) {
     if (!signer.provider)
       throw new Error(

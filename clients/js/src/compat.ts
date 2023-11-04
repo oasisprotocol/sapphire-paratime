@@ -90,9 +90,6 @@ export type SapphireAnnex = {
   };
 };
 
-/** If a gas limit is not provided, the runtime will produce a very confusing error message, so we set a default limit. This one is very high, but solves the problem. This should be lowered once error messages are better or gas estimation is enabled. */
-const DEFAULT_GAS = 10_000_000;
-
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
  *
@@ -165,7 +162,7 @@ export function wrap<U extends UpstreamProvider>(
         cipher,
       ),
       call: hookEthers6Call(signer, 'call', cipher),
-      estimateGas: async () => BigInt(DEFAULT_GAS),
+      estimateGas: hookEthers6Call(signer, 'estimateGas', cipher),
       connect(provider: ethers6.Provider) {
         return wrap(
           signer.connect(provider) as unknown as ethers6.Signer,
@@ -200,13 +197,7 @@ export function wrap<U extends UpstreamProvider>(
         cipher,
       ),
       call: hookEthers5Call(signer, 'call', cipher),
-      // TODO(#39): replace with original once resolved
-      estimateGas: async () => BigNumber.from(DEFAULT_GAS),
-      // estimateGas: hookEthersCall(
-      //   signer.estimateGas.bind(signer),
-      //   cipher,
-      //   signer,
-      // ),
+      estimateGas: hookEthers5Call(signer, 'estimateGas', cipher),
       connect(provider: AbstractProvider) {
         return wrap(
           signer.connect(provider) as unknown as Ethers5Signer,
@@ -438,7 +429,6 @@ function hookEthers5Send(send: Ethers5Call, cipher: Cipher): Ethers5Call {
   return async (tx: Deferrable<TransactionRequest>, ...rest) => {
     const data = await tx.data;
     tx.data = cipher.encryptEncode(data);
-    if (!tx.gasLimit) tx.gasLimit = DEFAULT_GAS;
     return send(tx, ...rest);
   };
 }
@@ -446,7 +436,6 @@ function hookEthers5Send(send: Ethers5Call, cipher: Cipher): Ethers5Call {
 function hookEthers6Send(send: Ethers6Call, cipher: Cipher): Ethers6Call {
   return async (tx: ethers6.TransactionRequest, ...rest) => {
     if (tx.data) tx.data = await cipher.encryptEncode(tx.data);
-    if (!tx.gasLimit) tx.gasLimit = DEFAULT_GAS;
     return send(tx, ...rest);
   };
 }
@@ -482,8 +471,6 @@ function hookExternalSigner(
   cipher: Cipher,
 ): EIP1193Provider['request'] {
   return async (args: Web3ReqArgs) => {
-    if (args.method === 'eth_estimateGas')
-      return BigNumber.from(DEFAULT_GAS).toHexString(); // TODO(#39)
     const { method, params } = await prepareRequest(args, signer, cipher);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') return cipher.decryptEncoded(res);
@@ -496,11 +483,8 @@ function hookExternalProvider(
   cipher: Cipher,
 ): EIP1193Provider['request'] {
   return async ({ method, params }: Web3ReqArgs) => {
-    if (method === 'eth_estimateGas')
-      return BigNumber.from(DEFAULT_GAS).toHexString(); // TODO(#39)
     if (method === 'eth_call' && params) {
       params[0].data = await cipher.encryptEncode(params[0].data);
-      if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
       return provider.send(method, params);
     }
     return provider.send(method, params ?? []);
@@ -546,7 +530,6 @@ async function prepareRequest(
 
   if (/^eth_((send|sign)Transaction|call|estimateGas)$/.test(method)) {
     params[0].data = await cipher.encryptEncode(params[0].data);
-    if (!params[0].gasLimit) params[0].gasLimit = DEFAULT_GAS;
     return { method, params };
   }
 
@@ -594,7 +577,6 @@ async function repackRawTx(
     value: q(tx.value),
     chainId: Number(tx.chainId),
   };
-  if (!parsed.gasLimit) parsed.gasLimit = q(BigInt(DEFAULT_GAS)); // TODO(39)
   try {
     return signer!.signTransaction({
       ...parsed,
