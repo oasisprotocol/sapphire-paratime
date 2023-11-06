@@ -91,6 +91,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install dependencies
         run: python3 -mpip install --user -r requirements.txt
+      - name: Install dev dependencies
+        run: python3 -mpip install --user -r requirements.dev.txt
       - name: mypy
         run: make mypy
       - name: pylint
