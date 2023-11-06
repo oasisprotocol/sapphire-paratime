@@ -80,6 +80,22 @@ jobs:
       - name: Lint JS client
         run: pnpm --filter '@oasisprotocol/sapphire-*' lint
 
+  lint-client-py:
+    name: lint-client-py
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/py
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: python3 -mpip install --user -r requirements.txt
+      - name: mypy
+        run: make mypy
+      - name: pylint
+        run: make lint
+
   lint-client-go:
     name: lint-client-go
     runs-on: ubuntu-latest

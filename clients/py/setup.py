@@ -18,7 +18,7 @@ setup(
         "Operating System :: OS Independent",
         "Typing :: Typed"
     ],
-    description="Oasis Sapphire encryption for Web3.py",
+    description="Oasis Sapphire encryption middleware for Web3.py",
     name="sapphire.py",
     license="Apache Software License 2.0",
     long_description=README,

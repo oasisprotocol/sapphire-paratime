@@ -18,9 +18,10 @@ class OfficialTestVector:
     sealed: bytes
 
 class TestDeoxysII(unittest.TestCase):
+    # pylint: disable=too-many-locals
     def test_kat(self):
         fn = os.path.join(TESTDATA, 'Deoxys-II-256-128.json')
-        with open(fn, 'r') as handle:
+        with open(fn, 'rb') as handle:
             data = json.load(handle)
         key = b64decode(data['Key'])
         nonce = b64decode(data['Nonce'])
@@ -63,7 +64,7 @@ class TestDeoxysII(unittest.TestCase):
 
     def test_official(self):
         fn = os.path.join(TESTDATA, 'Deoxys-II-256-128-official-20190608.json')
-        with open(fn, 'r') as handle:
+        with open(fn, 'rb') as handle:
             data = json.load(handle)
             for row in data:
                 t = OfficialTestVector(

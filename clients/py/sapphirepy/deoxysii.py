@@ -74,7 +74,7 @@ RCONS = bytes([
 ])
 assert len(RCONS) == STK_COUNT
 
-def H(t: bytearray):
+def stk_shuffle(t: bytearray):
     assert len(t) == STK_SIZE
     t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10], t[11], t[12], t[13], t[14], t[15] = t[1], t[6], t[11], t[12], t[5], t[10], t[15], t[0], t[9], t[14], t[3], t[4], t[13], t[2], t[7], t[8]
 
@@ -116,11 +116,11 @@ def stk_derive_k(key:bytes|bytearray):
     while i <= ROUNDS:
         # Tk2(i+1) = h(LFSR2(Tk2(i)))
         lfsr2(tk2)
-        H(tk2)
+        stk_shuffle(tk2)
 
         # Tk3(i+1) = h(LFSR3(Tk3(i)))
         lfsr3(tk3)
-        H(tk3)
+        stk_shuffle(tk3)
 
         xor_bytes(derived_k[i], tk2, tk3, STK_SIZE)
         xor_rc(derived_k[i], i)
@@ -381,6 +381,7 @@ class DeoxysII:
     def implementation(self):
         return "vartime"
 
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     def encrypt(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, msg:bytes|bytearray|None):
         assert len(nonce) == (BLOCK_SIZE-1)
         tweak = bytearray(TWEAK_SIZE)
@@ -572,7 +573,7 @@ def derive_sub_tweak_keys(derived_k:list[bytearray], t:bytearray):
     i = 1
     while i <= ROUNDS:
         # Tk1(i+1) = h(Tk1(i))
-        H(tk1)
+        stk_shuffle(tk1)
         xor_bytes(stk, derived_k[i], tk1, STK_SIZE)
         write_stk(i)
         i += 1

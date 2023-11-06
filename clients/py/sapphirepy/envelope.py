@@ -125,4 +125,4 @@ class TransactionCipher:
             raise EnvelopeError('callResult.ok', type(ok))
         if ok is not None:
             return self._decrypt_inner(ok)
-        raise EnvelopeError("No 'ok in call result!")
+        raise EnvelopeError("No 'ok' in call result!")
