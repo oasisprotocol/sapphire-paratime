@@ -23,7 +23,7 @@ To build and test locally, import the `Go` package.
 ### Go-Ethereum ABI
 
 After [generating](https://geth.ethereum.org/docs/dapp/abigen) the Go bindings
-for a particular Solidity contract, you can use dial an Ethereum client with the
+for a particular Solidity contract, you can instantiate an Ethereum client with the
 Sapphire Paratime gateway URL and instantiate a `sapphire.WrappedBackend` as a drop in
 replacement.
 
@@ -54,7 +54,7 @@ packedTx := sapphire.PackTx(tx, sapphire.NewCipher(sapphireTestnetChainId))
 signedTx := sign(packedTx) // using your usual signer
 ```
 
-and sending it with an normal, not-wrapped `ethclient`:
+and sending it with a normal, not-wrapped `ethclient`:
 
 ```Go
 ethclient.SendTransaction(ctx, signedTx)
