@@ -22,12 +22,12 @@ jobs:
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
           --health-start-period=90s
     steps:
-      - name: attempt to connect to sapphire-dev-ci
-        run: curl -kv http://sapphire-dev-ci:8545/ || true
-      - name: attempt to connect to sapphire-dev-ci via localhost
-        run: curl -kv http://127.0.0.1:8545/ || true
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt install -y jq
+      - name: Wait for gateway
+        run: bash .github/wait-until-ready.sh
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
