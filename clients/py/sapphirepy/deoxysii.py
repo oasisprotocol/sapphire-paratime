@@ -25,6 +25,7 @@ SOFTWARE.
 import struct
 import array
 import hmac
+from typing import Union, Optional
 
 BLOCK_SIZE = 16
 
@@ -45,7 +46,7 @@ PREFIX_TAG      = 0x1 # 0001
 
 PREFIX_SHIFT = 4
 
-def xor_bytes(out:bytearray, a:bytearray|bytes, b:bytearray|bytes, n:int):
+def xor_bytes(out:bytearray, a:Union[bytearray,bytes], b:Union[bytearray,bytes], n:int):
     assert len(out) >= n
     assert len(a) >= n
     assert len(b) >= n
@@ -69,8 +70,8 @@ def encode_enc_tweak(out:bytearray, tag:bytes, block_nr:int):
 
 RCONS = bytes([
     0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a,
-	0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
-	0x72
+    0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
+    0x72
 ])
 assert len(RCONS) == STK_COUNT
 
@@ -101,7 +102,7 @@ def xor_rc(t: bytearray, i: int):
     ])
     xor_bytes(t, t, rc, 8)
 
-def stk_derive_k(key:bytes|bytearray):
+def stk_derive_k(key:Union[bytes,bytearray]):
     derived_k = [bytearray(STK_SIZE) for _ in range(STK_COUNT)]
 
     tk2 = bytearray(key[16:32])  # Tk2 = W2
@@ -317,7 +318,7 @@ TE3 = array.array('I', [
 def uint8(x:int):
     return x & 0xFF
 
-def bc_encrypt(ciphertext:bytearray, derived_k:list[bytearray], tweak:bytearray, plaintext:bytes|bytearray):
+def bc_encrypt(ciphertext:bytearray, derived_k:list[bytearray], tweak:bytearray, plaintext:Union[bytes,bytearray]):
     assert len(plaintext) >= 16
     assert len(derived_k) == STK_COUNT
     assert len(derived_k[0]) == STK_SIZE
@@ -374,7 +375,7 @@ def bc_encrypt(ciphertext:bytearray, derived_k:list[bytearray], tweak:bytearray,
 
 class DeoxysII:
     derived_k:list[bytearray]
-    def __init__(self, key:bytes|bytearray):
+    def __init__(self, key:Union[bytes,bytearray]):
         self.derived_k = stk_derive_k(key)
 
     @property
@@ -382,7 +383,7 @@ class DeoxysII:
         return "vartime"
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    def encrypt(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, msg:bytes|bytearray|None):
+    def encrypt(self, nonce:Union[bytes,bytearray], dst:bytearray, ad:Optional[Union[bytes,bytearray]], msg:Optional[Union[bytes,bytearray]]):
         assert len(nonce) == (BLOCK_SIZE-1)
         tweak = bytearray(TWEAK_SIZE)
         tmp = bytearray(BLOCK_SIZE)
@@ -462,7 +463,7 @@ class DeoxysII:
 
         dst[len(dst)-TAG_SIZE:] = tag
 
-    def decrypt(self, nonce:bytes|bytearray, dst:bytearray, ad:bytes|bytearray|None, ciphertext:bytes|bytearray):
+    def decrypt(self, nonce:Union[bytes,bytearray], dst:bytearray, ad:Optional[Union[bytes,bytearray]], ciphertext:Union[bytes,bytearray]):
         assert len(nonce) == TAG_SIZE-1
         assert len(dst) == len(ciphertext) - TAG_SIZE
 

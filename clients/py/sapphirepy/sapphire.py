@@ -1,4 +1,4 @@
-from typing import Any, Callable, cast, TypedDict
+from typing import Any, Callable, cast, TypedDict, Optional
 from binascii import unhexlify, hexlify
 
 from web3 import Web3
@@ -96,7 +96,7 @@ def sapphire_middleware(
                 if not pk:
                     # If no calldata public key exists, fetch one
                     cdpk = cast(RPCResponse, make_request(RPCEndpoint('oasis_callDataPublicKey'), []))
-                    pk = cast(CalldataPublicKey|None, cdpk.get('result', None))
+                    pk = cast(Optional[CalldataPublicKey], cdpk.get('result', None))
                     if pk:
                         manager.add(pk)
                 if not pk:

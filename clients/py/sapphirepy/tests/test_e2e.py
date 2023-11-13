@@ -1,7 +1,7 @@
 import os
 import json
 import unittest
-from typing import Type
+from typing import Type, Union
 
 from web3 import Web3
 from web3.exceptions import ContractLogicError, ContractCustomError
@@ -43,7 +43,7 @@ def compiled_test_contract():
             }
 
 class TestEndToEnd(unittest.TestCase):
-    greeter:Contract|Type[Contract]
+    greeter:Union[Contract,Type[Contract]]
     w3: Web3
 
     def setUp(self):

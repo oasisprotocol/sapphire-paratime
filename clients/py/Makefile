@@ -6,6 +6,9 @@ all: mypy test wheel
 mypy:
 	$(PYTHON) -mmypy $(MODULE) --check-untyped-defs
 
+ruff:
+	$(PYTHON) -mruff check --target-version py38 --select AIR,PERF,F,PD,FLY,N,W $(MODULE)
+
 test:
 	$(PYTHON) -munittest discover
 

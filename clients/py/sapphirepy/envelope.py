@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict, cast
+from typing import Optional, TypedDict, cast, Union
 from binascii import unhexlify
 import hmac
 
@@ -52,7 +52,7 @@ class EnvelopeError(SapphireError):
 class DecryptError(SapphireError):
     pass
 
-class CallFailure(SapphireError):
+class CallError(SapphireError):
     pass
 
 ###############################################################################
@@ -67,7 +67,7 @@ class TransactionCipher:
     cipher:DeoxysII
     ephemeral_pubkey:bytes
 
-    def __init__(self, peer_pubkey:PublicKey|str, peer_epoch:int):
+    def __init__(self, peer_pubkey:Union[PublicKey,str], peer_epoch:int):
         if isinstance(peer_pubkey, str):
             if len(peer_pubkey) != 66 or peer_pubkey[:2] != "0x":
                 raise ValueError('peerPublicKey.invalid', peer_pubkey)
@@ -101,7 +101,7 @@ class TransactionCipher:
         inner_result = cast(ResultInner, cbor2.loads(plaintext))
         if inner_result.get('ok', None) is not None:
             return inner_result['ok']
-        raise CallFailure(inner_result['fail'])
+        raise CallError(inner_result['fail'])
 
     def _decrypt_inner(self, envelope: AeadEnvelope):
         plaintext = bytearray(len(envelope['data']) - TAG_SIZE)
@@ -119,7 +119,7 @@ class TransactionCipher:
         if not isinstance(call_result, dict):
             raise EnvelopeError('callResult', type(call_result))
         if call_result.get('failure', None) is not None:
-            raise CallFailure(call_result['failure'])
+            raise CallError(call_result['failure'])
         ok = call_result.get('ok', None)
         if not isinstance(ok, dict):
             raise EnvelopeError('callResult.ok', type(ok))
