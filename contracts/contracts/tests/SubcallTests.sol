@@ -9,11 +9,11 @@ contract SubcallTests {
     event SubcallResult(uint64 status, bytes data);
 
     constructor() payable {
-        // Do nothing, but allow balances to be sent on construction
+        // Do nothing, but allow balances to be sent on construction.
     }
 
     receive() external payable {
-        // Do nothing, but allow contract to receive native ROSE
+        // Do nothing, but allow contract to receive native ROSE.
     }
 
     function generateRandomAddress()

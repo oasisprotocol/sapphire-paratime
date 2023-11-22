@@ -67,7 +67,7 @@ describe('Staking', () => {
     expect(secondReceiptId).eq(firstReceiptId + 1);
   });
 
-  // Note: this will not work!
+  // Note: This should not work!
   // multiple delegations in same tx is not supported!
   it('Multi Delegate', async () => {
     const m = 2;

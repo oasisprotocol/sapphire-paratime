@@ -77,10 +77,12 @@ contract Staking {
      *
      * Delegation will fail if the minimum per-validator amount has not been
      * reached, at the time of writing this is 100 ROSE.
+     
+     See https://docs.oasis.io/node/genesis-doc#delegations.
      *
      * Only one delegation can occur per transaction.
      *
-     * @param to Staking address of validator on the consensus level
+     * @param to Staking address of validator on the consensus layer
      */
     function delegate(StakingAddress to) public payable returns (uint64) {
         // Whatever is sent to the contract is delegated.
