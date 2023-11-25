@@ -5,12 +5,6 @@ import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
 /// Unable to automatically configure OPL. Please use the manual version of the base contract.
 error AutoConfigUnavailable();
-/// The method can only be called by the message bus;
-error NotMessageBus();
-/// Messages may only be sent by the remote endpoint (Enclave or Host).
-error NotRemoteEndpoint();
-/// This message arrived too early or late.
-error WrongSeqNum(uint256 expected, uint256 got);
 /// The remote endpoint's contract address was missing.
 error MissingRemoteAddr();
 /// The remote endpoint's chain ID was missing.
@@ -19,8 +13,6 @@ error MissingRemoteChainId();
 error SelfCallDisallowed();
 /// The requested endpoint does not exist.
 error UnknownEndpoint();
-/// Receiving endpoint did not return successfully.
-error ReceiverError();
 
 /// The outcome of the message call.
 enum Result {
@@ -105,7 +97,8 @@ contract BaseEndpoint is Context {
                 envelope,
                 address(this) // executor
             );
-            if (celerStatus != 1) revert ReceiverError();
+            // Receiving endpoint did not return successfully.
+            require( celerStatus == 1, "ReceiverError" );
             if (fee > 0) payable(0).transfer(fee); // burn the fee, for fidelity
         } else {
             ICelerMessageBus(messageBus).sendMessage{value: fee}(
@@ -125,14 +118,16 @@ contract BaseEndpoint is Context {
         bytes calldata _message,
         address // executor
     ) external payable returns (uint256) {
-        if (msg.sender != messageBus) revert NotMessageBus();
-        if (_sender != remote || _senderChainId != remoteChainId)
-            revert NotRemoteEndpoint();
+        // The method can only be called by the message bus;
+        require(msg.sender == messageBus, "NotMessageBus");
+        // Messages may only be sent by the remote endpoint (Enclave or Host).
+        require( _sender == remote && _senderChainId == remoteChainId, "NotRemoteEndpoint" );
         bytes4 epSel = bytes4(_message[:4]);
         uint256 seq = uint256(bytes32(_message[4:36]));
         bytes calldata message = _message[36:];
         if (inOrder) {
-            if (seq != rxSeq) revert WrongSeqNum(rxSeq, seq);
+            // This message arrived too early or late.
+            require( seq == rxSeq, "WrongSeqNum" );
             ++rxSeq;
         }
         function(bytes calldata) returns (Result) ep = endpoints[epSel];
