@@ -32,14 +32,14 @@ describe('Hashes', () => {
   }
 
   it('SHA512-256', async () => {
-    testHashes('SHA512-256', contract.testSHA512_256.bind(contract));
+    await testHashes('SHA512-256', contract.testSHA512_256.bind(contract));
   });
 
   it('SHA512', async () => {
-    testHashes('SHA512', contract.testSHA512.bind(contract));
+    await testHashes('SHA512', contract.testSHA512.bind(contract));
   });
 
   it('SHA384', async () => {
-    testHashes('SHA384', contract.testSHA384.bind(contract));
+    await testHashes('SHA384', contract.testSHA384.bind(contract));
   });
 });
