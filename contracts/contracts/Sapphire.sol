@@ -34,7 +34,7 @@ library Sapphire {
     address internal constant SHA512 =
         0x0100000000000000000000000000000000000102;
     address internal constant SHA384 =
-        0x0100000000000000000000000000000000000103;
+        0x0100000000000000000000000000000000000104;
 
     type Curve25519PublicKey is bytes32;
     type Curve25519SecretKey is bytes32;
