@@ -1,0 +1,207 @@
+import DocCard from '@theme/DocCard';
+import {findSidebarItem} from '@site/src/sidebarUtils';
+
+# Quickstart
+
+<p style={{width: '100%'}}>
+<iframe style={{margin: 'auto', display:'block'}} width="560" height="315" src="https://www.youtube.com/embed/LDLz06X_KNY?si=tS1-b1hncG6wo9oL" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
+In this tutorial, you will build and deploy a unique dApp that requires
+confidentiality to work. By the end of the tutorial, you should feel
+comfortable setting up your Eth development environment to target Sapphire,
+and know how and when to use confidentiality.
+
+The expected completion time of this tutorial is 15 minutes.
+
+:::info Sunsetting Truffle
+
+Per Consensys [announcement], Oasis will no longer support Truffle as of
+2023-10-05 and encourage immediate [migration] to Hardhat. Please see our
+repository for the archived Truffle [tutorial] and the deprecated [example].
+
+:::
+
+[announcement]: https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat
+[migration]: https://trufflesuite.com/docs/truffle/how-to/migrate-to-hardhat/
+[tutorial]: https://github.com/oasisprotocol/docs/blob/2f4a1a3c217b82687ab9440bf051762ae369ed45/docs/dapp/sapphire/quickstart.mdx
+[example]: https://github.com/oasisprotocol/sapphire-paratime/tree/3a85e42e6c1cc090c28a521cf7df6353aa8a30c8/examples/truffle
+
+
+## Create a Sapphire-Native dApp
+
+Porting an existing Eth app is cool, and will provide benefits such as
+protection against MEV.
+However, starting from scratch with confidentiality in mind can unlock some
+really novel dApps and provide a [higher level of security].
+
+One simple-but-useful dApp that takes advantage of confidentiality is a
+[dead person's switch] that reveals a secret (let's say the encryption key to a
+data trove) if the operator fails to re-up before too long.
+Let's make it happen!
+
+[higher level of security]: guide.mdx#writing-secure-dapps
+[dead person's switch]: https://en.wikipedia.org/wiki/Dead_man%27s_switch
+
+### Init a new Hardhat project
+
+We're going to use Hardhat, but Sapphire should be compatible with your dev
+environment of choice. Let us know if things are not as expected!
+
+1. Make & enter a new directory
+2. `npx hardhat@~2.16.0 init` then create a TypeScript project.
+3. Add [`@oasisprotocol/sapphire-hardhat`] as dependency:
+
+  ```shell npm2yarn
+  npm install -D @oasisprotocol/sapphire-hardhat
+  ```
+
+4. Install `@nomicfoundation/hardhat-toolbox`, TypeScript and other peer
+   dependencies required by HardHat.
+
+### Add the Sapphire Testnet to Hardhat
+
+Open up your `hardhat.config.ts` and drop in these lines.
+
+```diff
+diff --git a/hardhat.config.ts b/hardhat.config.ts
+index 414e974..49c95f9 100644
+--- a/hardhat.config.ts
++++ b/hardhat.config.ts
+@@ -1,8 +1,19 @@
+ import { HardhatUserConfig } from "hardhat/config";
++import '@oasisprotocol/sapphire-hardhat';
+ import "@nomicfoundation/hardhat-toolbox";
+
+ const config: HardhatUserConfig = {
+   solidity: "0.8.17",
++  networks: {
++    'sapphire-testnet': {
++      // This is Testnet! If you want Mainnet, add a new network config item.
++      url: "https://testnet.sapphire.oasis.dev",
++      accounts: process.env.PRIVATE_KEY
++        ? [process.env.PRIVATE_KEY]
++        : [],
++      chainId: 0x5aff,
++    },
++  },
+ };
+
+ export default config;
+```
+
+By importing `@oasisprotocol/sapphire-hardhat` at the top of the config file,
+**any network config entry corresponding to the Sapphire's chain ID will
+automatically be wrapped with Sapphire specifics for encrypting and signing the
+transactions**.
+
+### Get some Sapphire Testnet tokens
+
+Now for the fun part. We need to configure the Sapphire network and get some tokens.
+Hit up the one and only [Oasis Testnet faucet] and select "Sapphire".
+Submit the form and be on your way.
+
+[Oasis Testnet faucet]: https://faucet.testnet.oasis.dev
+
+### Get the Contract
+
+This is a Sapphire tutorial and you're already a Solidity expert, so let's not
+bore you with explaining the gritty details of the contract.
+Start by pasting [Vigil.sol] into `contracts/Vigil.sol`.
+
+While you're there, also place [run-vigil.ts] into `scripts/run-vigil.ts`.
+We'll need that later.
+
+[Vigil.sol]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/hardhat/contracts/Vigil.sol
+[run-vigil.ts]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/hardhat/scripts/run-vigil.ts
+
+#### Vigil.sol, the interesting parts
+
+The key state variables are:
+
+```solidity
+    SecretMetadata[] public _metas;
+    bytes[] private _secrets;
+```
+
+* `_metas` is marked with `public` visibility, so despite the state itself being
+  encrypted and not readable directly, Solidity will generate a getter that will
+  do the decryption for you.
+* `_secrets` is `private` and therefore truly secret; only the contract can
+  access the data contained in this mapping.
+
+And the methods we'll care most about are
+
+* `createSecret`, which adds an entry to both `_metas` and `_secrets`.
+* `revealSecret`, which acts as an access-controlled getter for the data
+  contained with `_secrets`. Due to trusted execution and confidentiality, the
+  only way that the secret will get revealed is if execution proceeds all the
+  way to the end of the function and does not revert.
+
+The rest of the methods are useful if you actually intended to use the contract,
+but they demonstrate that developing for Sapphire is essentially the same as for
+Ethereum.
+You can even write tests against the Hardhat network and use Hardhat plugins.
+
+### Run the Contract
+
+And to wrap things up, we'll put `Vigil` through its paces.
+First, let's see what's actually going on.
+
+After deploying the contract, we can create a secret, check that it's not
+readable, wait a bit, and then check that it has become readable.
+Pretty cool if you ask me!
+
+Anyway, make it happen by running
+
+```shell
+PRIVATE_KEY="0x..." npx hardhat run scripts/run-vigil.ts --network sapphire-testnet
+```
+
+And if you see something like the following, you'll know you're well on the road
+to deploying confidential dApps on Sapphire.
+
+```
+Vigil deployed to: 0x74dC4879B152FDD1DDe834E9ba187b3e14f462f1
+Storing a secret in 0x13125d868f5fb3cbc501466df26055ea063a90014b5ccc8dfd5164dc1dd67543
+Checking the secret
+failed to fetch secret: reverted: not expired
+Waiting...
+Checking the secret again
+The secret ingredient is brussels sprouts
+```
+
+## All done!
+
+Congratulations, you made it through the Sapphire tutorial! If you have any
+questions, please check out the [guide] and join the discussion on the
+[#sapphire-paratime Discord channel][social-media].
+
+Best of luck on your future forays into confidentiality!
+
+:::info Example
+
+Visit the Sapphire ParaTime repository to download the [Hardhat][hardhat-example]
+example of this quickstart.
+
+:::
+
+:::info Example
+
+If your project involves building a web frontend, we recommend that you check
+out the official [Oasis starter] files.
+
+[Oasis starter]: https://github.com/oasisprotocol/demo-starter
+
+:::
+
+## See also
+
+<DocCard item={findSidebarItem('/dapp/sapphire/browser')} />
+<DocCard item={findSidebarItem('/node/run-your-node/paratime-client-node')} />
+<DocCard item={findSidebarItem('/node/web3')} />
+
+[social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
+[guide]: guide.mdx
+[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat
+[`@oasisprotocol/sapphire-hardhat`]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat

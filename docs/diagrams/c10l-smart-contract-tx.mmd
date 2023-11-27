@@ -1,0 +1,63 @@
+sequenceDiagram
+    autonumber
+    participant Client as Client<br/>(e.g. Node.js,<br/>MetaMask)
+    participant Web3 as Oasis Web3<br/>Gateway
+    participant ClientN as Oasis Node<br/>Sapphire<br/>ParaTime Client
+    participant Compute as Oasis Node<br/>Sapphire ParaTime<br/>Compute 🔒
+    participant KM as Oasis Node<br/>Key Manager<br/>🔒
+
+    Client->>Client: Create transaction<br/>call data
+
+    opt Encrypt Transaction
+        Client->>+Web3: Get ephemeral<br/>public key R
+        Web3->>+ClientN: Get ephemeral<br/>public key R
+        ClientN->>+KM: Get ephemeral<br/>public key R
+        KM->>KM: Derive per-epoch<br/>per-runtime<br/>keypair R, R'
+        KM-->>-ClientN: Ephemeral public key R
+        Note over ClientN: R is cached<br/>until the end<br/>of epoch
+        ClientN-->>-Web3: Ephemeral<br/>public key R
+        Web3-->>-Client: Ephemeral<br/>public key R
+
+        Client->>Client: Generate X25519<br/>keypair C, C'
+        Client->>Client: Derive shared key<br/>K' = X25519(C', R)
+        Client->>Client: Encrypt call data<br/>with Deoxys-II using<br/>shared key K'
+        Client->>Client: Attach C
+    end
+
+    Client->>Client: Sign transaction<br/>with User's<br/>Secp256k1/Ed25519<br/>key
+    Client->>+Web3: eth_sendRawTx
+    Web3->>+ClientN: eth_sendRawTx
+    ClientN->>ClientN: Validate<br/>transaction
+    ClientN->>Compute: eth_sendRawTx
+
+    opt Encrypted Transaction
+        Compute->>+KM: Get ephemeral<br/>private key R'
+        KM->>KM: Check runtime<br/>policy for caller
+        KM->>KM: Derive per-epoch<br/>per-runtime<br/>keypair R, R'
+        KM-->>-Compute: Ephemeral<br/>private key R'
+        Compute->>Compute: Derive shared key<br/>K' = X25519(C, R')
+        Compute->>Compute: Decrypt Deoxys-II<br/>envelope using K'
+    end
+
+    Compute->>+KM: Get c10l contract<br/>state keypair S, S'
+    KM->>KM: Check runtime<br/>policy for caller
+    KM->>KM: Derive per-contract<br/>per-runtime<br/>keypair S, S'
+    KM-->>-Compute: Contract state<br/>keypair S, S'
+
+    Compute->>Compute: Fetch contract code
+    Compute->>Compute: C10l contract execution<br/>using S, S' to read and<br/>write storage
+    Compute->>Compute: Obtain new<br/>state root
+
+    alt Encrypted Transaction
+        Compute->>Compute: Transaction receipt:<br/>encrypt tx status with K',<br/>unencrypted logs
+    else Unencrypted Transaction
+        Compute->>Compute: Transaction receipt:<br/>unencrypted tx status<br/>and logs
+    end
+
+    Note over Compute: Proposer node adds<br/>transaction, state and<br/>receipt in new block
+    Note over Web3: Wait for new block
+    Web3-->>-Client: Transaction<br/>receipt
+
+    opt Encrypted Transaction
+        Client->>Client: Decrypt tx status<br/>from receipt<br/>using K'
+    end

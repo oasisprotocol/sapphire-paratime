@@ -16,14 +16,6 @@ This monorepo includes the source code for the following Sapphire packages:
 - Solidity [smart contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts)
 - Hardhat [plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat)
 
-## Documentation
-
-The Sapphire Paratime documentation is deployed as part of the full set of Oasis [docs](https://docs.oasis.io/dapp/sapphire/)
-based on this open source [repository](https://github.com/oasisprotocol/docs). Auto-generated API documentation is available at:
-
- * https://api.docs.oasis.io/js/sapphire-paratime/
- * https://api.docs.oasis.io/sol/sapphire-contracts/
-
 ## Layout
 
 This repository includes all relevant Sapphire and dependencies organized into
@@ -31,11 +23,41 @@ the following directories:
 
 - [`clients`](./clients): the Go and TypeScript clients
 - [`contracts`](./contracts): Sapphire and [OPL](https://docs.oasis.io/dapp/opl/) smart contracts
+- [`docs`](./docs): topic-oriented Sapphire documentation
 - [`examples`](./examples/): sample code snippets in popular Ethereum
 development environments
 - [`integrations`](./integrations/): plugins with popular Solidity tools
 - [`runtime`](./runtime/): the Sapphire Paratime as based off of the
 [Oasis SDK](https://github.com/oasisprotocol/oasis-sdk)
+
+## Documentation
+
+The Sapphire documentation is deployed as part of the official
+[Oasis documentation](https://docs.oasis.io/dapp/sapphire/). To make changes
+visible on the docs website:
+
+1. Merge any changes in the `docs` folder to the `main` branch.
+2. Bump the git commit reference of the Sapphire submodule inside the `external`
+   directory of the [Oasis docs repository](https://github.com/oasisprotocol/docs)
+   (you can simply approve the auto-generated dependabot's submodule bump PR).
+3. Merge changes into Oasis docs repository `main` branch. CI will deploy the
+   docs to the website automatically.
+
+Note: If you want to introduce a new markdown file, don't forget to add
+it to the [Oasis documentation's sidebar](https://github.com/oasisprotocol/docs/blob/main/sidebarDapp.js).
+If you remove any chapters, don't forget to define sensible [redirects](https://github.com/oasisprotocol/docs/blob/main/redirects.js).
+For more info on how to write the Oasis documentation, manage images and
+diagrams, reference cross-repo markdown files and similar consult the
+[official README](https://github.com/oasisprotocol/docs/blob/main/README.md).
+
+The API documentation is auto-generated from the corresponding Sapphire
+clients and libraries. It is deployed at:
+
+* https://api.docs.oasis.io/js/sapphire-paratime/
+* https://api.docs.oasis.io/sol/sapphire-contracts/
+
+The API docs are generated automatically every 15 minutes from the `main`
+branch.
 
 ## Release
 
@@ -44,7 +66,6 @@ development environments
 JS libraries should be updated with a version bump in the `package.json`
 file and a respective tag in the pattern of `{{path}}/v{{semver}}`, such as
 `clients/js/v1.1.1`.
-
 
 ## Contributing
 
