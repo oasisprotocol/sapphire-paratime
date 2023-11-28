@@ -76,6 +76,36 @@ function transferFrom(address who, address to, uint amount)
 }
 ```
 
+## Speed Bump
+
+If we would like to prevent off-chain calls from being chained together, we can
+ensure that the block has been finalized.
+
+```solidity
+contract Secret {
+  uint256 private _height;
+  bytes private _secret;
+  address private _buyer;
+
+  constructor(bytes memory _text) {
+    _secret = _text;
+  }
+
+  function recordPayment() external payable {
+    require(msg.value == 1 ether);
+    // set and lock recipient
+    _height = block.number;
+  }
+
+  /// @notice Reveals the secret.
+  function revealSecret() view external returns (bytes memory) {
+    require(block.number >= _height, "not settled");
+    // check for recipient
+    return _secret;
+  }
+}
+```
+
 ## Gas Padding
 
 To prevent leaking information about a particular transaction, Sapphire
