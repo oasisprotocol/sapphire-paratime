@@ -8,6 +8,8 @@ Confidential Sapphire dApps work in web browsers by wrapping the
 Ethereum provider such as Metamask to enable signing and encrypting
 calls and transactions.
 
+If you are developing with [`wagmi`], you can use the Viem [configuration].
+
 Let's begin with the [Hardhat boilerplate]. As mentioned on their website
 the boilerplate provides the following:
 
@@ -194,6 +196,8 @@ repository.
 
 :::
 
+[`wagmi`]: https://wagmi.sh/
+[configuration]: guide.mdx#viem
 [block explorer]: https://testnet.explorer.sapphire.oasis.dev/tx/0x3303dea5d48291d1564cad573f21fc71fcbdc2b862e17e056287fd9207e3bc53
 [guide-transaction-calls]: guide.mdx#transactions--calls
 [Hardhat boilerplate repo]: https://github.com/NomicFoundation/hardhat-boilerplate
