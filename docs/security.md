@@ -99,7 +99,7 @@ contract Secret {
 
   /// @notice Reveals the secret.
   function revealSecret() view external returns (bytes memory) {
-    require(block.number >= _height, "not settled");
+    require(block.number > _height, "not settled");
     // check for recipient
     return _secret;
   }
