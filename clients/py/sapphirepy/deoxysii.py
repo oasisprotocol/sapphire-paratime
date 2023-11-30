@@ -1,4 +1,6 @@
 """
+This work is derived from: https://github.com/oasisprotocol/deoxysii
+
 Copyright (c) 2019 Oasis Labs Inc. <info@oasislabs.com>
 
 Permission is hereby granted, free of charge, to any person obtaining

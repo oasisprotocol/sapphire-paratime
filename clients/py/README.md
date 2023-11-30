@@ -1,5 +1,15 @@
 # sapphire.py
 
+## Installation
+
+```shell
+pip3 install --user -r requirements.txt
+pip3 install --user -r requirements.dev.txt
+make
+```
+
+## Usage
+
 ```python
 from web3 import Web3
 from sapphirepy import sapphire
@@ -12,5 +22,15 @@ w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 w3 = sapphire.wrap(w3)
 ```
 
-The Sapphire middleware for Web3.py ensures all transactions, gas estimates and view calls are end-to-end encrypted between your application and the smart contract.
+The Sapphire middleware for Web3.py ensures all transactions, gas estimates and
+view calls are end-to-end encrypted between your application and the smart
+contract.
 
+## License
+
+The [Deoxys-ii library](sapphirepy/deoxysii.py) and its
+[test vectors](tests/testdata/Deoxys-II-256-128.json) are derived directly
+from the [original go library](https://github.com/oasisprotocol/deoxysii).
+
+The remainder of the Oasis Sapphire python bindings is licensed under Apache 2.0
+license.
