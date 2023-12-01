@@ -42,6 +42,27 @@ library Subcall {
 
     error AccountsTransferError(uint64 status, string data);
 
+    /// Name of token cannot be CBOR encoded with current functions
+    error TokenNameTooLong();
+
+    /// While parsing CBOR map, unexpected key
+    error InvalidKey();
+
+    /// While parsing CBOR map, length is invalid, or other parse error
+    error InvalidMap();
+
+    /// While parsing CBOR structure, data length was unexpected
+    error InvalidLength();
+
+    /// Invalid receipt ID
+    error InvalidReceiptId();
+
+    /// CBOR parsed valid is out of expected range
+    error ValueOutOfRange();
+
+    /// CBOR parser expected a key, but it was not found in the map!
+    error MissingKey();
+
     /**
      * Submit a native message to the Oasis runtime layer.
      *
@@ -81,6 +102,9 @@ library Subcall {
         uint128 value,
         bytes memory token
     ) internal returns (uint64 status, bytes memory data) {
+        // Ensures prefix is in range of 0x40..0x57 (inclusive)
+        if (token.length > 19) revert TokenNameTooLong();
+
         (status, data) = subcall(
             method,
             abi.encodePacked(
@@ -119,9 +143,9 @@ library Subcall {
         internal
         returns (bytes memory)
     {
-        require(receiptId != 0);
+        if (receiptId == 0) revert InvalidReceiptId();
 
-        require(uint8(kind) > 0 && uint8(kind) <= 23);
+        if (uint256(kind) == 0 || uint256(kind) > 23) revert ValueOutOfRange();
 
         (bool success, bytes memory data) = SUBCALL.call(
             abi.encode(
@@ -139,7 +163,7 @@ library Subcall {
             )
         );
 
-        require(success);
+        if (!success) revert SubcallError();
 
         (uint64 status, bytes memory result) = abi.decode(
             data,
@@ -158,11 +182,11 @@ library Subcall {
         pure
         returns (uint256 newOffset, uint256 value)
     {
-        require(result[offset] & 0x40 == 0x40, "invalid len");
+        if (result[offset] & 0x40 != 0x40) revert InvalidLength();
 
         uint256 len = uint8(result[offset++]) ^ 0x40;
 
-        require(len < 0x20);
+        if (len >= 0x20) revert InvalidLength();
 
         assembly {
             value := mload(add(add(0x20, result), offset))
@@ -182,7 +206,7 @@ library Subcall {
 
         (newOffset, tmp) = _parseCBORUint(result, offset);
 
-        require(tmp <= type(uint64).max);
+        if (tmp > type(uint64).max) revert ValueOutOfRange();
 
         value = uint64(tmp);
     }
@@ -196,7 +220,7 @@ library Subcall {
 
         (newOffset, tmp) = _parseCBORUint(result, offset);
 
-        require(tmp <= type(uint128).max);
+        if (tmp > type(uint128).max) revert ValueOutOfRange();
 
         value = uint128(tmp);
     }
@@ -206,7 +230,7 @@ library Subcall {
         pure
         returns (uint256 newOffset, bytes32 keyDigest)
     {
-        require(result[offset] & 0x60 == 0x60, "invalid key");
+        if (result[offset] & 0x60 != 0x60) revert InvalidKey();
 
         uint8 len = uint8(result[offset++]) ^ 0x60;
 
@@ -228,7 +252,7 @@ library Subcall {
 
         bool hasReceipt = false;
 
-        require(result[0] == 0xA2, "invalid map");
+        if (result[0] != 0xA2) revert InvalidMap();
 
         while (offset < result.length) {
             bytes32 keyDigest;
@@ -245,11 +269,11 @@ library Subcall {
                 hasReceipt = true;
             } else {
                 // TODO: skip unknown keys & values? For forward compatibility
-                require(false, "Invalid key");
+                revert InvalidKey();
             }
         }
 
-        require(hasEpoch && hasReceipt);
+        if (!hasEpoch || !hasReceipt) revert MissingKey();
     }
 
     function _decodeReceiptUndelegateDone(bytes memory result)
@@ -261,7 +285,7 @@ library Subcall {
 
         bool hasAmount = false;
 
-        require(result[0] == 0xA1, "invalid map");
+        if (result[0] != 0xA1) revert InvalidMap();
 
         while (offset < result.length) {
             bytes32 keyDigest;
@@ -274,11 +298,11 @@ library Subcall {
                 hasAmount = true;
             } else {
                 // TODO: skip unknown keys & values? For forward compatibility
-                require(false, "Invalid key");
+                revert InvalidKey();
             }
         }
 
-        require(hasAmount);
+        if (!hasAmount) revert MissingKey();
     }
 
     /**
@@ -291,13 +315,13 @@ library Subcall {
         pure
         returns (uint128 shares)
     {
-        require(result[0] == 0xA1, "invalid map");
+        if (result[0] != 0xA1) revert InvalidMap();
 
         if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s") {
             // Delegation succeeded, decode number of shares.
             uint8 sharesLen = uint8(result[8]) & 0x1f; // Assume shares field is never greater than 16 bytes.
 
-            require(9 + sharesLen == result.length);
+            if (9 + sharesLen != result.length) revert InvalidLength();
 
             for (uint256 offset = 0; offset < sharesLen; offset++) {
                 uint8 v = uint8(result[9 + offset]);
@@ -355,7 +379,7 @@ library Subcall {
     function consensusUndelegate(StakingAddress from, uint128 shares) internal {
         (uint64 status, bytes memory data) = subcall(
             CONSENSUS_UNDELEGATE,
-            abi.encodePacked(
+            abi.encodePacked( // CBOR encoded, {'from': x, 'shares': y}
                 hex"a2", // map, 2 pairs
                 // pair 1
                 hex"64", // UTF-8 string, 4 bytes
@@ -381,11 +405,11 @@ library Subcall {
         uint64 receiptId
     ) internal {
         // XXX: due to weirdness in oasis-cbor, `0x1b || 8 bytes` requires `value >= 2**32`
-        require(receiptId >= 4294967296);
+        if( receiptId < 4294967296 ) revert InvalidReceiptId();
 
         (uint64 status, bytes memory data) = subcall(
             CONSENSUS_UNDELEGATE,
-            abi.encodePacked(
+            abi.encodePacked( // CBOR encoded, {'from': x, 'shares': y, 'receipt': z}
                 hex"a3", // map, 3 pairs
                 // pair 1
                 hex"64", // UTF-8 string, 4 bytes
@@ -451,7 +475,7 @@ library Subcall {
         uint64 receiptId
     ) internal returns (bytes memory data) {
         // XXX: due to weirdness in oasis-cbor, `0x1b || 8 bytes` requires `value >= 2**32`
-        require(receiptId >= 4294967296);
+        if( receiptId < 4294967296 ) revert InvalidReceiptId();
 
         uint64 status;
 

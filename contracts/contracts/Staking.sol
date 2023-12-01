@@ -66,6 +66,20 @@ contract Staking {
 
     // -------------------------------------------------------------------------
 
+    /// Receipt is not known, cannot continue with action (e.g. UndelegateStart)
+    error UnknownReceipt();
+
+    /// UndelegateDone has been called before UndelegateStart!
+    error MustUndelegateStartFirst();
+
+    /// User does not have enough shares to perform the action (e.g. undelegate)
+    error NotEnoughShares();
+
+    /// Must undelegate 1 or more shares
+    error CannotUndelegateZeroShares();
+
+    // -------------------------------------------------------------------------
+
     constructor() {
         // Due to an oddity in the oasis-cbor package, we start at 2**32
         // Otherwise uint64 parsing will fail and the message is rejected
@@ -77,7 +91,7 @@ contract Staking {
      *
      * Delegation will fail if the minimum per-validator amount has not been
      * reached, at the time of writing this is 100 ROSE.
-     
+
      See https://docs.oasis.io/node/genesis-doc#delegations.
      *
      * Only one delegation can occur per transaction.
@@ -118,7 +132,7 @@ contract Staking {
     function delegateDone(uint64 receiptId) public returns (uint128 shares) {
         PendingDelegation memory pending = pendingDelegations[receiptId];
 
-        require(pending.from != address(0), "unknown receipt");
+        if (pending.from == address(0)) revert UnknownReceipt();
 
         shares = Subcall.consensusTakeReceiptDelegate(receiptId);
 
@@ -138,12 +152,9 @@ contract Staking {
         public
         returns (uint64)
     {
-        require(shares > 0, "must undelegate some shares");
+        if (shares == 0) revert CannotUndelegateZeroShares();
 
-        require(
-            delegations[msg.sender][from] >= shares,
-            "must have enough delegated shares"
-        );
+        if (delegations[msg.sender][from] < shares) revert NotEnoughShares();
 
         uint64 receiptId = lastReceiptId++;
 
@@ -175,7 +186,7 @@ contract Staking {
     function undelegateStart(uint64 receiptId) public {
         PendingUndelegation storage pending = pendingUndelegations[receiptId];
 
-        require(pending.to != address(0), "unknown receipt");
+        if (pending.to == address(0)) revert UnknownReceipt();
 
         (uint64 epoch, uint64 endReceipt) = Subcall
             .consensusTakeReceiptUndelegateStart(receiptId);
@@ -192,16 +203,14 @@ contract Staking {
     /**
      * Finish the undelegation process, transferring the staked ROSE back.
      *
-     * The
-     *
      * @param receiptId returned/emitted from `undelegateStart`
      */
     function undelegateDone(uint64 receiptId) public {
         PendingUndelegation memory pending = pendingUndelegations[receiptId];
 
-        require(pending.to != address(0), "unknown receipt");
+        if (pending.to == address(0)) revert UnknownReceipt();
 
-        require(pending.endReceiptId > 0, "must call undelegateStart first");
+        if (pending.endReceiptId == 0) revert MustUndelegateStartFirst();
 
         UndelegationPool memory pool = undelegationPools[pending.endReceiptId];
 
