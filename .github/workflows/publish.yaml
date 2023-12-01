@@ -20,7 +20,7 @@ jobs:
         id: pnpm-install
         with:
           version: 8
-          run_install: false
+          run_install: true
       - name: Extract package from tag
         id: extract-tag
         run: |

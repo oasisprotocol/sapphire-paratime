@@ -2,7 +2,7 @@
   "type": "module",
   "name": "@oasisprotocol/sapphire-paratime",
   "license": "Apache-2.0",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "The Sapphire ParaTime Web3 integration library.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/js",
   "repository": {
@@ -38,7 +38,7 @@
     "build:cjs": "tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
     "test": "jest",
     "coverage": "jest --coverage",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@ethersproject/abstract-provider": "^5.7.0",
