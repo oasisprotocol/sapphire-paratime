@@ -1,0 +1,4 @@
+py-solc-x
+mypy
+pylint
+ruff

@@ -28,6 +28,11 @@ jobs:
         run: sudo apt install -y jq
       - name: Wait for gateway
         run: bash .github/wait-until-ready.sh
+      - name: Python client tests
+        working-directory: clients/py
+        run: |
+          python3 -mpip install --user -r requirements.txt
+          python3 -munittest discover
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
