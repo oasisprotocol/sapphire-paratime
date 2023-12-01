@@ -35,6 +35,9 @@ describe('Gas Padding', function () {
     // XXX: sometimes this is off by 1 gas!
     tx = await contract.testConstantTime(0, 100000);
     receipt = await tx.wait();
-    expect(receipt.cumulativeGasUsed).within(expectedGas - 13, expectedGas - 12);
+    expect(receipt.cumulativeGasUsed).within(
+      expectedGas - 13,
+      expectedGas - 12,
+    );
   });
 });
