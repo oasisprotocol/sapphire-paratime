@@ -405,7 +405,7 @@ library Subcall {
         uint64 receiptId
     ) internal {
         // XXX: due to weirdness in oasis-cbor, `0x1b || 8 bytes` requires `value >= 2**32`
-        if( receiptId < 4294967296 ) revert InvalidReceiptId();
+        if (receiptId < 4294967296) revert InvalidReceiptId();
 
         (uint64 status, bytes memory data) = subcall(
             CONSENSUS_UNDELEGATE,
@@ -475,7 +475,7 @@ library Subcall {
         uint64 receiptId
     ) internal returns (bytes memory data) {
         // XXX: due to weirdness in oasis-cbor, `0x1b || 8 bytes` requires `value >= 2**32`
-        if( receiptId < 4294967296 ) revert InvalidReceiptId();
+        if (receiptId < 4294967296) revert InvalidReceiptId();
 
         uint64 status;
 
