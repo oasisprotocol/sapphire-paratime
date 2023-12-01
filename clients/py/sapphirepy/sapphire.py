@@ -130,6 +130,12 @@ def sapphire_middleware(
     return middleware
 
 def wrap(w3: Web3):
+    """
+    Adds the Sapphire transaction encryption middleware to a Web3.py provider.
+
+    Note: the provider must be wrapped *after* any signing middleware has been
+          added, otherwise pre-signed transactions will not be encrypted.
+    """
     if 'sapphire' not in w3.middleware_onion:
         w3.middleware_onion.add(sapphire_middleware, "sapphire")
     return w3
