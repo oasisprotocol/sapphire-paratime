@@ -98,7 +98,7 @@ contract BaseEndpoint is Context {
                 address(this) // executor
             );
             // Receiving endpoint did not return successfully.
-            require( celerStatus == 1, "ReceiverError" );
+            require(celerStatus == 1, "ReceiverError");
             if (fee > 0) payable(0).transfer(fee); // burn the fee, for fidelity
         } else {
             ICelerMessageBus(messageBus).sendMessage{value: fee}(
@@ -121,13 +121,16 @@ contract BaseEndpoint is Context {
         // The method can only be called by the message bus;
         require(msg.sender == messageBus, "NotMessageBus");
         // Messages may only be sent by the remote endpoint (Enclave or Host).
-        require( _sender == remote && _senderChainId == remoteChainId, "NotRemoteEndpoint" );
+        require(
+            _sender == remote && _senderChainId == remoteChainId,
+            "NotRemoteEndpoint"
+        );
         bytes4 epSel = bytes4(_message[:4]);
         uint256 seq = uint256(bytes32(_message[4:36]));
         bytes calldata message = _message[36:];
         if (inOrder) {
             // This message arrived too early or late.
-            require( seq == rxSeq, "WrongSeqNum" );
+            require(seq == rxSeq, "WrongSeqNum");
             ++rxSeq;
         }
         function(bytes calldata) returns (Result) ep = endpoints[epSel];
