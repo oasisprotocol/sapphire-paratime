@@ -1,5 +1,6 @@
 # Sapphire Paratime
 
+![license](https://img.shields.io/github/license/oasisprotocol/sapphire-paratime.svg)
 [![ci-lint](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml)
 [![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-test.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-test.yaml)
 [![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/contracts-test.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/contracts-test.yaml)
@@ -12,10 +13,10 @@ This monorepo includes the source code for the following Sapphire packages:
 
 | Language | Version | Size | Downloads |
 | -------- | ------- | ---- | --------- |
-| [TypeScript client](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime)](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime)](https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg?style=flat-square) |
+| [TypeScript client](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime)](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime)](https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg) |
 | [Golang client](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime) | [![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod)](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime) | |
-| [Solidity smart contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts)](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) |  | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-contracts.svg?style=flat-square) |
-| [Hardhat plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat)](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat)](https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-hardhat.svg?style=flat-square) |
+| [Solidity smart contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts)](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) |  | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-contracts.svg) |
+| [Hardhat plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat)](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat)](https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-hardhat.svg) |
 
 ## Layout
 
