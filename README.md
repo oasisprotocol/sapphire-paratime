@@ -11,7 +11,7 @@ on the Oasis Network.
 
 This monorepo includes the source code for the following Sapphire packages:
 
-| Language | Version | Size | Downloads |
+| Sub-Project | Version | Size | Downloads |
 | -------- | ------- | ---- | --------- |
 | [TypeScript client](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime)](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime)](https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg) |
 | [Golang client](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime) | [![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod)](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime) | |
