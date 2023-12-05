@@ -1,14 +1,12 @@
-import { BlockTag, Provider } from '@ethersproject/abstract-provider';
+import * as cbor from 'cborg';
 import {
-  Signer as Ethers5Signer,
+  ethers,
+  BigNumberish,
   TypedDataDomain,
   TypedDataField,
-  TypedDataSigner,
-} from '@ethersproject/abstract-signer';
-import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { BytesLike } from '@ethersproject/bytes';
-import * as cbor from 'cborg';
-import { ethers } from 'ethers6';
+  BlockTag,
+  toBeHex,
+} from 'ethers';
 import type {
   CamelCasedProperties,
   Promisable,
@@ -67,15 +65,7 @@ const _cache = new SignedCallCache();
 
 /// @deprecated
 export type Signer = CallSigner;
-export type CallSigner = Ethers5CallSigner | ethers.Signer;
-
-export type Ethers5CallSigner = Pick<
-  Ethers5Signer,
-  'getTransactionCount' | 'getChainId' | 'getAddress'
-> &
-  TypedDataSigner & {
-    provider?: Pick<Provider, 'getBlock' | 'getNetwork'>;
-  };
+export type CallSigner = ethers.Signer;
 
 export function signedCallEIP712Params(chainId: number): {
   domain: TypedDataDomain;
@@ -161,12 +151,12 @@ export class SignedCallDataPack {
   }
 }
 
-function parseBytesLike(data: BytesLike): Uint8Array {
+function parseBytesLike(data: ethers.BytesLike): Uint8Array {
   if (Array.isArray(data)) return new Uint8Array(data);
   return ethers.getBytesCopy(data as 'string' | Uint8Array);
 }
 
-function stringifyBytesLike(data: BytesLike): string {
+function stringifyBytesLike(data: ethers.BytesLike): string {
   if (Array.isArray(data)) return ethers.hexlify(new Uint8Array(data));
   return ethers.hexlify(data as 'string' | Uint8Array);
 }
@@ -182,9 +172,7 @@ async function makeLeash(
 
   const nonceP = overrides?.nonce
     ? overrides.nonce
-    : 'getNonce' in signer
-    ? signer.getNonce('pending')
-    : signer.getTransactionCount('pending');
+    : signer.getNonce('pending');
   let blockP: Promisable<BlockId>;
   if (overrides?.block !== undefined) {
     blockP = overrides.block;
@@ -238,11 +226,9 @@ export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
   return {
     from: call.from,
     to: call.to ?? zeroAddress(),
-    gasLimit: BigNumber.from(
-      call.gas ?? call.gasLimit ?? DEFAULT_GAS_LIMIT,
-    ).toNumber(),
-    gasPrice: BigNumber.from(call.gasPrice ?? DEFAULT_GAS_PRICE),
-    value: BigNumber.from(call.value ?? DEFAULT_VALUE),
+    gasLimit: Number(BigInt(call.gas ?? call.gasLimit ?? DEFAULT_GAS_LIMIT)),
+    gasPrice: BigInt(call.gasPrice ?? DEFAULT_GAS_PRICE),
+    value: BigInt(call.value ?? DEFAULT_VALUE),
     data: call.data ? stringifyBytesLike(call.data) : DEFAULT_DATA,
     leash: {
       nonce: leash.nonce,
@@ -279,15 +265,9 @@ async function signCall(
   );
   let signature = _cache.get(address, hash);
   // if (signature !== undefined) return signature;
-  if ('_signTypedData' in signer) {
-    signature = ethers.getBytes(
-      await signer._signTypedData(domain, types, call),
-    );
-  } else {
-    signature = ethers.getBytes(
-      await signer.signTypedData(upgradedDomain, types, upgradedCall),
-    );
-  }
+  signature = ethers.getBytes(
+    await signer.signTypedData(upgradedDomain, types, upgradedCall),
+  );
   _cache.cache(address, BigInt(chainId), call, hash, signature);
   return signature;
 }
@@ -296,19 +276,15 @@ function upgradeDomain(domain: TypedDataDomain): ethers.TypedDataDomain {
   return {
     ...domain,
     salt: domain.salt ? parseBytesLike(domain.salt) : undefined,
-    chainId: domain.chainId
-      ? BigNumber.from(domain.chainId).toHexString()
-      : undefined,
+    chainId: domain.chainId ? toBeHex(domain.chainId) : undefined,
   };
 }
 
 function upgradeCall(call: SignableEthCall) {
-  const big2int = (
-    b?: BigNumber | bigint | number | string,
-  ): string | undefined => {
+  const big2int = (b?: bigint | number | string | any): string | undefined => {
     if (b === undefined || b === null) return undefined;
     if (typeof b === 'string') return b;
-    if (b instanceof BigNumber) return b.toHexString();
+    if (b instanceof BigInt) return toBeHex(b.toString());
     return ethers.toQuantity(b);
   };
   return {
@@ -341,7 +317,7 @@ export type EthCall = {
   to?: string;
   value?: BigNumberish;
   gasPrice?: BigNumberish;
-  data?: BytesLike;
+  data?: ethers.BytesLike;
 } & Partial<
   RequireExactlyOne<{
     gas: number | string; // web3.js
@@ -358,8 +334,8 @@ export type SignableEthCall = {
   from: string;
   to: string;
   gasLimit?: number;
-  gasPrice?: BigNumber;
-  value?: BigNumber;
+  gasPrice?: bigint;
+  value?: bigint;
   data?: string;
   leash: CamelCasedProperties<Leash>;
 };

@@ -1,5 +1,5 @@
 import * as cbor from 'cborg';
-import { ethers } from 'ethers5';
+import { ethers } from 'ethers';
 
 import {
   EthCall,
@@ -15,7 +15,7 @@ export async function verifySignedCall(
   cipher?: Cipher,
 ): Promise<void> {
   const { domain, types } = signedCallEIP712Params(CHAIN_ID);
-  const dataPack = cbor.decode(ethers.utils.arrayify(call.data!));
+  const dataPack = cbor.decode(ethers.getBytes(call.data!));
   const body = dataPack?.data?.body;
   let origData: Uint8Array;
   if (cipher) {
@@ -24,11 +24,11 @@ export async function verifySignedCall(
   } else {
     origData = body;
   }
-  const recoveredSender = ethers.utils.verifyTypedData(
+  const recoveredSender = ethers.verifyTypedData(
     domain,
     types,
     makeSignableCall({ ...call, data: origData }, dataPack.leash),
-    dataPack.signature,
+    ethers.Signature.from(ethers.hexlify(dataPack.signature)),
   );
   if (call.from.toLowerCase() !== recoveredSender.toLowerCase()) {
     throw new Error('signed call signature verification failed');

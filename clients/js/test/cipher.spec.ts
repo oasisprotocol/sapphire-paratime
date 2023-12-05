@@ -1,4 +1,4 @@
-import { arrayify, hexlify } from '@ethersproject/bytes';
+import { hexlify, getBytes } from 'ethers';
 import * as cbor from 'cborg';
 import { TagSize } from '@oasisprotocol/deoxysii';
 import nock from 'nock';
@@ -46,7 +46,7 @@ describe('Plain', () => {
 describe('X25519DeoxysII', () => {
   it('key derivation', () => {
     // These test vectors are taken from `ts-web`.
-    const secretKey = arrayify(
+    const secretKey = getBytes(
       '0xc07b151fbc1e7a11dff926111188f8d872f62eba0396da97c0a24adb75161750',
     );
     const keypair = nacl.box.keyPair.fromSecretKey(secretKey);
