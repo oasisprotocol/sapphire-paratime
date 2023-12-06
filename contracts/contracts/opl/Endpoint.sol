@@ -119,7 +119,7 @@ contract BaseEndpoint is Context {
         address // executor
     ) external payable returns (uint256) {
         // The method can only be called by the message bus;
-        require(msg.sender == messageBus, "NotMessageBus");
+        require(_msgSender() == messageBus, "NotMessageBus");
         // Messages may only be sent by the remote endpoint (Enclave or Host).
         require(
             _sender == remote && _senderChainId == remoteChainId,
