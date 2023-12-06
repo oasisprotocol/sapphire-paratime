@@ -11,12 +11,34 @@ on the Oasis Network.
 
 This monorepo includes the source code for the following Sapphire packages:
 
-| Sub-Project | Version | Size | Downloads |
-| -------- | ------- | ---- | --------- |
-| [TypeScript client](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime)](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime)](https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg) |
-| [Golang client](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime) | [![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod)](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime) | |
-| [Solidity smart contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts)](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) |  | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-contracts.svg) |
-| [Hardhat plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) | [![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat)](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) | [![size](https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat)](https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat) | ![downloads](https://img.shields.io/npm/dm/@oasisprotocol/sapphire-hardhat.svg) |
+| Sub-Project                               | Version                                        | Size                                          | Downloads                         |
+| ----------------------------------------- | ---------------------------------------------- | --------------------------------------------- | --------------------------------- |
+| [TypeScript client][client-npm]           | [![version][client-version]][client-npm]       | [![size][client-size]][client-bundlephobia]   | ![downloads][client-downloads]    |
+| [Go client][go-pkg]                       | [![version][go-version]][go-pkg]               |                                               |                                   |
+| [Solidity smart contracts][contracts-npm] | [![version][contracts-version]][contracts-npm] |                                               | ![downloads][contracts-downloads] |
+| [Hardhat plugin][hardhat-npm]             | [![version][hardhat-version]][hardhat-npm]     | [![size][hardhat-size]][hardhat-bundlephobia] | ![downloads][hardhat-downloads]   |
+
+
+[go-pkg]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime
+
+[hardhat-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
+[contracts-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts
+[client-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
+
+[go-version]: https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod
+[hardhat-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat
+[contracts-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts
+[client-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime
+
+[hardhat-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat
+[client-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime
+
+[hardhat-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat
+[client-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime
+
+[hardhat-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-hardhat.svg
+[contracts-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-contracts.svg
+[client-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg
 
 ## Layout
 
