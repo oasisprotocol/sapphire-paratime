@@ -1,7 +1,9 @@
 # Sapphire Paratime
 
+[![license](https://img.shields.io/github/license/oasisprotocol/sapphire-paratime.svg)](https://github.com/oasisprotocol/sapphire-paratime/blob/main/LICENSE)
 [![ci-lint](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml)
 [![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-test.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-test.yaml)
+[![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/contracts-test.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/contracts-test.yaml)
 
 The Sapphire ParaTime is the official confidential EVM Compatible ParaTime
 providing a smart contract development environment with EVM compatibility
@@ -9,19 +11,41 @@ on the Oasis Network.
 
 This monorepo includes the source code for the following Sapphire packages:
 
-- TypeScript [client](https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime)
-- Golang [client](https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime)
-![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod)
+| Sub-Project                               | Version                                        | Size                                          | Downloads                         |
+| ----------------------------------------- | ---------------------------------------------- | --------------------------------------------- | --------------------------------- |
+| [TypeScript client][client-npm]           | [![version][client-version]][client-npm]       | [![size][client-size]][client-bundlephobia]   | ![downloads][client-downloads]    |
+| [Go client][go-pkg]                       | [![version][go-version]][go-pkg]               |                                               |                                   |
+| [Solidity smart contracts][contracts-npm] | [![version][contracts-version]][contracts-npm] |                                               | ![downloads][contracts-downloads] |
+| [Hardhat plugin][hardhat-npm]             | [![version][hardhat-version]][hardhat-npm]     | [![size][hardhat-size]][hardhat-bundlephobia] | ![downloads][hardhat-downloads]   |
 
-- Solidity [smart contracts](https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts)
-- Hardhat [plugin](https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat) ![npm](https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat)
+
+[go-pkg]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime
+
+[hardhat-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
+[contracts-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts
+[client-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
+
+[go-version]: https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod
+[hardhat-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat
+[contracts-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts
+[client-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime
+
+[hardhat-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat
+[client-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime
+
+[hardhat-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat
+[client-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime
+
+[hardhat-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-hardhat.svg
+[contracts-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-contracts.svg
+[client-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg
 
 ## Layout
 
 This repository includes all relevant Sapphire and dependencies organized into
 the following directories:
 
-- [`clients`](./clients): the Go and TypeScript clients
+- [`clients`](./clients): the Go, Python and TypeScript clients
 - [`contracts`](./contracts): Sapphire and [OPL](https://docs.oasis.io/dapp/opl/) smart contracts
 - [`docs`](./docs): topic-oriented Sapphire documentation
 - [`examples`](./examples/): sample code snippets in popular Ethereum
