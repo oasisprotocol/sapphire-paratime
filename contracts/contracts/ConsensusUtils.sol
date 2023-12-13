@@ -12,20 +12,23 @@ type StakingSecretKey is bytes32;
 
 /**
  * @title Consensus-level utilities
- * @dev Generate Oasis wallets for use with staking at the consensus level
+ * @notice Generate Oasis wallets for use with staking at the consensus level.
  */
 library ConsensusUtils {
-    /// The unique context for v0 staking account addresses.
-    /// https://github.com/oasisprotocol/oasis-core/blob/master/go/staking/api/address.go#L16
+    /**
+     * @notice The unique context for v0 staking account addresses.
+     * @custom:see @oasisprotocol/oasis-core :: go/staking/api/address.go
+     */
     string private constant ADDRESS_V0_CONTEXT_IDENTIFIER =
         "oasis-core/address: staking";
     uint8 private constant ADDRESS_V0_CONTEXT_VERSION = 0;
 
     /**
-     * @dev Generate a random Ed25519 wallet for Oasis consensus-layer staking
-     * @param personalization Optional user-specified entropy
-     * @return publicAddress Public address of the keypair
-     * @return secretKey Secret key for the keypair
+     * @notice Generate a random Ed25519 wallet for Oasis consensus-layer
+     * staking.
+     * @param personalization Optional user-specified entropy.
+     * @return publicAddress Public address of the keypair.
+     * @return secretKey Secret key for the keypair.
      */
     function generateStakingAddress(bytes memory personalization)
         internal
@@ -47,8 +50,8 @@ library ConsensusUtils {
     }
 
     /**
-     * @dev Derive the staking address from the public key
-     * @param ed25519publicKey Ed25519 public key
+     * @notice Derive the staking address from the public key.
+     * @param ed25519publicKey Ed25519 public key.
      */
     function _stakingAddressFromPublicKey(bytes32 ed25519publicKey)
         internal
@@ -64,10 +67,10 @@ library ConsensusUtils {
     }
 
     /**
-     * @dev Derive an Oasis-style address
-     * @param contextIdentifier Domain separator
-     * @param contextVersion Domain version
-     * @param data Public point of the keypair
+     * @notice Derive an Oasis-style address.
+     * @param contextIdentifier Domain separator.
+     * @param contextVersion Domain version.
+     * @param data Public point of the keypair.
      */
     function _addressFromData(
         string memory contextIdentifier,

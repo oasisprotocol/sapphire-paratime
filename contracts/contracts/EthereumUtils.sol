@@ -46,9 +46,9 @@ library EthereumUtils {
     error k256DeriveY_Invalid_Prefix_Error();
 
     /**
-     * Recover Y coordinate from X coordinate and sign bit
-     * @param prefix 0x02 or 0x03 indicates sign bit of compressed point
-     * @param x X coordinate
+     * @notice Recover Y coordinate from X coordinate and sign bit.
+     * @param prefix 0x02 or 0x03 indicates sign bit of compressed point.
+     * @param x X coordinate.
      */
     function k256DeriveY(uint8 prefix, uint256 x)
         internal
@@ -73,10 +73,10 @@ library EthereumUtils {
     error k256Decompress_Invalid_Length_Error();
 
     /**
-     * Decompress SEC P256 k1 point
-     * @param pk 33 byte compressed public key
-     * @return x coordinate
-     * @return y coordinate
+     * @notice Decompress SEC P256 k1 point.
+     * @param pk 33 byte compressed public key.
+     * @return x X coordinate.
+     * @return y Y coordinate.
      */
     function k256Decompress(bytes memory pk)
         internal
@@ -101,10 +101,10 @@ library EthereumUtils {
     }
 
     /**
-     * Convert SEC P256 k1 curve point to Ethereum address
-     * @param x coordinate
-     * @param y coordinate
-     * @custom:see https://gavwood.com/paper.pdf (212)
+     * @notice Convert SEC P256 k1 curve point to Ethereum address.
+     * @param x X coordinate.
+     * @param y Y coordinate.
+     * @custom:see https://gavwood.com/paper.pdf (pp. 212)
      */
     function toEthereumAddress(uint256 x, uint256 y)
         internal
@@ -119,17 +119,22 @@ library EthereumUtils {
     error DER_Split_Error();
 
     /**
-     * Extracts the `r` and `s` parameters from a DER encoded ECDSA signature.
+     * @notice Extracts the `r` and `s` parameters from a DER encoded ECDSA
+     * signature.
      *
-     * The signature is an ASN1 encoded SEQUENCE of the variable length `r` and `s` INTEGERs.
+     * The signature is an ASN1 encoded SEQUENCE of the variable length `r` and
+     * `s` INTEGERs.
      *
+     * ```
      * | 0x30 | len(z) | 0x02 | len(r) |  r   | 0x02 | len(s) |  s   | = hex value
      * |  1   |   1    |   1  |   1    | 1-33 |  1   |   1    | 1-33 | = byte length
+     * ```
      *
-     * If the highest bit of either `r` or `s` is set, it will be prefix padded with a zero byte
-     * There is exponentially decreasing probability that either `r` or `s` will be below 32 bytes.
-     * There is a very high probability that either `r` or `s` will be 33 bytes.
-     * This function only works if either `r` or `s` are 256bits or lower.
+     * If the highest bit of either `r` or `s` is set, it will be prefix padded
+     * with a zero byte. There is exponentially decreasing probability that
+     * either `r` or `s` will be below 32 bytes. There is a very high
+     * probability that either `r` or `s` will be 33 bytes. This function only
+     * works if either `r` or `s` are 256bits or lower.
      *
      * @param der DER encoded ECDSA signature
      * @return rsv ECDSA R point X coordinate, and S scalar
@@ -214,13 +219,15 @@ library EthereumUtils {
     }
 
     /**
-     * Convert a Secp256k1PrehashedKeccak256 signature to one accepted by ecrecover
-     * @param pubkey 33 byte compressed public key
-     * @param digest 32 byte pre-hashed message digest
-     * @param signature ASN.1 DER encoded signature, as returned from `Sapphire.sign`
-     * @return pubkeyAddr 20 byte Ethereum address
-     * @return rsv Ethereum EcDSA RSV signature values
-     * @custom:see https://gavwood.com/paper.pdf (206)
+     * @notice Convert a Secp256k1PrehashedKeccak256 signature to one accepted
+     * by ecrecover.
+     * @param pubkey 33 byte compressed public key.
+     * @param digest 32 byte pre-hashed message digest.
+     * @param signature ASN.1 DER encoded signature, as returned from
+     * [`Sapphire.sign`](../Sapphire.sol/library.Sapphire.md#sign).
+     * @return pubkeyAddr 20 byte Ethereum address.
+     * @return rsv Ethereum EcDSA RSV signature values.
+     * @custom:see https://gavwood.com/paper.pdf (pp. 206)
      */
     function toEthereumSignature(
         bytes memory pubkey,
@@ -252,9 +259,10 @@ library EthereumUtils {
     }
 
     /**
-     * Generates an Ethereum compatible SEC P256 k1 keypair and corresponding public address
-     * @return pubkeyAddr Ethereum address
-     * @return secretKey Secret key used for signing
+     * @notice Generate an Ethereum compatible SEC P256 k1 keypair and
+     * corresponding public address.
+     * @return pubkeyAddr Ethereum address.
+     * @return secretKey Secret key used for signing.
      */
     function generateKeypair()
         internal

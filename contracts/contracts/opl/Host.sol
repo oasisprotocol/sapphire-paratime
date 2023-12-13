@@ -5,7 +5,7 @@ import {Endpoint, autoswitch} from "./Endpoint.sol";
 
 /**
  * @title OPL Host
- * @dev The L1-side of an OPL dapp.
+ * @notice The L1-side of an OPL dApp.
  */
 contract Host is Endpoint {
     // solhint-disable-next-line no-empty-blocks

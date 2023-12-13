@@ -2,19 +2,17 @@
 pragma solidity ^0.8.0;
 
 /**
- * @custom:attribution https://github.com/bakaoh/solidity-rlp-encode
- * @custom:attribution https://raw.githubusercontent.com/Maia-DAO/solidity-rlp-encoder/main/src/rlp/RLPWriter.sol
  * @title RLPWriter
  * @author RLPWriter is a library for encoding Solidity types to RLP bytes. Adapted from Bakaoh's
- *         RLPEncode library (https://github.com/bakaoh/solidity-rlp-encode) with minor
- *         modifications to improve legibility.
+ * RLPEncode library (https://github.com/bakaoh/solidity-rlp-encode) with minor
+ * modifications to improve legibility.
+ * @custom:attribution https://github.com/bakaoh/solidity-rlp-encode
+ * @custom:attribution https://raw.githubusercontent.com/Maia-DAO/solidity-rlp-encoder/main/src/rlp/RLPWriter.sol
  */
 library RLPWriter {
     /**
      * @notice RLP encodes a byte string.
-     *
      * @param _in The byte string to encode.
-     *
      * @return The RLP encoded string in bytes.
      */
     function writeBytes(bytes memory _in) internal pure returns (bytes memory) {
@@ -31,9 +29,7 @@ library RLPWriter {
 
     /**
      * @notice RLP encodes a list of RLP encoded byte byte strings.
-     *
      * @param _in The RLP encoded byte strings.
-     *
      * @return The RLP encoded list of items in bytes.
      */
     function writeList(bytes memory _in) internal pure returns (bytes memory) {
@@ -42,9 +38,7 @@ library RLPWriter {
 
     /**
      * @notice RLP encodes a list of RLP encoded byte byte strings.
-     *
      * @param _in The list of RLP encoded byte strings.
-     *
      * @return The RLP encoded list of items in bytes.
      */
     function writeList(bytes[] memory _in)
@@ -58,9 +52,7 @@ library RLPWriter {
 
     /**
      * @notice RLP encodes a string.
-     *
      * @param _in The string to encode.
-     *
      * @return The RLP encoded string in bytes.
      */
     function writeString(string memory _in)
@@ -73,9 +65,7 @@ library RLPWriter {
 
     /**
      * @notice RLP encodes an address.
-     *
      * @param _in The address to encode.
-     *
      * @return The RLP encoded address in bytes.
      */
     function writeAddress(address _in) internal pure returns (bytes memory) {
@@ -84,9 +74,7 @@ library RLPWriter {
 
     /**
      * @notice RLP encodes a uint.
-     *
      * @param _in The uint256 to encode.
-     *
      * @return The RLP encoded uint256 in bytes.
      */
     function writeUint(uint256 _in) internal pure returns (bytes memory) {
@@ -95,9 +83,7 @@ library RLPWriter {
 
     /**
      * @notice RLP encodes a bool.
-     *
      * @param _in The bool to encode.
-     *
      * @return The RLP encoded bool in bytes.
      */
     function writeBool(bool _in) internal pure returns (bytes memory) {
@@ -107,11 +93,10 @@ library RLPWriter {
     }
 
     /**
-     * @notice Encode the first byte and then the `len` in binary form if `length` is more than 55.
-     *
+     * @notice Encode the first byte and then the `len` in binary form if
+     * `length` is more than 55.
      * @param _len    The length of the string or the payload.
      * @param _offset 128 if item is string, 192 if item is list.
-     *
      * @return RLP encoded bytes.
      */
     function _writeLength(uint256 _len, uint256 _offset)
@@ -144,9 +129,7 @@ library RLPWriter {
 
     /**
      * @notice Encode integer in big endian binary form with no leading zeroes.
-     *
      * @param _x The integer to encode.
-     *
      * @return RLP encoded bytes.
      */
     function _toBinary(uint256 _x) private pure returns (bytes memory) {
@@ -168,12 +151,11 @@ library RLPWriter {
     }
 
     /**
-     * @custom:attribution https://github.com/Arachnid/solidity-stringutils
      * @notice Copies a piece of memory to another location.
-     *
      * @param _dest Destination location.
      * @param _src  Source location.
      * @param _len  Length of memory to copy.
+     * @custom:attribution https://github.com/Arachnid/solidity-stringutils
      */
     function _memcpy(
         uint256 _dest,
@@ -204,12 +186,10 @@ library RLPWriter {
     }
 
     /**
-     * @custom:attribution https://github.com/sammayo/solidity-rlp-encoder
      * @notice Flattens a list of byte strings into one byte string.
-     *
      * @param _list List of byte strings to flatten.
-     *
      * @return The flattened byte string.
+     * @custom:attribution https://github.com/sammayo/solidity-rlp-encoder
      */
     function _flatten(bytes[] memory _list)
         private

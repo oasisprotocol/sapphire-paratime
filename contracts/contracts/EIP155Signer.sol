@@ -20,9 +20,9 @@ library EIP155Signer {
     }
 
     /**
-     * Encode a signed EIP-155 transaction
-     * @param rawTx Transaction which was signed
-     * @param rsv R, S & V parameters of signature
+     * @notice Encode a signed EIP-155 transaction.
+     * @param rawTx Transaction which was signed.
+     * @param rsv R, S & V parameters of signature.
      */
     function encodeSignedTx(EthTx memory rawTx, SignatureRSV memory rsv)
         internal
@@ -43,10 +43,11 @@ library EIP155Signer {
     }
 
     /**
-     * Sign a raw transaction, which will then need to be encoded to include the signature
-     * @param rawTx Transaction to sign
-     * @param pubkeyAddr Ethereum address of secret key
-     * @param secretKey Secret key used to sign
+     * @notice Sign a raw transaction, which will then need to be encoded to
+     * include the signature.
+     * @param rawTx Transaction to sign.
+     * @param pubkeyAddr Ethereum address of secret key.
+     * @param secretKey Secret key used to sign.
      */
     function signRawTx(
         EthTx memory rawTx,
@@ -64,10 +65,10 @@ library EIP155Signer {
     }
 
     /**
-     * Sign a transaction, returning it in EIP-155 encoded form
-     * @param publicAddress Ethereum address of secret key
-     * @param secretKey Secret key used to sign
-     * @param transaction Transaction to sign
+     * @notice Sign a transaction, returning it in EIP-155 encoded form.
+     * @param publicAddress Ethereum address of secret key.
+     * @param secretKey Secret key used to sign.
+     * @param transaction Transaction to sign.
      */
     function sign(
         address publicAddress,
