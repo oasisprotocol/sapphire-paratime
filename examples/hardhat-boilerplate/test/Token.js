@@ -25,8 +25,6 @@ describe("Token contract", function () {
     // mined.
     const hardhatToken = await Token.deploy();
 
-    await hardhatToken.deployed();
-
     // Fixtures can return anything you consider useful for your tests
     return { Token, hardhatToken, owner, addr1, addr2 };
   }
