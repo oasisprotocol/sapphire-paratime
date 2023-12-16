@@ -22,11 +22,11 @@ describe('EVM Semantics', () => {
   });
 
   it('eth_call maximum return length vs gas limit', async () => {
-    const i = 1787872;
+    const i = 1211104;
     const respHex = await c.testViewLength(i);
     const respBytes = ethers.utils.arrayify(respHex);
     expect(respBytes.length).eq(i);
-    expect(c.testViewLength(i + 1)).reverted;
+    await expect(c.testViewLength(i + 1)).reverted;
   });
 
   it('Error string in view call', async () => {
