@@ -3,6 +3,8 @@ packages:
   - clients/js/type-only-test
   - contracts/
   - examples/hardhat
+  - examples/ethersv5-ts-esm
+  - examples/ethersv6-ts-esm
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
   - examples/onchain-signer

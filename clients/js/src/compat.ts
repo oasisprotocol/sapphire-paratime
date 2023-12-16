@@ -19,8 +19,19 @@ import {
 import { CallError, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 import { SignedCallDataPack } from './signed_calls.js';
 
+type Ethers5Signer = {
+  connect(provider: any): Ethers5Signer;
+  sendTransaction(transaction: Deferrable<any>): Promise<any>;
+  signTransaction(transaction: Deferrable<any>): Promise<string>;
+  call(transaction: Deferrable<any>, blockTag?: any): Promise<string>;
+  estimateGas(transaction: Deferrable<any>): Promise<any>;
+  _isSigner: boolean;
+  provider?: any;
+}
+
 export type UpstreamProvider =
   | EIP1193Provider
+  | Ethers5Signer
   | ethers.Signer
   | ethers.Provider;
 
@@ -105,8 +116,8 @@ export function wrap<U extends UpstreamProvider>(
 
   const cipher = customCipher ?? getCipher(upstream);
 
-  if (isEthersSigner(upstream)) {
-    let signer: ethers.Signer;
+  if (isEthers5Signer(upstream) || isEthers6Signer(upstream)) {
+    let signer: ethers.Signer | Ethers5Signer;
     if (upstream.provider) {
       try {
         signer = upstream.connect(
@@ -186,7 +197,7 @@ function makeProxy<U extends UpstreamProvider>(
 function wrapEthersProvider<P extends ethers.Provider>(
   provider: P,
   cipher: Cipher,
-  signer?: ethers.Signer,
+  signer?: Ethers5Signer | ethers.Signer,
 ): P & SapphireAnnex {
   // Already wrapped, so don't wrap it again.
   if (Reflect.get(provider, SAPPHIRE_PROP) !== undefined) {
@@ -203,10 +214,16 @@ function wrapEthersProvider<P extends ethers.Provider>(
   return makeProxy(provider, cipher, hooks);
 }
 
+function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
+  return Reflect.get(upstream, '_isSigner') === true;
+}
+
+function isEthers6Signer(upstream: object): upstream is ethers.Signer {
+  return upstream instanceof ethers.AbstractSigner;
+}
+
 function isEthersSigner(upstream: object): upstream is ethers.Signer {
-  const isEthersv5 = Reflect.get(upstream, '_isSigner') === true;
-  const isEthersv6 = upstream instanceof ethers.AbstractSigner;
-  return isEthersv5 || isEthersv6;
+  return isEthers5Signer(upstream) || isEthers6Signer(upstream);
 }
 
 function isEthersProvider(upstream: object): upstream is ethers.Provider {
@@ -216,12 +233,12 @@ function isEthersProvider(upstream: object): upstream is ethers.Provider {
 }
 
 function hookEthersCall(
-  runner: ethers.ContractRunner,
+  runner: Ethers5Signer | ethers.ContractRunner,
   method: 'call' | 'estimateGas',
   cipher: Cipher,
 ): EthersCall | undefined {
   const sendUnsignedCall = async (
-    runner: ethers.ContractRunner,
+    runner: ethers.ContractRunner | Ethers5Signer,
     call: ethers.TransactionRequest,
   ) => {
     return runner[method]!({
@@ -455,7 +472,7 @@ export async function fetchRuntimePublicKey(
     return fetchRuntimePublicKeyByChainId(chainId);
   }
 
-  if (isEthersSigner(upstream)) {
+  if (isEthers5Signer(upstream) || isEthers6Signer(upstream)) {
     const chainId = Number((await upstream.provider!.getNetwork()).chainId);
     return fetchRuntimePublicKeyByChainId(chainId);
   }
