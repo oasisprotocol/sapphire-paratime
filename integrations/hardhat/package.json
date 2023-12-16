@@ -35,6 +35,6 @@
     "typescript": "^4.9.4"
   },
   "peerDependencies": {
-    "hardhat": "^2.0.0"
+    "hardhat": "^2.19.2"
   }
 }

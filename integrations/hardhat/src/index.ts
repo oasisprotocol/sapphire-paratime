@@ -1,8 +1,6 @@
 import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { extendEnvironment } from 'hardhat/config';
 
-import './type-extensions';
-
 extendEnvironment((hre) => {
   const { chainId } = hre.network.config;
   const rpcUrl = 'url' in hre.network.config ? hre.network.config.url : '';
