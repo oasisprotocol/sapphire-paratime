@@ -1,7 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 
 import '@oasisprotocol/sapphire-hardhat';
-import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import 'hardhat-watcher';
 
