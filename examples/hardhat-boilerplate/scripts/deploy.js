@@ -15,18 +15,18 @@ async function main() {
 
   // ethers is available in the global scope
   const [deployer] = await ethers.getSigners();
-  const address = await deployer.getAddress();
   console.log(
     "Deploying the contracts with the account:",
-    address
+    await deployer.getAddress()
   );
 
-  console.log("Account balance:", (await ethers.provider.getBalance(address)).toString());
+  console.log("Account balance:", (await deployer.getBalance()).toString());
 
   const Token = await ethers.getContractFactory("Token");
   const token = await Token.deploy();
+  await token.deployed();
 
-  console.log("Token address:", await token.getAddress());
+  console.log("Token address:", token.address);
 
   // We also save the contract's artifacts and address in the frontend directory
   saveFrontendFiles(token);

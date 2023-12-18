@@ -13,18 +13,17 @@ struct EthereumKeypair {
 contract Gasless {
     EthereumKeypair private kp;
 
-    constructor (EthereumKeypair memory keypair) payable {
+    constructor(EthereumKeypair memory keypair) payable {
         kp = keypair;
-        if( msg.value > 0 ) {
+        if (msg.value > 0) {
             payable(kp.addr).transfer(msg.value);
         }
     }
 
-    function makeProxyTx(address innercallAddr, bytes memory innercall)
-        external
-        view
-        returns (bytes memory output)
-    {
+    function makeProxyTx(
+        address innercallAddr,
+        bytes memory innercall
+    ) external view returns (bytes memory output) {
         bytes memory data = abi.encode(innercallAddr, innercall);
 
         // Call will invoke proxy().

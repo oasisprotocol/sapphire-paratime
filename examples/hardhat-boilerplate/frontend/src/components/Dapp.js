@@ -228,20 +228,20 @@ export class Dapp extends React.Component {
 
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
-    this._provider = sapphire.wrap(window.ethereum);
+    this._provider = sapphire.wrap(new ethers.providers.Web3Provider(window.ethereum));
 
     // Then, we initialize two contract instances:
     // - _token: Used for query transactions (e.g. balanceOf, name, symbol)
     // - _tokenWrite: Used for on-chain write transactions (e.g. transfer)
     this._token = new ethers.Contract(
-      contractAddress,
+      contractAddress.Token,
       TokenArtifact.abi,
       this._provider,
     );
     this._tokenWrite = new ethers.Contract(
-      contractAddress,
+      contractAddress.Token,
       TokenArtifact.abi,
-      sapphire.wrap(window.ethereum)
+      this._provider.getSigner()
     );
   }
 
@@ -274,7 +274,7 @@ export class Dapp extends React.Component {
   }
 
   async _updateBalance() {
-    const balance = await this._provider.getBalance(this.state.selectedAddress);
+    const balance = await this._token.balanceOf(this.state.selectedAddress);
     this.setState({ balance });
   }
 

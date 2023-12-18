@@ -16,7 +16,7 @@ async function main() {
   await tx.wait();
   try {
     console.log('Checking the secret');
-    await vigil.connect(ethers.provider).staticCall.revealSecret(0);
+    await vigil.connect(ethers.provider).revealSecret.staticCall(0);
     console.log('Uh oh. The secret was available!');
     process.exit(1);
   } catch (e: any) {
