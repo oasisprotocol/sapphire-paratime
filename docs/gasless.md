@@ -174,8 +174,10 @@ fashion would look like this:
 ```typescript
 const CommentBox = await ethers.getContractFactory("CommentBox");
 const commentBox = await CommentBox.deploy();
+await commentBox.waitForDeployment();
 const Gasless = await ethers.getContractFactory("Gasless");
 const gasless = await Gasless.deploy();
+await gasless.waitForDeployment();
 
 // Set the keypair used to sign the meta-transaction.
 await gasless.setKeypair({
@@ -187,10 +189,10 @@ await gasless.setKeypair({
 const innercall = commentBox.interface.encodeFunctionData('comment', ['Hello, free world!']);
 const tx = await gasless.makeProxyTx(commentBox.address, innercall);
 
-const plainProvider = new ethers.providers.JsonRpcProvider(ethers.provider.connection);
+const plainProvider = new ethers.JsonRpcProvider(ethers.provider.connection);
 const plainResp = await plainProvider.sendTransaction(tx);
 
-const receipt = await ethers.provider.waitForTransaction(plainResp.hash);
+const receipt = await ethers.provider.getTransactionReceipt(plainResp.hash);
 if (!receipt || receipt.status != 1) throw new Error('tx failed');
 ```
 

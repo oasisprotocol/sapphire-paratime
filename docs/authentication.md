@@ -185,11 +185,11 @@ const time = new Date().getTime();
 const user = await eth.signer.getAddress();
 
 // Ask user to "Sign-In" every 24 hours.
-const signature = await eth.signer._signTypedData({
+const signature = await eth.signer.signTypedData({
     name: "SignInExample.SignIn",
     version: "1",
     chainId: import.meta.env.CHAINID,
-    verifyingContract: contract.address
+    verifyingContract: await contract.getAddress()
 }, {
     SignIn: [
         { name: 'user', type: "address" },
@@ -199,7 +199,7 @@ const signature = await eth.signer._signTypedData({
     user,
     time: time
 });
-const rsv = ethers.utils.splitSignature(signature);
+const rsv = ethers.Signature.from(signature);
 const auth = {user, time, rsv};
 // The `auth` variable can then be cached.
 
