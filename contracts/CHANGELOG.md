@@ -6,7 +6,7 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
-## 0.2.5 (2023-12-18)
+## 0.2.6 (2023-12-18)
 
 ### Added
 
@@ -19,3 +19,30 @@ The format is inspired by [Keep a Changelog].
 ### Removed
 
  - Unused `ERC2771Context` from `opl/Enclave.sol`
+
+## 0.2.5 (2023-12-02)
+
+### Added
+
+ * padGas & gasUsed precompile support in Sapphire.sol
+ * SEC P256 R1 curve support
+ * SHA512_256, SHA512 & SHA384 hash support
+
+## 0.2.4 (2023-08-02)
+
+### Fixed
+
+ * Compile warning in EthereumUtils.sol
+ * Corrected MessageBus address in opl/Endpoint.sol
+
+## 0.2.3 (2023-07-17)
+
+### Added
+
+ * EIP-155 compatible signing
+
+## 0.2.2 (2023-07-12)
+
+### Added
+
+ * Ethereum signature compatibliity (EthereumUtils)
