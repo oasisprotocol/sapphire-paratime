@@ -27,7 +27,7 @@ type Ethers5Signer = {
   estimateGas(transaction: Deferrable<any>): Promise<any>;
   _isSigner: boolean;
   provider?: any;
-}
+};
 
 export type UpstreamProvider =
   | EIP1193Provider
@@ -153,6 +153,17 @@ export function wrap<U extends UpstreamProvider>(
 
   if (isEthersProvider(upstream)) {
     return wrapEthersProvider(upstream, cipher);
+  }
+
+  if ('isMetaMask' in upstream && upstream.isMetaMask) {
+    const browserProvider = new ethers.BrowserProvider(upstream);
+    const request = hookExternalSigner(browserProvider, cipher);
+    const sendAsync = callbackify(request);
+
+    return makeProxy(upstream, cipher, {
+      request,
+      sendAsync,
+    });
   }
 
   if ('request' in upstream) {
@@ -324,6 +335,14 @@ function hookExternalProvider(
       return provider.send(method, params);
     }
     return provider.send(method, params ?? []);
+  };
+}
+
+function callbackify(request: EIP1193Provider['request']) {
+  return (args: Web3ReqArgs, cb: (err: unknown, ok?: unknown) => void) => {
+    request(args)
+      .then((res) => cb(null, { jsonrpc: '2.0', id: args.id, result: res }))
+      .catch((err) => cb(err));
   };
 }
 

@@ -31,7 +31,7 @@ class MockEIP1193Provider {
     [{ method: string; params?: any[] }]
   >;
 
-  public readonly isMetaMask = false;
+  public readonly isMetaMask: boolean = false;
 
   private readonly signer = wallet;
 
@@ -97,6 +97,7 @@ class MockEIP1193Provider {
 }
 
 class MockLegacyProvider extends MockEIP1193Provider {
+  public readonly isMetaMask = true;
   public readonly sendAsync: (
     args: { id?: string | number; method: string; params?: any[] },
     cb: (err: unknown, ok?: unknown) => void,
@@ -276,7 +277,7 @@ describe('window.ethereum', () => {
 describe('legacy MetaMask', () => {
   it('proxy', async () => {
     const wrapped = wrap(new MockLegacyProvider(), cipher);
-    expect(wrapped.isMetaMask).toBe(false);
+    expect(wrapped.isMetaMask).toBe(true);
     expect(wrapped.isConnected()).toBe(false);
     expect((wrapped as any).sapphire).toMatchObject({ cipher });
   });
