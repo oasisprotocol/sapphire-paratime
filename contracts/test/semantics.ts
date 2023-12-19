@@ -33,8 +33,8 @@ describe('EVM Semantics', () => {
     try {
       await c.testViewRevert();
     } catch (x: any) {
-      expect(x.errorArgs[0]).to.eq('ThisIsAnError');
-      expect(x.errorName).to.eq('Error');
+      expect(x.revert.args[0]).to.eq('ThisIsAnError');
+      expect(x.revert.name).to.eq('Error');
     }
   });
 
@@ -44,8 +44,8 @@ describe('EVM Semantics', () => {
       await c.testCustomViewRevert();
       expect(false).to.be.true;
     } catch (x: any) {
-      expect(x.errorArgs[0]).to.eq(ERROR_NUM);
-      expect(x.errorName).to.eq('CustomError');
+      expect(x.revert.args[0]).to.eq(ERROR_NUM);
+      expect(x.revert.name).to.eq('CustomError');
     }
   });
 });

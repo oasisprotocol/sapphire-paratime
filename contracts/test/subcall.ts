@@ -271,7 +271,7 @@ describe('Subcall', () => {
     const nextReceiptId = receiptId + 1;
     tx = await contract.testConsensusUndelegateWithReceipt(
       randomDelegate,
-      result.shares,
+      bufToBigint(result.shares),
       nextReceiptId,
     );
     receipt = await tx.wait();
