@@ -58,7 +58,7 @@ describe('EIP-155', function () {
     const tx = await testContract.emitChainId();
     const receipt = await tx.wait();
     if (!receipt || receipt.status != 1) throw new Error('tx failed');
-    expect(receipt.logs![0]).eq(expectedChainId);
+    expect(receipt.logs![0].data).eq(expectedChainId);
 
     // Returned from view call
     const onchainChainId = await testContract.getChainId();

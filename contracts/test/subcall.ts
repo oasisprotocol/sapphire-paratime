@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import * as oasis from '@oasisprotocol/client';
 import * as cborg from 'cborg';
 import { SubcallTests } from '../typechain-types/contracts/tests/SubcallTests';
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/dist/src/signer-with-address';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import {
   ContractTransactionReceipt,
   EventLog,
@@ -114,8 +114,8 @@ describe('Subcall', () => {
       value: parseEther('1.0'),
     })) as SubcallTests;
 
-    const signers = await ethers.provider.getSigners();
-    owner = signers[0];
+    const signers = await ethers.getSigners();
+    owner = signers[0] as unknown as SignerWithAddress;
     ownerAddr = await owner.getAddress();
 
     // Convert Ethereum address to native bytes with version prefix (V1=0x00)

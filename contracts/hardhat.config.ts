@@ -54,6 +54,9 @@ const config: HardhatUserConfig = {
       viaIR: true,
     },
   },
+  typechain: {
+    target: 'ethers-v6',
+  },
   networks: {
     'emerald-testnet': {
       url: 'https://testnet.emerald.oasis.dev',

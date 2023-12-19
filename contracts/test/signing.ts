@@ -108,7 +108,7 @@ describe('Signing', function () {
     for (let i = 0; i < 20; i++) {
       const seed = randomBytes(32);
       const digest = randomBytes(32);
-      const expected_addr = ethers.computeAddress(seed.toString());
+      const expected_addr = ethers.computeAddress(seed.toString('hex'));
 
       const resp = await se.testEthereum(seed, digest);
       expect(expected_addr).equal(resp.addr);
