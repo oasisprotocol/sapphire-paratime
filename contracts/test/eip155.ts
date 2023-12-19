@@ -88,8 +88,9 @@ describe('EIP-155', function () {
     });
 
     // Submit signed transaction via plain JSON-RPC provider (avoiding sapphire.wrap)
-    let plainResp = await provider.sendTransaction(signedTx);
-    let receipt = await ethers.provider.waitForTransaction(plainResp.hash);
+    let plainResp = await provider.broadcastTransaction(signedTx);
+    await plainResp.wait();
+    let receipt = await provider.getTransactionReceipt(plainResp.hash);
     expect(plainResp.data).eq(calldata);
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
@@ -110,8 +111,9 @@ describe('EIP-155', function () {
       chainId: 0,
     });
 
-    let plainResp = await provider.sendTransaction(signedTx);
-    let receipt = await provider.waitForTransaction(plainResp.hash);
+    let plainResp = await provider.broadcastTransaction(signedTx);
+    await plainResp.wait();
+    let receipt = await provider.getTransactionReceipt(plainResp.hash);
     expect(plainResp.data).eq(calldata);
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
@@ -132,11 +134,12 @@ describe('EIP-155', function () {
     });
 
     // Calldata should be encrypted when we wrap the wallet provider
-    let x = await provider.sendTransaction(signedTx);
+    let x = await provider.broadcastTransaction(signedTx);
+    await x.wait();
     expect(entropy(x.data)).gte(EXPECTED_ENTROPY_ENCRYPTED);
     expect(x.data).not.eq(calldata);
 
-    let r = await provider.waitForTransaction(x.hash);
+    let r = await provider.getTransactionReceipt(x.hash);
     expect(r.logs[0].data).equal(EXPECTED_EVENT);
   });
 });
