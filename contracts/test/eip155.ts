@@ -79,7 +79,7 @@ describe('EIP-155', function () {
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
-      gasPrice: await provider.getGasPrice(),
+      gasPrice: (await provider.getFeeData()).gasPrice,
       gasLimit: 250000,
       to: await testContract.getAddress(),
       value: 0,
@@ -102,7 +102,7 @@ describe('EIP-155', function () {
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
-      gasPrice: await provider.getGasPrice(),
+      gasPrice: (await provider.getFeeData()).gasPrice,
       gasLimit: 250000,
       to: await testContract.getAddress(),
       value: 0,
@@ -127,7 +127,7 @@ describe('EIP-155', function () {
       value: 0,
       data: calldata,
       chainId: (await provider.getNetwork()).chainId,
-      gasPrice: await provider.getGasPrice(),
+      gasPrice: (await provider.getFeeData()).gasPrice,
       nonce: await provider.getTransactionCount(wallet.address),
     });
 
