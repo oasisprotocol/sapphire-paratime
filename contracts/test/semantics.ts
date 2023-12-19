@@ -17,14 +17,14 @@ describe('EVM Semantics', () => {
       'SemanticTests',
     )) as SemanticTests__factory;
     c = await f.deploy();
-    await c.deployed();
-    chainId = (await c.provider.getNetwork()).chainId;
+    await c.waitForDeployment();
+    chainId = (await ethers.provider.getNetwork()).chainId;
   });
 
   it('eth_call maximum return length vs gas limit', async () => {
     const i = 1211104;
     const respHex = await c.testViewLength(i);
-    const respBytes = ethers.utils.arrayify(respHex);
+    const respBytes = ethers.getBytes(respHex);
     expect(respBytes.length).eq(i);
     await expect(c.testViewLength(i + 1)).reverted;
   });

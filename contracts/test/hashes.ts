@@ -3,12 +3,11 @@ import { randomBytes, createHash } from 'crypto';
 import { ethers } from 'hardhat';
 import { HashTests } from '../typechain-types/contracts/tests/HashTests';
 import { HashTests__factory } from '../typechain-types/factories/contracts/tests';
-import { PromiseOrValue } from '../typechain-types/common';
-import { BytesLike, CallOverrides } from 'ethers';
+import { BytesLike, Overrides } from 'ethers';
 
 type HasherTestT = (
-  data: PromiseOrValue<BytesLike>,
-  overrides?: CallOverrides | undefined,
+  data: BytesLike,
+  overrides?: Overrides | undefined,
 ) => Promise<string>;
 
 describe('Hashes', () => {
@@ -19,7 +18,7 @@ describe('Hashes', () => {
       'HashTests',
     )) as HashTests__factory;
     contract = await factory.deploy();
-    await contract.deployed();
+    await contract.waitForDeployment();
   });
 
   async function testHashes(algname: string, method: HasherTestT) {

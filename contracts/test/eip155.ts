@@ -30,8 +30,8 @@ function getWallet(index: number) {
   if (!accounts.mnemonic) {
     return new ethers.Wallet((accounts as unknown as string[])[0]);
   }
-  return ethers.Wallet.fromMnemonic(
-    accounts.mnemonic,
+  return ethers.HDNodeWallet.fromMnemonic(
+    ethers.Mnemonic.fromPhrase(accounts.mnemonic),
     accounts.path + `/${index}`,
   );
 }
@@ -44,20 +44,21 @@ describe('EIP-155', function () {
       'EIP155Tests',
     )) as EIP155Tests__factory;
     testContract = await factory.deploy({
-      value: ethers.utils.parseEther('1'),
+      value: ethers.parseEther('1'),
     });
-    await testContract.deployed();
+    await testContract.waitForDeployment();
     calldata = testContract.interface.encodeFunctionData('example');
   });
 
   it('Has correct block.chainid', async () => {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const expectedChainId = (await provider.getNetwork()).chainId;
 
     // Emitted via transaction
     const tx = await testContract.emitChainId();
     const receipt = await tx.wait();
-    expect(receipt.events![0].args![0]).eq(expectedChainId);
+    if (!receipt || receipt.status != 1) throw new Error('tx failed');
+    expect(receipt.logs![0]).eq(expectedChainId);
 
     // Returned from view call
     const onchainChainId = await testContract.getChainId();
@@ -73,14 +74,14 @@ describe('EIP-155', function () {
 
   /// Verify that contracts can sign transactions for submission with an unwrapped provider
   it('Other-Signed transaction submission via un-wrapped provider', async function () {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const signedTx = await testContract.sign({
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
       gasPrice: await provider.getGasPrice(),
       gasLimit: 250000,
-      to: testContract.address,
+      to: await testContract.getAddress(),
       value: 0,
       data: '0x',
       chainId: 0,
@@ -88,9 +89,7 @@ describe('EIP-155', function () {
 
     // Submit signed transaction via plain JSON-RPC provider (avoiding sapphire.wrap)
     let plainResp = await provider.sendTransaction(signedTx);
-    let receipt = await testContract.provider.waitForTransaction(
-      plainResp.hash,
-    );
+    let receipt = await ethers.provider.waitForTransaction(plainResp.hash);
     expect(plainResp.data).eq(calldata);
     expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
   });
@@ -98,14 +97,14 @@ describe('EIP-155', function () {
   /// Verify that contracts can sign transactions for submission with a wrapped provider
   /// Transactions signed by other accounts should pass-through the wrapped provider
   it('Other-Signed transaction submission via wrapped provider', async function () {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const signedTx = await testContract.sign({
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
       gasPrice: await provider.getGasPrice(),
       gasLimit: 250000,
-      to: testContract.address,
+      to: await testContract.getAddress(),
       value: 0,
       data: '0x',
       chainId: 0,
@@ -119,12 +118,12 @@ describe('EIP-155', function () {
 
   /// Verify that the wrapped wallet will encrypt a manually signed transaction
   it('Self-Signed transaction submission via wrapped wallet', async function () {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const wallet = sapphire.wrap(getWallet(0).connect(provider));
 
     const signedTx = await wallet.signTransaction({
       gasLimit: 250000,
-      to: testContract.address,
+      to: await testContract.getAddress(),
       value: 0,
       data: calldata,
       chainId: (await provider.getNetwork()).chainId,

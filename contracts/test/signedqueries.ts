@@ -11,7 +11,7 @@ describe('Signed Queries', () => {
       'SignedQueriesTests',
     )) as SignedQueriesTests__factory;
     contract = await factory.deploy();
-    await contract.deployed();
+    await contract.waitForDeployment();
   });
 
   it('msg.sender is signer', async () => {

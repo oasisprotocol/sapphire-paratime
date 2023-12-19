@@ -4,15 +4,18 @@ import '@typechain/hardhat';
 import '@nomicfoundation/hardhat-chai-matchers';
 import 'hardhat-watcher';
 import 'solidity-coverage';
-import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types';
+import { HDAccountsUserConfig } from 'hardhat/types';
 
-const TEST_HDWALLET: HardhatNetworkHDAccountsUserConfig = {
+const TEST_HDWALLET: HDAccountsUserConfig = {
   mnemonic: 'test test test test test test test test test test test junk',
   path: "m/44'/60'/0'/0",
   initialIndex: 0,
   count: 20,
   passphrase: '',
 };
+const accounts = process.env.PRIVATE_KEY
+  ? [process.env.PRIVATE_KEY]
+  : TEST_HDWALLET;
 
 task('wrap-rose', 'Wrap some ROSE.')
   .addParam('wroseAddr')
@@ -21,7 +24,7 @@ task('wrap-rose', 'Wrap some ROSE.')
     const ethers = hre.ethers;
     const WrappedROSE = await ethers.getContractFactory('WrappedROSE');
     const wrose = WrappedROSE.attach(args.wroseAddr);
-    const value = ethers.utils.parseEther(args.amount);
+    const value = ethers.parseEther(args.amount);
     const tx = await wrose.deposit({ value });
     console.log(tx.hash);
     await tx.wait();
@@ -76,12 +79,12 @@ const config: HardhatUserConfig = {
     'sapphire-dev-ci': {
       url: `http://127.0.0.1:8545`,
       chainId: 0x5afd,
-      accounts: TEST_HDWALLET,
+      accounts,
     },
-    'sapphire-dev': {
+    'sapphire-localnet': {
       url: 'http://localhost:8545',
       chainId: 0x5afd,
-      accounts: TEST_HDWALLET,
+      accounts,
     },
   },
   watcher: {

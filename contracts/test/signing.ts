@@ -108,12 +108,12 @@ describe('Signing', function () {
     for (let i = 0; i < 20; i++) {
       const seed = randomBytes(32);
       const digest = randomBytes(32);
-      const expected_addr = ethers.utils.computeAddress(seed);
+      const expected_addr = ethers.computeAddress(seed.toString());
 
       const resp = await se.testEthereum(seed, digest);
       expect(expected_addr).equal(resp.addr);
 
-      const addr_v = ethers.utils.recoverAddress(digest, {
+      const addr_v = ethers.recoverAddress(digest, {
         r: resp.rsv.r,
         s: resp.rsv.s,
         v: Number(resp.rsv.v),
