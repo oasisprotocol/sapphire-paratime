@@ -1,12 +1,20 @@
 import * as cbor from 'cborg';
 import {
-  ethers as ethers,
+  AbstractProvider,
+  AbstractSigner,
   BrowserProvider,
-  JsonRpcSigner,
+  ContractRunner,
   JsonRpcProvider,
+  JsonRpcSigner,
+  Provider,
+  Signer,
+  Transaction,
+  TransactionRequest,
+  TransactionResponse,
   decodeRlp,
   getBytes,
   isBytesLike,
+  toQuantity,
 } from 'ethers';
 
 import {
@@ -32,8 +40,8 @@ type Ethers5Signer = {
 export type UpstreamProvider =
   | EIP1193Provider
   | Ethers5Signer
-  | ethers.Signer
-  | ethers.Provider;
+  | Signer
+  | Provider;
 
 export type EIP1193Provider = {
   request: (args: Web3ReqArgs) => Promise<unknown>;
@@ -117,7 +125,7 @@ export function wrap<U extends UpstreamProvider>(
   const cipher = customCipher ?? getCipher(upstream);
 
   if (isEthers5Signer(upstream) || isEthers6Signer(upstream)) {
-    let signer: ethers.Signer | Ethers5Signer;
+    let signer: Signer | Ethers5Signer;
     if (upstream.provider) {
       try {
         signer = upstream.connect(
@@ -141,13 +149,10 @@ export function wrap<U extends UpstreamProvider>(
       ),
       call: hookEthersCall(signer, 'call', cipher),
       estimateGas: hookEthersCall(signer, 'estimateGas', cipher),
-      connect(provider: ethers.Provider) {
-        return wrap(
-          signer.connect(provider) as unknown as ethers.Signer,
-          cipher,
-        );
+      connect(provider: Provider) {
+        return wrap(signer.connect(provider) as unknown as Signer, cipher);
       },
-    } as Partial<ethers.Signer>;
+    } as Partial<Signer>;
     return makeProxy(signer as any, cipher, hooks);
   }
 
@@ -156,7 +161,7 @@ export function wrap<U extends UpstreamProvider>(
   }
 
   if ('isMetaMask' in upstream && upstream.isMetaMask) {
-    const browserProvider = new ethers.BrowserProvider(upstream);
+    const browserProvider = new BrowserProvider(upstream);
     const request = hookExternalSigner(browserProvider, cipher);
     const sendAsync = callbackify(request);
 
@@ -168,7 +173,7 @@ export function wrap<U extends UpstreamProvider>(
 
   if ('request' in upstream) {
     //  || 'send' in upstream
-    const browserProvider = new ethers.BrowserProvider(upstream);
+    const browserProvider = new BrowserProvider(upstream);
     const request = hookExternalSigner(browserProvider, cipher);
     const send: JsonRpcProvider['send'] = ((method, params) => {
       return request({ method, params: params as any[] });
@@ -205,10 +210,10 @@ function makeProxy<U extends UpstreamProvider>(
   }) as U & SapphireAnnex;
 }
 
-function wrapEthersProvider<P extends ethers.Provider>(
+function wrapEthersProvider<P extends Provider>(
   provider: P,
   cipher: Cipher,
-  signer?: Ethers5Signer | ethers.Signer,
+  signer?: Ethers5Signer | Signer,
 ): P & SapphireAnnex {
   // Already wrapped, so don't wrap it again.
   if (Reflect.get(provider, SAPPHIRE_PROP) !== undefined) {
@@ -229,28 +234,28 @@ function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
   return Reflect.get(upstream, '_isSigner') === true;
 }
 
-function isEthers6Signer(upstream: object): upstream is ethers.Signer {
-  return upstream instanceof ethers.AbstractSigner;
+function isEthers6Signer(upstream: object): upstream is Signer {
+  return upstream instanceof AbstractSigner;
 }
 
-function isEthersSigner(upstream: object): upstream is ethers.Signer {
+function isEthersSigner(upstream: object): upstream is Signer {
   return isEthers5Signer(upstream) || isEthers6Signer(upstream);
 }
 
-function isEthersProvider(upstream: object): upstream is ethers.Provider {
+function isEthersProvider(upstream: object): upstream is Provider {
   const isEthersv5 = Reflect.get(upstream, '_isProvider') === true;
-  const isEthersv6 = upstream instanceof ethers.AbstractProvider;
+  const isEthersv6 = upstream instanceof AbstractProvider;
   return isEthersv5 || isEthersv6;
 }
 
 function hookEthersCall(
-  runner: Ethers5Signer | ethers.ContractRunner,
+  runner: Ethers5Signer | ContractRunner,
   method: 'call' | 'estimateGas',
   cipher: Cipher,
 ): EthersCall | undefined {
   const sendUnsignedCall = async (
-    runner: ethers.ContractRunner | Ethers5Signer,
-    call: ethers.TransactionRequest,
+    runner: ContractRunner | Ethers5Signer,
+    call: TransactionRequest,
   ) => {
     return runner[method]!({
       ...call,
@@ -258,7 +263,7 @@ function hookEthersCall(
     });
   };
   return async (call) => {
-    let res: string | bigint | ethers.TransactionResponse;
+    let res: string | bigint | TransactionResponse;
     if (isEthersSigner(runner)) {
       const signer = runner;
       if (!signer.provider)
@@ -285,14 +290,14 @@ function hookEthersCall(
 }
 
 function hookEthersSend(send: EthersCall, cipher: Cipher): EthersCall {
-  return async (tx: ethers.TransactionRequest, ...rest) => {
+  return async (tx: TransactionRequest, ...rest) => {
     if (tx.data) tx.data = await cipher.encryptEncode(tx.data);
     return send(tx, ...rest);
   };
 }
 
 async function callNeedsSigning(
-  callP: Deferrable<ethers.TransactionRequest> | ethers.TransactionRequest,
+  callP: Deferrable<TransactionRequest> | TransactionRequest,
 ): Promise<boolean> {
   const [from, to] = await Promise.all([callP.from, callP.to]);
   return (
@@ -300,7 +305,7 @@ async function callNeedsSigning(
   );
 }
 
-type EthersCall = (tx: ethers.TransactionRequest) => Promise<unknown>;
+type EthersCall = (tx: TransactionRequest) => Promise<unknown>;
 
 type Deferrable<T> = {
   [K in keyof T]: T[K] | Promise<T[K]>;
@@ -393,7 +398,7 @@ const REPACK_ERROR =
 async function repackRawTx(
   raw: string,
   cipher: Cipher,
-  signer?: ethers.Signer,
+  signer?: Signer,
 ): Promise<string> {
   const DATA_FIELD = 5;
   const txFields = decodeRlp(raw);
@@ -407,7 +412,7 @@ async function repackRawTx(
   } catch (e) {
     if (e instanceof EnvelopeError) throw e;
   }
-  const tx = ethers.Transaction.from(raw);
+  const tx = Transaction.from(raw);
   if (tx.isSigned() && (!signer || (await signer!.getAddress()) != tx.from!)) {
     // encrypted tx cannot be re-signed, allow passthrough when
     // submitting a transaction signed by another keypair
@@ -415,7 +420,7 @@ async function repackRawTx(
   }
   const q = (v: bigint | null | undefined): string | undefined => {
     if (!v) return undefined;
-    return ethers.toQuantity(v);
+    return toQuantity(v);
   };
   const parsed = {
     to: tx.to!,
@@ -497,7 +502,7 @@ export async function fetchRuntimePublicKey(
   }
 
   const chainId = Number(
-    (await new ethers.BrowserProvider(upstream).getNetwork()).chainId,
+    (await new BrowserProvider(upstream).getNetwork()).chainId,
   );
   return fetchRuntimePublicKeyByChainId(chainId);
 }
