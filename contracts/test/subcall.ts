@@ -57,7 +57,7 @@ async function dockerSkipEpochs(args: {
 }
 
 function fromBigInt(bi: BigInt): Uint8Array {
-  return getBytes(ethers.zeroPadValue(ethers.hexlify(bi.toString()), 16));
+  return ethers.getBytes(ethers.toQuantity(Buffer.from(bi.toString())));
 }
 
 function bufToBigint(buf: Uint8Array): bigint {
@@ -75,7 +75,7 @@ async function ensureBalance(
 ) {
   const address = await contract.getAddress();
   const balance = await ethers.provider.getBalance(address);
-  if (balance.lt(initialBalance)) {
+  if (balance < initialBalance) {
     const resp = await owner.sendTransaction({
       to: address,
       value: (initialBalance as bigint) - balance,
@@ -159,7 +159,7 @@ describe('Subcall', () => {
       'accounts.Transfer',
       cborg.encode({
         to: ownerNativeAddr,
-        amount: [fromBigInt(balance.sub(1)), new Uint8Array()],
+        amount: [fromBigInt(BigInt(balance) - BigInt(1)), new Uint8Array()],
       }),
     );
     let receipt = await tx.wait();
