@@ -8,8 +8,10 @@ import {
   ContractTransactionReceipt,
   EventLog,
   getBytes,
+  hexlify,
   parseEther,
   toQuantity,
+  zeroPadValue,
 } from 'ethers';
 import { getRandomValues, randomInt } from 'crypto';
 
@@ -113,14 +115,14 @@ describe('Subcall', () => {
     const factory = await ethers.getContractFactory('SubcallTests');
     contract = (await factory.deploy({
       value: parseEther('1.0'),
-    })) as SubcallTests;
+    })) as unknown as SubcallTests;
 
     const signers = await ethers.getSigners();
     owner = signers[0] as unknown as SignerWithAddress;
     ownerAddr = await owner.getAddress();
 
     // Convert Ethereum address to native bytes with version prefix (V1=0x00)
-    ownerNativeAddr = getBytes(ethers.zeroPadValue(ownerAddr, 21));
+    ownerNativeAddr = getBytes(zeroPadValue(ownerAddr, 21));
     expect(ownerNativeAddr.length).eq(21);
 
     const rawKp = await contract.generateRandomAddress();
@@ -138,11 +140,11 @@ describe('Subcall', () => {
       getBytes(newKeypair.secretKey),
       'this key is not important',
     );
-    const computedPublicKey = ethers.hexlify(
+    const computedPublicKey = hexlify(
       await oasis.staking.addressFromPublicKey(alice.public()),
     );
 
-    expect(computedPublicKey).eq(ethers.hexlify(newKeypair.publicKey));
+    expect(computedPublicKey).eq(hexlify(newKeypair.publicKey));
   });
 
   /// Verify that the 'accounts.Transfer' subcall operates similarly to

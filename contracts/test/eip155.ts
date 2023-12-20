@@ -42,7 +42,7 @@ describe('EIP-155', function () {
   before(async () => {
     const factory = (await ethers.getContractFactory(
       'EIP155Tests',
-    )) as EIP155Tests__factory;
+    )) as unknown as EIP155Tests__factory;
     testContract = await factory.deploy({
       value: ethers.parseEther('1'),
     });
@@ -79,7 +79,7 @@ describe('EIP-155', function () {
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
-      gasPrice: (await provider.getFeeData()).gasPrice,
+      gasPrice: (await provider.getFeeData()).gasPrice as bigint,
       gasLimit: 250000,
       to: await testContract.getAddress(),
       value: 0,
@@ -92,7 +92,7 @@ describe('EIP-155', function () {
     await plainResp.wait();
     let receipt = await provider.getTransactionReceipt(plainResp.hash);
     expect(plainResp.data).eq(calldata);
-    expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
+    expect(receipt!.logs[0].data).equal(EXPECTED_EVENT);
   });
 
   /// Verify that contracts can sign transactions for submission with a wrapped provider
@@ -103,7 +103,7 @@ describe('EIP-155', function () {
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
-      gasPrice: (await provider.getFeeData()).gasPrice,
+      gasPrice: (await provider.getFeeData()).gasPrice as bigint,
       gasLimit: 250000,
       to: await testContract.getAddress(),
       value: 0,
@@ -115,7 +115,7 @@ describe('EIP-155', function () {
     await plainResp.wait();
     let receipt = await provider.getTransactionReceipt(plainResp.hash);
     expect(plainResp.data).eq(calldata);
-    expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
+    expect(receipt!.logs[0].data).equal(EXPECTED_EVENT);
   });
 
   /// Verify that the wrapped wallet will encrypt a manually signed transaction
@@ -140,6 +140,6 @@ describe('EIP-155', function () {
     expect(x.data).not.eq(calldata);
 
     let r = await provider.getTransactionReceipt(x.hash);
-    expect(r.logs[0].data).equal(EXPECTED_EVENT);
+    expect(r!.logs[0].data).equal(EXPECTED_EVENT);
   });
 });
