@@ -13,10 +13,8 @@ describe('EVM Semantics', () => {
   let chainId: number;
 
   before(async () => {
-    const f = (await ethers.getContractFactory(
-      'SemanticTests',
-    ));
-    c = await f.deploy() as unknown as SemanticTests;
+    const f = await ethers.getContractFactory('SemanticTests');
+    c = (await f.deploy()) as unknown as SemanticTests;
     await c.waitForDeployment();
     chainId = (await ethers.provider.getNetwork()).chainId;
   });
@@ -28,10 +26,9 @@ describe('EVM Semantics', () => {
     expect(respBytes.length).eq(i);
 
     try {
-      await c.testViewLength(i + 1)
+      await c.testViewLength(i + 1);
       expect(false).eq(true);
-    }
-    catch (e:any) {
+    } catch (e: any) {
       expect(e.info.error.message).contains('out of gas');
     }
   });

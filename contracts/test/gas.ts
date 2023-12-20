@@ -8,10 +8,8 @@ describe('Gas Padding', function () {
   let contract: GasTests;
 
   before(async () => {
-    const factory = await ethers.getContractFactory(
-      'GasTests',
-    );
-    contract = await factory.deploy() as unknown as GasTests;
+    const factory = await ethers.getContractFactory('GasTests');
+    contract = (await factory.deploy()) as unknown as GasTests;
   });
 
   it('Gas Padding works as Expected', async () => {
