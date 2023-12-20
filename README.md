@@ -105,3 +105,11 @@ Oasis remains committed to unlocking the full potential of privacy applications
 on Web3.
 
 Build with [us](https://oasisprotocol.org/opl#how-to-get-started) today!
+
+## License
+
+This software is licensed under [Apache 2.0](./LICENSE).
+
+The content of the documentation (the `/docs` folder) including the media (e.g.
+images and diagrams) is licensed under [Creative Commons Attribution 4.0
+International](./LICENSE-docs).
