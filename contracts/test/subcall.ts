@@ -9,6 +9,7 @@ import {
   EventLog,
   getBytes,
   parseEther,
+  toQuantity,
 } from 'ethers';
 import { getRandomValues, randomInt } from 'crypto';
 
@@ -57,7 +58,7 @@ async function dockerSkipEpochs(args: {
 }
 
 function fromBigInt(bi: BigInt): Uint8Array {
-  return ethers.getBytes(ethers.toQuantity(Buffer.from(bi.toString())));
+  return getBytes(toQuantity(Buffer.from(bi.toString())));
 }
 
 function bufToBigint(buf: Uint8Array): bigint {
