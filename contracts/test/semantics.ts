@@ -3,7 +3,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SemanticTests } from '../typechain-types/contracts/tests/SemanticTests';
-import { SemanticTests__factory } from '../typechain-types/factories/contracts/tests';
+import { getBytes } from 'ethers';
 
 const ERROR_NUM =
   '0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef';
@@ -15,8 +15,8 @@ describe('EVM Semantics', () => {
   before(async () => {
     const f = (await ethers.getContractFactory(
       'SemanticTests',
-    )) as SemanticTests__factory;
-    c = await f.deploy();
+    ));
+    c = await f.deploy() as unknown as SemanticTests;
     await c.waitForDeployment();
     chainId = (await ethers.provider.getNetwork()).chainId;
   });
@@ -24,9 +24,16 @@ describe('EVM Semantics', () => {
   it('eth_call maximum return length vs gas limit', async () => {
     const i = 1211104;
     const respHex = await c.testViewLength(i);
-    const respBytes = ethers.getBytes(respHex);
+    const respBytes = getBytes(respHex);
     expect(respBytes.length).eq(i);
-    await expect(c.testViewLength(i + 1)).reverted;
+
+    try {
+      await c.testViewLength(i + 1)
+      expect(false).eq(true);
+    }
+    catch (e:any) {
+      expect(e.info.error.message).contains('out of gas');
+    }
   });
 
   it('Error string in view call', async () => {
