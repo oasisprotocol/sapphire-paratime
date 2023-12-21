@@ -148,18 +148,13 @@ describe('Subcall', () => {
     await ensureBalance(contract, initialBalance, owner);
 
     // transfer balance-1 back to owner, then wait for transaction to be mined.
-    let balance = await provider.getBalance(
-      await contract.getAddress(),
-    );
+    let balance = await provider.getBalance(await contract.getAddress());
 
     const msg = cborg.encode({
       to: ownerNativeAddr,
       amount: [toBeArray(balance - 1n), new Uint8Array()],
     });
-    let tx = await contract.testSubcall(
-      'accounts.Transfer',
-      msg,
-    );
+    let tx = await contract.testSubcall('accounts.Transfer', msg);
     let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null
