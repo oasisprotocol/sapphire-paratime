@@ -1,12 +1,11 @@
 import * as cbor from 'cborg';
 import { BytesLike, isBytesLike, hexlify, getBytes } from 'ethers';
 import deoxysii from '@oasisprotocol/deoxysii';
-import { IncomingMessage } from 'http';
 import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
 
-import { CallError, NETWORKS, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
+import { CallError } from './index.js';
 
 export enum Kind {
   Plain = 0,

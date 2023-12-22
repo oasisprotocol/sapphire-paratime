@@ -37,11 +37,7 @@ describe('ethers.js 6', () => {
 test('web3.js', () => {
   const web3 = new Web3();
   if (web3.currentProvider) {
-    web3.setProvider(
-      sapphire.wrap(
-        web3.currentProvider.asEIP1193Provider(),
-      ),
-    );
+    web3.setProvider(sapphire.wrap(web3.currentProvider.asEIP1193Provider()));
   }
 });
 

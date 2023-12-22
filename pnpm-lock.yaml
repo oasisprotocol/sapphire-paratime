@@ -52,8 +52,8 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@18.16.18)(ts-node@10.9.2)
       nock:
-        specifier: ^13.2.9
-        version: 13.3.1
+        specifier: ^13.4.0
+        version: 13.4.0
       node-fetch:
         specifier: ^2.6.7
         version: 2.6.12
@@ -12053,13 +12053,12 @@ packages:
       tslib: 2.4.0
     dev: true
 
-  /nock@13.3.1:
-    resolution: {integrity: sha512-vHnopocZuI93p2ccivFyGuUfzjq2fxNyNurp7816mlT5V5HF4SzXu8lvLrVzBbNqzs+ODooZ6OksuSUNM7Njkw==}
+  /nock@13.4.0:
+    resolution: {integrity: sha512-W8NVHjO/LCTNA64yxAPHV/K47LpGYcVzgKd3Q0n6owhwvD0Dgoterc25R4rnZbckJEb6Loxz1f5QMuJpJnbSyQ==}
     engines: {node: '>= 10.13'}
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
       json-stringify-safe: 5.0.1
-      lodash: 4.17.21
       propagate: 2.0.1
     transitivePeerDependencies:
       - supports-color

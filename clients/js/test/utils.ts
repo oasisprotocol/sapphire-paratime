@@ -30,7 +30,7 @@ export async function verifySignedCall(
     makeSignableCall({ ...call, data: origData }, dataPack.leash),
     ethers.Signature.from(ethers.hexlify(dataPack.signature)),
   );
-  if (call.from.toLowerCase() !== recoveredSender.toLowerCase()) {
+  if (call.from?.toLowerCase() !== recoveredSender.toLowerCase()) {
     throw new Error('signed call signature verification failed');
   }
 }
