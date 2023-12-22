@@ -6,6 +6,7 @@ import {
   TypedDataField,
   BlockTag,
   toBeHex,
+  TransactionRequest,
 } from 'ethers';
 import type {
   CamelCasedProperties,
@@ -14,6 +15,7 @@ import type {
 } from 'type-fest';
 
 import { Cipher, Envelope } from './cipher.js';
+import { Ethers5Signer } from './interfaces.js';
 
 const DEFAULT_GAS_PRICE = 1; // Default gas params are assigned in the web3 gateway.
 const DEFAULT_GAS_LIMIT = 30_000_000;
@@ -63,10 +65,6 @@ class SignedCallCache {
 
 const _cache = new SignedCallCache();
 
-/// @deprecated
-export type Signer = CallSigner;
-export type CallSigner = ethers.Signer;
-
 export function signedCallEIP712Params(chainId: number): {
   domain: TypedDataDomain;
   types: Record<string, TypedDataField[]>;
@@ -102,9 +100,9 @@ export function signedCallEIP712Params(chainId: number): {
  * CBOR-encoded and sent as the call's `data` field.
  */
 export class SignedCallDataPack {
-  static async make<C extends EthCall>(
-    call: C,
-    signer: CallSigner,
+  static async make(
+    call: EthCall | TransactionRequest,
+    signer: Ethers5Signer | ethers.Signer,
     overrides?: PrepareSignedCallOverrides,
   ): Promise<SignedCallDataPack> {
     const leash = await makeLeash(signer, overrides?.leash);
@@ -162,7 +160,7 @@ function stringifyBytesLike(data: ethers.BytesLike): string {
 }
 
 async function makeLeash(
-  signer: CallSigner,
+  signer: Ethers5Signer | ethers.Signer,
   overrides?: LeashOverrides,
 ): Promise<Leash> {
   // simply invalidate signedCall caches if overrided nonce or block are provided
@@ -170,13 +168,25 @@ async function makeLeash(
     _cache.clear();
   }
 
-  const nonceP = overrides?.nonce
-    ? overrides.nonce
-    : signer.getNonce('pending');
+  let nonceP : Promisable<number>;
+  if( overrides?.nonce ) {
+    nonceP = overrides.nonce;
+  }
+  else if( 'getNonce' in signer ) {
+    // Ethers v6 has 'getNonce'
+    nonceP = signer.getNonce('pending');
+  }
+  else {
+    // Ethers v5 doesn't, so use `getTransactionCount`
+    const addr = await signer.getAddress();
+    nonceP = signer.provider!.getTransactionCount(addr, 'pending');
+  }
+
   let blockP: Promisable<BlockId>;
   if (overrides?.block !== undefined) {
     blockP = overrides.block;
-  } else {
+  }
+  else {
     if (!signer.provider)
       throw new Error(
         '`sapphire.wrap`ped signer was not connected to a provider',
@@ -222,11 +232,11 @@ async function makeLeash(
   };
 }
 
-export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
+export function makeSignableCall(call: EthCall | TransactionRequest, leash: Leash): SignableEthCall {
   return {
-    from: call.from,
-    to: call.to ?? zeroAddress(),
-    gasLimit: Number(BigInt(call.gas ?? call.gasLimit ?? DEFAULT_GAS_LIMIT)),
+    from: call.from as any,
+    to: call.to ?? zeroAddress() as any,
+    gasLimit: Number(BigInt(call.gasLimit ?? call.gasLimit ?? DEFAULT_GAS_LIMIT)),
     gasPrice: BigInt(call.gasPrice ?? DEFAULT_GAS_PRICE),
     value: BigInt(call.value ?? DEFAULT_VALUE),
     data: call.data ? stringifyBytesLike(call.data) : DEFAULT_DATA,
@@ -239,9 +249,13 @@ export function makeSignableCall(call: EthCall, leash: Leash): SignableEthCall {
   };
 }
 
+interface TypedDataSigner {
+  _signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>): Promise<string>;
+}
+
 async function signCall(
   call: SignableEthCall,
-  signer: CallSigner,
+  signer: Ethers5Signer | ethers.Signer,
   overrides?: Partial<{ chainId: number | bigint }>,
 ): Promise<Uint8Array> {
   const address = await signer.getAddress();
@@ -265,19 +279,26 @@ async function signCall(
   );
   let signature = _cache.get(address, hash);
   // if (signature !== undefined) return signature;
+
+  console.log('Signing Typed Data', upgradedDomain, types, upgradedCall)
   signature = ethers.getBytes(
-    await signer.signTypedData(upgradedDomain, types, upgradedCall),
+    '_signTypedData' in signer
+    ? await (signer as TypedDataSigner)._signTypedData(upgradedDomain, types, upgradedCall)
+    : await (signer as ethers.Signer).signTypedData(upgradedDomain, types, upgradedCall),
   );
   _cache.cache(address, BigInt(chainId), call, hash, signature);
   return signature;
 }
 
 function upgradeDomain(domain: TypedDataDomain): ethers.TypedDataDomain {
-  return {
+  const x = {
     ...domain,
-    salt: domain.salt ? parseBytesLike(domain.salt) : undefined,
     chainId: domain.chainId ? toBeHex(domain.chainId) : undefined,
   };
+  if( domain.salt ) {
+    x['salt'] = parseBytesLike(domain.salt);
+  }
+  return x;
 }
 
 function upgradeCall(call: SignableEthCall) {
@@ -312,7 +333,7 @@ export type LeashOverrides = Partial<
 
 export type EthCall = {
   /** 0x-prefixed hex-encoded address. */
-  from: string;
+  from?: string;
   /** Optional 0x-prefixed hex-encoded address. */
   to?: string;
   value?: BigNumberish;
@@ -346,7 +367,7 @@ export type Leash = {
   /** The block number whence the call will be valid. */
   block_number: number; // uint64
   /** The expected block hash to be found at `block_number`. */
-  block_hash: Uint8Array;
+  block_hash: Uint8Array | string;
   /** The number of blocks past the block at `block_number` whence the call will be valid. */
   block_range: number; // uint64
 };

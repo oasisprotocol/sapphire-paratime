@@ -8,30 +8,32 @@ import { assert } from "console";
 async function main () {
     const wallet = new ethers.Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
 
-    const provider = new ethers.providers.JsonRpcProvider({
-        url: 'http://127.0.0.1:8545',
-    });
+    const provider = wrap(new ethers.providers.JsonRpcProvider({
+        url: 'http://127.0.0.1:3000',
+    }));
 
     const signer = wallet.connect(provider);
 
-    const fac = new ContractFactory(TestErc20Token.abi, TestErc20Token. bytecode, signer);
+    const fac = new ContractFactory(TestErc20Token.abi, TestErc20Token.bytecode, signer);
 
+    console.log('Deploying');
     const contract = await fac.deploy();
-    await contract.deployed();
+    console.log('Waiting for deployment');
+    const contractReceipt = await contract.deployed();
+    console.log('Deployed', contractReceipt.deployTransaction.hash);
 
+    console.log('Calling getAddress');
     const myAddr = await signer.getAddress();
 
-    const ws = wrap(signer);
-    const signerContract = contract.connect(ws);
-    const mintTx = await signerContract["mint(address,uint256)"](myAddr, 100) as ethers.providers.TransactionResponse;
+    console.log('Calling mint');
+    const mintTx = await contract["mint(address,uint256)"](myAddr, 100) as ethers.providers.TransactionResponse;
     assert(mintTx.data.length > 100);  // TODO: ensure mintTx has encrypted calldata
+    console.log('mintTx', mintTx.hash);
     await mintTx.wait();
 
-    const wp = wrap(provider);
-    const providerContract = contract.connect(wp);
-    const totalSupply = await providerContract["totalSupply()"]() as BigNumber;
+    console.log('Calling totalSupply');
+    const totalSupply = await contract["totalSupply()"]() as BigNumber;
     assert(totalSupply.eq(100));
 }
 
 await main ();
-

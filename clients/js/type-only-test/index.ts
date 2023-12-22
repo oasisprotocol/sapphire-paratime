@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import * as sapphire from '../src/index';
-import { Web3, providers } from 'web3';
+import { Web3 } from 'web3';
 import { ethers } from 'ethers';
 
 declare global {
@@ -39,8 +39,8 @@ test('web3.js', () => {
   if (web3.currentProvider) {
     web3.setProvider(
       sapphire.wrap(
-        web3.currentProvider.asEIP1193Provider() as sapphire.EIP1193Provider,
-      ) as unknown as providers.Eip1193Provider,
+        web3.currentProvider.asEIP1193Provider(),
+      ),
     );
   }
 });

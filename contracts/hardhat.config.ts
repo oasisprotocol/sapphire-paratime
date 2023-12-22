@@ -85,7 +85,7 @@ const config: HardhatUserConfig = {
       accounts,
     },
     'sapphire-localnet': {
-      url: 'http://localhost:8545',
+      url: 'http://localhost:3000',
       chainId: 0x5afd,
       accounts,
     },
