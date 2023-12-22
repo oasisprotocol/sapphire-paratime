@@ -6,6 +6,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { EIP155Tests__factory } from '../typechain-types/factories/contracts/tests';
 import { EIP155Tests } from '../typechain-types/contracts/tests/EIP155Tests';
 import { HardhatNetworkHDAccountsConfig } from 'hardhat/types';
+import { Transaction } from 'ethers';
 
 const EXPECTED_EVENT =
   '0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
@@ -123,7 +124,7 @@ describe('EIP-155', function () {
     const provider = ethers.provider;
     const wallet = sapphire.wrap(getWallet(0).connect(provider));
 
-    const signedTx = await wallet.signTransaction({
+    const tx = Transaction.from({
       gasLimit: 250000,
       to: await testContract.getAddress(),
       value: 0,
@@ -131,7 +132,10 @@ describe('EIP-155', function () {
       chainId: (await provider.getNetwork()).chainId,
       gasPrice: (await provider.getFeeData()).gasPrice,
       nonce: await provider.getTransactionCount(wallet.address),
+      type: 0 // Ethers v6 requires 'legacy' tx encoding
     });
+
+    const signedTx = await wallet.signTransaction(tx);
 
     // Calldata should be encrypted when we wrap the wallet provider
     let x = await provider.broadcastTransaction(signedTx);

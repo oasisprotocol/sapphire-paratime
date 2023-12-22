@@ -405,6 +405,7 @@ async function repackRawTx(
   cipher: Cipher,
   signer?: Ethers5Signer | Signer,
 ): Promise<string> {
+  // TODO: support non-legacy tx format, 1=eip-2930 (berlin) and 2=eip-1559 (london)
   const DATA_FIELD = 5;
   const txFields = decodeRlp(raw);
   const data = getBytes(txFields[DATA_FIELD] as string);

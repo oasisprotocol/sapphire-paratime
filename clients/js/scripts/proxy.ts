@@ -54,7 +54,6 @@ async function onRequest(req:IncomingMessage, response:ServerResponse) {
   {
     const log = loggedMethods.includes(body.method);
 
-    //console.log(req.method, req.url, body.method);
     if( log ) {
       if( body.method == 'oasis_callDataPublicKey' ) {
         console.log(req.method, req.url, body.method);
@@ -63,22 +62,28 @@ async function onRequest(req:IncomingMessage, response:ServerResponse) {
         try {
           const x = getBytes(body.params[0].data);
           const y = cborg.decode(x);
-          //console.log('ENCRYPTED', y);
+          // Verify envelope format == 1 (encrypted)
+          if( 'data' in y ) {
+            // EIP-712 signed queries are wrapped as follows:
+            // {data: {body{pk:,data:,nonce:},format:},leash:{nonce:,block_hash:,block_range:,block_number:},signature:}
+            assert(y.data.format == 1);
+          }
+          else {
+            assert(y.format == 1);
+          }
           console.log('ENCRYPTED', req.method, req.url, body.method);
         }
         catch( e:any ) {
           console.log('NOT ENCRYPTED', req.method, req.url, body.method);
         }
-        //console.log('params', pj.params);
       }
       else if( body.method == 'eth_sendRawTransaction' ) {
         try {
           const x = getBytes(body.params[0]);
-          const y = decodeRlp(x) as string[];
-          cborg.decode(getBytes(y[5]));
+          const y = decodeRlp(x) as string[];  //console.log(pj);
+          const z = cborg.decode(getBytes(y[5]));
+          assert(z.format == 1);  // Verify envelope format == 1 (encrypted)
           console.log('ENCRYPTED', req.method, req.url, body.method);
-          //console.log('ENCRYPTED', cborg.decode(y));
-          //console.log('ENCRYPTED');
         }
         catch( e:any ) {
           console.log('NOT ENCRYPTED', req.method, req.url, body.method, body.params);
@@ -94,7 +99,6 @@ async function onRequest(req:IncomingMessage, response:ServerResponse) {
   })
 
   const pj = await pr.json();
-  //console.log(pj);
 
   response.writeHead(200, 'OK');
   response.write(JSON.stringify(pj));
