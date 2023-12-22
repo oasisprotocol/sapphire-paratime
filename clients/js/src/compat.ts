@@ -15,6 +15,8 @@ import {
   isBytesLike,
   toQuantity,
   AbstractProvider,
+  BytesLike,
+  hexlify,
 } from 'ethers';
 
 import {
@@ -255,6 +257,21 @@ function isEthersProvider(upstream: object): upstream is Provider | Ethers5Provi
   return isEthers5Provider(upstream) || isEthers6Provider(upstream);
 }
 
+function isCalldataEnveloped(calldata?: BytesLike | null)
+{
+  if( calldata ) {
+    try {
+      cbor.decode(getBytes(calldata));
+      return true;
+    }
+    catch( e:any ) {
+      return false;
+    }
+  }
+  return false;
+}
+
+
 function hookEthersCall(
   runner: Ethers5Provider | Ethers5Signer | ContractRunner,
   method: 'call' | 'estimateGas',
@@ -263,15 +280,21 @@ function hookEthersCall(
   const sendUnsignedCall = async (
     runner: Ethers5Provider | Ethers5Signer | ContractRunner,
     call: EthCall | TransactionRequest,
+    is_already_enveloped: boolean
   ) => {
+    let call_data = call.data;
+    if( ! is_already_enveloped ) {
+      call_data = await cipher.encryptEncode(call.data ?? new Uint8Array());
+    }
     return runner[method]!({
       ...call,
-      data: await cipher.encryptEncode(call.data ?? new Uint8Array()),
+      data: hexlify(call_data!),
     });
   };
   return async (call) => {
     let res: string | bigint | TransactionResponse;
-    if (isEthersSigner(runner)) {
+    const is_already_enveloped = isCalldataEnveloped(call.data);
+    if ( ! is_already_enveloped && isEthersSigner(runner)) {
       const signer = runner;
       if (!signer.provider)
         throw new Error('signer not connected to a provider');
@@ -286,12 +309,14 @@ function hookEthersCall(
           data: await dataPack.encryptEncode(cipher),
         });
       } else {
-        res = await sendUnsignedCall(provider, call);
+        res = await sendUnsignedCall(provider, call, is_already_enveloped);
       }
     } else {
-      res = await sendUnsignedCall(runner, call);
+      res = await sendUnsignedCall(runner, call, is_already_enveloped);
     }
-    if (typeof res === 'string') return cipher.decryptEncoded(res);
+    if ( ! is_already_enveloped && typeof res === 'string') {
+      return cipher.decryptEncoded(res);
+    }
     return res;
   };
 }

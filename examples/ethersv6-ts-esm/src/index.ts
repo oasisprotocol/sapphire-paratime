@@ -12,7 +12,7 @@ async function main () {
 
 
 
-    const signer = wallet.connect(provider);
+    const signer = wrap(wallet.connect(provider));
 
     const fac = new ContractFactory(TestErc20Token.abi, TestErc20Token.bytecode, signer);
 

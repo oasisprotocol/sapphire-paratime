@@ -278,9 +278,8 @@ async function signCall(
     upgradedCall,
   );
   let signature = _cache.get(address, hash);
-  // if (signature !== undefined) return signature;
+  if (signature !== undefined) return signature;
 
-  console.log('Signing Typed Data', upgradedDomain, types, upgradedCall)
   signature = ethers.getBytes(
     '_signTypedData' in signer
     ? await (signer as TypedDataSigner)._signTypedData(upgradedDomain, types, upgradedCall)

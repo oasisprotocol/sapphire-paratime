@@ -12,7 +12,7 @@ async function main () {
         url: 'http://127.0.0.1:3000',
     }));
 
-    const signer = wallet.connect(provider);
+    const signer = wrap(wallet.connect(provider));
 
     const fac = new ContractFactory(TestErc20Token.abi, TestErc20Token.bytecode, signer);
 
