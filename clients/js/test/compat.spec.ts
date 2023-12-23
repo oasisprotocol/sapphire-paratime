@@ -22,11 +22,13 @@ const data = Buffer.from([1, 2, 3, 4, 5]);
 class MockEIP1193Provider {
   public readonly request: jest.Mock<
     Promise<unknown>,
-    [{
-      id?: string | number;
-      method: string;
-      params?: any[]
-    }]
+    [
+      {
+        id?: string | number;
+        method: string;
+        params?: any[];
+      },
+    ]
   >;
 
   public readonly isMetaMask: boolean = false;
@@ -118,11 +120,13 @@ class MockLegacyProvider extends MockEIP1193Provider {
 class MockNonRuntimePublicKeyProvider {
   public readonly request: jest.Mock<
     Promise<unknown>,
-    [{
-      id?: string | number;
-      method: string;
-      params?: any[]
-    }]
+    [
+      {
+        id?: string | number;
+        method: string;
+        params?: any[];
+      },
+    ]
   >;
 
   public constructor() {
