@@ -19,7 +19,9 @@ jest.mock('@oasisprotocol/sapphire-paratime/compat.js', () => ({
     .mockReturnValue(new Uint8Array(Buffer.alloc(32, 8))),
 }));
 
-const real_fetchRuntimePublicKeyByChainId = jest.requireActual('@oasisprotocol/sapphire-paratime/compat.js').fetchRuntimePublicKeyByChainId;
+const real_fetchRuntimePublicKeyByChainId = jest.requireActual(
+  '@oasisprotocol/sapphire-paratime/compat.js',
+).fetchRuntimePublicKeyByChainId;
 
 const secretKey =
   '0x8160d68c4bf9425b1d3a14dc6d59a99d7d130428203042a8d419e68d626bd9f2';
