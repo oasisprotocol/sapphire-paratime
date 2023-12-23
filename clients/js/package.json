@@ -44,7 +44,7 @@
   "dependencies": {
     "@oasisprotocol/deoxysii": "^0.0.5",
     "cborg": "^1.9.5",
-    "ethers": "npm:ethers@^6.6.1",
+    "ethers": "^6.6.1",
     "js-sha512": "^0.8.0",
     "tweetnacl": "^1.0.3",
     "type-fest": "^2.19.0"

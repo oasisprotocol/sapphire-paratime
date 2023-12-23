@@ -7,20 +7,17 @@
       "lint": "prettier --cache --plugin-search-dir=. --check *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint contracts/**.sol",
       "format": "prettier --cache --plugin-search-dir=. --write *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint --fix contracts/**.sol",
       "build": "tsc -b",
-      "test": "pnpm ts-node src/index.ts"
+      "test": "pnpm ts-node --esm src/index.ts"
     },
     "dependencies": {
       "@oasisprotocol/sapphire-paratime": "workspace:^",
-      "ethers": "^5.5.0",
-      "ts-node": "10.8.0",
-      "typescript": "4.7.4"
+      "ethers": "5.5.0"
     },
     "devDependencies": {
       "@types/node": "^17.0.10",
       "@tsconfig/strictest": "2.0.2",
       "prettier": "^2.5.1",
-      "prettier-plugin-solidity": "^1.0.0-beta.19",
-      "solhint": "^3.3.7",
-      "ts-node": "10.9.2"
+      "ts-node": "10.9.2",
+      "typescript": "4.7.4"
     }
   }
