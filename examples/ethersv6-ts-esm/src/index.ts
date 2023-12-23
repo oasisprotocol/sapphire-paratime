@@ -8,7 +8,7 @@ import { assert } from "console";
 async function main () {
     const wallet = new ethers.Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
 
-    const provider = wrap(new JsonRpcProvider('http://127.0.0.1:3000'));
+    const provider = wrap(new JsonRpcProvider('http://127.0.0.1:8545'));
 
 
 
