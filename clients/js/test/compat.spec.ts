@@ -141,7 +141,7 @@ class MockNonRuntimePublicKeyProvider {
   }
 }
 
-describe.skip('fetchRuntimePublicKey', () => {
+describe('fetchRuntimePublicKey', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -180,7 +180,7 @@ describe.skip('fetchRuntimePublicKey', () => {
   });
 });
 
-describe.skip('ethers signer', () => {
+describe('ethers signer', () => {
   it('proxy', async () => {
     const wrapped = wrap(wallet, { cipher });
     expect(wrapped.address).toEqual(
@@ -221,7 +221,7 @@ describe.skip('ethers signer', () => {
   });
 });
 
-describe.skip('ethers provider', () => {
+describe('ethers provider', () => {
   let upstreamProvider: MockEIP1193Provider;
   let wrapped: ethers.Provider;
 
@@ -260,7 +260,7 @@ describe.skip('ethers provider', () => {
   });
 });
 
-describe.skip('window.ethereum', () => {
+describe('window.ethereum', () => {
   it('proxy', async () => {
     const wrapped = wrap(new MockEIP1193Provider(), { cipher });
     expect(wrapped.isMetaMask).toBe(false);
@@ -463,7 +463,7 @@ describe('fetchPublicKeyByChainId', () => {
   });
 
   it('fetches chainId (fetch)', async () => {
-    expectFetch(0x5afe, 'https://sapphire.oasis.io', {
+    await expectFetch(0x5afe, 'https://sapphire.oasis.io', {
       fetch: fetchImpl as unknown as typeof fetch,
     });
   });
