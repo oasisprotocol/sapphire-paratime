@@ -200,7 +200,7 @@ jobs:
     needs: [test-client-js, test-integration-hardhat]
     strategy:
       matrix:
-        example: [hardhat, hardhat-boilerplate, onchain-signer ethersv5-ts-esm ethersv6-ts-esm]
+        example: [hardhat, hardhat-boilerplate, onchain-signer, ethersv5-ts-esm, ethersv6-ts-esm]
     defaults:
       run:
         working-directory: examples/${{ matrix.example }}

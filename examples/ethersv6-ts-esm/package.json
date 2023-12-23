@@ -4,7 +4,8 @@
     "main": "lib/index.js",
     "type": "module",
     "scripts": {
-      "build": "tsc -b"
+      "build": "tsc -b",
+      "test": "pnpm ts-node src/index.ts"
     },
     "dependencies": {
       "@oasisprotocol/sapphire-paratime": "workspace:^",
