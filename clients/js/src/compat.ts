@@ -10,10 +10,8 @@ import {
   Transaction,
   TransactionRequest,
   TransactionResponse,
-  decodeRlp,
   getBytes,
   isBytesLike,
-  toQuantity,
   AbstractProvider,
   BytesLike,
   hexlify,
@@ -105,13 +103,13 @@ export function wrap<U extends UpstreamProvider>(
     return upstream as U & SapphireAnnex;
   }
 
-  const filled_options = fillOptions(options, upstream);
-
   if (typeof upstream === 'string') {
-    return wrapEthersProvider(new JsonRpcProvider(upstream), filled_options) as any;
+    upstream = new JsonRpcProvider(upstream) as any;
   }
 
-  if (isEthers5Signer(upstream) || isEthers6Signer(upstream)) {
+  const filled_options = fillOptions(options, upstream);
+
+  if (isEthersSigner(upstream)) {
     return wrapEthersSigner(upstream as Ethers5Signer, filled_options) as any;
   }
 
@@ -127,7 +125,6 @@ export function wrap<U extends UpstreamProvider>(
   throw new TypeError('Unable to wrap unsupported provider.');
 }
 
-
 // -----------------------------------------------------------------------------
 // Wrap an EIP-1193 compatible provider
 // Under the hood, we wrap it in an ethers BrowserProvider to be used internally
@@ -138,22 +135,21 @@ function isEIP1193Provider(upstream: object): upstream is EIP1193Provider {
 
 function wrapEIP1193Provider<P extends EIP1193Provider>(
   upstream: P,
-  options?: SapphireWrapOptions
-) : P & SapphireAnnex
-{
+  options?: SapphireWrapOptions,
+): P & SapphireAnnex {
   const filled_options = fillOptions(options, upstream);
   const browserProvider = new BrowserProvider(upstream);
   const request = hookEIP1193Request(browserProvider, filled_options);
-  const hooks: Record<string,any> = {
-    request: request
-  }
-  if( 'send' in upstream ) {
+  const hooks: Record<string, any> = {
+    request: request,
+  };
+  if ('send' in upstream) {
     // Send is deprecated, but still used by ethers
     hooks['send'] = async (...args: any[]) => {
       return await request({ method: args[0], params: args[1] });
-    }
+    };
   }
-  if( 'sendAsync' in upstream ) {
+  if ('sendAsync' in upstream) {
     // sendAsync is deprecated, it historically has an incoherent interface
     hooks['sendAsync'] = () => {
       throw new Error('sendAsync not supported by Sapphire wrapper!');
@@ -175,9 +171,7 @@ function hookEIP1193Request(
   };
 }
 
-
 // -----------------------------------------------------------------------------
-
 
 function getCipher(provider: UpstreamProvider): Cipher {
   return lazyCipher(async () => {
@@ -201,9 +195,7 @@ function makeProxy<U extends UpstreamProvider>(
   }) as U & SapphireAnnex;
 }
 
-
 // -----------------------------------------------------------------------------
-
 
 export function wrapEthersSigner<P extends Ethers5Signer>(
   upstream: P,
@@ -364,6 +356,7 @@ function hookEthersCall(
     } else {
       res = await sendUnsignedCall(runner, call, is_already_enveloped);
     }
+    // NOTE: if it's already enveloped, caller will decrypt it (not us)
     if (!is_already_enveloped && typeof res === 'string') {
       return options.cipher.decryptEncoded(res);
     }
@@ -380,9 +373,7 @@ function hookEthersSend<C>(send: C, options: SapphireWrapOptions): C {
   }) as C;
 }
 
-
 // -----------------------------------------------------------------------------
-
 
 async function callNeedsSigning(
   callP: Deferrable<EthCall> | TransactionRequest,
@@ -447,7 +438,7 @@ async function repackRawTx(
   const tx = Transaction.from(raw);
 
   // If raw transaction is enveloped & signed correctly, bypass re-packing
-  if( isCalldataEnveloped(tx.data, false) ) {
+  if (isCalldataEnveloped(tx.data, false)) {
     return raw;
   }
 
@@ -470,7 +461,6 @@ async function repackRawTx(
   }
 }
 
-
 // -----------------------------------------------------------------------------
 // Determine if the CBOR encoded calldata is a signed query or an evelope
 
@@ -479,32 +469,27 @@ interface SignedQuery {
   leash: Leash;
   signature: Uint8Array;
 }
-type SignedQueryOrEnvelope = Envelope | SignedQuery
+type SignedQueryOrEnvelope = Envelope | SignedQuery;
 
-function isSignedQuery(x: SignedQueryOrEnvelope): x is SignedQuery
-{
+function isSignedQuery(x: SignedQueryOrEnvelope): x is SignedQuery {
   return 'data' in x && 'leash' in x && 'signature' in x;
 }
 
-function isCalldataEnveloped(
-  calldata: BytesLike,
-  allowSignedQuery: boolean
-) {
+function isCalldataEnveloped(calldata: BytesLike, allowSignedQuery: boolean) {
   try {
-    const outer_envelope = cbor.decode(getBytes(calldata)) as SignedQueryOrEnvelope;
-    let envelope : Envelope;
-    if( isSignedQuery(outer_envelope) ) {
-      if( ! allowSignedQuery ) {
-        throw new EnvelopeError(
-          "Got unexpected signed query!"
-        );
+    const outer_envelope = cbor.decode(
+      getBytes(calldata),
+    ) as SignedQueryOrEnvelope;
+    let envelope: Envelope;
+    if (isSignedQuery(outer_envelope)) {
+      if (!allowSignedQuery) {
+        throw new EnvelopeError('Got unexpected signed query!');
       }
       envelope = outer_envelope.data;
-    }
-    else {
+    } else {
       envelope = outer_envelope;
     }
-    if( ! envelopeFormatOk(envelope) ) {
+    if (!envelopeFormatOk(envelope)) {
       throw new EnvelopeError(
         'Bogus Sapphire enveloped data found in transaction!',
       );
@@ -516,17 +501,14 @@ function isCalldataEnveloped(
   return false;
 }
 
-function envelopeFormatOk(
-  envelope: Envelope
-): boolean {
-  const {format, body, ...extra} = envelope;
+function envelopeFormatOk(envelope: Envelope): boolean {
+  const { format, body, ...extra } = envelope;
 
   if (Object.keys(extra).length > 0) return false;
 
   if (!body) return false;
 
-  if (format != null && format !== CipherKind.Plain)
-  {
+  if (format != null && format !== CipherKind.Plain) {
     if (isBytesLike(body)) return false;
 
     if (!isBytesLike(body.data)) return false;
@@ -534,7 +516,6 @@ function envelopeFormatOk(
 
   return true;
 }
-
 
 // -----------------------------------------------------------------------------
 // Fetch calldata public key
