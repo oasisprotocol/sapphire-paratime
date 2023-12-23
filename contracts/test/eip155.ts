@@ -132,7 +132,7 @@ describe('EIP-155', function () {
       chainId: (await provider.getNetwork()).chainId,
       gasPrice: (await provider.getFeeData()).gasPrice,
       nonce: await provider.getTransactionCount(wallet.address),
-      type: 0 // Ethers v6 requires 'legacy' tx encoding
+      type: 0, // Ethers v6 requires 'legacy' tx encoding
     });
 
     const signedTx = await wallet.signTransaction(tx);
