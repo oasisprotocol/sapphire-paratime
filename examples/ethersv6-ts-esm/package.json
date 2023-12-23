@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
       "build": "tsc -b",
-      "test": "pnpm ts-node --esm src/index.ts"
+      "test": "tsc -b && pnpm node build/index.js"
     },
     "dependencies": {
       "@oasisprotocol/sapphire-paratime": "workspace:^",

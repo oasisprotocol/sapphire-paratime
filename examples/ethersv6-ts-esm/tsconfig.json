@@ -2,7 +2,6 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "extends": "@tsconfig/strictest/tsconfig.json",
     "compilerOptions": {
-        "isolatedModules": false,
         "outDir": "./build",
         "module": "NodeNext",
         "target": "ES2022",
@@ -10,8 +9,5 @@
     },
     "include": [
         "./src"
-    ],
-    "ts-node": {
-        "esm": true
-    }
+    ]
 }
