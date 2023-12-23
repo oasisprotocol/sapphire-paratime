@@ -551,7 +551,7 @@ export async function fetchRuntimePublicKeyByChainId(
     throw new Error(
       `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
     );
-  const fetchImpl = globalThis?.fetch ?? opts?.fetch;
+  const fetchImpl = opts?.fetch ?? globalThis?.fetch;
   const res = await (fetchImpl
     ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
     : fetchRuntimePublicKeyNode(gatewayUrl));

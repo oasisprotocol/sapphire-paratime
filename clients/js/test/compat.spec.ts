@@ -19,13 +19,6 @@ const to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
 const cipher = new MockCipher();
 const data = Buffer.from([1, 2, 3, 4, 5]);
 
-jest.mock('@oasisprotocol/sapphire-paratime/compat.js', () => ({
-  ...jest.requireActual('@oasisprotocol/sapphire-paratime/compat.js'),
-  fetchRuntimePublicKeyByChainId: jest
-    .fn()
-    .mockReturnValue(new Uint8Array(Buffer.alloc(32, 8))),
-}));
-
 class MockEIP1193Provider {
   public readonly request: jest.Mock<
     Promise<unknown>,
@@ -457,8 +450,12 @@ describe('fetchPublicKeyByChainId', () => {
   }
 
   it('fetches chainId', async () => {
-    await expectFetch(0x5afe, 'https://sapphire.oasis.io');
-    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev');
+    await expectFetch(0x5afe, 'https://sapphire.oasis.io', {
+      fetch: fetchImpl as unknown as typeof fetch,
+    });
+    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev', {
+      fetch: fetchImpl as unknown as typeof fetch,
+    });
   });
 
   it('fetches chainId (fetch)', async () => {
