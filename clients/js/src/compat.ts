@@ -22,11 +22,12 @@ import {
 import {
   Cipher,
   Kind as CipherKind,
+  Envelope,
   X25519DeoxysII,
   lazy as lazyCipher,
 } from './cipher.js';
 import { CallError, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
-import { EthCall, SignedCallDataPack } from './signed_calls.js';
+import { EthCall, Leash, SignedCallDataPack } from './signed_calls.js';
 import { NETWORKS } from './networks.js';
 
 import {
@@ -41,8 +42,6 @@ export type UpstreamProvider =
   | EIP1193Provider
   | Ethers5Signer
   | Ethers5Provider;
-
-export type Send = (method: string, params: any[]) => Promise<unknown>;
 
 interface SapphireWrapOptions {
   cipher: Cipher;
@@ -83,14 +82,17 @@ export function wrap<U extends EIP1193Provider>(
   upstream: U,
   options?: SapphireWrapOptions,
 ): U & SapphireAnnex; // `window.ethereum`
+
 export function wrap<U extends Ethers5Provider>(
   upstream: U,
   options?: SapphireWrapOptions,
 ): U & SapphireAnnex; // Ethers providers
+
 export function wrap<U extends Ethers5Signer>(
   upstream: U,
   options?: SapphireWrapOptions,
 ): U & SapphireAnnex; // Ethers signers
+
 export function wrap<U extends UpstreamProvider>(
   upstream: U,
   options?: SapphireWrapOptions,
@@ -103,11 +105,11 @@ export function wrap<U extends UpstreamProvider>(
     return upstream as U & SapphireAnnex;
   }
 
-  if (typeof upstream === 'string') {
-    return wrapEthersProvider(new JsonRpcProvider(upstream), options) as any;
-  }
-
   const filled_options = fillOptions(options, upstream);
+
+  if (typeof upstream === 'string') {
+    return wrapEthersProvider(new JsonRpcProvider(upstream), filled_options) as any;
+  }
 
   if (isEthers5Signer(upstream) || isEthers6Signer(upstream)) {
     return wrapEthersSigner(upstream as Ethers5Signer, filled_options) as any;
@@ -118,22 +120,64 @@ export function wrap<U extends UpstreamProvider>(
   }
 
   // The only other thing we wrap is EIP-1193 compatible providers
-  if ('request' in upstream) {
-    const browserProvider = new BrowserProvider(upstream);
-    const request = hookEIP1193Request(browserProvider, filled_options);
-    return makeProxy(upstream, filled_options, {
-      request: request,
-      send: async function (...args: any[]) {
-        return await request({ method: args[0], params: args[1] });
-      },
-      sendAsync: function (...args: any[]) {
-        throw new Error('sendAsync()Fail ' + args);
-      },
-    });
+  if (isEIP1193Provider(upstream)) {
+    return wrapEIP1193Provider(upstream, filled_options);
   }
 
   throw new TypeError('Unable to wrap unsupported provider.');
 }
+
+
+// -----------------------------------------------------------------------------
+// Wrap an EIP-1193 compatible provider
+// Under the hood, we wrap it in an ethers BrowserProvider to be used internally
+
+function isEIP1193Provider(upstream: object): upstream is EIP1193Provider {
+  return 'request' in upstream;
+}
+
+function wrapEIP1193Provider<P extends EIP1193Provider>(
+  upstream: P,
+  options?: SapphireWrapOptions
+) : P & SapphireAnnex
+{
+  const filled_options = fillOptions(options, upstream);
+  const browserProvider = new BrowserProvider(upstream);
+  const request = hookEIP1193Request(browserProvider, filled_options);
+  const hooks: Record<string,any> = {
+    request: request
+  }
+  if( 'send' in upstream ) {
+    // Send is deprecated, but still used by ethers
+    hooks['send'] = async (...args: any[]) => {
+      return await request({ method: args[0], params: args[1] });
+    }
+  }
+  if( 'sendAsync' in upstream ) {
+    // sendAsync is deprecated, it historically has an incoherent interface
+    hooks['sendAsync'] = () => {
+      throw new Error('sendAsync not supported by Sapphire wrapper!');
+    };
+  }
+  return makeProxy(upstream, filled_options, hooks);
+}
+
+function hookEIP1193Request(
+  provider: BrowserProvider,
+  options: SapphireWrapOptions,
+): EIP1193Provider['request'] {
+  return async (args: Web3ReqArgs) => {
+    const signer = await provider.getSigner();
+    const { method, params } = await prepareRequest(args, signer, options);
+    const res = await signer.provider.send(method, params ?? []);
+    if (method === 'eth_call') return options.cipher.decryptEncoded(res);
+    return res;
+  };
+}
+
+
+// -----------------------------------------------------------------------------
+
 
 function getCipher(provider: UpstreamProvider): Cipher {
   return lazyCipher(async () => {
@@ -156,6 +200,10 @@ function makeProxy<U extends UpstreamProvider>(
     },
   }) as U & SapphireAnnex;
 }
+
+
+// -----------------------------------------------------------------------------
+
 
 export function wrapEthersSigner<P extends Ethers5Signer>(
   upstream: P,
@@ -252,6 +300,7 @@ function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Signer(upstream: object): upstream is Signer {
+  // XXX: this will not match if installed ethers version is different!
   return upstream instanceof AbstractSigner;
 }
 
@@ -264,6 +313,7 @@ function isEthers5Provider(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Provider(upstream: object): upstream is Provider {
+  // XXX: this will not match if installed ethers version is different!
   return upstream instanceof AbstractProvider;
 }
 
@@ -271,18 +321,6 @@ function isEthersProvider(
   upstream: object,
 ): upstream is Provider | Ethers5Provider {
   return isEthers5Provider(upstream) || isEthers6Provider(upstream);
-}
-
-function isCalldataEnveloped(calldata?: BytesLike | null) {
-  if (calldata) {
-    try {
-      cbor.decode(getBytes(calldata));
-      return true;
-    } catch (e: any) {
-      return false;
-    }
-  }
-  return false;
 }
 
 function hookEthersCall(
@@ -307,8 +345,8 @@ function hookEthersCall(
     });
   };
   return async (call) => {
-    let res: string | bigint | TransactionResponse;
-    const is_already_enveloped = isCalldataEnveloped(call.data);
+    let res: string;
+    const is_already_enveloped = isCalldataEnveloped(call.data!, true);
     if (!is_already_enveloped && isEthersSigner(runner)) {
       const signer = runner;
       if (!signer.provider)
@@ -342,20 +380,9 @@ function hookEthersSend<C>(send: C, options: SapphireWrapOptions): C {
   }) as C;
 }
 
-function hookEIP1193Request(
-  provider: BrowserProvider,
-  options: SapphireWrapOptions,
-): EIP1193Provider['request'] {
-  return async (args: Web3ReqArgs) => {
-    const signer = await provider.getSigner();
-    const { method, params } = await prepareRequest(args, signer, options);
-    const res = await signer.provider.send(method, params ?? []);
-    if (method === 'eth_call') return options.cipher.decryptEncoded(res);
-    return res;
-  };
-}
 
 // -----------------------------------------------------------------------------
+
 
 async function callNeedsSigning(
   callP: Deferrable<EthCall> | TransactionRequest,
@@ -406,6 +433,8 @@ async function prepareRequest(
   return { method, params };
 }
 
+class EnvelopeError extends Error {}
+
 const REPACK_ERROR =
   'Un-enveloped data was passed to sendRawTransaction, which is likely incorrect. Is the dapp using the Sapphire compat lib correctly?';
 
@@ -415,44 +444,23 @@ async function repackRawTx(
   options: SapphireWrapOptions,
   signer?: Ethers5Signer | Signer,
 ): Promise<string> {
-  // TODO: support non-legacy tx format, 1=eip-2930 (berlin) and 2=eip-1559 (london)
-  const DATA_FIELD = 5;
-  const txFields = decodeRlp(raw);
-  const data = getBytes(txFields[DATA_FIELD] as string);
-  try {
-    const { format, body, ...extra } = cbor.decode(data);
-    if (envelopeFormatOk(format, body, extra)) return raw;
-    throw new EnvelopeError(
-      'Bogus enveloped data found in sendRawTransaction.',
-    );
-  } catch (e) {
-    if (e instanceof EnvelopeError) throw e;
-  }
   const tx = Transaction.from(raw);
-  if (tx.isSigned() && (!signer || (await signer!.getAddress()) != tx.from!)) {
-    // encrypted tx cannot be re-signed, allow passthrough when
-    // submitting a transaction signed by another keypair
-    return tx.serialized;
+
+  // If raw transaction is enveloped & signed correctly, bypass re-packing
+  if( isCalldataEnveloped(tx.data, false) ) {
+    return raw;
   }
-  const q = (v: bigint | null | undefined): string | undefined => {
-    if (!v) return undefined;
-    return toQuantity(v);
-  };
-  const parsed = {
-    to: tx.to!,
-    from: tx.from!,
-    data: tx.data,
-    nonce: tx.nonce,
-    gasLimit: q(tx.gasLimit),
-    gasPrice: q(tx.gasPrice) ?? undefined,
-    value: q(tx.value),
-    chainId: Number(tx.chainId),
-  };
+
+  // When transaction is signed by another keypair and we don't have that signer
+  // bypass re-packing, this allows repacking to pass-thru pre-signed txs
+  if (tx.isSigned() && (!signer || (await signer!.getAddress()) != tx.from!)) {
+    return raw;
+  }
+
+  tx.data = await options.cipher.encryptEncode(tx.data);
+
   try {
-    return signer!.signTransaction({
-      ...parsed,
-      data: await options.cipher.encryptEncode(data),
-    });
+    return signer!.signTransaction(tx);
   } catch (e) {
     // Many JSON-RPC providers, Ethers included, will not let you directly
     // sign transactions, which is necessary to re-encrypt the calldata!
@@ -462,21 +470,71 @@ async function repackRawTx(
   }
 }
 
+
+// -----------------------------------------------------------------------------
+// Determine if the CBOR encoded calldata is a signed query or an evelope
+
+interface SignedQuery {
+  data: Envelope;
+  leash: Leash;
+  signature: Uint8Array;
+}
+type SignedQueryOrEnvelope = Envelope | SignedQuery
+
+function isSignedQuery(x: SignedQueryOrEnvelope): x is SignedQuery
+{
+  return 'data' in x && 'leash' in x && 'signature' in x;
+}
+
+function isCalldataEnveloped(
+  calldata: BytesLike,
+  allowSignedQuery: boolean
+) {
+  try {
+    const outer_envelope = cbor.decode(getBytes(calldata)) as SignedQueryOrEnvelope;
+    let envelope : Envelope;
+    if( isSignedQuery(outer_envelope) ) {
+      if( ! allowSignedQuery ) {
+        throw new EnvelopeError(
+          "Got unexpected signed query!"
+        );
+      }
+      envelope = outer_envelope.data;
+    }
+    else {
+      envelope = outer_envelope;
+    }
+    if( ! envelopeFormatOk(envelope) ) {
+      throw new EnvelopeError(
+        'Bogus Sapphire enveloped data found in transaction!',
+      );
+    }
+    return true;
+  } catch (e: any) {
+    if (e instanceof EnvelopeError) throw e;
+  }
+  return false;
+}
+
 function envelopeFormatOk(
-  format: CipherKind | undefined,
-  body: Uint8Array | Record<string, Uint8Array> | undefined,
-  extra: Record<string, any>,
+  envelope: Envelope
 ): boolean {
+  const {format, body, ...extra} = envelope;
+
   if (Object.keys(extra).length > 0) return false;
+
   if (!body) return false;
-  if (format != null && format !== CipherKind.Plain) {
+
+  if (format != null && format !== CipherKind.Plain)
+  {
     if (isBytesLike(body)) return false;
+
     if (!isBytesLike(body.data)) return false;
   }
+
   return true;
 }
 
-class EnvelopeError extends Error {}
 
 // -----------------------------------------------------------------------------
 // Fetch calldata public key
@@ -484,7 +542,12 @@ class EnvelopeError extends Error {}
 // e.g. MetaMask doesn't allow the oasis_callDataPublicKey JSON-RPC method
 
 type CallDataPublicKeyResponse = {
-  result: { key: string; checksum: string; signature: string };
+  result: {
+    key: string;
+    checksum: string;
+    signature: string;
+    epoch: number;
+  };
 };
 
 async function fetchRuntimePublicKeyNode(
