@@ -45,7 +45,7 @@
     "ethers6": "npm:ethers@^6.6.1",
     "tweetnacl": "^1.0.3",
     "type-fest": "^2.19.0",
-    "viem": "^1.6.4"
+    "viem": "^2.0.3"
   },
   "devDependencies": {
     "@ethersproject/transactions": "^5.7.0",

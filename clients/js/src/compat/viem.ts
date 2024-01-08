@@ -1,6 +1,7 @@
 import {
   Chain,
   EIP1193Provider,
+  Hex,
   PublicClient,
   WalletClient,
   toBytes,
@@ -33,18 +34,14 @@ export function wrapPublicClient<U extends PublicClient>(
       const rtPubKey = await fetchRuntimePublicKey(transport, upstream.chain);
       return X25519DeoxysII.ephemeral(rtPubKey);
     });
-  return makeProxy(
-    upstream,
-    cipher,
-    {
-      async call(req) {
-        return upstream.call({
-          ...req,
-          data: await cipher.encryptEncode(req.data),
-        });
-      },
-    } as Hooks<U>,
-  );
+  return makeProxy(upstream, cipher, {
+    async call(req) {
+      return upstream.call({
+        ...req,
+        data: await cipher.encryptEncode(req.data),
+      });
+    },
+  } as Hooks<U>);
 }
 
 export function wrapWalletClient<U extends WalletClient>(
@@ -66,22 +63,23 @@ export function wrapWalletClient<U extends WalletClient>(
       const rtPubKey = await fetchRuntimePublicKey(transport, upstream.chain);
       return X25519DeoxysII.ephemeral(rtPubKey);
     });
-  return makeProxy(
-    upstream,
-    cipher,
-    {
-      async sendTransaction(req) {
-        return upstream.sendTransaction({
-          ...req,
-          data: await cipher.encryptEncode(req.data),
-        });
-      },
-    } as Hooks<U>,
-  );
+
+  return makeProxy<U>(upstream, cipher, {
+    async sendTransaction(req) {
+      req.data = await cipher.encryptEncode(req.data);
+      return upstream.sendTransaction(req);
+    },
+    async signTransaction(req) {
+      req.data = await cipher.encryptEncode(req.data);
+      return upstream.signTransaction(req);
+    },
+  } as Hooks<U>);
 }
 
 export async function getDefaultCipher(pc: PublicClient): Promise<Cipher> {
-  return X25519DeoxysII.ephemeral(await fetchRuntimePublicKey(pc.transport, pc.chain))
+  return X25519DeoxysII.ephemeral(
+    await fetchRuntimePublicKey(pc.transport, pc.chain),
+  );
 }
 
 async function fetchRuntimePublicKey(

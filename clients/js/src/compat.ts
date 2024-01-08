@@ -352,7 +352,7 @@ function hookEthers5Call(
     return provider[method](
       {
         ...callP,
-        data: cipher.encryptEncode(arrayify(await callP.data ?? '0x')),
+        data: cipher.encryptEncode(arrayify((await callP.data) ?? '0x')),
       },
       blockTag,
     );
@@ -599,7 +599,7 @@ function envelopeFormatOk(
 ): boolean {
   if (Object.keys(extra).length > 0) return false;
   if (!body) return false;
-  if (format && format as CipherKind !== CipherKind.Plain) {
+  if (format && (format as CipherKind) !== CipherKind.Plain) {
     if (isBytesLike(body) || !isBytesLike(body.data)) return false;
   }
   return true;

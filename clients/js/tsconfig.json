@@ -6,7 +6,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "lib": ["esnext", "dom"],
-    "module": "es2022",
+    "module": "node16",
     "moduleResolution": "node16",
     "outDir": "lib",
     "paths": {

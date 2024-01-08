@@ -58,7 +58,7 @@ export abstract class Cipher {
   public async encryptEnvelope(
     plaintext?: BytesLike,
   ): Promise<Envelope | undefined> {
-    if (plaintext === undefined) return;
+    if (plaintext === undefined || plaintext === '0x') return;
     if (!isBytesLike(plaintext)) {
       throw new Error('Attempted to sign tx having non-byteslike data.');
     }
