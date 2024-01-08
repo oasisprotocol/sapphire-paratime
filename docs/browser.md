@@ -133,8 +133,8 @@ Sapphire wrapper you can notice that we initialized **two** contract
 instances:
 
 - `this._token` object will be used for unsigned eth calls. This is the
-  Hardhat method of [setting `from` transaction field to all zeros]
-  [guide-transaction-calls] in order to avoid Metamask signature popups.
+  Hardhat method of [setting `from` transaction field to all
+  zeros][guide-transaction-calls] in order to avoid Metamask signature popups.
   Although the call is unsigned, **it is still encrypted** with the
   corresponding runtime key to preserve confidentiality.
 - `this._tokenWrite` object will be used for signed calls and transactions. The
@@ -155,9 +155,9 @@ automatically open `http://localhost:3000`.
 ![Hardhat boilerplate frontend](images/hardhat-boilerplate-frontend1.png)
 
 Go ahead and connect the wallet. If you haven't done it yet, you will have
-to add the [Sapphire ParaTime Testnet network to your Metamask]
-[sapphire-testnet]. Once connected, the frontend will make an unsigned call to
-the `balanceOf` view and show you the amount of `MHT`s in your selected
+to add the [Sapphire ParaTime Testnet network to your
+Metamask][sapphire-testnet]. Once connected, the frontend will make an unsigned
+call to the `balanceOf` view and show you the amount of `MHT`s in your selected
 Metamask account.
 
 ![MHT balance of your account](images/hardhat-boilerplate-frontend2.png)
@@ -174,9 +174,9 @@ and the balance in the dApp will be updated.
 :::tip
 
 If you commented out `emit Transfer(...)`, the transfer of `MHT`s would have
-been completely confidential. In the example above, the [following transaction]
-[block explorer] was generated. Go ahead and check your transaction on the
-block explorer too, to make sure no sensitive data was leaked!
+been completely confidential. In the example above, the [following
+transaction][block explorer] was generated. Go ahead and check your transaction
+on the block explorer too, to make sure no sensitive data was leaked!
 
 :::
 
@@ -201,7 +201,7 @@ repository.
 [Hardhat tutorial]: https://hardhat.org/tutorial
 [line 66]: https://github.com/NomicFoundation/hardhat-boilerplate/blob/13bd712c1285b2de572f14d20e6a750ae08565c0/contracts/Token.sol#L66
 [quickstart]: quickstart.mdx#add-the-sapphire-testnet-to-hardhat
-[sapphire-testnet]: README.mdx#testnet
+[sapphire-testnet]: ./README.mdx#testnet
 [Sapphire ParaTime examples]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat-boilerplate
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
 [pnpm]: https://pnpm.io
