@@ -267,7 +267,7 @@ function _getChainConfig(uint256 _chainId)
         return (0x940dAAbA3F713abFabD79CdD991466fe698CBe54, false);
     if (_chainId == 0x5afe)
         // sapphire
-        return (0x9B36f165baB9ebe611d491180418d8De4b8f3a1f, false);
+        return (0x9Bb46D5100d2Db4608112026951c9C965b233f4D, false);
     if (_chainId == 0x5aff)
         // sapphire testnet
         return (0x9Bb46D5100d2Db4608112026951c9C965b233f4D, true);
