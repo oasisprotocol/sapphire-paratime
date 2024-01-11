@@ -23,8 +23,8 @@ your contract to a non-confidential EVM network (e.g., Ropsten, Emerald).
 
 The Oasis Network consists of the consensus layer and a number of ParaTimes.
 ParaTimes are independent replicated state machines that settle transactions
-using the consensus layer (to learn more, check the [Oasis Network Overview]
-[overview chapter]). Sapphire is a ParaTime which implements the Ethereum
+using the consensus layer (to learn more, check the [Oasis Network
+Overview][overview chapter]). Sapphire is a ParaTime which implements the Ethereum
 Virtual Machine (EVM).
 
 The minimum and also expected block time in Sapphire is **6 seconds**. Any
@@ -33,8 +33,8 @@ and probably no more.
 
 ParaTimes, Sapphire included, are not allowed to directly access your tokens stored
 in consensus layer accounts. You will need to _deposit_ tokens from your consensus
-account to Sapphire. Consult the [How to transfer ROSE into an EVM ParaTime]
-[how-to-deposit-rose] chapter to learn more.
+account to Sapphire. Consult the [How to transfer ROSE into an EVM
+ParaTime][how-to-deposit-rose] chapter to learn more.
 
 
 [overview chapter]: https://github.com/oasisprotocol/docs/blob/main/docs/general/oasis-network/README.mdx
@@ -43,18 +43,18 @@ account to Sapphire. Consult the [How to transfer ROSE into an EVM ParaTime]
 
 ## Testnet and Mainnet
 
-Sapphire is deployed on both Testnet and Mainnet. The Testnet should be
-considered unstable software and may have its state wiped at any time. As
-the name implies, only use the Testnet for testing unless you're testing how
+Sapphire is deployed on Testnet and Mainnet chains. Testnet should be
+considered unstable software and may also have its state wiped at any time. As
+the name implies, only use Testnet for testing unless you're testing how
 angry your users get when state is wiped.
 
 :::danger Never deploy production services on Testnet
 
 Because Testnet state can be wiped in the future, you should **never** deploy a
-production service on the Testnet! Just don't do it!
+production service on Testnet! Just don't do it!
 
-Also note that while the Testnet does use actual TEEs, due to experimental
-software and different security parameters, **confidentiality of Sapphire on the
+Also note that while Testnet does use proper TEEs, due to experimental
+software and different security parameters, **confidentiality of Sapphire on
 Testnet is not guaranteed** -- all transactions and state published on the
 Sapphire Testnet should be considered public.
 
@@ -123,7 +123,7 @@ Sapphire is programmable using any language that targets the EVM, such as Solidi
 or Vyper. If you prefer to use an Ethereum framework like Hardhat or Foundry, you
 can also use those with Sapphire; all you need to do is set your Web3 gateway URL.
 You can find the details of the Oasis Sapphire Web3 gateway
-[here](/dapp/sapphire#web3-gateway).
+[here](https://github.com/oasisprotocol/docs/blob/main/docs/dapp/sapphire/README.mdx#web3-gateway).
 
 ### Transactions & Calls
 
@@ -267,7 +267,7 @@ To verify a contract deployed on Sapphire Mainnet or Testnet:
 
 3. Sourcify will decode the metadata and prepare a list of included contracts on
    the right. Enter the address of the specific contract and select the "Oasis
-   Sapphire" or "Oasis Sapphire Testnet" chain for the Mainnet or Testnet
+   Sapphire" or "Oasis Sapphire Testnet" chain for Mainnet or Testnet
    accordingly. If your contract assigns any immutable variables in the
    constructor, you will also need to correctly fill those out under the "More
    Inputs (optional)" panel. Finally, click on the "Verify" button.
@@ -298,7 +298,7 @@ the [ghcr.io/oasisprotocol/sapphire-dev][sapphire-dev] Docker image which brings
 complete Oasis stack to your desktop. The Localnet Sapphire instance **mimics
 confidential transactions**, but it does not run in a trusted execution
 environment nor does it require Intel's SGX on your computer. The network is
-isolated from the Mainnet or Testnet and consists of:
+isolated from Mainnet or Testnet and consists of:
 
 - single Oasis validator node with 1-second block time and 30-second epoch,
 - single Oasis client node,
