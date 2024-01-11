@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        4
+        5
     } else {
         // Mainnet.
         2
@@ -159,11 +159,11 @@ impl sdk::Runtime for Runtime {
                 parameters: modules::core::Parameters {
                     min_gas_price: { BTreeMap::from([(Denomination::NATIVE, 100_000_000_000)]) },
                     dynamic_min_gas_price: modules::core::DynamicMinGasPrice {
-                        enabled: false,
+                        enabled: true,
                         target_block_gas_usage_percentage: 50,
                         min_price_max_change_denominator: 8,
                     },
-                    max_batch_gas: if is_testnet() { 30_000_000 } else { 15_000_000 },
+                    max_batch_gas: 15_000_000,
                     max_tx_size: 300 * 1024,
                     max_tx_signers: 1,
                     max_multisig_signers: 8,
@@ -193,6 +193,7 @@ impl sdk::Runtime for Runtime {
             },
             modules::consensus::Genesis {
                 parameters: modules::consensus::Parameters {
+                    gas_costs: modules::consensus::GasCosts { round_root: 10_000 },
                     // Consensus layer denomination is the native denomination of this runtime.
                     consensus_denomination: Denomination::NATIVE,
                     // Scale to 18 decimal places as this is what is expected in the EVM ecosystem.
@@ -238,7 +239,7 @@ impl sdk::Runtime for Runtime {
         )
     }
 
-    fn migrate_state<C: sdk::Context>(_ctx: &mut C) {
+    fn migrate_state<C: sdk::Context>(_ctx: &C) {
         // State migration from by copying over parameters from updated genesis state.
         let genesis = Self::genesis_state();
 
