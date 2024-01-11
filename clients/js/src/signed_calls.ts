@@ -7,6 +7,7 @@ import {
 } from '@ethersproject/abstract-signer';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { BytesLike } from '@ethersproject/bytes';
+// @ts-expect-error
 import * as cbor from 'cborg';
 import { ethers } from 'ethers6';
 import type {

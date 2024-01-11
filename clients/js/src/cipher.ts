@@ -1,15 +1,12 @@
-import {
-  BytesLike,
-  arrayify,
-  hexlify,
-  isBytesLike,
-} from '@ethersproject/bytes';
-import * as cbor from 'cborg';
+import { hmac } from '@noble/hashes/hmac';
+import { sha512_256 } from '@noble/hashes/sha512';
 import deoxysii from '@oasisprotocol/deoxysii';
+// @ts-expect-error
+import * as cbor from 'cborg';
 import { IncomingMessage } from 'http';
-import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
+import { isBytes, isHex, toBytes, toHex } from 'viem';
 
 import { CallError, NETWORKS, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 
@@ -52,16 +49,16 @@ export abstract class Cipher {
   ): Promise<Uint8Array>;
 
   /** Encrypts the plaintext and encodes it for sending. */
-  public async encryptEncode(plaintext?: BytesLike): Promise<string> {
+  public async encryptEncode(plaintext?: BytesLike): Promise<`0x${string}`> {
     const envelope = await this.encryptEnvelope(plaintext);
-    return envelope ? hexlify(cbor.encode(envelope)) : '';
+    return envelope ? toHex(cbor.encode(envelope)) : '0x';
   }
 
   /** Encrypts the plaintext and formats it into an envelope. */
   public async encryptEnvelope(
     plaintext?: BytesLike,
   ): Promise<Envelope | undefined> {
-    if (plaintext === undefined) return;
+    if (plaintext === undefined || plaintext === '0x') return;
     if (!isBytesLike(plaintext)) {
       throw new Error('Attempted to sign tx having non-byteslike data.');
     }
@@ -113,7 +110,7 @@ export abstract class Cipher {
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
   public async decryptEncoded(callResult: BytesLike): Promise<string> {
-    return hexlify(
+    return toHex(
       await this.decryptCallResult(cbor.decode(arrayify(callResult))),
     );
   }
@@ -184,10 +181,7 @@ export class X25519DeoxysII extends Cipher {
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
   static ephemeral(peerPublicKey: BytesLike): X25519DeoxysII {
     const keypair = nacl.box.keyPair();
-    return new X25519DeoxysII(
-      keypair,
-      arrayify(peerPublicKey, { allowMissingPrefix: true }),
-    );
+    return new X25519DeoxysII(keypair, arrayify(peerPublicKey));
   }
 
   static fromSecretKey(
@@ -202,11 +196,10 @@ export class X25519DeoxysII extends Cipher {
     super();
     this.publicKey = keypair.publicKey;
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
-    const keyBytes = sha512_256.hmac
-      .create('MRAE_Box_Deoxys-II-256-128')
+    this.key = hmac
+      .create(sha512_256, 'MRAE_Box_Deoxys-II-256-128')
       .update(nacl.scalarMult(keypair.secretKey, peerPublicKey))
-      .arrayBuffer();
-    this.key = new Uint8Array(keyBytes);
+      .digest();
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }
 
@@ -245,8 +238,7 @@ export class Mock extends Cipher {
     nonce: Uint8Array,
     ciphertext: Uint8Array,
   ): Promise<Uint8Array> {
-    if (hexlify(nonce) !== hexlify(Mock.NONCE))
-      throw new Error('incorrect nonce');
+    if (toHex(nonce) !== toHex(Mock.NONCE)) throw new Error('incorrect nonce');
     return ciphertext;
   }
 }
@@ -351,4 +343,20 @@ function makeCallDataPublicKeyBody(): string {
     method: OASIS_CALL_DATA_PUBLIC_KEY,
     params: [],
   });
+}
+
+type BytesLike = string | Uint8Array;
+
+function isBytesLike(byteslike: any): byteslike is BytesLike {
+  return isHex(byteslike) || isBytes(byteslike);
+}
+
+function arrayify(byteslike: BytesLike): Uint8Array {
+  if (isBytes(byteslike)) {
+    return byteslike;
+  } else if (isHex(byteslike)) {
+    return toBytes(byteslike.startsWith('0x') ? `0x${byteslike}` : byteslike);
+  } else {
+    throw new Error('attempted to decode non-byteslike data');
+  }
 }
