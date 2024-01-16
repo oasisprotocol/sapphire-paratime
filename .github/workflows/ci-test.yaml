@@ -156,7 +156,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Download client-js build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: client-js
           path: clients/js/lib
@@ -235,13 +235,13 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Download client-js build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: client-js
           path: clients/js/lib
 
       - name: Download integration-hardhat build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: integration-hardhat
           path: integrations/hardhat/dist
