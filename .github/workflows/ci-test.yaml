@@ -105,7 +105,7 @@ jobs:
         run: pnpm typedoc
 
       - name: Upload client-js build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: client-js
           retention-days: 1
@@ -169,7 +169,7 @@ jobs:
         run: pnpm build
 
       - name: Upload integration-hardhat build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: integration-hardhat
           retention-days: 1
