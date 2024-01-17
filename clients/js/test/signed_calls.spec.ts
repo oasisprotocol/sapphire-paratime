@@ -1,5 +1,4 @@
-import { hexlify } from '@ethersproject/bytes';
-import { Wallet, BigNumber } from 'ethers5';
+import { hexlify, Wallet } from 'ethers';
 
 import {
   PrepareSignedCallOverrides,
@@ -35,7 +34,7 @@ describe('signed calls', () => {
       gasLimit: 10,
       gasPrice: 123,
       value: 42,
-      data: [1, 2, 3, 4],
+      data: new Uint8Array([1, 2, 3, 4]),
     };
 
     const origCall = JSON.parse(JSON.stringify(call));
@@ -83,8 +82,8 @@ describe('signed calls', () => {
       from: from.address,
       to: '0x0000000000000000000000000000000000000000',
       gasLimit: 30_000_000,
-      gasPrice: BigNumber.from(1),
-      value: BigNumber.from(0),
+      gasPrice: BigInt(1),
+      value: BigInt(0),
       data: '0x',
       leash: {
         nonce: 2,

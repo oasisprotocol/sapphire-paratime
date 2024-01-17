@@ -79,3 +79,9 @@ jobs:
       - name: hardhat test examples/onchain-signer
         working-directory: examples/onchain-signer
         run: pnpm run test --network sapphire-localnet
+      - name: ethersv5-ts-esm
+        working-directory: examples/ethersv5-ts-esm
+        run: pnpm run test
+      - name: ethersv6-ts-esm
+        working-directory: examples/ethersv6-ts-esm
+        run: pnpm run test

@@ -15,7 +15,11 @@
     },
     "sourceMap": true,
     "strict": true,
-    "target": "es6"
+    "target": "es6",
+    "types": ["node", "jest"]
+  },
+  "ts-node": {
+    "esm": true
   },
   "typedocOptions": {
     "entryPoints": ["src/index.ts"],

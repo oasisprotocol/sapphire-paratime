@@ -37,7 +37,10 @@ const config: HardhatUserConfig = {
       accounts,
     },
   },
-  solidity: '0.8.19',
+  typechain: {
+    target: "ethers-v6"
+  },
+  solidity: '0.8.20',
   mocha: {
     timeout: 120_000_000, // Sapphire Mainnet/Testnet require more time.
   },

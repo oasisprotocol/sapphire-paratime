@@ -1,0 +1,23 @@
+{
+    "name": "example-ethersv5-ts-esm",
+    "private": true,
+    "main": "lib/index.js",
+    "type": "module",
+    "scripts": {
+      "lint": "prettier --cache --plugin-search-dir=. --check *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint contracts/**.sol",
+      "format": "prettier --cache --plugin-search-dir=. --write *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint --fix contracts/**.sol",
+      "build": "tsc -b",
+      "test": "tsc -b && pnpm node build/index.js"
+    },
+    "dependencies": {
+      "@oasisprotocol/sapphire-paratime": "workspace:^",
+      "ethers": "5.5.0"
+    },
+    "devDependencies": {
+      "@types/node": "^17.0.10",
+      "@tsconfig/strictest": "2.0.2",
+      "prettier": "^2.5.1",
+      "ts-node": "10.9.2",
+      "typescript": "4.7.4"
+    }
+  }

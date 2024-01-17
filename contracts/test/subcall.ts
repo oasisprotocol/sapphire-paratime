@@ -3,9 +3,18 @@ import { expect } from 'chai';
 import * as oasis from '@oasisprotocol/client';
 import * as cborg from 'cborg';
 import { SubcallTests } from '../typechain-types/contracts/tests/SubcallTests';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { arrayify, parseEther } from 'ethers/lib/utils';
-import { BigNumber, BigNumberish, ContractReceipt } from 'ethers';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import {
+  ContractTransactionReceipt,
+  EventLog,
+  Provider,
+  getBytes,
+  hexlify,
+  parseEther,
+  toBeArray,
+  toBigInt,
+  zeroPadValue,
+} from 'ethers';
 import { getRandomValues, randomInt } from 'crypto';
 
 import { execSync } from 'child_process';
@@ -52,40 +61,28 @@ async function dockerSkipEpochs(args: {
   }
 }
 
-function fromBigInt(bi: BigNumberish): Uint8Array {
-  return ethers.utils.arrayify(
-    ethers.utils.zeroPad(ethers.utils.hexlify(bi), 16),
-  );
-}
-
-function bufToBigint(buf: Uint8Array): bigint {
-  let ret = 0n;
-  for (const i of buf.values()) {
-    ret = (ret << 8n) + BigInt(i);
-  }
-  return ret;
-}
-
 async function ensureBalance(
   contract: SubcallTests,
-  initialBalance: BigNumber,
+  initialBalance: bigint,
   owner: SignerWithAddress,
 ) {
-  const balance = await contract.provider.getBalance(contract.address);
-  if (balance.lt(initialBalance)) {
+  const provider = contract.runner!.provider!;
+  const address = await contract.getAddress();
+  const balance = await provider.getBalance(address);
+  if (balance < initialBalance) {
     const resp = await owner.sendTransaction({
-      to: contract.address,
-      value: initialBalance.sub(balance),
+      to: address,
+      value: initialBalance - balance,
       data: '0x',
     });
     await resp.wait();
   }
-  const newBalance = await contract.provider.getBalance(contract.address);
+  const newBalance = await provider.getBalance(address);
   expect(newBalance).eq(initialBalance);
 }
 
-function decodeResult(receipt: ContractReceipt) {
-  const event = receipt.events![0].args! as unknown as {
+function decodeResult(receipt: ContractTransactionReceipt) {
+  const event = (receipt.logs![0] as EventLog).args as unknown as {
     status: number;
     data: string;
   };
@@ -93,8 +90,8 @@ function decodeResult(receipt: ContractReceipt) {
     status: event.status,
     data:
       event.status == 0
-        ? cborg.decode(ethers.utils.arrayify(event.data))
-        : new TextDecoder().decode(ethers.utils.arrayify(event.data)),
+        ? cborg.decode(getBytes(event.data))
+        : new TextDecoder().decode(getBytes(event.data)),
   };
 }
 
@@ -104,27 +101,27 @@ describe('Subcall', () => {
   let ownerAddr: string;
   let ownerNativeAddr: Uint8Array;
   let kp: { publicKey: Uint8Array; secretKey: Uint8Array };
+  let provider: Provider;
 
   before(async () => {
     const factory = await ethers.getContractFactory('SubcallTests');
     contract = (await factory.deploy({
       value: parseEther('1.0'),
-    })) as SubcallTests;
+    })) as unknown as SubcallTests;
+    provider = contract.runner!.provider!;
 
     const signers = await ethers.getSigners();
-    owner = signers[0];
+    owner = signers[0] as unknown as SignerWithAddress;
     ownerAddr = await owner.getAddress();
 
     // Convert Ethereum address to native bytes with version prefix (V1=0x00)
-    ownerNativeAddr = ethers.utils.arrayify(
-      ethers.utils.zeroPad(ownerAddr, 21),
-    );
+    ownerNativeAddr = getBytes(zeroPadValue(ownerAddr, 21));
     expect(ownerNativeAddr.length).eq(21);
 
     const rawKp = await contract.generateRandomAddress();
     kp = {
-      publicKey: ethers.utils.arrayify(rawKp.publicKey),
-      secretKey: ethers.utils.arrayify(rawKp.secretKey),
+      publicKey: getBytes(rawKp.publicKey),
+      secretKey: getBytes(rawKp.secretKey),
     };
   });
 
@@ -133,14 +130,14 @@ describe('Subcall', () => {
 
     // Verify `@oasisprotocol/client` matches Solidity.
     const alice = oasis.signature.NaclSigner.fromSeed(
-      ethers.utils.arrayify(newKeypair.secretKey),
+      getBytes(newKeypair.secretKey),
       'this key is not important',
     );
-    const computedPublicKey = ethers.utils.hexlify(
+    const computedPublicKey = hexlify(
       await oasis.staking.addressFromPublicKey(alice.public()),
     );
 
-    expect(computedPublicKey).eq(ethers.utils.hexlify(newKeypair.publicKey));
+    expect(computedPublicKey).eq(hexlify(newKeypair.publicKey));
   });
 
   /// Verify that the 'accounts.Transfer' subcall operates similarly to
@@ -151,30 +148,41 @@ describe('Subcall', () => {
     await ensureBalance(contract, initialBalance, owner);
 
     // transfer balance-1 back to owner, then wait for transaction to be mined.
-    const balance = await contract.provider.getBalance(contract.address);
-    let tx = await contract.testSubcall(
-      'accounts.Transfer',
-      cborg.encode({
-        to: ownerNativeAddr,
-        amount: [fromBigInt(balance.sub(1)), new Uint8Array()],
-      }),
-    );
+    let balance = await provider.getBalance(await contract.getAddress());
+
+    const msg = cborg.encode({
+      to: ownerNativeAddr,
+      amount: [toBeArray(balance - 1n), new Uint8Array()],
+    });
+    let tx = await contract.testSubcall('accounts.Transfer', msg);
     let receipt = await tx.wait();
 
     // Transfer is success with: status=0, data=null
+    if (!receipt) throw new Error('tx failed');
     const event = decodeResult(receipt);
-    expect(event.status).eq(0);
-    expect(event.data).is.null;
+    expect(event.status).eq(0n); // accounts.Transfer response status, 0 = success
+    expect(event.data).is.null; // No data
 
     // Ensure contract only has 1 wei left.
-    expect(await contract.provider.getBalance(contract.address)).eq(1);
+    balance = await provider.getBalance(await contract.getAddress());
+    expect(balance).eq(1);
+  });
+
+  it('Subcall.accounts_Transfer', async () => {
+    const transferAmount = 1n;
+
+    // Ensure contract has an initial balance.
+    const initialBalance = parseEther('1.0');
+    await ensureBalance(contract, initialBalance, owner);
 
     // Transfer using the Subcall.accounts_Transfer method.
-    tx = await contract.testAccountsTransfer(ownerAddr, 1);
-    receipt = await tx.wait();
+    const tx = await contract.testAccountsTransfer(ownerAddr, transferAmount);
+    const receipt = await tx.wait();
+    if (!receipt) throw new Error('tx failed');
 
-    // Ensure contract only no wei left.
-    expect(await contract.provider.getBalance(contract.address)).eq(0);
+    // Ensure transfer has occurred
+    const balance = await provider.getBalance(await contract.getAddress());
+    expect(balance).eq(initialBalance - transferAmount);
   });
 
   it('consensus.Undelegate', async () => {
@@ -184,7 +192,7 @@ describe('Subcall', () => {
 
     let tx = await contract.testConsensusUndelegate(kp.publicKey, 0);
     await tx.wait();
-    expect(await contract.provider.getBalance(contract.address)).eq(
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
       initialBalance,
     );
   });
@@ -196,13 +204,13 @@ describe('Subcall', () => {
     const initialBalance = parseEther('1.0');
     await ensureBalance(contract, initialBalance, owner);
 
-    expect(await contract.provider.getBalance(contract.address)).eq(
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
       initialBalance,
     );
 
     let tx = await contract.testConsensusWithdraw(kp.publicKey, 0);
     await tx.wait();
-    expect(await contract.provider.getBalance(contract.address)).eq(
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
       initialBalance,
     );
   });
@@ -219,7 +227,7 @@ describe('Subcall', () => {
     );
     await tx.wait();
 
-    expect(await contract.provider.getBalance(contract.address)).eq(
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
       parseEther('0'),
     );
   });
@@ -227,7 +235,7 @@ describe('Subcall', () => {
   /// Verifies that delegation works, and when a receipt is requested it returns
   /// the number of shares allocated
   it('Delegate then begin Undelegate (with receipts)', async () => {
-    const randomDelegate = arrayify(
+    const randomDelegate = getBytes(
       (await contract.generateRandomAddress()).publicKey,
     );
 
@@ -243,28 +251,31 @@ describe('Subcall', () => {
       receiptId,
     );
     let receipt = await tx.wait();
-    expect(cborg.decode(arrayify(receipt.events![0].args!.data))).is.null;
-    expect(await contract.provider.getBalance(contract.address)).eq(
+    expect(cborg.decode(getBytes((receipt?.logs![0] as EventLog).args!.data)))
+      .is.null;
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
       parseEther('0'),
     );
 
     // Ensure everything has been delegated
-    const contractBalance = await contract.provider.getBalance(
-      contract.address,
+    const contractBalance = await ethers.provider.getBalance(
+      await contract.getAddress(),
     );
     expect(contractBalance).eq(parseEther('0'));
 
     // Retrieve DelegateDone receipt after transaction is confirmed
     tx = await contract.testTakeReceipt(1, receiptId);
     receipt = await tx.wait();
-    let result = cborg.decode(arrayify(receipt.events![0].args!.data));
-    expect(bufToBigint(result.shares)).eq(100000000000);
+    let result = cborg.decode(
+      getBytes((receipt?.logs![0] as EventLog).args!.data),
+    );
+    expect(toBigInt(result.shares)).eq(100000000000);
 
     // Attempt undelegation of the full amount, with a receipt
     const nextReceiptId = receiptId + 1;
     tx = await contract.testConsensusUndelegateWithReceipt(
       randomDelegate,
-      result.shares,
+      toBigInt(result.shares),
       nextReceiptId,
     );
     receipt = await tx.wait();
@@ -272,7 +283,7 @@ describe('Subcall', () => {
     // Retrieve UndelegateStart receipt
     tx = await contract.testTakeReceipt(2, nextReceiptId);
     receipt = await tx.wait();
-    result = cborg.decode(arrayify(receipt.events![0].args!.data));
+    result = cborg.decode(getBytes((receipt?.logs![0] as EventLog).args!.data));
     expect(result.receipt).eq(nextReceiptId);
 
     await dockerSkipEpochs({ targetEpoch: result.epoch });
@@ -280,8 +291,8 @@ describe('Subcall', () => {
     // Retrieve UndelegateStart receipt
     tx = await contract.testTakeReceipt(3, result.receipt);
     receipt = await tx.wait();
-    result = cborg.decode(arrayify(receipt.events![0].args!.data));
-    expect(await contract.provider.getBalance(contract.address)).eq(
+    result = cborg.decode(getBytes((receipt?.logs![0] as EventLog).args!.data));
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
       parseEther('100'),
     );
   });
@@ -306,8 +317,8 @@ describe('Subcall', () => {
         }
         const [epoch, receipt] =
           await contract.testDecodeReceiptUndelegateStart(payload);
-        expect(epoch).eq(bufToBigint(numI));
-        expect(receipt).eq(bufToBigint(numJ));
+        expect(epoch).eq(toBigInt(numI));
+        expect(receipt).eq(toBigInt(numJ));
         k += 1;
       }
     }
@@ -320,7 +331,7 @@ describe('Subcall', () => {
         amount: getRandomValues(numI),
       });
       const amount = await contract.testDecodeReceiptUndelegateDone(payload);
-      expect(amount).eq(bufToBigint(numI));
+      expect(amount).eq(toBigInt(numI));
     }
   });
 
@@ -328,7 +339,7 @@ describe('Subcall', () => {
   it('Decode Delegate receipt', async () => {
     expect(
       await contract.testDecodeReceiptDelegate(
-        ethers.utils.arrayify('0xa16673686172657345174876e800'),
+        getBytes('0xa16673686172657345174876e800'),
       ),
     ).eq(100000000000);
 
@@ -336,7 +347,7 @@ describe('Subcall', () => {
       const num = new Uint8Array(i);
       const payload = cborg.encode({ shares: getRandomValues(num) });
       const shares = await contract.testDecodeReceiptDelegate(payload);
-      expect(shares).eq(bufToBigint(num));
+      expect(shares).eq(toBigInt(num));
     }
   });
 });

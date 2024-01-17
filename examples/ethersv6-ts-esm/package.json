@@ -1,0 +1,20 @@
+{
+    "name": "example-ethersv6-ts-esm",
+    "private": true,
+    "main": "lib/index.js",
+    "type": "module",
+    "scripts": {
+      "build": "tsc -b",
+      "test": "tsc -b && pnpm node build/index.js"
+    },
+    "dependencies": {
+      "@oasisprotocol/sapphire-paratime": "workspace:^",
+      "ethers": "6.9.0"
+    },
+    "devDependencies": {
+      "@types/node": "^17.0.10",
+      "@tsconfig/strictest": "2.0.2",
+      "ts-node": "10.9.2",
+      "typescript": "5.3.3"
+    }
+  }

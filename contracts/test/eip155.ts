@@ -6,6 +6,7 @@ import * as sapphire from '@oasisprotocol/sapphire-paratime';
 import { EIP155Tests__factory } from '../typechain-types/factories/contracts/tests';
 import { EIP155Tests } from '../typechain-types/contracts/tests/EIP155Tests';
 import { HardhatNetworkHDAccountsConfig } from 'hardhat/types';
+import { Transaction } from 'ethers';
 
 const EXPECTED_EVENT =
   '0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
@@ -30,8 +31,8 @@ function getWallet(index: number) {
   if (!accounts.mnemonic) {
     return new ethers.Wallet((accounts as unknown as string[])[0]);
   }
-  return ethers.Wallet.fromMnemonic(
-    accounts.mnemonic,
+  return ethers.HDNodeWallet.fromMnemonic(
+    ethers.Mnemonic.fromPhrase(accounts.mnemonic),
     accounts.path + `/${index}`,
   );
 }
@@ -42,22 +43,23 @@ describe('EIP-155', function () {
   before(async () => {
     const factory = (await ethers.getContractFactory(
       'EIP155Tests',
-    )) as EIP155Tests__factory;
+    )) as unknown as EIP155Tests__factory;
     testContract = await factory.deploy({
-      value: ethers.utils.parseEther('1'),
+      value: ethers.parseEther('1'),
     });
-    await testContract.deployed();
+    await testContract.waitForDeployment();
     calldata = testContract.interface.encodeFunctionData('example');
   });
 
   it('Has correct block.chainid', async () => {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const expectedChainId = (await provider.getNetwork()).chainId;
 
     // Emitted via transaction
     const tx = await testContract.emitChainId();
     const receipt = await tx.wait();
-    expect(receipt.events![0].args![0]).eq(expectedChainId);
+    if (!receipt || receipt.status != 1) throw new Error('tx failed');
+    expect(receipt.logs![0].data).eq(expectedChainId);
 
     // Returned from view call
     const onchainChainId = await testContract.getChainId();
@@ -73,71 +75,75 @@ describe('EIP-155', function () {
 
   /// Verify that contracts can sign transactions for submission with an unwrapped provider
   it('Other-Signed transaction submission via un-wrapped provider', async function () {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const signedTx = await testContract.sign({
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
-      gasPrice: await provider.getGasPrice(),
+      gasPrice: (await provider.getFeeData()).gasPrice as bigint,
       gasLimit: 250000,
-      to: testContract.address,
+      to: await testContract.getAddress(),
       value: 0,
       data: '0x',
       chainId: 0,
     });
 
     // Submit signed transaction via plain JSON-RPC provider (avoiding sapphire.wrap)
-    let plainResp = await provider.sendTransaction(signedTx);
-    let receipt = await testContract.provider.waitForTransaction(
-      plainResp.hash,
-    );
+    let plainResp = await provider.broadcastTransaction(signedTx);
+    await plainResp.wait();
+    let receipt = await provider.getTransactionReceipt(plainResp.hash);
     expect(plainResp.data).eq(calldata);
-    expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
+    expect(receipt!.logs[0].data).equal(EXPECTED_EVENT);
   });
 
   /// Verify that contracts can sign transactions for submission with a wrapped provider
   /// Transactions signed by other accounts should pass-through the wrapped provider
   it('Other-Signed transaction submission via wrapped provider', async function () {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const signedTx = await testContract.sign({
       nonce: await provider.getTransactionCount(
         await testContract.publicAddr(),
       ),
-      gasPrice: await provider.getGasPrice(),
+      gasPrice: (await provider.getFeeData()).gasPrice as bigint,
       gasLimit: 250000,
-      to: testContract.address,
+      to: await testContract.getAddress(),
       value: 0,
       data: '0x',
       chainId: 0,
     });
 
-    let plainResp = await provider.sendTransaction(signedTx);
-    let receipt = await provider.waitForTransaction(plainResp.hash);
+    let plainResp = await provider.broadcastTransaction(signedTx);
+    await plainResp.wait();
+    let receipt = await provider.getTransactionReceipt(plainResp.hash);
     expect(plainResp.data).eq(calldata);
-    expect(receipt.logs[0].data).equal(EXPECTED_EVENT);
+    expect(receipt!.logs[0].data).equal(EXPECTED_EVENT);
   });
 
   /// Verify that the wrapped wallet will encrypt a manually signed transaction
   it('Self-Signed transaction submission via wrapped wallet', async function () {
-    const provider = testContract.provider;
+    const provider = ethers.provider;
     const wallet = sapphire.wrap(getWallet(0).connect(provider));
 
-    const signedTx = await wallet.signTransaction({
+    const tx = Transaction.from({
       gasLimit: 250000,
-      to: testContract.address,
+      to: await testContract.getAddress(),
       value: 0,
       data: calldata,
       chainId: (await provider.getNetwork()).chainId,
-      gasPrice: await provider.getGasPrice(),
+      gasPrice: (await provider.getFeeData()).gasPrice,
       nonce: await provider.getTransactionCount(wallet.address),
+      type: 0, // Ethers v6 requires 'legacy' tx encoding
     });
 
+    const signedTx = await wallet.signTransaction(tx);
+
     // Calldata should be encrypted when we wrap the wallet provider
-    let x = await provider.sendTransaction(signedTx);
+    let x = await provider.broadcastTransaction(signedTx);
+    await x.wait();
     expect(entropy(x.data)).gte(EXPECTED_ENTROPY_ENCRYPTED);
     expect(x.data).not.eq(calldata);
 
-    let r = await provider.waitForTransaction(x.hash);
-    expect(r.logs[0].data).equal(EXPECTED_EVENT);
+    let r = await provider.getTransactionReceipt(x.hash);
+    expect(r!.logs[0].data).equal(EXPECTED_EVENT);
   });
 });

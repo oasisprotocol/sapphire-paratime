@@ -241,7 +241,7 @@ export class Dapp extends React.Component {
     this._tokenWrite = new ethers.Contract(
       contractAddress.Token,
       TokenArtifact.abi,
-      sapphire.wrap(new ethers.providers.Web3Provider(window.ethereum).getSigner())
+      this._provider.getSigner()
     );
   }
 

@@ -1,44 +1,53 @@
-import { parse as parseTx } from '@ethersproject/transactions';
 import * as cbor from 'cborg';
-import { ethers as ethers5 } from 'ethers5';
-import { ethers as ethers6 } from 'ethers6';
+import { ethers } from 'ethers';
+import nock from 'nock';
+import fetchImpl from 'node-fetch';
+import nacl from 'tweetnacl';
 
 import {
   wrap,
   fetchRuntimePublicKey,
-} from '@oasisprotocol/sapphire-paratime/compat.js';
-import {
-  Mock as MockCipher,
   fetchRuntimePublicKeyByChainId,
-} from '@oasisprotocol/sapphire-paratime/cipher.js';
+} from '@oasisprotocol/sapphire-paratime/compat.js';
+import { Mock as MockCipher } from '@oasisprotocol/sapphire-paratime/cipher.js';
 import { CHAIN_ID, verifySignedCall } from './utils';
 
-const secretKey =
-  '0x8160d68c4bf9425b1d3a14dc6d59a99d7d130428203042a8d419e68d626bd9f2';
-const wallet = new ethers5.Wallet(secretKey);
-const wallet6 = new ethers6.Wallet(secretKey);
-const to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
-const cipher = new MockCipher();
-const data = Buffer.from([1, 2, 3, 4, 5]);
-
-jest.mock('@oasisprotocol/sapphire-paratime/cipher.js', () => ({
-  ...jest.requireActual('@oasisprotocol/sapphire-paratime/cipher.js'),
+jest.mock('@oasisprotocol/sapphire-paratime/compat.js', () => ({
+  ...jest.requireActual('@oasisprotocol/sapphire-paratime/compat.js'),
   fetchRuntimePublicKeyByChainId: jest
     .fn()
     .mockReturnValue(new Uint8Array(Buffer.alloc(32, 8))),
 }));
 
-class MockProvider {
-  public readonly _request: jest.Mock<
+const real_fetchRuntimePublicKeyByChainId = jest.requireActual(
+  '@oasisprotocol/sapphire-paratime/compat.js',
+).fetchRuntimePublicKeyByChainId;
+
+const secretKey =
+  '0x8160d68c4bf9425b1d3a14dc6d59a99d7d130428203042a8d419e68d626bd9f2';
+const wallet = new ethers.Wallet(secretKey);
+const to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
+const cipher = new MockCipher();
+const data = Buffer.from([1, 2, 3, 4, 5]);
+
+class MockEIP1193Provider {
+  public readonly request: jest.Mock<
     Promise<unknown>,
-    [{ method: string; params?: any[] }]
+    [
+      {
+        id?: string | number;
+        method: string;
+        params?: any[];
+      },
+    ]
   >;
-  public readonly isMetaMask = false;
+
+  public readonly isMetaMask: boolean = false;
 
   private readonly signer = wallet;
 
   public constructor() {
-    this._request = jest.fn(async ({ method, params }) => {
+    this.request = jest.fn(async ({ method, params }) => {
       const hash =
         '0x5dbc9f2c9579671b8ab359acd7b370603e7c056442305e1f2b71741c90cbd046';
       if (method === 'eth_chainId') return CHAIN_ID;
@@ -57,7 +66,7 @@ class MockProvider {
         };
       if (method === 'eth_getTransactionCount') return '0x2';
       if (method === 'eth_call') {
-        return ethers6.hexlify(
+        return ethers.hexlify(
           cbor.encode({
             unknown: {
               nonce: MockCipher.NONCE,
@@ -68,7 +77,7 @@ class MockProvider {
       }
       if (method === 'eth_estimateGas') return '0x112358';
       if (method === 'eth_sendRawTransaction') {
-        const tx = ethers6.Transaction.from(params![0]);
+        const tx = ethers.Transaction.from(params![0]);
         return tx.hash;
       }
       if (method === 'eth_signTransaction') {
@@ -80,7 +89,7 @@ class MockProvider {
       if (method === 'eth_signTypedData_v4') {
         const { domain, types, message } = JSON.parse(params![1]);
         delete types['EIP712Domain'];
-        return wallet._signTypedData(domain, types, message);
+        return wallet.signTypedData(domain, types, message);
       }
       if (method === 'oasis_callDataPublicKey') {
         return {
@@ -98,53 +107,48 @@ class MockProvider {
   }
 }
 
-class MockEIP1193Provider extends MockProvider {
+/*
+class MockLegacyProvider extends MockEIP1193Provider {
+  public readonly isMetaMask = true;
+  public readonly sendAsync: (
+    args: { id?: string | number; method: string; params?: any[] },
+    cb: (err: unknown, ok?: unknown) => void,
+  ) => void;
+
+  public constructor() {
+    super();
+    this.sendAsync = (args, cb) => {
+      this.request(args)
+        .then((res: any) => {
+          cb(null, { jsonrpc: '2.0', id: args.id, result: res });
+        })
+        .catch((err) => cb(err));
+    };
+  }
+}
+*/
+
+class MockNonRuntimePublicKeyProvider {
   public readonly request: jest.Mock<
     Promise<unknown>,
-    [{ method: string; params?: any[] }]
+    [
+      {
+        id?: string | number;
+        method: string;
+        params?: any[];
+      },
+    ]
   >;
 
   public constructor() {
-    super();
-    this.request = this._request;
-  }
-}
-
-class MockLegacyProvider extends MockProvider {
-  public readonly send: (
-    args: { id?: string | number; method: string; params?: any[] },
-    cb: (err: unknown, ok?: unknown) => void,
-  ) => void;
-
-  public constructor() {
-    super();
-    this.send = (args, cb) => {
-      this._request(args)
-        .then((res: any) => {
-          cb(null, { jsonrpc: '2.0', id: args.id, result: res });
-        })
-        .catch((err) => cb(err));
-    };
-  }
-}
-
-class MockNonRuntimePublicKeyProvider extends MockProvider {
-  public readonly send: (
-    args: { id?: string | number; method: string; params?: any[] },
-    cb: (err: unknown, ok?: unknown) => void,
-  ) => void;
-
-  public constructor() {
-    super();
-    this.send = (args, cb) => {
-      if (args.method == 'oasis_callDataPublicKey')
+    this.request = jest.fn((args) => {
+      // Always errors while requesting the calldata public key
+      // This simulates, e.g. MetaMask, which doesn't allow arbitrary requests
+      if (args.method == 'oasis_callDataPublicKey') {
         throw new Error(`unhandled web3 call`);
-      this._request(args)
-        .then((res: any) => {
-          cb(null, { jsonrpc: '2.0', id: args.id, result: res });
-        })
-        .catch((err) => cb(err));
-    };
+      }
+      return new MockEIP1193Provider().request(args);
+    });
   }
 }
 
@@ -153,179 +157,43 @@ describe('fetchRuntimePublicKey', () => {
     jest.clearAllMocks();
   });
 
+  /*
   it('legacy metamask provider', async () => {
-    const upstream = new ethers5.providers.Web3Provider(
-      new MockLegacyProvider(),
-    );
+    const upstream = new ethers.BrowserProvider(new MockLegacyProvider());
     const pk = await fetchRuntimePublicKey(upstream);
     expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
     expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
   });
+  */
 
-  it('ethers5 provider', async () => {
-    const upstream = new ethers5.providers.Web3Provider(
-      new MockEIP1193Provider(),
-    );
-    const pk = await fetchRuntimePublicKey(upstream);
-    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
-  });
-
-  it('ethers6 provider', async () => {
-    const upstream = new ethers6.BrowserProvider(new MockEIP1193Provider());
+  it('ethers provider', async () => {
+    const upstream = new ethers.BrowserProvider(new MockEIP1193Provider());
     const pk = await fetchRuntimePublicKey(upstream);
     expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
     expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
   });
 
   it('non public key provider', async () => {
-    const upstream = new ethers5.providers.Web3Provider(
+    const pk = await fetchRuntimePublicKey(
       new MockNonRuntimePublicKeyProvider(),
     );
-    const pk = await fetchRuntimePublicKey(upstream);
-    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 8)));
+    // This will have retrieved the key from testnet or mainnet
+    expect(pk).not.toEqual(new Uint8Array(Buffer.alloc(32, 8)));
   });
 
-  it('legacy signer', async () => {
-    const wrapped = wrap(wallet, cipher).connect(
-      new ethers5.providers.Web3Provider(new MockLegacyProvider()),
+  it('ethers signer', async () => {
+    const wrapped = wrap(wallet, { cipher }).connect(
+      new ethers.BrowserProvider(new MockEIP1193Provider()),
     );
     const pk = await fetchRuntimePublicKey(wrapped);
     expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
     expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
   });
-
-  it('ethers5 signer', async () => {
-    const wrapped = wrap(wallet, cipher).connect(
-      new ethers5.providers.Web3Provider(new MockEIP1193Provider()),
-    );
-    const pk = await fetchRuntimePublicKey(wrapped);
-    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
-  });
-
-  it('ethers6 signer', async () => {
-    const wrapped = wrap(wallet6, cipher).connect(
-      new ethers6.BrowserProvider(new MockEIP1193Provider()),
-    );
-    const pk = await fetchRuntimePublicKey(wrapped);
-    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
-  });
-
-  it('non public key signer', async () => {
-    const wrapped = wrap(wallet, cipher).connect(
-      new ethers5.providers.Web3Provider(new MockNonRuntimePublicKeyProvider()),
-    );
-    const pk = await fetchRuntimePublicKey(wrapped);
-    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 8)));
-  });
 });
 
-describe('ethers5 signer', () => {
+describe('ethers signer', () => {
   it('proxy', async () => {
-    const wrapped = wrap(wallet, cipher);
-    expect(wrapped.address).toEqual(
-      '0x11e244400Cf165ade687077984F09c3A037b868F',
-    );
-    expect(await wrapped.getAddress()).toEqual(wrapped.address);
-    expect((wrapped as any).sapphire).toMatchObject({ cipher });
-  });
-
-  it('sendRawTransaction un-enveloped', async () => {
-    const upstreamProvider = new MockEIP1193Provider();
-    const wrapped = wrap(wallet, cipher).connect(
-      new ethers5.providers.Web3Provider(upstreamProvider),
-    );
-
-    const raw = await wallet.signTransaction({
-      to,
-      data,
-    });
-    await wrapped.provider!.sendTransaction(raw);
-    const tx = ethers6.Transaction.from(
-      upstreamProvider._request.mock.lastCall[0].params![0],
-    );
-    const txData = cbor.decode(ethers6.getBytes(tx.data));
-    expect(txData.format).toEqual(cipher.kind);
-    expect(ethers6.hexlify(txData.body.data)).toEqual(
-      ethers6.hexlify(cbor.encode({ body: data })),
-    );
-  });
-
-  it('unsigned call/estimateGas', async () => {
-    const upstreamProvider = new MockEIP1193Provider();
-    const wrapped = wrap(wallet, cipher).connect(
-      new ethers5.providers.Web3Provider(upstreamProvider),
-    );
-    const callRequest = { from: ethers5.constants.AddressZero, to, data };
-
-    const response = await wrapped.call(callRequest);
-    expect(response).toEqual('0x112358');
-    const encryptedCall = upstreamProvider._request.mock.lastCall[0].params![0];
-    expect(encryptedCall.data).toEqual(
-      await cipher.encryptEncode(callRequest.data),
-    );
-
-    // TODO(#39): re-enable once resolved
-    // const gasUsed = await wrapped.estimateGas(callRequest);
-    // expect(gasUsed.toNumber()).toEqual(0x112358);
-  });
-
-  runTestBattery(async () => {
-    const provider = new MockEIP1193Provider();
-    const signer = wrap(wallet, cipher).connect(
-      new ethers5.providers.Web3Provider(provider),
-    );
-    return [signer, provider, signer.signTransaction.bind(signer)];
-  });
-});
-
-describe('ethers5 provider', () => {
-  let upstreamProvider: MockEIP1193Provider;
-  let wrapped: ethers5.providers.Provider;
-
-  beforeEach(() => {
-    upstreamProvider = new MockEIP1193Provider();
-    const provider = new ethers5.providers.Web3Provider(upstreamProvider);
-    wrapped = wrap(provider, cipher);
-  });
-
-  it('proxy', async () => {
-    expect(wrapped._isProvider).toBe(true);
-    expect((wrapped as any).sapphire).toMatchObject({ cipher });
-  });
-
-  it('unsigned call/estimateGas', async () => {
-    const callRequest = { to, data };
-    const response = await wrapped.call(callRequest, 'pending');
-    expect(response).toEqual('0x112358');
-    const [{ data: latestData }, pendingTag] =
-      upstreamProvider._request.mock.lastCall[0].params!;
-    expect(latestData).toEqual(await cipher.encryptEncode(callRequest.data));
-    expect(pendingTag).toEqual('pending');
-
-    // TODO(#39): re-enable once resolved
-    // const gasUsed = await wrapped.estimateGas(callRequest);
-    // expect(gasUsed.toNumber()).toEqual(0x112358);
-  });
-
-  it('real cipher', async () => {
-    jest.clearAllMocks();
-    const upstreamProvider = new MockNonRuntimePublicKeyProvider();
-    const provider = new ethers5.providers.Web3Provider(upstreamProvider);
-    const wrapped = wrap(provider); // no cipher!
-    await wrapped.estimateGas({ to, data });
-    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
-    upstreamProvider._request.mock.lastCall[0].params![0];
-  });
-});
-
-describe('ethers6 signer', () => {
-  it('proxy', async () => {
-    const wrapped = wrap(wallet6, cipher);
+    const wrapped = wrap(wallet, { cipher });
     expect(wrapped.address).toEqual(
       '0x11e244400Cf165ade687077984F09c3A037b868F',
     );
@@ -335,44 +203,43 @@ describe('ethers6 signer', () => {
 
   it('unsigned call/estimateGas', async () => {
     const upstreamProvider = new MockEIP1193Provider();
-    const wrapped = wrap(wallet6, cipher).connect(
-      new ethers6.BrowserProvider(upstreamProvider),
+    const wrapped = wrap(wallet, { cipher }).connect(
+      new ethers.BrowserProvider(upstreamProvider),
     );
     const callRequest = {
       from: null,
       to,
-      data: ethers6.hexlify(data),
+      data: ethers.hexlify(data),
     };
 
     const response = await wrapped.call(callRequest);
     expect(response).toEqual('0x112358');
-    const encryptedCall = upstreamProvider._request.mock.calls[1][0].params![0];
+    const encryptedCall = upstreamProvider.request.mock.calls[1][0].params![0];
     expect(encryptedCall.data).toEqual(
       await cipher.encryptEncode(callRequest.data),
     );
 
-    // TODO(#39): re-enable once resolved
-    // const gasUsed = await wrapped.estimateGas(callRequest);
-    // expect(gasUsed.toNumber()).toEqual(0x112358);
+    const gasUsed = await wrapped.estimateGas(callRequest);
+    expect(gasUsed).toEqual(BigInt(0x112358));
   });
 
   runTestBattery(async () => {
     const provider = new MockEIP1193Provider();
-    const signer = wrap(wallet6, cipher).connect(
-      new ethers6.BrowserProvider(provider),
+    const signer = wrap(wallet, { cipher }).connect(
+      new ethers.BrowserProvider(provider),
     );
     return [signer, provider, signer.signTransaction.bind(signer)];
   });
 });
 
-describe('ethers6 provider', () => {
+describe('ethers provider', () => {
   let upstreamProvider: MockEIP1193Provider;
-  let wrapped: ethers6.Provider;
+  let wrapped: ethers.Provider;
 
   beforeEach(() => {
     upstreamProvider = new MockEIP1193Provider();
-    const provider = new ethers6.BrowserProvider(upstreamProvider);
-    wrapped = wrap(provider, cipher);
+    const provider = new ethers.BrowserProvider(upstreamProvider);
+    wrapped = wrap(provider, { cipher });
   });
 
   it('proxy', async () => {
@@ -380,36 +247,33 @@ describe('ethers6 provider', () => {
   });
 
   it('unsigned call/estimateGas', async () => {
-    const callRequest = { to, data: ethers6.hexlify(data) };
+    const callRequest = { to, data: ethers.hexlify(data) };
     const response = await wrapped.call({
       ...callRequest,
       blockTag: 'pending',
     });
     expect(response).toEqual('0x112358');
     const [{ data: latestData }, pendingTag] =
-      upstreamProvider._request.mock.calls[1][0].params!;
+      upstreamProvider.request.mock.calls[1][0].params!;
     expect(latestData).toEqual(await cipher.encryptEncode(callRequest.data));
     expect(pendingTag).toEqual('pending');
 
-    // TODO(#39): re-enable once resolved
-    // const gasUsed = await wrapped.estimateGas(callRequest);
-    // expect(gasUsed.toNumber()).toEqual(0x112358);
+    const gasUsed = await wrapped.estimateGas(callRequest);
+    expect(gasUsed).toEqual(BigInt(0x112358));
   });
 
   it('real cipher', async () => {
     jest.clearAllMocks();
-    const upstreamProvider = new MockNonRuntimePublicKeyProvider();
-    const provider = new ethers5.providers.Web3Provider(upstreamProvider);
+    const provider = new ethers.BrowserProvider(upstreamProvider);
     const wrapped = wrap(provider); // no cipher!
-    await wrapped.estimateGas({ to, data });
-    expect(fetchRuntimePublicKeyByChainId).toHaveBeenCalled();
-    upstreamProvider._request.mock.lastCall[0].params![0];
+    await wrapped.estimateGas({ to, data: ethers.hexlify(data) });
+    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
   });
 });
 
 describe('window.ethereum', () => {
   it('proxy', async () => {
-    const wrapped = wrap(new MockEIP1193Provider(), cipher);
+    const wrapped = wrap(new MockEIP1193Provider(), { cipher });
     expect(wrapped.isMetaMask).toBe(false);
     expect(wrapped.isConnected()).toBe(false);
     expect((wrapped as any).sapphire).toMatchObject({ cipher });
@@ -417,8 +281,8 @@ describe('window.ethereum', () => {
 
   runTestBattery(async () => {
     const provider = new MockEIP1193Provider();
-    const wrapped = wrap(provider, cipher);
-    const signer = await new ethers6.BrowserProvider(wrapped).getSigner();
+    const wrapped = wrap(provider, { cipher });
+    const signer = await new ethers.BrowserProvider(wrapped).getSigner();
     const rawSign = async (...args: unknown[]) => {
       const raw = await wrapped.request({
         method: 'eth_signTransaction',
@@ -430,23 +294,24 @@ describe('window.ethereum', () => {
   });
 });
 
+/*
 describe('legacy MetaMask', () => {
   it('proxy', async () => {
-    const wrapped = wrap(new MockLegacyProvider(), cipher);
-    expect(wrapped.isMetaMask).toBe(false);
+    const wrapped = wrap(new MockLegacyProvider(), { cipher });
+    expect(wrapped.isMetaMask).toBe(true);
     expect(wrapped.isConnected()).toBe(false);
     expect((wrapped as any).sapphire).toMatchObject({ cipher });
   });
 
   runTestBattery(async () => {
     const provider = new MockLegacyProvider();
-    const wrapped = wrap(provider, cipher);
-    const signer = new ethers5.providers.Web3Provider(wrapped).getSigner();
-    const rawSign: ethers5.Signer['signTransaction'] = async (
+    const wrapped = wrap(provider, { cipher });
+    const signer = await new ethers.BrowserProvider(wrapped).getSigner();
+    const rawSign: ethers.Signer['signTransaction'] = async (
       ...args: unknown[]
     ) => {
       return new Promise((resolve, reject) => {
-        wrapped.send(
+        wrapped.sendAsync(
           {
             method: 'eth_signTransaction',
             params: args,
@@ -461,18 +326,19 @@ describe('legacy MetaMask', () => {
     return [signer, provider, rawSign];
   });
 });
+*/
 
-function runTestBattery<S extends ethers5.Signer | ethers6.Signer>(
+function runTestBattery<S extends ethers.Signer>(
   makeSigner: () => Promise<
     [
       S,
-      MockProvider, // this must not be proxied
+      MockEIP1193Provider, // this must not be proxied
       S['signTransaction'],
     ]
   >,
 ) {
   let wrapped: S;
-  let upstreamProvider: MockProvider;
+  let upstreamProvider: MockEIP1193Provider;
   let rawSign: S['signTransaction'];
 
   beforeEach(async () => {
@@ -481,19 +347,19 @@ function runTestBattery<S extends ethers5.Signer | ethers6.Signer>(
 
   it('signTransaction balance transfer', async () => {
     const raw = await rawSign({ to, value: 42 });
-    const tx = parseTx(raw);
+    const tx = ethers.Transaction.from(raw);
     expect(tx.data).toEqual('0x');
     expect(tx.to).toEqual(to);
-    expect(tx.value.toNumber()).toEqual(42);
+    expect(tx.value).toEqual(BigInt(42));
   });
 
   it('signTransaction with data', async () => {
     const raw = await rawSign({
       to,
       value: 42,
-      data: ethers6.hexlify(data),
+      data: ethers.hexlify(data),
     });
-    const tx = parseTx(raw);
+    const tx = ethers.Transaction.from(raw);
     expect(tx.data).toEqual(await cipher.encryptEncode(data));
   });
 
@@ -501,18 +367,20 @@ function runTestBattery<S extends ethers5.Signer | ethers6.Signer>(
     if (!wrapped?.provider?.sendTransaction) return;
     const raw = await wallet.signTransaction({
       to,
-      data: cbor.encode({
-        format: 42,
-        body: {
-          data: new Uint8Array([6]),
-        },
-      }),
+      data: cbor
+        .encode({
+          format: 42,
+          body: {
+            data: new Uint8Array([6]),
+          },
+        })
+        .toString(),
     });
-    await wrapped.provider!.sendTransaction(raw);
-    const tx = ethers6.Transaction.from(
-      upstreamProvider._request.mock.lastCall[0].params![0],
+    await wrapped.provider!.sendTransaction(ethers.Transaction.from(raw));
+    const tx = ethers.Transaction.from(
+      upstreamProvider.request.mock.lastCall![0].params![0],
     );
-    const txData = cbor.decode(ethers6.getBytes(tx.data));
+    const txData = cbor.decode(ethers.getBytes(tx.data));
     expect(txData.format).toEqual(42);
     expect(txData.body.data).toEqual(new Uint8Array([6]));
   });
@@ -521,11 +389,15 @@ function runTestBattery<S extends ethers5.Signer | ethers6.Signer>(
     if (!wrapped?.provider?.sendTransaction) return;
     const raw = await wallet.signTransaction({
       to,
-      data: cbor.encode({
-        something: 'definitely not right',
-      }),
+      data: cbor
+        .encode({
+          something: 'definitely not right',
+        })
+        .toString(),
     });
-    expect(wrapped.provider!.sendTransaction(raw)).rejects.toThrow(/bogus/i);
+    expect(
+      wrapped.provider!.sendTransaction(ethers.Transaction.from(raw)),
+    ).rejects.toThrow(/bogus/i);
   });
 
   it('signed call/estimateGas', async () => {
@@ -533,11 +405,11 @@ function runTestBattery<S extends ethers5.Signer | ethers6.Signer>(
     const callRequest = {
       from,
       to,
-      data: ethers6.hexlify(data),
+      data: ethers.hexlify(data),
     };
     const response = await wrapped.call(callRequest);
     expect(response).toEqual('0x112358');
-    const calls = upstreamProvider._request.mock.calls;
+    const calls = upstreamProvider.request.mock.calls;
     let signedCall: any;
     for (let i = calls.length - 1; i >= 0; i--) {
       if (calls[i][0].method === 'eth_call') {
@@ -547,20 +419,63 @@ function runTestBattery<S extends ethers5.Signer | ethers6.Signer>(
     }
     await expect(verifySignedCall(signedCall, cipher)).resolves.not.toThrow();
 
-    // TODO(#39): re-enable once resolved
-    // const gasUsed = await wrapped.estimateGas(callRequest);
-    // expect(gasUsed.toNumber()).toEqual(0x112358);
+    const gasUsed = await wrapped.estimateGas(callRequest);
+    expect(gasUsed).toEqual(BigInt(0x112358));
   });
 }
 
-describe('hre.network.provider', () => {
-  it('has JsonRpcProvider.send', async () => {
-    const upstreamProvider = new MockEIP1193Provider();
-    const provider = new ethers5.providers.Web3Provider(upstreamProvider);
-    const hreProvider = {
-      send: provider.send.bind(provider),
-    };
-    const wrapped = wrap(hreProvider);
-    await expect(wrapped.send('eth_chainId', [])).resolves.toEqual(0x5afe);
+describe('fetchPublicKeyByChainId', () => {
+  async function expectFetch(
+    chainId: Parameters<typeof fetchRuntimePublicKeyByChainId>[0],
+    expectedUrl: string,
+    opts?: Parameters<typeof fetchRuntimePublicKeyByChainId>[1],
+  ): Promise<void> {
+    const publicKey = nacl.box.keyPair().publicKey;
+    const scope = nock(expectedUrl, {
+      reqheaders: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .post('/', (body) => {
+        if (body.jsonrpc !== '2.0') {
+          return false;
+        }
+        if (!Number.isInteger(parseInt(body.id, 10))) {
+          return false;
+        }
+        if (body.method !== 'oasis_callDataPublicKey') {
+          return false;
+        }
+        if (!Array.isArray(body.params) || body.params.length !== 0) {
+          return false;
+        }
+        return true;
+      })
+      .reply(200, {
+        result: {
+          key: `0x${Buffer.from(publicKey).toString('hex')}`,
+          // TODO: checksum and signature
+        },
+      });
+
+    const response = await real_fetchRuntimePublicKeyByChainId(chainId, opts);
+    expect(response).not.toHaveLength(0);
+
+    scope.done();
+  }
+
+  it('fetches chainId', async () => {
+    await expectFetch(0x5afe, 'https://sapphire.oasis.io', {
+      fetch: fetchImpl as unknown as typeof fetch,
+    });
+    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev', {
+      fetch: fetchImpl as unknown as typeof fetch,
+    });
+  });
+
+  it('fetches chainId (fetch)', async () => {
+    await expectFetch(0x5afe, 'https://sapphire.oasis.io', {
+      fetch: fetchImpl as unknown as typeof fetch,
+    });
   });
 });

@@ -1,14 +1,11 @@
-import { arrayify, hexlify } from '@ethersproject/bytes';
+import { hexlify, getBytes } from 'ethers';
 import * as cbor from 'cborg';
 import { TagSize } from '@oasisprotocol/deoxysii';
-import nock from 'nock';
-import fetchImpl from 'node-fetch';
 import nacl from 'tweetnacl';
 
 import {
   Plain,
   X25519DeoxysII,
-  fetchRuntimePublicKeyByChainId,
   lazy,
 } from '@oasisprotocol/sapphire-paratime/cipher.js';
 
@@ -46,7 +43,7 @@ describe('Plain', () => {
 describe('X25519DeoxysII', () => {
   it('key derivation', () => {
     // These test vectors are taken from `ts-web`.
-    const secretKey = arrayify(
+    const secretKey = getBytes(
       '0xc07b151fbc1e7a11dff926111188f8d872f62eba0396da97c0a24adb75161750',
     );
     const keypair = nacl.box.keyPair.fromSecretKey(secretKey);
@@ -125,51 +122,5 @@ describe('lazy', () => {
     expect((await cipher.encrypt(DATA)).ciphertext).toHaveLength(
       DATA.length + TagSize,
     );
-  });
-});
-
-describe('fetchPublicKeyByChainId', () => {
-  async function expectFetch(
-    chainId: Parameters<typeof fetchRuntimePublicKeyByChainId>[0],
-    expectedUrl: string,
-    opts?: Parameters<typeof fetchRuntimePublicKeyByChainId>[1],
-  ): Promise<void> {
-    const publicKey = nacl.box.keyPair().publicKey;
-    const scope = nock(expectedUrl, {
-      reqheaders: {
-        'content-type': 'application/json',
-      },
-    })
-      .post('/', (body) => {
-        if (body.jsonrpc !== '2.0') return false;
-        if (!Number.isInteger(parseInt(body.id, 10))) return false;
-        if (body.method !== 'oasis_callDataPublicKey') return false;
-        if (!Array.isArray(body.params) || body.params.length !== 0)
-          return false;
-        return true;
-      })
-      .reply(200, {
-        result: {
-          key: `0x${Buffer.from(publicKey).toString('hex')}`,
-          // TODO: checksum and signature
-        },
-      });
-
-    expect(
-      await fetchRuntimePublicKeyByChainId(chainId, opts),
-    ).not.toHaveLength(0);
-
-    scope.done();
-  }
-
-  it('fetches chainId', async () => {
-    await expectFetch(0x5afe, 'https://sapphire.oasis.io');
-    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev');
-  });
-
-  it('fetches chainId (fetch)', async () => {
-    expectFetch(0x5afe, 'https://sapphire.oasis.io', {
-      fetch: fetchImpl as unknown as typeof fetch,
-    });
   });
 });

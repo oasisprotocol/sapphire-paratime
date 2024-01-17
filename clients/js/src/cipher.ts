@@ -1,17 +1,11 @@
-import {
-  BytesLike,
-  arrayify,
-  hexlify,
-  isBytesLike,
-} from '@ethersproject/bytes';
 import * as cbor from 'cborg';
+import { BytesLike, isBytesLike, hexlify, getBytes } from 'ethers';
 import deoxysii from '@oasisprotocol/deoxysii';
-import { IncomingMessage } from 'http';
 import { sha512_256 } from 'js-sha512';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
 
-import { CallError, NETWORKS, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
+import { CallError } from './index.js';
 
 export enum Kind {
   Plain = 0,
@@ -66,7 +60,7 @@ export abstract class Cipher {
       throw new Error('Attempted to sign tx having non-byteslike data.');
     }
     if (plaintext.length === 0) return; // Txs without data are just balance transfers, and all data in those is public.
-    const { data, nonce } = await this.encryptCallData(arrayify(plaintext));
+    const { data, nonce } = await this.encryptCallData(getBytes(plaintext));
     const [format, pk] = await Promise.all([this.kind, this.publicKey]);
     const body = pk.length && nonce.length ? { pk, nonce, data } : data;
     if (format === Kind.Plain) return { body };
@@ -114,7 +108,7 @@ export abstract class Cipher {
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
   public async decryptEncoded(callResult: BytesLike): Promise<string> {
     return hexlify(
-      await this.decryptCallResult(cbor.decode(arrayify(callResult))),
+      await this.decryptCallResult(cbor.decode(getBytes(callResult))),
     );
   }
 
@@ -126,10 +120,10 @@ export abstract class Cipher {
     }
     if (res.fail) throw new CallError(formatFailure(res.fail), res.fail);
     if (res.ok && (typeof res.ok === 'string' || res.ok instanceof Uint8Array))
-      return arrayify(res.ok);
+      return getBytes(res.ok);
     const { nonce, data } = (res.ok as AeadEnvelope) ?? res.unknown;
     const inner = cbor.decode(await this.decrypt(nonce, data));
-    if (inner.ok) return arrayify(inner.ok);
+    if (inner.ok) return getBytes(inner.ok);
     if (inner.fail) throw new CallError(formatFailure(inner.fail), inner.fail);
     throw new CallError(
       `Unexpected inner call result: ${JSON.stringify(inner)}`,
@@ -184,18 +178,15 @@ export class X25519DeoxysII extends Cipher {
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
   static ephemeral(peerPublicKey: BytesLike): X25519DeoxysII {
     const keypair = nacl.box.keyPair();
-    return new X25519DeoxysII(
-      keypair,
-      arrayify(peerPublicKey, { allowMissingPrefix: true }),
-    );
+    return new X25519DeoxysII(keypair, getBytes(peerPublicKey));
   }
 
   static fromSecretKey(
     secretKey: BytesLike,
     peerPublicKey: BytesLike,
   ): X25519DeoxysII {
-    const keypair = nacl.box.keyPair.fromSecretKey(arrayify(secretKey));
-    return new X25519DeoxysII(keypair, arrayify(peerPublicKey));
+    const keypair = nacl.box.keyPair.fromSecretKey(getBytes(secretKey));
+    return new X25519DeoxysII(keypair, getBytes(peerPublicKey));
   }
 
   public constructor(keypair: BoxKeyPair, peerPublicKey: Uint8Array) {
@@ -276,79 +267,4 @@ export function lazy(generator: () => Promisable<Cipher>): Cipher {
       },
     },
   ) as Cipher;
-}
-
-export async function fetchRuntimePublicKeyByChainId(
-  chainId: number,
-  opts?: { fetch?: typeof fetch },
-): Promise<Uint8Array> {
-  const { defaultGateway: gatewayUrl } = NETWORKS[chainId];
-  if (!gatewayUrl)
-    throw new Error(
-      `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
-    );
-  const fetchImpl = globalThis?.fetch ?? opts?.fetch;
-  const res = await (fetchImpl
-    ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
-    : fetchRuntimePublicKeyNode(gatewayUrl));
-  return arrayify(res.result.key);
-}
-
-type CallDataPublicKeyResponse = {
-  result: { key: string; checksum: string; signature: string };
-};
-
-async function fetchRuntimePublicKeyNode(
-  gwUrl: string,
-): Promise<CallDataPublicKeyResponse> {
-  // Import http or https, depending on the URI scheme.
-  const https = await import(/* webpackIgnore: true */ gwUrl.split(':')[0]);
-
-  const body = makeCallDataPublicKeyBody();
-  return new Promise((resolve, reject) => {
-    const opts = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'content-length': body.length,
-      },
-    };
-    const req = https.request(gwUrl, opts, (res: IncomingMessage) => {
-      const chunks: Buffer[] = [];
-      res.on('error', (err) => reject(err));
-      res.on('data', (chunk) => chunks.push(chunk));
-      res.on('end', () => {
-        resolve(JSON.parse(Buffer.concat(chunks).toString()));
-      });
-    });
-    req.on('error', (err: Error) => reject(err));
-    req.write(body);
-    req.end();
-  });
-}
-
-async function fetchRuntimePublicKeyBrowser(
-  gwUrl: string,
-  fetchImpl: typeof fetch,
-): Promise<CallDataPublicKeyResponse> {
-  const res = await fetchImpl(gwUrl, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: makeCallDataPublicKeyBody(),
-  });
-  if (!res.ok) {
-    throw new CallError('Failed to fetch runtime public key.', res);
-  }
-  return await res.json();
-}
-
-function makeCallDataPublicKeyBody(): string {
-  return JSON.stringify({
-    jsonrpc: '2.0',
-    id: Math.floor(Math.random() * 1e9),
-    method: OASIS_CALL_DATA_PUBLIC_KEY,
-    params: [],
-  });
 }
