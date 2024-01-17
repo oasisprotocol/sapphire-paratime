@@ -53,8 +53,8 @@ describe('CommentBox', function () {
   });
 
   it('Should comment gasless', async function () {
-    // You can set up sapphire-dev image and run the test like this:
-    // docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-dev -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    // You can set up sapphire-localnet image and run the test like this:
+    // docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
     // npx hardhat test --grep proxy --network sapphire-localnet
     if ((await gasless.provider.getNetwork()).chainId == 1337) {
       this.skip();

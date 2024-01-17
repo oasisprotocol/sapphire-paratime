@@ -73,12 +73,12 @@ const config: HardhatUserConfig = {
         ? [process.env.SAPPHIRE_MAINNET_PRIVATE_KEY]
         : [],
     },
-    'sapphire-dev-ci': {
+    'sapphire-localnet-ci': {
       url: `http://127.0.0.1:8545`,
       chainId: 0x5afd,
       accounts: TEST_HDWALLET,
     },
-    'sapphire-dev': {
+    'sapphire-localnet': {
       url: 'http://localhost:8545',
       chainId: 0x5afd,
       accounts: TEST_HDWALLET,
