@@ -10,8 +10,8 @@ jobs:
   contracts-test:
     runs-on: ubuntu-latest
     services:
-      sapphire-dev-ci:
-        image: ghcr.io/oasisprotocol/sapphire-dev:latest
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
         ports:
           - 8545:8545
           - 8546:8546
@@ -66,7 +66,7 @@ jobs:
         run: pnpm build
       - name: Test contracts with Hardhat
         working-directory: contracts
-        run: pnpm hardhat test --network sapphire-dev-ci
+        run: pnpm hardhat test --network sapphire-localnet-ci
       - name: Build docs
         working-directory: contracts
         run: |

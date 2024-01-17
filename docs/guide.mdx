@@ -294,7 +294,7 @@ You can also explore other verification methods on Sourcify by reading the
 ## Running a Private Oasis Network Locally
 
 For convenient development and testing of your dApps the Oasis team prepared
-the [ghcr.io/oasisprotocol/sapphire-dev][sapphire-dev] Docker image which brings you a
+the [ghcr.io/oasisprotocol/sapphire-localnet][sapphire-localnet] Docker image which brings you a
 complete Oasis stack to your desktop. The Localnet Sapphire instance **mimics
 confidential transactions**, but it does not run in a trusted execution
 environment nor does it require Intel's SGX on your computer. The network is
@@ -311,13 +311,13 @@ isolated from Mainnet or Testnet and consists of:
 To run the image, execute:
 
 ```sh
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-dev
+docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet
 ```
 
 After a while, the tool will show you something like this:
 
 ```
-sapphire-dev 2023-02-28-git84730b2 (oasis-core: 22.2.6, sapphire-paratime: 0.4.0, oasis-web3-gateway: 3.2.0-git84730b2)
+sapphire-localnet 2023-02-28-git84730b2 (oasis-core: 22.2.6, sapphire-paratime: 0.4.0, oasis-web3-gateway: 3.2.0-git84730b2)
 
 Starting oasis-net-runner with sapphire...
 Starting postgresql...
@@ -352,9 +352,9 @@ Listening on http://localhost:8545 and ws://localhost:8546
 
 Those familiar with local dApp environments will find the output above similar
 to `geth --dev` or `ganache-cli` commands or the `geth-dev-assistant` npm
-package. [sapphire-dev] will spin up a private Oasis Network locally, generate
-and populate test accounts and make the following Web3 endpoints available for
-you to use:
+package. [sapphire-localnet] will spin up a private Oasis Network locally,
+generate and populate test accounts and make the following Web3 endpoints
+available for you to use:
 - `http://localhost:8545`
 - `ws://localhost:8546`
 
@@ -365,20 +365,20 @@ or to populate just a single wallet, use `-to` flag and pass the mnemonics or
 the wallet addresses. For example
 
 ```sh
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-dev -to "bench remain brave curve frozen verify dream margin alarm world repair innocent"
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-dev -to "0x75eCF0d4496C2f10e4e9aF3D4d174576Ee9010E2,0xbDA5747bFD65F08deb54cb465eB87D40e51B197E"
+docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "bench remain brave curve frozen verify dream margin alarm world repair innocent"
+docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "0x75eCF0d4496C2f10e4e9aF3D4d174576Ee9010E2,0xbDA5747bFD65F08deb54cb465eB87D40e51B197E"
 ```
 
 :::
 
 :::danger
 
-[sapphire-dev] runs in ephemeral mode. Any smart contract and wallet balance
+[sapphire-localnet] runs in ephemeral mode. Any smart contract and wallet balance
 will be lost after you quit the Docker container!
 
 :::
 
-[sapphire-dev]: https://github.com/oasisprotocol/oasis-web3-gateway/pkgs/container/sapphire-dev
+[sapphire-localnet]: https://github.com/oasisprotocol/oasis-web3-gateway/pkgs/container/sapphire-localnet
 
 ## See also
 
