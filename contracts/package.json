@@ -1,6 +1,6 @@
 {
   "name": "@oasisprotocol/sapphire-contracts",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "license": "Apache-2.0",
   "description": "Solidity smart contract library for confidential contract development",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/contracts",

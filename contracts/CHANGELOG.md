@@ -6,6 +6,12 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.7 (2024-01-17)
+
+### Fixed
+
+ * Endpoint.sol had incorrect mainnet address for Celer IM MessageBus in `_getChainConfig`
+
 ## 0.2.6 (2023-12-18)
 
 ### Added
