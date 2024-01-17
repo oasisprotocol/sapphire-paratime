@@ -53,7 +53,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/crypto v0.14.0
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/crypto v0.17.0
+	golang.org/x/sys v0.15.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )
