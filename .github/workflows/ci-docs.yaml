@@ -81,13 +81,11 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
+      - name: Install forge doc deps
+        run: cargo install mdbook-pagetoc
+
       - name: Build docs
-        run: |
-          forge doc --build
-          # Inject another /contracts/ for github.com URLs.
-          find sol/sapphire-contracts/book -name *.html | xargs sed -i -E "s+(blob/.*/contracts)+\1/contracts+"
-          # Remove /src/ from "Inherits" links.
-          find sol/sapphire-contracts/book -name *.html | xargs sed -i "s+/src/+/+"
+        run: pnpm doc
 
       - name: Deploy to api-reference branch
         uses: peaceiris/actions-gh-pages@v3

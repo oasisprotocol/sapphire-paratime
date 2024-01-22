@@ -18,7 +18,7 @@ $ pnpm install @oasisprotocol/sapphire-contracts
 
 #### Usage
 
-Once installed, you can import and use the Sapphire contracts as follows.
+Once installed, you can import and use the Sapphire contracts as follows:
 
 ```solidity
 pragma solidity ^0.8.13;
@@ -37,7 +37,19 @@ contract RandomNumber {
 See the user's guide for [Sapphire](https://docs.oasis.io/dapp/sapphire/) and
 [OPL](https://docs.oasis.io/dapp/opl/).
 
-API reference is available at [api.docs.oasis.io](https://api.docs.oasis.io/sol/sapphire-contracts).
+The generated API reference is hosted at
+[api.docs.oasis.io](https://api.docs.oasis.io/sol/sapphire-contracts).
+
+Generating API docs locally requires Foundry and mdbook-pagetoc. To install
+them and generate the docs execute:
+
+```shell
+curl -L https://foundry.paradigm.xyz | bash
+cargo install mdbook-pagetoc
+pnpm doc
+```
+
+The API docs index will be located in `sol/sapphire-contracts/book/index.html`.
 
 ## Contribute
 
