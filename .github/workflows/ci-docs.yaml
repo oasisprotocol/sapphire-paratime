@@ -78,6 +78,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v2.4.0
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
