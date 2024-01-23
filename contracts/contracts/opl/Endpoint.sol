@@ -160,7 +160,7 @@ contract BaseEndpoint is Context {
 
 /**
  * @title OPL Endpoint
- * @dev An app that sends or receives using OPL.
+ * @notice An app that sends or receives using OPL.
  */
 contract Endpoint is BaseEndpoint {
     constructor(address _remote, bytes32 _remoteChainName)
@@ -176,9 +176,12 @@ contract Endpoint is BaseEndpoint {
 /* solhint-disable func-visibility */
 
 /**
- * @dev Autoswitch automatically picks the remote network based on the network the contract on which the contract has already been deployed.
- * @dev When on testnet, the remote chain will be the testnet version of the provided chain.
- * @dev When running locally, the remote chain will be this one and the contracts will call each other without going through a message bus. This is helpful for debugging logic but does not test gas fee payment and other moving parts.
+ * @notice Autoswitch automatically picks the remote network based on the
+ * network the contract on which the contract has already been deployed. When on
+ * testnet, the remote chain will be the testnet version of the provided chain.
+ * When running locally, the remote chain will be this one and the contracts
+ * will call each other without going through a message bus. This is helpful for
+ * debugging logic but does not test gas fee payment and other moving parts.
  */
 function autoswitch(bytes32 protocol) view returns (bytes32 networkName) {
     if (block.chainid == 1337 || block.chainid == 31337) return "local";

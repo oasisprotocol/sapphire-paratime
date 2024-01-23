@@ -56,6 +56,8 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+      - name: Install forge doc deps
+        run: cargo install mdbook-pagetoc
       - name: Install dependencies
         run: pnpm install
       - name: Build JS client
@@ -69,8 +71,7 @@ jobs:
         run: pnpm hardhat test --network sapphire-localnet-ci
       - name: Build docs
         working-directory: contracts
-        run: |
-          forge doc --build
+        run: pnpm doc
       - name: hardhat test examples/hardhat
         working-directory: examples/hardhat
         run: pnpm hardhat run --network sapphire-localnet scripts/run-vigil.ts

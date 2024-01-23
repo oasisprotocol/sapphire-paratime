@@ -9,6 +9,7 @@
     "url": "https://github.com/oasisprotocol/sapphire-paratime.git"
   },
   "scripts": {
+    "doc": "forge doc --build && ./post-build-doc.sh",
     "lint:eslint": "eslint --ignore-path .gitignore --ext .ts",
     "lint:solhint": "solhint 'contracts/**/*.sol'",
     "lint::prettier": "prettier --cache --check --plugin-search-dir=. --cache '*.json' '**/*.ts' '**/*.sol'",

@@ -5,7 +5,7 @@ import {Endpoint} from "./Endpoint.sol";
 
 /**
  * @title OPL Enclave
- * @dev The Sapphire-side of an OPL dapp.
+ * @notice The Sapphire-side of an OPL dApp.
  */
 contract Enclave is Endpoint {
     constructor(address _host, bytes32 _hostChain)

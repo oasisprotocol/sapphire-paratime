@@ -13,7 +13,7 @@ enum SubcallReceiptKind {
 
 /**
  * @title SDK Subcall wrappers
- * @dev Interact with Oasis Runtime SDK modules from Sapphire.
+ * @notice Interact with Oasis Runtime SDK modules from Sapphire.
  */
 library Subcall {
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
@@ -64,14 +64,12 @@ library Subcall {
     error MissingKey();
 
     /**
-     * Submit a native message to the Oasis runtime layer.
-     *
-     * Messages which re-enter the EVM module are forbidden: evm.*
-     *
-     * @param method Native message type
-     * @param body CBOR encoded body
-     * @return status Result of call
-     * @return data CBOR encoded result
+     * @notice Submit a native message to the Oasis runtime layer. Messages
+     * which re-enter the EVM module are forbidden: `evm.*`.
+     * @param method Native message type.
+     * @param body CBOR encoded body.
+     * @return status Result of call.
+     * @return data CBOR encoded result.
      */
     function subcall(string memory method, bytes memory body)
         internal
@@ -89,12 +87,12 @@ library Subcall {
     }
 
     /**
-     * @dev Generic method to call `{to:address, amount:uint128}`
-     * @param method Runtime SDK method name ('module.Action')
-     * @param to Destination address
-     * @param value Amount specified
-     * @return status Non-zero on error
-     * @return data Module name on error
+     * @notice Generic method to call `{to:address, amount:uint128}`.
+     * @param method Runtime SDK method name ('module.Action').
+     * @param to Destination address.
+     * @param value Amount specified.
+     * @return status Non-zero on error.
+     * @return data Module name on error.
      */
     function _subcallWithToAndAmount(
         string memory method,
@@ -123,20 +121,22 @@ library Subcall {
     }
 
     /**
-     * Returns a CBOR encoded structure, containing the following possible keys.
-     * All keys are optional:
+     * @notice Returns a CBOR encoded structure, containing the following
+     * possible keys. All keys are optional:
      *
-     *  shares: u128
-     *  epoch: EpochTime
-     *  receipt: u64
-     *  amount: u128
-     *  error: {module: string, code: u32}
+     *  - shares: `u128`
+     *  - epoch: `EpochTime`
+     *  - receipt: `u64`
+     *  - amount: `u128`
+     *  - error: `{module: string, code: u32}`
      *
-     * Delegate will have the `error` or `shares` keys.
-     * UndelegateStart will have the `epoch` and `receipt` keys.
-     * UndelegateDone will have the `amount` key
+     * #### Keys returned by specific subcalls
      *
-     * @param kind 1=Delegate, 2=UndelegateStart, 3=UndelegateDone
+     * - `Delegate` will have the `error` or `shares` keys.
+     * - `UndelegateStart` will have the `epoch` and `receipt` keys.
+     * - `UndelegateDone` will have the `amount` key.
+     *
+     * @param kind `1` (`Delegate`), `2` (`UndelegateStart`) or `3` (`UndelegateDone`)
      * @param receiptId ID of receipt
      */
     function consensusTakeReceipt(SubcallReceiptKind kind, uint64 receiptId)
@@ -306,9 +306,9 @@ library Subcall {
     }
 
     /**
-     * Decodes a 'Delegate' receipt
-     * @param receiptId Previously unretrieved receipt
-     * @param result CBOR encoded {shares: u128}
+     * @notice Decodes a 'Delegate' receipt.
+     * @param receiptId Previously unretrieved receipt.
+     * @param result CBOR encoded {shares: u128}.
      */
     function _decodeReceiptDelegate(uint64 receiptId, bytes memory result)
         internal
@@ -370,11 +370,10 @@ library Subcall {
     }
 
     /**
-     * Start the undelegation process of the given number of shares from
+     * @notice Start the undelegation process of the given number of shares from
      * consensus staking account to runtime account.
-     *
-     * @param from Consensus address which shares were delegated to
-     * @param shares Number of shares to withdraw back to us
+     * @param from Consensus address which shares were delegated to.
+     * @param shares Number of shares to withdraw back to us.
      */
     function consensusUndelegate(StakingAddress from, uint128 shares) internal {
         (uint64 status, bytes memory data) = subcall(
@@ -435,10 +434,9 @@ library Subcall {
     }
 
     /**
-     * Delegate native token to consensus level.
-     *
-     * @param to Consensus address shares are delegated to
-     * @param amount Native token amount (in wei)
+     * @notice Delegate native token to consensus level.
+     * @param to Consensus address shares are delegated to.
+     * @param amount Native token amount (in wei).
      */
     function consensusDelegate(StakingAddress to, uint128 amount)
         internal
@@ -459,15 +457,13 @@ library Subcall {
     }
 
     /**
-     * Delegate native token to consensus level.
-     *
-     * Requests that the number of shares allocated can be retrieved with a
-     * receipt. The receipt will be of `ReceiptKind.DelegateDone` and can be
-     * decoded using `decodeReceiptDelegateDone`
-     *
-     * @param to Consensus address shares are delegated to
-     * @param amount Native token amount (in wei)
-     * @param receiptId contract-specific receipt to retrieve result
+     * @notice Delegate native token to consensus level. Requests that the
+     * number of shares allocated can be retrieved with a receipt. The receipt
+     * will be of `ReceiptKind.DelegateDone` and can be decoded using
+     * `decodeReceiptDelegateDone`.
+     * @param to Consensus address shares are delegated to.
+     * @param amount Native token amount (in wei).
+     * @param receiptId contract-specific receipt to retrieve result.
      */
     function consensusDelegate(
         StakingAddress to,
@@ -510,10 +506,10 @@ library Subcall {
     }
 
     /**
-     * Transfer from an account in this runtime to a consensus staking account.
-     *
-     * @param to Consensus address which gets the tokens
-     * @param value Token amount (in wei)
+     * @notice Transfer from an account in this runtime to a consensus staking
+     * account.
+     * @param to Consensus address which gets the tokens.
+     * @param value Token amount (in wei).
      */
     function consensusWithdraw(StakingAddress to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
@@ -529,12 +525,10 @@ library Subcall {
     }
 
     /**
-     * Perform a transfer to another account.
-     *
-     * This is equivalent of `payable(to).transfer(value);`
-     *
-     * @param to Destination account
-     * @param value native token amount (in wei)
+     * @notice Perform a transfer to another account. This is equivalent of
+     * `payable(to).transfer(value);`.
+     * @param to Destination account.
+     * @param value native token amount (in wei).
      */
     function accountsTransfer(address to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
