@@ -45,6 +45,7 @@
     "@oasisprotocol/deoxysii": "^0.0.5",
     "cborg": "^1.9.5",
     "ethers": "^6.6.1",
+    "ethersv5": "npm:ethers@^5.7.2",
     "js-sha512": "^0.8.0",
     "tweetnacl": "^1.0.3",
     "type-fest": "^2.19.0"

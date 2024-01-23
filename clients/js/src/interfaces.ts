@@ -1,55 +1,13 @@
-export type Deferrable<T> = {
-  [K in keyof T]: T[K] | Promise<T[K]>;
-};
+import { AbstractSigner, Block, Eip1193Provider, JsonRpcProvider, Provider, Signer, TransactionRequest } from 'ethers';
+import { BigNumber, ethers as ethersv5 } from 'ethersv5';
+import { EthCall } from '@oasisprotocol/sapphire-paratime/signed_calls';
+import { UpstreamProvider } from '@oasisprotocol/sapphire-paratime/compat';
 
-type Ethers5BlockTag = string | number;
+export type Ethers5Signer = typeof ethersv5.Signer
+export type EthersSigner = Signer
 
-export interface _Ethers5Block {
-  hash: string;
-  parentHash: string;
-  number: number;
-  timestamp: number;
-  nonce: string;
-  difficulty: number;
-  miner: string;
-  extraData: string;
-}
-
-export interface Block extends _Ethers5Block {
-  transactions: Array<string>;
-}
-
-export type Ethers5Signer = {
-  connect(provider: any): any;
-  sendTransaction(transaction: Deferrable<any>): Promise<any>;
-  signTransaction(transaction: Deferrable<any>): Promise<string>;
-  call(transaction: Deferrable<any>, blockTag?: any): Promise<string>;
-  estimateGas(transaction: Deferrable<any>): Promise<any>;
-  getAddress(): Promise<string>;
-  provider?: any;
-};
-
-export type Ethers5Network = {
-  name: string;
-  chainId: number | bigint;
-  ensAddress?: string;
-  _defaultProvider?: (providers: any, options?: any) => any;
-};
-
-export type Ethers5Provider = {
-  getTransactionCount(addressOrName: any, blockTag?: any): Promise<number>;
-  call(
-    transaction: Deferrable<any>,
-    blockTag?: Ethers5BlockTag | Promise<Ethers5BlockTag>,
-  ): Promise<string>;
-  estimateGas(transaction: Deferrable<any>): Promise<any>;
-  getNetwork(): Promise<Ethers5Network>;
-  getBlock(blockHashOrBlockTag: any): Promise<any>;
-};
-
-export type EIP1193Provider = {
-  request: (args: StrictWeb3ReqArgs | Web3ReqArgs) => Promise<unknown>;
-};
+export type Ethers5Provider = typeof ethersv5.providers.Provider
+export type EthersProvider = Provider
 
 export type SendProvider = {
   send?: Send;
@@ -72,8 +30,61 @@ export type StrictWeb3ReqArgs = {
   readonly params?: any[];
 };
 
-export async function undefer<T>(obj: Deferrable<T>): Promise<T> {
+export async function undefer<T>(obj: ethersv5.utils.Deferrable<T>): Promise<T> {
   return Object.fromEntries(
     await Promise.all(Object.entries(obj).map(async ([k, v]) => [k, await v])),
   );
 }
+
+export type EthersCallInput = EthCall | TransactionRequest;
+type EthersCallOutput = bigint | BigNumber | string | undefined;
+export type EthersCall = (tx: EthersCallInput) => Promise<EthersCallOutput>;
+
+export function isEthers5Signer(upstream: object): upstream is ethersv5.VoidSigner {
+  return Reflect.get(upstream, '_isSigner') === true;
+}
+
+export function isEthers6Signer(upstream: object): upstream is EthersSigner {
+  // XXX: this will not match if installed ethers version is different!
+  return upstream instanceof AbstractSigner;
+}
+
+export function isEthersSigner(upstream: object): upstream is EthersSigner & Ethers5Signer {
+  return isEthers5Signer(upstream) || isEthers6Signer(upstream);
+}
+
+export function isEthers5Provider(upstream: object): upstream is Ethers5Provider {
+  return Reflect.get(upstream, '_isProvider') === true;
+}
+
+function isEthers6Provider(upstream: Partial<EthersProvider>): upstream is EthersProvider {
+  return !!upstream.provider;
+}
+
+export function isEthersProvider(
+  upstream: object,
+): upstream is EthersProvider | Ethers5Provider {
+  return isEthers5Provider(upstream) || isEthers6Provider(upstream);
+}
+
+export function isEip1193Provider(upstream: object | null): upstream is Eip1193Provider {
+  return !!upstream && 'request' in upstream;
+}
+
+export function isJsonRpcProvider(upstream: object | null): upstream is JsonRpcProvider {
+  return !!upstream && 'send' in upstream;
+}
+
+export function isSupportedProvider(upstream: UpstreamProvider | null): upstream is Eip1193Provider | JsonRpcProvider {
+  return isEip1193Provider(upstream) || isJsonRpcProvider(upstream);
+}
+
+export function getProvider(upstream: UpstreamProvider | null): Eip1193Provider | JsonRpcProvider | undefined {
+  return isSupportedProvider(upstream) ? upstream : undefined;
+}
+
+export function isOasisCallDataPublicKeyResponse(response: object | undefined) {
+  return !!response && 'key' in response;
+}
+
+export { Block }

@@ -7,7 +7,12 @@ import {
   BlockTag,
   toBeHex,
   TransactionRequest,
+  JsonRpcSigner,
 } from 'ethers';
+import {
+  ethers as ethersv5
+} from 'ethers';
+
 import type {
   CamelCasedProperties,
   Promisable,
@@ -15,7 +20,12 @@ import type {
 } from 'type-fest';
 
 import { Cipher, Envelope } from './cipher.js';
-import { Ethers5Signer } from './interfaces.js';
+import {
+  EthersCallInput,
+  EthersSigner,
+  isEthers5Signer,
+  isEthers6Signer,
+} from './interfaces.js';
 
 const DEFAULT_GAS_PRICE = 1; // Default gas params are assigned in the web3 gateway.
 const DEFAULT_GAS_LIMIT = 30_000_000;
@@ -101,8 +111,8 @@ export function signedCallEIP712Params(chainId: number): {
  */
 export class SignedCallDataPack {
   static async make(
-    call: EthCall | TransactionRequest,
-    signer: Ethers5Signer | ethers.Signer,
+    call: EthersCallInput,
+    signer: ((typeof ethersv5.VoidSigner) & EthersSigner) | JsonRpcSigner,
     overrides?: PrepareSignedCallOverrides,
   ): Promise<SignedCallDataPack> {
     const leash = await makeLeash(signer, overrides?.leash);
@@ -160,7 +170,7 @@ function stringifyBytesLike(data: ethers.BytesLike): string {
 }
 
 async function makeLeash(
-  signer: Ethers5Signer | ethers.Signer,
+  signer: ((typeof ethersv5.VoidSigner) & EthersSigner) | JsonRpcSigner,
   overrides?: LeashOverrides,
 ): Promise<Leash> {
   // simply invalidate signedCall caches if overrided nonce or block are provided
@@ -168,21 +178,21 @@ async function makeLeash(
     _cache.clear();
   }
 
-  let nonceP: Promisable<number>;
+  let noncePromisable: Promisable<number> = Promise.resolve(-1);
   if (overrides?.nonce) {
-    nonceP = overrides.nonce;
-  } else if ('getNonce' in signer) {
+    noncePromisable = overrides.nonce;
+  } else if (isEthers6Signer(signer)) {
     // Ethers v6 has 'getNonce'
-    nonceP = signer.getNonce('pending');
-  } else {
+    noncePromisable = (signer as EthersSigner).getNonce('pending');
+  } else if(isEthers5Signer(signer)) {
     // Ethers v5 doesn't, so use `getTransactionCount`
-    const addr = await signer.getAddress();
-    nonceP = signer.provider!.getTransactionCount(addr, 'pending');
+    const addr = await (signer as unknown as ethersv5.VoidSigner).getAddress();
+    noncePromisable = (signer as unknown as ethersv5.VoidSigner).provider!.getTransactionCount(addr, 'pending');
   }
 
-  let blockP: Promisable<BlockId>;
+  let blockPromisable: Promisable<BlockId>;
   if (overrides?.block !== undefined) {
-    blockP = overrides.block;
+    blockPromisable = overrides.block;
   } else {
     if (!signer.provider)
       throw new Error(
@@ -190,11 +200,11 @@ async function makeLeash(
       );
     const latestBlock = await signer.provider.getBlock('latest');
     if (!latestBlock) throw new Error('unable to get latest block');
-    blockP = signer.provider!.getBlock(
+    blockPromisable = signer.provider!.getBlock(
       latestBlock.number - 2,
     ) as Promise<BlockId>;
   }
-  const [nonce, block] = await Promise.all([nonceP, blockP]);
+  const [nonce, block] = await Promise.all([noncePromisable, blockPromisable]);
   const blockRange = overrides?.blockRange ?? DEFAULT_BLOCK_RANGE;
 
   // check whether we should use cached leashes
@@ -261,7 +271,7 @@ interface TypedDataSigner {
 
 async function signCall(
   call: SignableEthCall,
-  signer: Ethers5Signer | ethers.Signer,
+  signer: ((typeof ethersv5.VoidSigner) & EthersSigner) | JsonRpcSigner,
   overrides?: Partial<{ chainId: number | bigint }>,
 ): Promise<Uint8Array> {
   const address = await signer.getAddress();

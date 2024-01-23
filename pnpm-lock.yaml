@@ -17,6 +17,9 @@ importers:
       ethers:
         specifier: ^6.6.1
         version: 6.9.0
+      ethersv5:
+        specifier: npm:ethers@^5.7.2
+        version: /ethers@5.7.2
       js-sha512:
         specifier: ^0.8.0
         version: 0.8.0
@@ -8578,6 +8581,7 @@ packages:
     dependencies:
       is-hex-prefixed: 1.0.0
       strip-hex-prefix: 1.0.0
+    bundledDependencies: false
 
   /eventemitter3@4.0.4:
     resolution: {integrity: sha512-rlaVLnVxtxvoyLsQQFBx53YmXHDxRIzzTLbdfxqi4yocpSjAxXwkU0cScM5JgSKMqEhrZpnvQ2D9gjylR0AimQ==}

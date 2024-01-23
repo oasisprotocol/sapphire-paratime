@@ -1,45 +1,50 @@
 import * as cbor from 'cborg';
 import {
-  Provider,
-  AbstractSigner,
   BrowserProvider,
-  ContractRunner,
+  BytesLike,
+  Eip1193Provider, ethers as ethersv5,
+  getBytes,
+  hexlify,
+  isBytesLike,
   JsonRpcProvider,
   JsonRpcSigner,
-  Signer,
+  Provider,
   Transaction,
   TransactionRequest,
   TransactionResponse,
-  getBytes,
-  isBytesLike,
-  AbstractProvider,
-  BytesLike,
-  hexlify,
 } from 'ethers';
 
-import {
-  Cipher,
-  Kind as CipherKind,
-  Envelope,
-  X25519DeoxysII,
-  lazy as lazyCipher,
-} from './cipher.js';
+import { Cipher, Envelope, Kind as CipherKind, lazy as lazyCipher, X25519DeoxysII } from './cipher.js';
 import { CallError, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
 import { EthCall, Leash, SignedCallDataPack } from './signed_calls.js';
 import { NETWORKS } from './networks.js';
 
 import {
-  Deferrable,
-  Ethers5Signer,
   Ethers5Provider,
-  EIP1193Provider,
+  Ethers5Signer,
+  EthersCall,
+  EthersCallInput,
+  EthersProvider,
+  EthersSigner,
+  getProvider,
+  isEip1193Provider,
+  isEthers5Provider,
+  isEthersProvider,
+  isEthersSigner,
+  isJsonRpcProvider,
+  isOasisCallDataPublicKeyResponse,
   Web3ReqArgs,
 } from './interfaces.js';
+import { ethers } from 'ethersv5';
 
 export type UpstreamProvider =
-  | EIP1193Provider
+  ethers.providers.ExternalProvider
+  | Eip1193Provider
+  | JsonRpcProvider
   | Ethers5Signer
-  | Ethers5Provider;
+  | Ethers5Provider
+  | EthersSigner
+  | EthersProvider;
 
 interface SapphireWrapOptions {
   cipher: Cipher;
@@ -63,6 +68,11 @@ function fillOptions(
   return options;
 }
 
+// Function to check if upstream is already wrapped
+function isWrapped<U extends UpstreamProvider>(upstream: U & string): boolean {
+  return typeof upstream !== 'string' && Reflect.get(upstream, SAPPHIRE_PROP) !== undefined;
+}
+
 /**
  * Wraps an upstream ethers/web3/EIP-1193 provider to speak the Sapphire format.
  *
@@ -74,32 +84,17 @@ function fillOptions(
  * web3.currentProvider
  * window.ethereum
  * a Web3 gateway URL
+ * ethers.BrowserProvider(window.ethereum)
  * ```
+ * @param options
  */
-export function wrap<U extends EIP1193Provider>(
-  upstream: U,
-  options?: SapphireWrapOptions,
-): U & SapphireAnnex; // `window.ethereum`
-
-export function wrap<U extends Ethers5Provider>(
-  upstream: U,
-  options?: SapphireWrapOptions,
-): U & SapphireAnnex; // Ethers providers
-
-export function wrap<U extends Ethers5Signer>(
-  upstream: U,
-  options?: SapphireWrapOptions,
-): U & SapphireAnnex; // Ethers signers
 
 export function wrap<U extends UpstreamProvider>(
   upstream: U,
   options?: SapphireWrapOptions,
 ): U & SapphireAnnex {
   // Already wrapped, so don't wrap it again.
-  if (
-    typeof upstream !== 'string' &&
-    Reflect.get(upstream, SAPPHIRE_PROP) !== undefined
-  ) {
+  if (isWrapped<UpstreamProvider & string>(upstream as UpstreamProvider & string)) {
     return upstream as U & SapphireAnnex;
   }
 
@@ -110,7 +105,7 @@ export function wrap<U extends UpstreamProvider>(
   const filled_options = fillOptions(options, upstream);
 
   if (isEthersSigner(upstream)) {
-    return wrapEthersSigner(upstream as Ethers5Signer, filled_options) as any;
+    return wrapEthersSigner(upstream as Ethers5Signer & EthersSigner, filled_options) as any;
   }
 
   if (isEthersProvider(upstream)) {
@@ -129,11 +124,11 @@ export function wrap<U extends UpstreamProvider>(
 // Wrap an EIP-1193 compatible provider
 // Under the hood, we wrap it in an ethers BrowserProvider to be used internally
 
-function isEIP1193Provider(upstream: object): upstream is EIP1193Provider {
+function isEIP1193Provider(upstream: object): upstream is Eip1193Provider {
   return 'request' in upstream;
 }
 
-function wrapEIP1193Provider<P extends EIP1193Provider>(
+function wrapEIP1193Provider<P extends Eip1193Provider>(
   upstream: P,
   options?: SapphireWrapOptions,
 ): P & SapphireAnnex {
@@ -161,7 +156,7 @@ function wrapEIP1193Provider<P extends EIP1193Provider>(
 function hookEIP1193Request(
   provider: BrowserProvider,
   options: SapphireWrapOptions,
-): EIP1193Provider['request'] {
+): Eip1193Provider['request'] {
   return async (args: Web3ReqArgs) => {
     const signer = await provider.getSigner();
     const { method, params } = await prepareRequest(args, signer, options);
@@ -197,24 +192,22 @@ function makeProxy<U extends UpstreamProvider>(
 
 // -----------------------------------------------------------------------------
 
-export function wrapEthersSigner<P extends Ethers5Signer>(
+export function wrapEthersSigner<P extends Ethers5Signer & EthersSigner>(
   upstream: P,
   options?: SapphireWrapOptions,
 ): P & SapphireAnnex {
   const filled_options = fillOptions(options, upstream);
 
-  let signer: Ethers5Signer;
+  let signer: Ethers5Signer & EthersSigner = upstream;
   if (upstream.provider) {
     try {
-      const x = wrapEthersProvider(upstream.provider, filled_options, upstream);
-      signer = upstream.connect(x as any);
+      const providerWithSapphireAnnex = wrapEthersProvider(upstream.provider, filled_options, upstream);
+      signer = upstream.connect(providerWithSapphireAnnex) as Ethers5Signer & EthersSigner;
     } catch (e: any) {
       if (e.code !== 'UNSUPPORTED_OPERATION') throw e;
-      signer = upstream;
     }
-  } else {
-    signer = upstream;
   }
+
   const hooks = {
     sendTransaction: hookEthersSend(
       signer.sendTransaction.bind(signer),
@@ -226,9 +219,9 @@ export function wrapEthersSigner<P extends Ethers5Signer>(
     ),
     call: hookEthersCall(signer, 'call', filled_options),
     estimateGas: hookEthersCall(signer, 'estimateGas', filled_options),
-    connect(provider: Ethers5Provider) {
-      const wp = signer.connect(provider);
-      return wrapEthersSigner(wp, filled_options);
+    connect(provider: Ethers5Provider & EthersProvider) {
+      const wrappedSigner = signer.connect(provider);
+      return wrapEthersSigner(wrappedSigner as Ethers5Signer & EthersSigner, filled_options);
     },
   };
   return makeProxy(signer as any, filled_options, hooks);
@@ -240,10 +233,10 @@ interface Ethers5ProviderWithSend {
   ): Promise<TransactionResponse>;
 }
 
-export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
+export function wrapEthersProvider<P extends Ethers5Provider | EthersProvider>(
   provider: P,
   options?: SapphireWrapOptions,
-  signer?: Ethers5Signer | Signer,
+  signer?: Ethers5Provider | EthersProvider | Ethers5Signer | EthersSigner,
 ): P & SapphireAnnex {
   const filled_options = fillOptions(options, provider);
 
@@ -263,19 +256,19 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
   if (signer) {
     // Ethers v6 `sendTransaction` takes `TransactionRequest`
     //  v6 equivalent to `sendTransaction` is `broadcastTransaction`
-    if ('broadcastTransaction' in provider) {
+    if (isEthersProvider(provider)) {
       hooks['broadcastTransaction'] = <Provider['broadcastTransaction']>(async (
         raw: string,
       ) => {
-        const repacked = await repackRawTx(raw, filled_options, signer);
+        const repacked = await repackRawTx(raw, filled_options, signer as JsonRpcSigner);
         return (provider as Provider).broadcastTransaction(repacked);
       });
-    } else {
+    } else if(isEthers5Provider(provider)) {
       // Ethers v5 doesn't have `broadcastTransaction`
       // Ethers v5 `sendTransaction` takes hex encoded byte string
       hooks['sendTransaction'] = <Ethers5ProviderWithSend['sendTransaction']>(
         (async (raw: string) => {
-          const repacked = await repackRawTx(raw, filled_options, signer);
+          const repacked = await repackRawTx(raw, filled_options, signer as JsonRpcSigner);
           return (
             provider as unknown as Ethers5ProviderWithSend
           ).sendTransaction(repacked);
@@ -287,42 +280,32 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
   return makeProxy(provider, filled_options, hooks);
 }
 
-function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
-  return Reflect.get(upstream, '_isSigner') === true;
-}
-
-function isEthers6Signer(upstream: object): upstream is Signer {
-  // XXX: this will not match if installed ethers version is different!
-  return upstream instanceof AbstractSigner;
-}
-
-function isEthersSigner(upstream: object): upstream is Signer | Ethers5Signer {
-  return isEthers5Signer(upstream) || isEthers6Signer(upstream);
-}
-
-function isEthers5Provider(upstream: object): upstream is Ethers5Signer {
-  return Reflect.get(upstream, '_isProvider') === true;
-}
-
-function isEthers6Provider(upstream: object): upstream is Provider {
-  // XXX: this will not match if installed ethers version is different!
-  return upstream instanceof AbstractProvider;
-}
-
-function isEthersProvider(
-  upstream: object,
-): upstream is Provider | Ethers5Provider {
-  return isEthers5Provider(upstream) || isEthers6Provider(upstream);
-}
-
 function hookEthersCall(
-  runner: Ethers5Provider | Ethers5Signer | ContractRunner,
+  runner: UpstreamProvider,
   method: 'call' | 'estimateGas',
   options: SapphireWrapOptions,
 ): EthersCall | undefined {
+
+  const sendSignedCall = async (
+    runner: Ethers5Provider & EthersProvider,
+    call: EthersCallInput,
+    signer: ((typeof ethersv5.VoidSigner) & EthersSigner) | JsonRpcSigner,
+  ) => {
+    const dataPack = await SignedCallDataPack.make(call, signer);
+
+    if (typeof (runner as any)[method] !== 'function') {
+      throw new Error(`The method '${method}' doesn't exist on the provider.`);
+    }
+
+    return (runner as any)[method]({
+      ...call,
+      data: await dataPack.encryptEncode(options.cipher),
+    });
+  };
+
   const sendUnsignedCall = async (
-    runner: Ethers5Provider | Ethers5Signer | ContractRunner,
-    call: EthCall | TransactionRequest,
+    runner: Ethers5Provider & EthersProvider,
+    call: EthersCallInput,
     is_already_enveloped: boolean,
   ) => {
     let call_data = call.data;
@@ -331,30 +314,34 @@ function hookEthersCall(
         call.data ?? new Uint8Array(),
       );
     }
-    return runner[method]!({
+
+    if (typeof (runner as any)[method] !== 'function') {
+      throw new Error(`The method '${method}' doesn't exist on the provider.`);
+    }
+
+    return (runner as any)[method]({
       ...call,
       data: hexlify(call_data!),
     });
   };
+
   return async (call) => {
-    let res: string;
+    let res: string | undefined = undefined;
+
     const is_already_enveloped = isCalldataEnveloped(call.data!, true);
+
     if (!is_already_enveloped && isEthersSigner(runner)) {
-      const signer = runner;
-      if (!signer.provider)
-        throw new Error('signer not connected to a provider');
-      const provider = signer.provider;
+      if (!runner.provider) {
+        throw new Error('No available provider connected to signer');
+      }
+
       if (await callNeedsSigning(call)) {
-        const dataPack = await SignedCallDataPack.make(call, signer);
-        res = await provider[method]({
-          ...call,
-          data: await dataPack.encryptEncode(options.cipher),
-        });
+        res = await sendSignedCall(runner.provider as any, call, runner as any);
       } else {
-        res = await sendUnsignedCall(provider, call, is_already_enveloped);
+        res = await sendUnsignedCall(runner.provider as any, call, is_already_enveloped);
       }
     } else {
-      res = await sendUnsignedCall(runner, call, is_already_enveloped);
+      res = await sendUnsignedCall(runner as any, call, is_already_enveloped);
     }
     // NOTE: if it's already enveloped, caller will decrypt it (not us)
     if (!is_already_enveloped && typeof res === 'string') {
@@ -363,8 +350,6 @@ function hookEthersCall(
     return res;
   };
 }
-
-type EthersCall = (tx: EthCall | TransactionRequest) => Promise<unknown>;
 
 function hookEthersSend<C>(send: C, options: SapphireWrapOptions): C {
   return (async (tx: EthCall | TransactionRequest, ...rest: any[]) => {
@@ -376,7 +361,7 @@ function hookEthersSend<C>(send: C, options: SapphireWrapOptions): C {
 // -----------------------------------------------------------------------------
 
 async function callNeedsSigning(
-  callP: Deferrable<EthCall> | TransactionRequest,
+  callP: ethers.utils.Deferrable<EthCall> | TransactionRequest,
 ): Promise<boolean> {
   const [from, to] = await Promise.all([callP.from, callP.to]);
   return (
@@ -433,7 +418,7 @@ const REPACK_ERROR =
 async function repackRawTx(
   raw: string,
   options: SapphireWrapOptions,
-  signer?: Ethers5Signer | Signer,
+  signer?: ((typeof ethersv5.VoidSigner) & EthersSigner) | JsonRpcSigner,
 ): Promise<string> {
   const tx = Transaction.from(raw);
 
@@ -602,6 +587,14 @@ export async function fetchRuntimePublicKeyByChainId(
   return getBytes(res.result.key);
 }
 
+async function getChainIdFromProvider(provider: Eip1193Provider | JsonRpcProvider): Promise<number> {
+  const browserOrWeb3Provider = isEthersProvider(provider)
+    ? new BrowserProvider(provider as Eip1193Provider)
+    : new ethers.providers.Web3Provider(provider as ethers.providers.ExternalProvider);
+  const network = await browserOrWeb3Provider.getNetwork();
+  return Number(network.chainId);
+}
+
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
@@ -609,42 +602,52 @@ export async function fetchRuntimePublicKeyByChainId(
 export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
-  const provider = 'provider' in upstream ? upstream['provider'] : upstream;
-  if (provider) {
-    let resp: any;
-    // It's probably an EIP-1193 provider
-    if ('request' in provider) {
-      try {
-        const source = provider as EIP1193Provider;
-        resp = await source.request({
-          method: OASIS_CALL_DATA_PUBLIC_KEY,
-          params: [],
-        });
-      } catch (ex) {
-        // don't do anything, move on to try next
-      }
+  let provider: Eip1193Provider | JsonRpcProvider | undefined = undefined;
+
+  if (isEthersSigner(upstream)) {
+    provider = getProvider(upstream.provider);
+  }
+
+  if (isEthersProvider(upstream) && !provider) {
+    provider = getProvider(upstream);
+  }
+
+  if (!provider) {
+    throw new Error('Provided signer/provider is unsupported it should be either Eip1193Provider or JsonRpcProvider');
+  }
+
+  let publicKeyResponse: any;
+
+  if (isEip1193Provider(provider)) {
+    try {
+      publicKeyResponse = await provider.request({
+        method: OASIS_CALL_DATA_PUBLIC_KEY,
+        params: [],
+      });
+    } catch (ex) {
+      // don't do anything, move on to try next
     }
-    // If it's a `send` provider
-    else if ('send' in provider) {
-      try {
-        const source = provider as {
-          send: (method: string, params: any[]) => Promise<any>;
-        };
-        resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
-      } catch (ex) {
-        // don't do anything, move on to try chainId fetch
-      }
-    }
-    if (resp && 'key' in resp) {
-      const key = resp.key;
-      return getBytes(key);
+  } else if (isJsonRpcProvider(provider)) {
+    try {
+      publicKeyResponse = await provider.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
+    } catch (ex) {
+      // don't do anything, move on to try chainId fetch
     }
   }
 
-  // Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
-  // fall back to manually querying the default gateway.
-  const chainId = Number(
-    (await new BrowserProvider(provider).getNetwork()).chainId,
-  );
+  if (isOasisCallDataPublicKeyResponse(publicKeyResponse)) {
+    const key = publicKeyResponse.key;
+    return getBytes(key);
+  }
+
+  let chainId: number | undefined = undefined;
+  if (isEthersProvider(provider) || isEthers5Provider(provider)) {
+    chainId = await getChainIdFromProvider(provider);
+  }
+
+  if (!chainId) {
+    throw new Error('Unable to determine the network provider is connected to!');
+  }
+
   return fetchRuntimePublicKeyByChainId(chainId);
 }
