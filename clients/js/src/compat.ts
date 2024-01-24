@@ -670,7 +670,9 @@ export async function fetchRuntimePublicKey(
   }
 
   if (!chainId) {
-    throw new Error('fetchRuntimePublicKey failed to retrieve chainId from provider');
+    throw new Error(
+      'fetchRuntimePublicKey failed to retrieve chainId from provider',
+    );
   }
   return fetchRuntimePublicKeyByChainId(chainId);
 }
