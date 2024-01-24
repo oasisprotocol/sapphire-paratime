@@ -310,10 +310,12 @@ function isEthers5Provider(upstream: object): upstream is Ethers5Signer {
 
 function isEthers6Provider(upstream: object): upstream is Provider {
   //
-  return (upstream instanceof AbstractProvider ||
-      (Reflect.get(upstream, 'waitForBlock') &&
-       Reflect.get(upstream, 'destroy') &&
-       Reflect.get(upstream, 'broadcastTransaction')));
+  return (
+    upstream instanceof AbstractProvider ||
+    (Reflect.get(upstream, 'waitForBlock') &&
+      Reflect.get(upstream, 'destroy') &&
+      Reflect.get(upstream, 'broadcastTransaction'))
+  );
 }
 
 function isEthersProvider(
