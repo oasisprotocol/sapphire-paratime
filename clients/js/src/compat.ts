@@ -122,6 +122,7 @@ export function wrap<U extends UpstreamProvider>(
     return wrapEIP1193Provider(upstream, filled_options);
   }
 
+  console.log(upstream);
   throw new TypeError('Unable to wrap unsupported provider.');
 }
 
@@ -292,7 +293,6 @@ function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Signer(upstream: object): upstream is Signer {
-  // XXX: this will not match if installed ethers version is different!
   return (
     upstream instanceof AbstractSigner ||
     (Reflect.get(upstream, 'signTypedData') &&
@@ -309,8 +309,11 @@ function isEthers5Provider(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Provider(upstream: object): upstream is Provider {
-  // XXX: this will not match if installed ethers version is different!
-  return upstream instanceof AbstractProvider;
+  //
+  return (upstream instanceof AbstractProvider ||
+      (Reflect.get(upstream, 'waitForBlock') &&
+       Reflect.get(upstream, 'destroy') &&
+       Reflect.get(upstream, 'broadcastTransaction')));
 }
 
 function isEthersProvider(
