@@ -122,7 +122,6 @@ export function wrap<U extends UpstreamProvider>(
     return wrapEIP1193Provider(upstream, filled_options);
   }
 
-  console.log(upstream);
   throw new TypeError('Unable to wrap unsupported provider.');
 }
 
