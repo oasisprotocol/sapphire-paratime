@@ -2,7 +2,7 @@
   "type": "module",
   "name": "@oasisprotocol/sapphire-paratime",
   "license": "Apache-2.0",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "The Sapphire ParaTime Web3 integration library.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/js",
   "repository": {
@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@oasisprotocol/deoxysii": "0.0.5",
-    "cborg": "^4.0.8",
+    "cborg": "^1.10.2",
     "ethers": "^6.10.0",
     "@noble/hashes": "1.3.2",
     "tweetnacl": "1.0.3",

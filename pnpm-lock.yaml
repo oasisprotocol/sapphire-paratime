@@ -15,8 +15,8 @@ importers:
         specifier: 0.0.5
         version: 0.0.5
       cborg:
-        specifier: ^4.0.8
-        version: 4.0.8
+        specifier: ^1.10.2
+        version: 1.10.2
       ethers:
         specifier: ^6.10.0
         version: 6.10.0
@@ -6379,12 +6379,6 @@ packages:
   /cborg@1.10.2:
     resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
     hasBin: true
-    dev: true
-
-  /cborg@4.0.8:
-    resolution: {integrity: sha512-/6QDK0Hw//cV4YNWZZjdIUMFNw0DZmb56jdVGJPwXP7874gSN0AMYqM07mVKpAm+6Nn7U8lvYFzPgBGatC+5xw==}
-    hasBin: true
-    dev: false
 
   /chai-as-promised@7.1.1(chai@4.3.7):
     resolution: {integrity: sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==}

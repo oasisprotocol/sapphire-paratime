@@ -660,7 +660,7 @@ export async function fetchRuntimePublicKey(
     // Otherwise, we have no idea what to do with this provider!
     else {
       throw new Error(
-        'fetchRuntimePublicKey not sure how to handle non-request non-send provider!',
+        'fetchRuntimePublicKey does not support non-request non-send provier!',
       );
     }
     if (resp && 'key' in resp) {
@@ -670,7 +670,7 @@ export async function fetchRuntimePublicKey(
   }
 
   if (!chainId) {
-    throw new Error('fetchRuntimePublicKey to retrieve chainId from provider');
+    throw new Error('fetchRuntimePublicKey failed to retrieve chainId from provider');
   }
   return fetchRuntimePublicKeyByChainId(chainId);
 }
