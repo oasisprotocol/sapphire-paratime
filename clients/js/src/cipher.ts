@@ -1,7 +1,8 @@
 import * as cbor from 'cborg';
 import { BytesLike, isBytesLike, hexlify, getBytes } from 'ethers';
 import deoxysii from '@oasisprotocol/deoxysii';
-import { sha512_256 } from 'js-sha512';
+import { sha512_256 } from '@noble/hashes/sha512';
+import { hmac } from '@noble/hashes/hmac';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 import { Promisable } from 'type-fest';
 
@@ -193,10 +194,15 @@ export class X25519DeoxysII extends Cipher {
     super();
     this.publicKey = keypair.publicKey;
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
-    const keyBytes = sha512_256.hmac
-      .create('MRAE_Box_Deoxys-II-256-128')
+
+    const keyBytes = hmac
+      .create(
+        sha512_256,
+        new TextEncoder().encode('MRAE_Box_Deoxys-II-256-128'),
+      )
       .update(nacl.scalarMult(keypair.secretKey, peerPublicKey))
-      .arrayBuffer();
+      .digest().buffer;
+
     this.key = new Uint8Array(keyBytes);
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }

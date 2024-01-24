@@ -292,8 +292,11 @@ function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Signer(upstream: object): upstream is Signer {
-  // XXX: this will not match if installed ethers version is different!
-  return upstream instanceof AbstractSigner;
+  return (
+    upstream instanceof AbstractSigner ||
+    (Reflect.get(upstream, 'signTypedData') &&
+      Reflect.get(upstream, 'signTransaction'))
+  );
 }
 
 function isEthersSigner(upstream: object): upstream is Signer | Ethers5Signer {
@@ -305,8 +308,13 @@ function isEthers5Provider(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Provider(upstream: object): upstream is Provider {
-  // XXX: this will not match if installed ethers version is different!
-  return upstream instanceof AbstractProvider;
+  //
+  return (
+    upstream instanceof AbstractProvider ||
+    (Reflect.get(upstream, 'waitForBlock') &&
+      Reflect.get(upstream, 'destroy') &&
+      Reflect.get(upstream, 'broadcastTransaction'))
+  );
 }
 
 function isEthersProvider(
@@ -590,50 +598,74 @@ export async function fetchRuntimePublicKeyByChainId(
   chainId: number,
   opts?: { fetch?: typeof fetch },
 ): Promise<Uint8Array> {
-  const { defaultGateway: gatewayUrl } = NETWORKS[chainId];
-  if (!gatewayUrl)
+  const { defaultGateway } = NETWORKS[chainId];
+  if (!defaultGateway)
     throw new Error(
       `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
     );
   const fetchImpl = opts?.fetch ?? globalThis?.fetch;
   const res = await (fetchImpl
-    ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
-    : fetchRuntimePublicKeyNode(gatewayUrl));
+    ? fetchRuntimePublicKeyBrowser(defaultGateway, fetchImpl)
+    : fetchRuntimePublicKeyNode(defaultGateway));
   return getBytes(res.result.key);
+}
+
+function fromQuantity(x: number | string): number {
+  if (typeof x == 'string') {
+    if (x.startsWith('0x')) {
+      return parseInt(x, 16);
+    }
+    return parseInt(x); // Assumed to be base 10
+  }
+  return x;
 }
 
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
+ *
+ * NOTE: MetaMask does not support Web3 methods it doesn't know about, so we have to
+ *       fall-back to manually querying the default gateway.
  */
 export async function fetchRuntimePublicKey(
   upstream: UpstreamProvider,
 ): Promise<Uint8Array> {
   const provider = 'provider' in upstream ? upstream['provider'] : upstream;
+  let chainId: number | undefined;
   if (provider) {
     let resp: any;
     // It's probably an EIP-1193 provider
     if ('request' in provider) {
+      const source = provider as EIP1193Provider;
       try {
-        const source = provider as EIP1193Provider;
         resp = await source.request({
           method: OASIS_CALL_DATA_PUBLIC_KEY,
           params: [],
         });
       } catch (ex) {
         // don't do anything, move on to try next
+        chainId = fromQuantity(
+          (await source.request({ method: 'eth_chainId' })) as string | number,
+        );
       }
     }
     // If it's a `send` provider
     else if ('send' in provider) {
+      const source = provider as {
+        send: (method: string, params: any[]) => Promise<any>;
+      };
       try {
-        const source = provider as {
-          send: (method: string, params: any[]) => Promise<any>;
-        };
         resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
       } catch (ex) {
         // don't do anything, move on to try chainId fetch
+        chainId = fromQuantity(await source.send('eth_chainId', []));
       }
+    }
+    // Otherwise, we have no idea what to do with this provider!
+    else {
+      throw new Error(
+        'fetchRuntimePublicKey does not support non-request non-send provier!',
+      );
     }
     if (resp && 'key' in resp) {
       const key = resp.key;
@@ -641,10 +673,10 @@ export async function fetchRuntimePublicKey(
     }
   }
 
-  // Note: MetaMask does not support Web3 methods it doesn't know about, so we have to
-  // fall back to manually querying the default gateway.
-  const chainId = Number(
-    (await new BrowserProvider(provider).getNetwork()).chainId,
-  );
+  if (!chainId) {
+    throw new Error(
+      'fetchRuntimePublicKey failed to retrieve chainId from provider',
+    );
+  }
   return fetchRuntimePublicKeyByChainId(chainId);
 }
