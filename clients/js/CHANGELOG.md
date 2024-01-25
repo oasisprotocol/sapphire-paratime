@@ -6,6 +6,22 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 1.3.1 (2024-01-25)
+
+### Fixed
+
+- Ethers v6 signed queries
+
+### Deprecated
+
+- Web3.js is not supported
+
+## 1.3.0 (2024-01-24)
+
+### Changed
+
+- Uses Ethers v6 behind the scenes
+
 ## 1.2.0 (2023-11-15)
 
 ### Added

@@ -7,8 +7,8 @@ Once you wrap your provider, you can use Sapphire just like you would use Ethere
 [@oasisprotocol/sapphire-paratime]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 [sapphire paratime]: https://docs.oasis.io/dapp/sapphire/
 
-_If your dapp doesn't port in under 10 minutes, it's a bug!_  
-If you have more than a little trouble, please file an issue.  
+_If your dapp doesn't port in under 10 minutes, it's a bug!_
+If you have more than a little trouble, please file an issue.
 There should be _no_ reason _not_ to use the Sapphire ParaTime!
 
 ## Usage
@@ -48,15 +48,6 @@ const signer = sapphire
 const provider = sapphire.wrap(
   ethers.getDefaultProvider(sapphire.NETWORKS.testnet.defaultGateway),
 );
-```
-
-### web3.js
-
-```ts
-import Web3 from 'web3';
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
-
-web3.setProvider(sapphire.wrap(web3.currentProvider));
 ```
 
 ### [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193)

@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
       "build": "tsc -b",
-      "test": "tsc -b && pnpm node build/index.js"
+      "test": "tsc -b && pnpm node build/examples/ethersv6-ts-esm/src/index.js"
     },
     "dependencies": {
       "@oasisprotocol/sapphire-paratime": "workspace:^",

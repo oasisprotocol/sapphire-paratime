@@ -22,7 +22,17 @@ async function getBody(request: IncomingMessage): Promise<string> {
   });
 }
 
-createServer(onRequest).listen(3000);
+const LISTEN_PORT = 3000;
+const DIE_ON_UNENCRYPTED = true;
+const UPSTREAM_URL = 'http://127.0.0.1:8545';
+const SHOW_ENCRYPTED_RESULTS = true;
+
+console.log('DIE_ON_UNENCRYPTED', DIE_ON_UNENCRYPTED);
+console.log('UPSTREAM_URL', UPSTREAM_URL);
+console.log('LISTEN_PORT', LISTEN_PORT);
+console.log('SHOW_ENCRYPTED_RESULTS', SHOW_ENCRYPTED_RESULTS);
+
+createServer(onRequest).listen(LISTEN_PORT);
 
 interface JSONRPCRequest {
   jsonrpc: string;
@@ -53,6 +63,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
     bodies = [inputBody];
   }
 
+  let showResult = false;
   for (const body of bodies) {
     const log = loggedMethods.includes(body.method);
 
@@ -63,6 +74,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
         body.method == 'eth_estimateGas' ||
         body.method == 'eth_call'
       ) {
+        let isSignedQuery = false;
         try {
           const x = getBytes(body.params[0].data);
           const y = cborg.decode(x);
@@ -71,12 +83,31 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
             // EIP-712 signed queries are wrapped as follows:
             // {data: {body{pk:,data:,nonce:},format:},leash:{nonce:,block_hash:,block_range:,block_number:},signature:}
             assert(y.data.format == 1);
+            isSignedQuery = true;
           } else {
             assert(y.format == 1);
           }
-          console.log('ENCRYPTED', req.method, req.url, body.method);
+          console.log(
+            'ENCRYPTED' + (isSignedQuery ? ' SIGNED QUERY' : ''),
+            req.method,
+            req.url,
+            body.method,
+          );
+          showResult = true;
         } catch (e: any) {
-          console.log('NOT ENCRYPTED', req.method, req.url, body.method);
+          if (DIE_ON_UNENCRYPTED) {
+            console.log(e);
+            console.log(body);
+            throw new Error(
+              `NOT ENCRYPTED ${req.method} ${req.url} ${body.method}`,
+            );
+          }
+          console.log(
+            'NOT ENCRYPTED' + (isSignedQuery ? ' SIGNED QUERY' : ''),
+            req.method,
+            req.url,
+            body.method,
+          );
         }
       } else if (body.method == 'eth_sendRawTransaction') {
         try {
@@ -85,7 +116,15 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
           const z = cborg.decode(getBytes(y[5]));
           assert(z.format == 1); // Verify envelope format == 1 (encrypted)
           console.log('ENCRYPTED', req.method, req.url, body.method);
+          showResult = true;
         } catch (e: any) {
+          if (DIE_ON_UNENCRYPTED) {
+            console.log(e);
+            console.log(body);
+            throw new Error(
+              `NOT ENCRYPTED ${req.method} ${req.url} ${body.method}`,
+            );
+          }
           console.log(
             'NOT ENCRYPTED',
             req.method,
@@ -98,13 +137,16 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
     }
   }
 
-  const pr = await fetch('http://127.0.0.1:8545/', {
+  const pr = await fetch(UPSTREAM_URL, {
     method: 'POST',
     body: JSON.stringify(inputBody),
     headers: { 'Content-Type': 'application/json' },
   });
 
   const pj = await pr.json();
+  if( SHOW_ENCRYPTED_RESULTS && showResult ) {
+    console.log(' - RESULT', pj);
+  }
 
   response.writeHead(200, 'OK');
   response.write(JSON.stringify(pj));
