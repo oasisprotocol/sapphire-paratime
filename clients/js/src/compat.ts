@@ -339,10 +339,10 @@ function hookEthersCall(
         call.data ?? new Uint8Array(),
       );
     }
-    const result = await ((runner as any)[method]!({
+    const result = await (runner as any)[method]!({
       ...call,
       data: hexlify(call_data!),
-    }));
+    });
     return result;
   };
   return async (call) => {

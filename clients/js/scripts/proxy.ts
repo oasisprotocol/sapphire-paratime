@@ -144,7 +144,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
   });
 
   const pj = await pr.json();
-  if( SHOW_ENCRYPTED_RESULTS && showResult ) {
+  if (SHOW_ENCRYPTED_RESULTS && showResult) {
     console.log(' - RESULT', pj);
   }
 
