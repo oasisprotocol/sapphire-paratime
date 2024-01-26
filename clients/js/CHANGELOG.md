@@ -6,11 +6,12 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
-## 1.3.1 (2024-01-25)
+## 1.3.1 (2024-01-26)
 
 ### Fixed
 
 - Ethers v6 signed queries
+- Removed ethers & @noble/hashes from peer dependencies
 
 ### Deprecated
 
