@@ -185,14 +185,19 @@ describe('ethers signer', () => {
     const response = await wrapped.call(callRequest);
     expect(response).toEqual('0x112358');
 
-    const y = upstreamProvider.request.mock.calls.find((z) => z[0].method == 'eth_call')![0];
+    const y = upstreamProvider.request.mock.calls.find(
+      (z) => z[0].method == 'eth_call',
+    )![0];
 
     // This will be a signed view call, so it will be enveloped
     // Make sure that the view call is enveloped, and can be decrypted
     const decryptedBody = cbor.decode(ethers.getBytes(y.params![0].data));
     expect(decryptedBody.leash).toBeDefined();
     expect(decryptedBody.signature).toBeDefined();
-    const decryptedInnerBody = await cipher.decryptCallData(decryptedBody.data.body.nonce, decryptedBody.data.body.data);
+    const decryptedInnerBody = await cipher.decryptCallData(
+      decryptedBody.data.body.nonce,
+      decryptedBody.data.body.data,
+    );
     expect(ethers.hexlify(decryptedInnerBody)).toEqual(callRequest.data);
 
     const gasUsed = await wrapped.estimateGas(callRequest);
