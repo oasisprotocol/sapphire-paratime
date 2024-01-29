@@ -123,7 +123,7 @@ class MockNonRuntimePublicKeyProvider {
     this.request = jest.fn((args) => {
       // Always errors while requesting the calldata public key
       // This simulates, e.g. MetaMask, which doesn't allow arbitrary requests
-      if (args.method == 'oasis_callDataPublicKey') {
+      if (args.method === 'oasis_callDataPublicKey') {
         throw new Error(`unhandled web3 call`);
       }
       return new MockEIP1193Provider().request(args);
@@ -186,7 +186,7 @@ describe('ethers signer', () => {
     expect(response).toEqual('0x112358');
 
     const y = upstreamProvider.request.mock.calls.find(
-      (z) => z[0].method == 'eth_call',
+      (z) => z[0].method === 'eth_call',
     )![0];
 
     // This will be a signed view call, so it will be enveloped

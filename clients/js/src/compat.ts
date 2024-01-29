@@ -462,7 +462,7 @@ async function repackRawTx(
 
   // When transaction is signed by another keypair and we don't have that signer
   // bypass re-packing, this allows repacking to pass-thru pre-signed txs
-  if (tx.isSigned() && (!signer || (await signer!.getAddress()) != tx.from!)) {
+  if (tx.isSigned() && (!signer || (await signer!.getAddress()) !== tx.from!)) {
     return raw;
   }
 
@@ -526,7 +526,7 @@ function envelopeFormatOk(envelope: Envelope): boolean {
 
   if (!body) return false;
 
-  if (format != null && format !== CipherKind.Plain) {
+  if (format !== null && format !== CipherKind.Plain) {
     if (isBytesLike(body)) return false;
 
     if (!isBytesLike(body.data)) return false;
@@ -621,7 +621,7 @@ export async function fetchRuntimePublicKeyByChainId(
 }
 
 function fromQuantity(x: number | string): number {
-  if (typeof x == 'string') {
+  if (typeof x === 'string') {
     if (x.startsWith('0x')) {
       return parseInt(x, 16);
     }

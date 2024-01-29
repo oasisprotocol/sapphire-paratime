@@ -42,7 +42,7 @@ interface JSONRPCRequest {
 }
 
 async function onRequest(req: IncomingMessage, response: ServerResponse) {
-  if (req.method != 'POST') {
+  if (req.method !== 'POST') {
     response.writeHead(500, 'Not POST!');
     response.end();
     return;
@@ -68,11 +68,11 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
     const log = loggedMethods.includes(body.method);
 
     if (log) {
-      if (body.method == 'oasis_callDataPublicKey') {
+      if (body.method === 'oasis_callDataPublicKey') {
         console.log(req.method, req.url, body.method);
       } else if (
-        body.method == 'eth_estimateGas' ||
-        body.method == 'eth_call'
+        body.method === 'eth_estimateGas' ||
+        body.method === 'eth_call'
       ) {
         let isSignedQuery = false;
         try {
@@ -82,10 +82,10 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
           if ('data' in y) {
             // EIP-712 signed queries are wrapped as follows:
             // {data: {body{pk:,data:,nonce:},format:},leash:{nonce:,block_hash:,block_range:,block_number:},signature:}
-            assert(y.data.format == 1);
+            assert(y.data.format === 1);
             isSignedQuery = true;
           } else {
-            assert(y.format == 1);
+            assert(y.format === 1);
           }
           console.log(
             'ENCRYPTED' + (isSignedQuery ? ' SIGNED QUERY' : ''),
@@ -109,12 +109,12 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
             body.method,
           );
         }
-      } else if (body.method == 'eth_sendRawTransaction') {
+      } else if (body.method === 'eth_sendRawTransaction') {
         try {
           const x = getBytes(body.params[0]);
           const y = decodeRlp(x) as string[]; //console.log(pj);
           const z = cborg.decode(getBytes(y[5]));
-          assert(z.format == 1); // Verify envelope format == 1 (encrypted)
+          assert(z.format === 1); // Verify envelope format == 1 (encrypted)
           console.log('ENCRYPTED', req.method, req.url, body.method);
           showResult = true;
         } catch (e: any) {
