@@ -93,14 +93,16 @@ contract Secret {
 
   function recordPayment() external payable {
     require(msg.value == 1 ether);
-    // set and lock recipient
+    // set and lock buyer
     _height = block.number;
+    _buyer = msg.sender;
   }
 
   /// @notice Reveals the secret.
   function revealSecret() view external returns (bytes memory) {
     require(block.number > _height, "not settled");
-    // check for recipient
+    require(_buyer != address(0), "no recorded buyer");
+    // TODO: optionally authenticate call from buyer
     return _secret;
   }
 }
