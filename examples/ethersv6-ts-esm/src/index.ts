@@ -10,10 +10,10 @@ async function testTheContract(contract:BaseContract, signerAddr?:string)
 {
     const addr = await contract.getFunction("testSignedQueries()")();
     if( signerAddr ) {
-        assert( addr == signerAddr );
+        assert( addr === signerAddr );
     }
     else {
-        assert( addr == ZeroAddress );
+        assert( addr === ZeroAddress );
     }
 
     try {
@@ -21,9 +21,9 @@ async function testTheContract(contract:BaseContract, signerAddr?:string)
         assert(false);
     }
     catch(e:any) {
-        assert(e.code == 'CALL_EXCEPTION');
-        assert(e.revert.name == 'CustomError');
-        assert(e.revert.args[0] == '0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef');
+        assert(e.code === 'CALL_EXCEPTION');
+        assert(e.revert.name === 'CustomError');
+        assert(e.revert.args[0] === '0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef');
     }
 }
 

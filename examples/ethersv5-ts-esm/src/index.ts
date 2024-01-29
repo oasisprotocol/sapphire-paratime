@@ -10,10 +10,10 @@ async function testTheContract(contract:Contract, signerAddr?:string)
 {
     const addr = await contract.callStatic["testSignedQueries()"]!();
     if( signerAddr ) {
-        assert( addr == signerAddr );
+        assert( addr === signerAddr );
     }
     else {
-        assert( addr == ethers.constants.AddressZero );
+        assert( addr === ethers.constants.AddressZero );
     }
 
     // XXX: Note that Ethers v5 has a 'workaround' that confuses types

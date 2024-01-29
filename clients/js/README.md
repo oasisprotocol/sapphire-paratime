@@ -1,14 +1,14 @@
 # Sapphire ParaTime Compat Lib
 
 [@oasisprotocol/sapphire-paratime] makes it easy to port your dapp to the [Sapphire ParaTime]
-by wrapping your existing `ethers.Provider`/`window.ethereum`/`web3.providers.*`.
+by wrapping your existing `ethers.Provider`/`window.ethereum`.
 Once you wrap your provider, you can use Sapphire just like you would use Ethereum.
 
 [@oasisprotocol/sapphire-paratime]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 [sapphire paratime]: https://docs.oasis.io/dapp/sapphire/
 
-_If your dapp doesn't port in under 10 minutes, it's a bug!_
-If you have more than a little trouble, please file an issue.
+_If your dapp doesn't port in under 10 minutes, it's a bug!_<br />
+If you have more than a little trouble, please file an issue.<br />
 There should be _no_ reason _not_ to use the Sapphire ParaTime!
 
 ## Usage
