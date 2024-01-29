@@ -5,7 +5,8 @@
         "outDir": "./build",
         "module": "NodeNext",
         "target": "ES2022",
-        "moduleResolution": "NodeNext"
+        "moduleResolution": "NodeNext",
+        "resolveJsonModule": true
     },
     "include": [
         "./src"

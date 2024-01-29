@@ -7,7 +7,7 @@
       "lint": "prettier --cache --plugin-search-dir=. --check *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint contracts/**.sol",
       "format": "prettier --cache --plugin-search-dir=. --write *.cjs test/**.ts scripts/**.ts contracts/**.sol && solhint --fix contracts/**.sol",
       "build": "tsc -b",
-      "test": "tsc -b && pnpm node build/index.js"
+      "test": "tsc -b && pnpm node build/examples/ethersv5-ts-esm/src/index.js"
     },
     "dependencies": {
       "@oasisprotocol/sapphire-paratime": "workspace:^",

@@ -107,27 +107,6 @@ class MockEIP1193Provider {
   }
 }
 
-/*
-class MockLegacyProvider extends MockEIP1193Provider {
-  public readonly isMetaMask = true;
-  public readonly sendAsync: (
-    args: { id?: string | number; method: string; params?: any[] },
-    cb: (err: unknown, ok?: unknown) => void,
-  ) => void;
-
-  public constructor() {
-    super();
-    this.sendAsync = (args, cb) => {
-      this.request(args)
-        .then((res: any) => {
-          cb(null, { jsonrpc: '2.0', id: args.id, result: res });
-        })
-        .catch((err) => cb(err));
-    };
-  }
-}
-*/
-
 class MockNonRuntimePublicKeyProvider {
   public readonly request: jest.Mock<
     Promise<unknown>,
@@ -144,7 +123,7 @@ class MockNonRuntimePublicKeyProvider {
     this.request = jest.fn((args) => {
       // Always errors while requesting the calldata public key
       // This simulates, e.g. MetaMask, which doesn't allow arbitrary requests
-      if (args.method == 'oasis_callDataPublicKey') {
+      if (args.method === 'oasis_callDataPublicKey') {
         throw new Error(`unhandled web3 call`);
       }
       return new MockEIP1193Provider().request(args);
@@ -156,15 +135,6 @@ describe('fetchRuntimePublicKey', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-
-  /*
-  it('legacy metamask provider', async () => {
-    const upstream = new ethers.BrowserProvider(new MockLegacyProvider());
-    const pk = await fetchRuntimePublicKey(upstream);
-    expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
-  });
-  */
 
   it('ethers provider', async () => {
     const upstream = new ethers.BrowserProvider(new MockEIP1193Provider());
@@ -214,10 +184,21 @@ describe('ethers signer', () => {
 
     const response = await wrapped.call(callRequest);
     expect(response).toEqual('0x112358');
-    const encryptedCall = upstreamProvider.request.mock.calls[1][0].params![0];
-    expect(encryptedCall.data).toEqual(
-      await cipher.encryptEncode(callRequest.data),
+
+    const y = upstreamProvider.request.mock.calls.find(
+      (z) => z[0].method === 'eth_call',
+    )![0];
+
+    // This will be a signed view call, so it will be enveloped
+    // Make sure that the view call is enveloped, and can be decrypted
+    const decryptedBody = cbor.decode(ethers.getBytes(y.params![0].data));
+    expect(decryptedBody.leash).toBeDefined();
+    expect(decryptedBody.signature).toBeDefined();
+    const decryptedInnerBody = await cipher.decryptCallData(
+      decryptedBody.data.body.nonce,
+      decryptedBody.data.body.data,
     );
+    expect(ethers.hexlify(decryptedInnerBody)).toEqual(callRequest.data);
 
     const gasUsed = await wrapped.estimateGas(callRequest);
     expect(gasUsed).toEqual(BigInt(0x112358));
@@ -293,40 +274,6 @@ describe('window.ethereum', () => {
     return [signer, provider, rawSign];
   });
 });
-
-/*
-describe('legacy MetaMask', () => {
-  it('proxy', async () => {
-    const wrapped = wrap(new MockLegacyProvider(), { cipher });
-    expect(wrapped.isMetaMask).toBe(true);
-    expect(wrapped.isConnected()).toBe(false);
-    expect((wrapped as any).sapphire).toMatchObject({ cipher });
-  });
-
-  runTestBattery(async () => {
-    const provider = new MockLegacyProvider();
-    const wrapped = wrap(provider, { cipher });
-    const signer = await new ethers.BrowserProvider(wrapped).getSigner();
-    const rawSign: ethers.Signer['signTransaction'] = async (
-      ...args: unknown[]
-    ) => {
-      return new Promise((resolve, reject) => {
-        wrapped.sendAsync(
-          {
-            method: 'eth_signTransaction',
-            params: args,
-          },
-          (err, ok) => {
-            if (err) reject(err);
-            else resolve((<any>ok).result as string);
-          },
-        );
-      });
-    };
-    return [signer, provider, rawSign];
-  });
-});
-*/
 
 function runTestBattery<S extends ethers.Signer>(
   makeSigner: () => Promise<

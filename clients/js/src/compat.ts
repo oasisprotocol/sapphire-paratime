@@ -71,7 +71,6 @@ function fillOptions(
  * ethers.providers.Web3Provider(window.ethereum)
  * ethers.Wallet(privateKey)
  * ethers.getDefaultProvider(NETWORKS.testnet.defaultGateway)
- * web3.currentProvider
  * window.ethereum
  * a Web3 gateway URL
  * ```
@@ -166,7 +165,9 @@ function hookEIP1193Request(
     const signer = await provider.getSigner();
     const { method, params } = await prepareRequest(args, signer, options);
     const res = await signer.provider.send(method, params ?? []);
-    if (method === 'eth_call') return options.cipher.decryptEncoded(res);
+    if (method === 'eth_call') {
+      return options.cipher.decryptEncoded(res);
+    }
     return res;
   };
 }
@@ -294,8 +295,8 @@ function isEthers5Signer(upstream: object): upstream is Ethers5Signer {
 function isEthers6Signer(upstream: object): upstream is Signer {
   return (
     upstream instanceof AbstractSigner ||
-    (Reflect.get(upstream, 'signTypedData') &&
-      Reflect.get(upstream, 'signTransaction'))
+    (Reflect.get(upstream, 'signTypedData') !== undefined &&
+      Reflect.get(upstream, 'signTransaction') !== undefined)
   );
 }
 
@@ -308,7 +309,6 @@ function isEthers5Provider(upstream: object): upstream is Ethers5Signer {
 }
 
 function isEthers6Provider(upstream: object): upstream is Provider {
-  //
   return (
     upstream instanceof AbstractProvider ||
     (Reflect.get(upstream, 'waitForBlock') &&
@@ -339,12 +339,20 @@ function hookEthersCall(
         call.data ?? new Uint8Array(),
       );
     }
-    return runner[method]!({
+    const result = await runner[method]!({
       ...call,
       data: hexlify(call_data!),
     });
+    return result;
   };
   return async (call) => {
+    // Ethers v6 uses `populateCall` internally to fill in the `from` field etc.
+    // It's necessary to call this, if it exists, otherwise signed queries won't work
+    const populateCall = Reflect.get(runner, 'populateCall');
+    if (populateCall !== undefined) {
+      call = await populateCall.bind(runner)(call);
+    }
+
     let res: string;
     const is_already_enveloped = isCalldataEnveloped(call.data!, true);
     if (!is_already_enveloped && isEthersSigner(runner)) {
@@ -366,7 +374,7 @@ function hookEthersCall(
     }
     // NOTE: if it's already enveloped, caller will decrypt it (not us)
     if (!is_already_enveloped && typeof res === 'string') {
-      return options.cipher.decryptEncoded(res);
+      return await options.cipher.decryptEncoded(res);
     }
     return res;
   };
@@ -376,7 +384,9 @@ type EthersCall = (tx: EthCall | TransactionRequest) => Promise<unknown>;
 
 function hookEthersSend<C>(send: C, options: SapphireWrapOptions): C {
   return (async (tx: EthCall | TransactionRequest, ...rest: any[]) => {
-    if (tx.data) tx.data = await options.cipher.encryptEncode(tx.data);
+    if (tx.data) {
+      tx.data = await options.cipher.encryptEncode(tx.data);
+    }
     return (send as any)(tx, ...rest);
   }) as C;
 }
@@ -452,7 +462,7 @@ async function repackRawTx(
 
   // When transaction is signed by another keypair and we don't have that signer
   // bypass re-packing, this allows repacking to pass-thru pre-signed txs
-  if (tx.isSigned() && (!signer || (await signer!.getAddress()) != tx.from!)) {
+  if (tx.isSigned() && (!signer || (await signer!.getAddress()) !== tx.from!)) {
     return raw;
   }
 
@@ -516,7 +526,7 @@ function envelopeFormatOk(envelope: Envelope): boolean {
 
   if (!body) return false;
 
-  if (format != null && format !== CipherKind.Plain) {
+  if (format !== null && format !== CipherKind.Plain) {
     if (isBytesLike(body)) return false;
 
     if (!isBytesLike(body.data)) return false;
@@ -611,7 +621,7 @@ export async function fetchRuntimePublicKeyByChainId(
 }
 
 function fromQuantity(x: number | string): number {
-  if (typeof x == 'string') {
+  if (typeof x === 'string') {
     if (x.startsWith('0x')) {
       return parseInt(x, 16);
     }
