@@ -23,7 +23,7 @@ async function testTheContract(contract:BaseContract, signerAddr?:string)
     catch(e:any) {
         assert(e.code === 'CALL_EXCEPTION');
         assert(e.revert.name === 'CustomError');
-        assert(e.revert.args[0] === '0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef');
+        assert(e.revert.args[0] === 0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdefn);
     }
 }
 
