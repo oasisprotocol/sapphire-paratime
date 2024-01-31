@@ -5,6 +5,7 @@ packages:
   - examples/hardhat
   - examples/ethersv5-ts-esm
   - examples/ethersv6-ts-esm
+  - examples/viem
   - examples/web3js-ts-esm
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
