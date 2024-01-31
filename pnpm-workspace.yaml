@@ -11,3 +11,4 @@ packages:
   - examples/onchain-signer
   - examples/truffle
   - integrations/hardhat
+  - integrations/viem
