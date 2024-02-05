@@ -1,0 +1,21 @@
+{
+  "name": "example-viem",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "tsc -b && node --loader ts-node/esm src/index.ts"
+  },
+  "dependencies": {
+    "@oasisprotocol/sapphire-viem": "workspace:^",
+    "viem": "^2.7.1"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "2.0.2",
+    "@types/node": "^17.0.10",
+    "abitype": "^1.0.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3"
+  }
+}
