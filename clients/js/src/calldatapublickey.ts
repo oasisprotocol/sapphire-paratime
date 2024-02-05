@@ -24,39 +24,38 @@ type RawCallDataPublicKeyResponse = {
 };
 
 export interface CallDataPublicKey {
-    // PublicKey is the requested public key.
-    key: Uint8Array;
+  // PublicKey is the requested public key.
+  key: Uint8Array;
 
-    // Checksum is the checksum of the key manager state.
-    checksum: Uint8Array;
+  // Checksum is the checksum of the key manager state.
+  checksum: Uint8Array;
 
-    // Signature is the Sign(sk, (key || checksum)) from the key manager.
-    signature: Uint8Array;
+  // Signature is the Sign(sk, (key || checksum)) from the key manager.
+  signature: Uint8Array;
 
-    // Epoch is the epoch of the ephemeral runtime key.
-    epoch: number | undefined;
+  // Epoch is the epoch of the ephemeral runtime key.
+  epoch: number;
 
-    chainId: number;
+  // Which chain ID is this key for?
+  chainId: number;
 
-    fetched: Date;
-
-    cipher: Cipher;
+  // When was the key fetched
+  fetched: Date;
 }
 
 function toCallDataPublicKey(
   result: RawCallDataPublicKeyResponseResult,
   chainId: number,
 ) {
-    const key = getBytes(result.key);
-    return {
-        key,
-        checksum: getBytes(result.checksum),
-        signature: getBytes(result.signature),
-        epoch: result.epoch,
-        chainId,
-        fetched: new Date(),
-        cipher: X25519DeoxysII.ephemeral(key),
-    } as CallDataPublicKey;
+  const key = getBytes(result.key);
+  return {
+    key,
+    checksum: getBytes(result.checksum),
+    signature: getBytes(result.signature),
+    epoch: result.epoch,
+    chainId,
+    fetched: new Date(),
+  } as CallDataPublicKey;
 }
 
 // TODO: remove, this is unecessary, node has `fetch` now?
@@ -202,9 +201,8 @@ export async function fetchRuntimePublicKey(
 }
 
 export abstract class AbstractKeyFetcher {
-    public abstract fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey>;
-    public abstract cipher(upstream: UpstreamProvider): Promise<Cipher>;
-    constructor() {}
+  public abstract fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey>;
+  public abstract cipher(upstream: UpstreamProvider): Promise<Cipher>;
 }
 
 export class KeyFetcher extends AbstractKeyFetcher {
@@ -238,23 +236,24 @@ export class KeyFetcher extends AbstractKeyFetcher {
   }
 
   public async cipher(upstream: UpstreamProvider): Promise<Cipher> {
-    return (await this.fetch(upstream)).cipher;
+    const kp = await this.fetch(upstream);
+    return X25519DeoxysII.ephemeral(kp.key);
   }
 }
 
 export class MockKeyFetcher extends AbstractKeyFetcher {
-    #_cipher: MockCipher;
+  #_cipher: MockCipher;
 
-    constructor(in_cipher: MockCipher) {
-        super();
-        this.#_cipher = in_cipher;
-    }
+  constructor(in_cipher: MockCipher) {
+    super();
+    this.#_cipher = in_cipher;
+  }
 
-    public async fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey> {
-        throw new Error("MockKeyFetcher doesn't support fetch(), only cipher()");
-    }
+  public async fetch(): Promise<CallDataPublicKey> {
+    throw new Error("MockKeyFetcher doesn't support fetch(), only cipher()");
+  }
 
-    public async cipher(upstream: UpstreamProvider): Promise<Cipher> {
-        return this.#_cipher
-    }
+  public async cipher(): Promise<Cipher> {
+    return this.#_cipher;
+  }
 }

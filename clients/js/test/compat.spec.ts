@@ -4,9 +4,7 @@ import nock from 'nock';
 import fetchImpl from 'node-fetch';
 import nacl from 'tweetnacl';
 
-import {
-  wrap,
-} from '@oasisprotocol/sapphire-paratime/compat.js';
+import { wrap } from '@oasisprotocol/sapphire-paratime/compat.js';
 
 import {
   MockKeyFetcher,
@@ -17,7 +15,9 @@ import { Mock as MockCipher } from '@oasisprotocol/sapphire-paratime/cipher.js';
 import { CHAIN_ID, verifySignedCall } from './utils';
 
 jest.mock('@oasisprotocol/sapphire-paratime/calldatapublickey.js', () => ({
-  ...jest.requireActual('@oasisprotocol/sapphire-paratime/calldatapublickey.js'),
+  ...jest.requireActual(
+    '@oasisprotocol/sapphire-paratime/calldatapublickey.js',
+  ),
   fetchRuntimePublicKeyByChainId: jest
     .fn()
     .mockReturnValue(new Uint8Array(Buffer.alloc(32, 8))),
@@ -102,7 +102,7 @@ class MockEIP1193Provider {
           checksum: '0x',
           epoch: 1,
           signature: '0x',
-          chainId: CHAIN_ID
+          chainId: CHAIN_ID,
         };
       }
       throw new Error(
@@ -413,7 +413,7 @@ describe('fetchPublicKeyByChainId', () => {
           checksum: '0x',
           epoch: 1,
           signature: '0x',
-          chainId: CHAIN_ID
+          chainId: CHAIN_ID,
         },
       });
 

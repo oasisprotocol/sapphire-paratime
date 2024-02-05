@@ -17,7 +17,7 @@ import {
   hexlify,
 } from 'ethers';
 
-import { Kind as CipherKind, Envelope } from './cipher.js';
+import { Kind as CipherKind, Envelope, Cipher } from './cipher.js';
 
 import { CallError } from './index.js';
 
@@ -155,15 +155,15 @@ function hookEIP1193Request(
 ): EIP1193Provider['request'] {
   return async (args: Web3ReqArgs) => {
     const signer = await provider.getSigner();
+    const cipher = await options.fetcher.cipher(provider);
     const { method, params } = await prepareRequest(
       args,
       signer,
       options,
-      provider,
+      cipher,
     );
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') {
-      const cipher = await options.fetcher.cipher(provider);
       return await cipher.decryptEncoded(res);
     }
     return res;
@@ -261,10 +261,11 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
       hooks['broadcastTransaction'] = <Provider['broadcastTransaction']>(async (
         raw: string,
       ) => {
+        const cipher = await filled_options.fetcher.cipher(provider);;
         const repacked = await repackRawTx(
           raw,
           filled_options,
-          provider,
+          cipher,
           signer,
         );
         return (provider as Provider).broadcastTransaction(repacked);
@@ -274,10 +275,11 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
       // Ethers v5 `sendTransaction` takes hex encoded byte string
       hooks['sendTransaction'] = <Ethers5ProviderWithSend['sendTransaction']>(
         (async (raw: string) => {
+          const cipher = await filled_options.fetcher.cipher(provider);;
           const repacked = await repackRawTx(
             raw,
             filled_options,
-            provider,
+            cipher,
             signer,
           );
           return (
@@ -335,10 +337,10 @@ function hookEthersCall(
     runner: Ethers5Provider | Ethers5Signer | ContractRunner,
     call: EthCall | TransactionRequest,
     is_already_enveloped: boolean,
+    cipher: Cipher
   ) => {
     let call_data = call.data;
     if (!is_already_enveloped) {
-      const cipher = await options.fetcher.cipher(runner as any);
       call_data = await cipher.encryptEncode(call.data ?? new Uint8Array());
     }
     const result = await runner[method]!({
@@ -357,27 +359,26 @@ function hookEthersCall(
 
     let res: string;
     const is_already_enveloped = isCalldataEnveloped(call.data!, true);
+    const cipher = await options.fetcher.cipher(runner as any);
     if (!is_already_enveloped && isEthersSigner(runner)) {
       const signer = runner;
       if (!signer.provider)
         throw new Error('signer not connected to a provider');
       const provider = signer.provider;
       if (await callNeedsSigning(call)) {
-        const cipher = await options.fetcher.cipher(runner as any);
         const dataPack = await SignedCallDataPack.make(call, signer);
         res = await provider[method]({
           ...call,
           data: await dataPack.encryptEncode(cipher),
         });
       } else {
-        res = await sendUnsignedCall(provider, call, is_already_enveloped);
+        res = await sendUnsignedCall(provider, call, is_already_enveloped, cipher);
       }
     } else {
-      res = await sendUnsignedCall(runner, call, is_already_enveloped);
+      res = await sendUnsignedCall(runner, call, is_already_enveloped, cipher);
     }
     // NOTE: if it's already enveloped, caller will decrypt it (not us)
     if (!is_already_enveloped && typeof res === 'string') {
-      const cipher = await options.fetcher.cipher(runner as any);
       return await cipher.decryptEncoded(res);
     }
     return res;
@@ -415,14 +416,14 @@ async function prepareRequest(
   { method, params }: Web3ReqArgs,
   signer: JsonRpcSigner,
   options: SapphireWrapOptions,
-  provider: BrowserProvider,
+  cipher: Cipher,
 ): Promise<{ method: string; params?: Array<any> }> {
   if (!Array.isArray(params)) return { method, params };
 
   if (method === 'eth_sendRawTransaction') {
     return {
       method,
-      params: [await repackRawTx(params[0], options, provider, signer)],
+      params: [await repackRawTx(params[0], options, cipher, signer)],
     };
   }
 
@@ -463,7 +464,7 @@ const REPACK_ERROR =
 async function repackRawTx(
   raw: string,
   options: SapphireWrapOptions,
-  provider: UpstreamProvider,
+  cipher: Cipher,
   signer?: Ethers5Signer | Signer,
 ): Promise<string> {
   const tx = Transaction.from(raw);
@@ -479,7 +480,6 @@ async function repackRawTx(
     return raw;
   }
 
-  const cipher = await options.fetcher.cipher(provider);
   tx.data = await cipher.encryptEncode(tx.data);
 
   try {
