@@ -81,7 +81,10 @@ export const sapphireTestnet = {
   },
 } as const satisfies Chain;
 
-export const getChain = (chainId?: string): Chain => {
+export const getSapphireChain = (chainId?: string): Chain => {
+  if( chainId === undefined ) {
+    return sapphire;
+  }
   switch (chainId) {
     case "23294":
       return sapphire;
@@ -89,7 +92,6 @@ export const getChain = (chainId?: string): Chain => {
       return sapphireTestnet;
     case "23293":
         return sapphireLocalnet;
-    default:
-      return sapphire;
   }
+  throw new Error(`Unknown Sapphire chain id: ${chainId}`);
 };

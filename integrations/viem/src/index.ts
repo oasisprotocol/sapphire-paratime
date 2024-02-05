@@ -1,3 +1,2 @@
-export { sapphire, sapphireLocalnet, sapphireTestnet } from './chain.js';
-export { sapphireWrapProvider } from './wrapProvider.js'
-export { wrapWalletClient } from "./wrapWalletClient.js"
+export { sapphire, sapphireLocalnet, sapphireTestnet, getSapphireChain } from './chain.js';
+export { wrapWalletClient, wrapPublicClient } from "./wrapper.js"

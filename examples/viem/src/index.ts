@@ -1,47 +1,41 @@
-// import { wrap } from "@oasisprotocol/sapphire-paratime";
-import { http, createWalletClient, Hex } from 'viem';
+import { Hex, createWalletClient, getContract, http, publicActions } from 'viem';
 
 import OmnibusJSON from "../../../contracts/artifacts/contracts/tests/Omnibus.sol/Omnibus.json" assert { type: "json" };
+import { narrow } from 'abitype'
 import { privateKeyToAccount } from "viem/accounts";
+import { sapphireLocalnet, wrapWalletClient } from '@oasisprotocol/sapphire-viem';
 
-const LOCAL_NET = {
-  id: 23293,
-  name: 'Oasis Sapphire Testnet',
-  network: 'sapphire-testnet',
-  nativeCurrency: { name: 'Sapphire Test Rose', symbol: 'TEST', decimals: 18 },
-  rpcUrls: {
-    default: {
-      http: ['http://127.0.0.1:8545'],
-    },
-    public: {
-      http: ['http://127.0.0.1:8545'],
-    },
-  },
-  testnet: true,
-};
 
 async function main () {
   const account = privateKeyToAccount('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
-  const provider = http('http://127.0.0.1:8545');
 
-  // TODO actually wrap provider or use integration to extend client
-  // const wrapped = wrap(provider as EIP1193Provider);
-  const walletClient = createWalletClient({ 
+  const transport = http('http://127.0.0.1:3000');
+
+  const walletClient = wrapWalletClient(createWalletClient({
     account,
-    chain: LOCAL_NET,
-    transport: provider
-  });
+    chain: sapphireLocalnet,
+    transport
+  }));
 
   const hash = await walletClient.deployContract({
-    abi: OmnibusJSON.abi,
-    account: account.address,
-    chain: LOCAL_NET,
+    abi: narrow(OmnibusJSON.abi),
     bytecode: OmnibusJSON.bytecode as Hex,
   });
 
-  console.log(hash)
+  const pc = walletClient.extend(publicActions);
+  const receipt = await pc.waitForTransactionReceipt({hash});
+  console.log('Receipt', receipt);
 
-  // TODO migrate additional ethers integration tests over
+  const contractAddress = receipt.contractAddress!;
+
+  console.log('getContract')
+  const c = getContract({
+    address: contractAddress,
+    abi: narrow(OmnibusJSON.abi),
+    client: walletClient
+  })
+  const x = await c.read['testSignedQueries']!();
+  console.log(x);
 }
 
 await main ();

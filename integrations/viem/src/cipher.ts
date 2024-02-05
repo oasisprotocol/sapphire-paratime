@@ -2,9 +2,8 @@ import { hmac } from "@noble/hashes/hmac";
 import { sha512_256 } from "@noble/hashes/sha512";
 import * as deoxysii from "@oasisprotocol/deoxysii";
 import * as cbor from "cborg";
-import { IncomingMessage } from "http";
 import * as nacl from "tweetnacl";
-import { type BoxKeyPair, scalarMult, randomBytes } from 'tweetnacl';
+import { type BoxKeyPair } from 'tweetnacl';
 import type { Promisable } from "type-fest";
 import { isBytes, isHex, toBytes, toHex } from "viem";
 
@@ -203,7 +202,7 @@ export class X25519DeoxysII extends Cipher {
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
     this.key = hmac
       .create(sha512_256, "MRAE_Box_Deoxys-II-256-128")
-      .update(scalarMult(keypair.secretKey, peerPublicKey))
+      .update(nacl.scalarMult(keypair.secretKey, peerPublicKey))
       .digest();
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }
@@ -212,7 +211,7 @@ export class X25519DeoxysII extends Cipher {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   }> {
-    const nonce = randomBytes(deoxysii.NonceSize);
+    const nonce = nacl.randomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
@@ -285,44 +284,16 @@ export async function fetchRuntimePublicKeyByChainId(
       `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
     );
   const fetchImpl = globalThis?.fetch ?? opts?.fetch;
-  const res = await (fetchImpl
-    ? fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl)
-    : fetchRuntimePublicKeyNode(gatewayUrl));
+  if( ! fetchImpl ) {
+    throw new Error('No fetch implementation found!');
+  }
+  const res = await fetchRuntimePublicKeyBrowser(gatewayUrl, fetchImpl);
   return arrayify(res.result.key);
 }
 
 type CallDataPublicKeyResponse = {
   result: { key: string; checksum: string; signature: string };
 };
-
-async function fetchRuntimePublicKeyNode(
-  gwUrl: string,
-): Promise<CallDataPublicKeyResponse> {
-  // Import http or https, depending on the URI scheme.
-  const https = await import(/* webpackIgnore: true */ gwUrl.split(":")[0]);
-
-  const body = makeCallDataPublicKeyBody();
-  return new Promise((resolve, reject) => {
-    const opts = {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "content-length": body.length,
-      },
-    };
-    const req = https.request(gwUrl, opts, (res: IncomingMessage) => {
-      const chunks: Buffer[] = [];
-      res.on("error", (err) => reject(err));
-      res.on("data", (chunk) => chunks.push(chunk));
-      res.on("end", () => {
-        resolve(JSON.parse(Buffer.concat(chunks).toString()));
-      });
-    });
-    req.on("error", (err: Error) => reject(err));
-    req.write(body);
-    req.end();
-  });
-}
 
 async function fetchRuntimePublicKeyBrowser(
   gwUrl: string,
@@ -350,13 +321,13 @@ function makeCallDataPublicKeyBody(): string {
   });
 }
 
-type BytesLike = string | Uint8Array;
+export type BytesLike = string | Uint8Array;
 
-function isBytesLike(byteslike: any): byteslike is BytesLike {
+export function isBytesLike(byteslike: any): byteslike is BytesLike {
   return isHex(byteslike) || isBytes(byteslike);
 }
 
-function arrayify(byteslike: BytesLike): Uint8Array {
+export function arrayify(byteslike: BytesLike): Uint8Array {
   if (isBytes(byteslike)) {
     return byteslike;
   } else if (isHex(byteslike)) {
