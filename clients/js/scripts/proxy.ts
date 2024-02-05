@@ -25,7 +25,7 @@ async function getBody(request: IncomingMessage): Promise<string> {
 const LISTEN_PORT = 3000;
 const DIE_ON_UNENCRYPTED = true;
 const UPSTREAM_URL = 'http://127.0.0.1:8545';
-const SHOW_ENCRYPTED_RESULTS = true;
+const SHOW_ENCRYPTED_RESULTS = false;
 
 console.log('DIE_ON_UNENCRYPTED', DIE_ON_UNENCRYPTED);
 console.log('UPSTREAM_URL', UPSTREAM_URL);
@@ -75,6 +75,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
         body.method === 'eth_call'
       ) {
         let isSignedQuery = false;
+        let epoch = false;
         try {
           const x = getBytes(body.params[0].data);
           const y = cborg.decode(x);
@@ -84,11 +85,15 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
             // {data: {body{pk:,data:,nonce:},format:},leash:{nonce:,block_hash:,block_range:,block_number:},signature:}
             assert(y.data.format === 1);
             isSignedQuery = true;
+            epoch = y.data.body.epoch;
           } else {
             assert(y.format === 1);
+            epoch = y.body.epoch;
           }
           console.log(
-            'ENCRYPTED' + (isSignedQuery ? ' SIGNED QUERY' : ''),
+            'ENCRYPTED'
+            + (isSignedQuery ? ' SIGNED QUERY' : '')
+            + (epoch ? ` +EPOCH(${epoch})` : ''),
             req.method,
             req.url,
             body.method,
@@ -115,7 +120,10 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
           const y = decodeRlp(x) as string[]; //console.log(pj);
           const z = cborg.decode(getBytes(y[5]));
           assert(z.format === 1); // Verify envelope format == 1 (encrypted)
-          console.log('ENCRYPTED', req.method, req.url, body.method);
+          const epoch = z.body.epoch;
+          console.log(
+            'ENCRYPTED' + (epoch ? ` +EPOCH(${epoch})` : ''),
+            req.method, req.url, body.method);
           showResult = true;
         } catch (e: any) {
           if (DIE_ON_UNENCRYPTED) {

@@ -4,7 +4,6 @@ import deoxysii from '@oasisprotocol/deoxysii';
 import { sha512_256 } from '@noble/hashes/sha512';
 import { hmac } from '@noble/hashes/hmac';
 import nacl, { BoxKeyPair } from 'tweetnacl';
-import { Promisable } from 'type-fest';
 
 import { CallError } from './index.js';
 
@@ -34,8 +33,9 @@ export type CallResult = {
 export type CallFailure = { module: string; code: number; message?: string };
 
 export abstract class Cipher {
-  public abstract kind: Promisable<Kind>;
-  public abstract publicKey: Promisable<Uint8Array>;
+  public abstract kind: Kind;
+  public abstract publicKey: Uint8Array;
+  public abstract epoch: number | undefined;
 
   public abstract encrypt(plaintext: Uint8Array): Promise<{
     ciphertext: Uint8Array;
@@ -62,10 +62,11 @@ export abstract class Cipher {
     }
     if (plaintext.length === 0) return; // Txs without data are just balance transfers, and all data in those is public.
     const { data, nonce } = await this.encryptCallData(getBytes(plaintext));
-    const [format, pk] = await Promise.all([this.kind, this.publicKey]);
-    const body = pk.length && nonce.length ? { pk, nonce, data } : data;
-    if (format === Kind.Plain) return { body };
-    return { format, body };
+    const pk = this.publicKey;
+    const epoch = this.epoch;
+    const body = pk.length && nonce.length ? { pk, nonce, data, epoch } : data;
+    if (this.kind === Kind.Plain) return { body };
+    return { format: this.kind, body };
   }
 
   protected async encryptCallData(
@@ -142,6 +143,7 @@ export abstract class Cipher {
 export class Plain extends Cipher {
   public override readonly kind = Kind.Plain;
   public override readonly publicKey = new Uint8Array();
+  public override readonly epoch = undefined;
 
   public async encrypt(plaintext: Uint8Array): Promise<{
     ciphertext: Uint8Array;
@@ -172,28 +174,36 @@ export class Plain extends Cipher {
 export class X25519DeoxysII extends Cipher {
   public override readonly kind = Kind.X25519DeoxysII;
   public override readonly publicKey: Uint8Array;
+  public override readonly epoch: number | undefined;
 
   private cipher: deoxysii.AEAD;
   private key: Uint8Array; // Stored for curious users.
 
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
-  static ephemeral(peerPublicKey: BytesLike): X25519DeoxysII {
+  static ephemeral(peerPublicKey: BytesLike, epoch?: number): X25519DeoxysII {
     const keypair = nacl.box.keyPair();
-    return new X25519DeoxysII(keypair, getBytes(peerPublicKey));
+    return new X25519DeoxysII(keypair, getBytes(peerPublicKey), epoch);
   }
 
   static fromSecretKey(
     secretKey: BytesLike,
     peerPublicKey: BytesLike,
+    epoch?: number,
   ): X25519DeoxysII {
     const keypair = nacl.box.keyPair.fromSecretKey(getBytes(secretKey));
-    return new X25519DeoxysII(keypair, getBytes(peerPublicKey));
+    return new X25519DeoxysII(keypair, getBytes(peerPublicKey), epoch);
   }
 
-  public constructor(keypair: BoxKeyPair, peerPublicKey: Uint8Array) {
+  public constructor(
+    keypair: BoxKeyPair,
+    peerPublicKey: Uint8Array,
+    epoch?: number,
+  ) {
     super();
     this.publicKey = keypair.publicKey;
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
+
+    this.epoch = epoch;
 
     const keyBytes = hmac
       .create(
@@ -228,6 +238,7 @@ export class X25519DeoxysII extends Cipher {
 export class Mock extends Cipher {
   public override readonly kind = Kind.Mock;
   public override readonly publicKey = new Uint8Array([1, 2, 3]);
+  public override readonly epoch = undefined;
 
   public static readonly NONCE = new Uint8Array([10, 20, 30, 40]);
 
@@ -246,31 +257,4 @@ export class Mock extends Cipher {
       throw new Error('incorrect nonce');
     return ciphertext;
   }
-}
-
-/**
- * A Cipher that constructs itself only when needed.
- * Useful for deferring async construction (e.g., fetching public keys) until in an async context.
- *
- * @param generator A function that yields the cipher implementation. This function must be multiply callable and without observable side effects (c.f. Rust's `impl Fn()`).
- */
-export function lazy(generator: () => Promisable<Cipher>): Cipher {
-  // Note: in cases when `generate` is run concurrently, the first fulfillment will be used.
-  return new Proxy(
-    {},
-    {
-      get(target: { inner?: Promise<Cipher> }, prop) {
-        // Props (Promiseable)
-        if (prop === 'kind' || prop === 'publicKey') {
-          if (!target.inner) target.inner = Promise.resolve(generator());
-          return target.inner.then((c) => Reflect.get(c, prop));
-        }
-        // Funcs (async)
-        return async (...args: unknown[]) => {
-          if (!target.inner) target.inner = Promise.resolve(generator());
-          return target.inner.then((c) => Reflect.get(c, prop).apply(c, args));
-        };
-      },
-    },
-  ) as Cipher;
 }

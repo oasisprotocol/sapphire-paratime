@@ -237,7 +237,7 @@ export class KeyFetcher extends AbstractKeyFetcher {
 
   public async cipher(upstream: UpstreamProvider): Promise<Cipher> {
     const kp = await this.fetch(upstream);
-    return X25519DeoxysII.ephemeral(kp.key);
+    return X25519DeoxysII.ephemeral(kp.key, kp.epoch);
   }
 }
 
