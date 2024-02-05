@@ -261,12 +261,8 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
       hooks['broadcastTransaction'] = <Provider['broadcastTransaction']>(async (
         raw: string,
       ) => {
-        const cipher = await filled_options.fetcher.cipher(provider);;
-        const repacked = await repackRawTx(
-          raw,
-          cipher,
-          signer,
-        );
+        const cipher = await filled_options.fetcher.cipher(provider);
+        const repacked = await repackRawTx(raw, cipher, signer);
         return (provider as Provider).broadcastTransaction(repacked);
       });
     } else {
@@ -274,12 +270,8 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
       // Ethers v5 `sendTransaction` takes hex encoded byte string
       hooks['sendTransaction'] = <Ethers5ProviderWithSend['sendTransaction']>(
         (async (raw: string) => {
-          const cipher = await filled_options.fetcher.cipher(provider);;
-          const repacked = await repackRawTx(
-            raw,
-            cipher,
-            signer,
-          );
+          const cipher = await filled_options.fetcher.cipher(provider);
+          const repacked = await repackRawTx(raw, cipher, signer);
           return (
             provider as unknown as Ethers5ProviderWithSend
           ).sendTransaction(repacked);
@@ -335,7 +327,7 @@ function hookEthersCall(
     runner: Ethers5Provider | Ethers5Signer | ContractRunner,
     call: EthCall | TransactionRequest,
     is_already_enveloped: boolean,
-    cipher: Cipher
+    cipher: Cipher,
   ) => {
     let call_data = call.data;
     if (!is_already_enveloped) {
@@ -370,7 +362,12 @@ function hookEthersCall(
           data: await dataPack.encryptEncode(cipher),
         });
       } else {
-        res = await sendUnsignedCall(provider, call, is_already_enveloped, cipher);
+        res = await sendUnsignedCall(
+          provider,
+          call,
+          is_already_enveloped,
+          cipher,
+        );
       }
     } else {
       res = await sendUnsignedCall(runner, call, is_already_enveloped, cipher);
