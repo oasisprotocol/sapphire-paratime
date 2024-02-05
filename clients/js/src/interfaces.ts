@@ -77,3 +77,8 @@ export async function undefer<T>(obj: Deferrable<T>): Promise<T> {
     await Promise.all(Object.entries(obj).map(async ([k, v]) => [k, await v])),
   );
 }
+
+export type UpstreamProvider =
+  | EIP1193Provider
+  | Ethers5Signer
+  | Ethers5Provider;
