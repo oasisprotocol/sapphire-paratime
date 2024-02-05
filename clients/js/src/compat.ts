@@ -264,7 +264,6 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
         const cipher = await filled_options.fetcher.cipher(provider);;
         const repacked = await repackRawTx(
           raw,
-          filled_options,
           cipher,
           signer,
         );
@@ -278,7 +277,6 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
           const cipher = await filled_options.fetcher.cipher(provider);;
           const repacked = await repackRawTx(
             raw,
-            filled_options,
             cipher,
             signer,
           );
@@ -423,7 +421,7 @@ async function prepareRequest(
   if (method === 'eth_sendRawTransaction') {
     return {
       method,
-      params: [await repackRawTx(params[0], options, cipher, signer)],
+      params: [await repackRawTx(params[0], cipher, signer)],
     };
   }
 
@@ -463,7 +461,6 @@ const REPACK_ERROR =
 /** Repacks and signs a sendRawTransaction if needed and possible. */
 async function repackRawTx(
   raw: string,
-  options: SapphireWrapOptions,
   cipher: Cipher,
   signer?: Ethers5Signer | Signer,
 ): Promise<string> {
