@@ -91,9 +91,9 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
             epoch = y.body.epoch;
           }
           console.log(
-            'ENCRYPTED'
-            + (isSignedQuery ? ' SIGNED QUERY' : '')
-            + (epoch ? ` +EPOCH(${epoch})` : ''),
+            'ENCRYPTED' +
+              (isSignedQuery ? ' SIGNED QUERY' : '') +
+              (epoch ? ` +EPOCH(${epoch})` : ''),
             req.method,
             req.url,
             body.method,
@@ -123,7 +123,10 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
           const epoch = z.body.epoch;
           console.log(
             'ENCRYPTED' + (epoch ? ` +EPOCH(${epoch})` : ''),
-            req.method, req.url, body.method);
+            req.method,
+            req.url,
+            body.method,
+          );
           showResult = true;
         } catch (e: any) {
           if (DIE_ON_UNENCRYPTED) {
