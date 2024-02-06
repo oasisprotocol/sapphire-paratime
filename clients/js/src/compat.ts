@@ -156,11 +156,7 @@ function hookEIP1193Request(
   return async (args: Web3ReqArgs) => {
     const signer = await provider.getSigner();
     const cipher = await options.fetcher.cipher(provider);
-    const { method, params } = await prepareRequest(
-      args,
-      signer,
-      cipher,
-    );
+    const { method, params } = await prepareRequest(args, signer, cipher);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') {
       return await cipher.decryptEncoded(res);
