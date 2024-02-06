@@ -4,8 +4,6 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { GasTests } from '../typechain-types/contracts/tests/Gas.sol/GasTests';
 
-const GAS_MARGIN_OF_ERROR = 5;
-
 describe('Gas Padding', function () {
   let contract: GasTests;
 
@@ -15,37 +13,22 @@ describe('Gas Padding', function () {
   });
 
   it('Gas Padding works as Expected', async () => {
-    const expectedGas = 122746;
-
     let tx = await contract.testConstantTime(1, 100000);
     let receipt = await tx.wait();
-    expect(receipt!.cumulativeGasUsed).within(
-      expectedGas - GAS_MARGIN_OF_ERROR,
-      expectedGas + GAS_MARGIN_OF_ERROR,
-    );
+    const initialGasUsed = receipt!.cumulativeGasUsed;
 
     tx = await contract.testConstantTime(2, 100000);
     receipt = await tx.wait();
-    expect(receipt!.cumulativeGasUsed).within(
-      expectedGas - GAS_MARGIN_OF_ERROR,
-      expectedGas + GAS_MARGIN_OF_ERROR,
-    );
+    expect(receipt!.cumulativeGasUsed).eq(initialGasUsed);
 
-    tx = await contract.testConstantTime(1, 100000);
+    tx = await contract.testConstantTime(1, 110000);
     receipt = await tx.wait();
-    expect(receipt!.cumulativeGasUsed).within(
-      expectedGas - GAS_MARGIN_OF_ERROR,
-      expectedGas + GAS_MARGIN_OF_ERROR,
-    );
+    expect(receipt!.cumulativeGasUsed).eq(initialGasUsed+10000n);
 
     // Note: calldata isn't included in gas padding
     // Thus when the value is 0 it will use 4 gas instead of 16 gas
-    // XXX: sometimes this is off by 1 gas!
     tx = await contract.testConstantTime(0, 100000);
     receipt = await tx.wait();
-    expect(receipt?.cumulativeGasUsed).within(
-      expectedGas - 10 - GAS_MARGIN_OF_ERROR,
-      expectedGas - 10,
-    );
+    expect(receipt?.cumulativeGasUsed).eq(initialGasUsed-12n);
   });
 });
