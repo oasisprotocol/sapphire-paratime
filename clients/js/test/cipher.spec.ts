@@ -6,7 +6,6 @@ import nacl from 'tweetnacl';
 import {
   Plain,
   X25519DeoxysII,
-  lazy,
 } from '@oasisprotocol/sapphire-paratime/cipher.js';
 
 const DATA = new Uint8Array([1, 2, 3, 4, 5]);
@@ -110,17 +109,6 @@ describe('X25519DeoxysII', () => {
     });
     await expect(cipher.decryptCallResult(cbor.decode(res))).rejects.toThrow(
       'out of gas',
-    );
-  });
-});
-
-describe('lazy', () => {
-  it('forwards', async () => {
-    const inner = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
-    const cipher = lazy(() => inner);
-    expect(await cipher.publicKey).toEqual(inner.publicKey);
-    expect((await cipher.encrypt(DATA)).ciphertext).toHaveLength(
-      DATA.length + TagSize,
     );
   });
 });

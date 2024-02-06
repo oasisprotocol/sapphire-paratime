@@ -4,23 +4,27 @@ import nock from 'nock';
 import fetchImpl from 'node-fetch';
 import nacl from 'tweetnacl';
 
+import { wrap } from '@oasisprotocol/sapphire-paratime/compat.js';
+
 import {
-  wrap,
+  MockKeyFetcher,
   fetchRuntimePublicKey,
   fetchRuntimePublicKeyByChainId,
-} from '@oasisprotocol/sapphire-paratime/compat.js';
+} from '@oasisprotocol/sapphire-paratime/calldatapublickey.js';
 import { Mock as MockCipher } from '@oasisprotocol/sapphire-paratime/cipher.js';
 import { CHAIN_ID, verifySignedCall } from './utils';
 
-jest.mock('@oasisprotocol/sapphire-paratime/compat.js', () => ({
-  ...jest.requireActual('@oasisprotocol/sapphire-paratime/compat.js'),
+jest.mock('@oasisprotocol/sapphire-paratime/calldatapublickey.js', () => ({
+  ...jest.requireActual(
+    '@oasisprotocol/sapphire-paratime/calldatapublickey.js',
+  ),
   fetchRuntimePublicKeyByChainId: jest
     .fn()
     .mockReturnValue(new Uint8Array(Buffer.alloc(32, 8))),
 }));
 
 const real_fetchRuntimePublicKeyByChainId = jest.requireActual(
-  '@oasisprotocol/sapphire-paratime/compat.js',
+  '@oasisprotocol/sapphire-paratime/calldatapublickey.js',
 ).fetchRuntimePublicKeyByChainId;
 
 const secretKey =
@@ -28,6 +32,7 @@ const secretKey =
 const wallet = new ethers.Wallet(secretKey);
 const to = '0xb5ed90452AAC09f294a0BE877CBf2Dc4D55e096f';
 const cipher = new MockCipher();
+const fetcher = new MockKeyFetcher(cipher);
 const data = Buffer.from([1, 2, 3, 4, 5]);
 
 class MockEIP1193Provider {
@@ -94,6 +99,10 @@ class MockEIP1193Provider {
       if (method === 'oasis_callDataPublicKey') {
         return {
           key: `0x${Buffer.alloc(32, 42).toString('hex')}`,
+          checksum: '0x',
+          epoch: 1,
+          signature: '0x',
+          chainId: CHAIN_ID,
         };
       }
       throw new Error(
@@ -140,7 +149,7 @@ describe('fetchRuntimePublicKey', () => {
     const upstream = new ethers.BrowserProvider(new MockEIP1193Provider());
     const pk = await fetchRuntimePublicKey(upstream);
     expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
+    expect(pk.key).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
   });
 
   it('non public key provider', async () => {
@@ -148,32 +157,32 @@ describe('fetchRuntimePublicKey', () => {
       new MockNonRuntimePublicKeyProvider(),
     );
     // This will have retrieved the key from testnet or mainnet
-    expect(pk).not.toEqual(new Uint8Array(Buffer.alloc(32, 8)));
+    expect(pk.key).not.toEqual(new Uint8Array(Buffer.alloc(32, 8)));
   });
 
   it('ethers signer', async () => {
-    const wrapped = wrap(wallet, { cipher }).connect(
+    const wrapped = wrap(wallet, { fetcher: fetcher }).connect(
       new ethers.BrowserProvider(new MockEIP1193Provider()),
     );
     const pk = await fetchRuntimePublicKey(wrapped);
     expect(fetchRuntimePublicKeyByChainId).not.toHaveBeenCalled();
-    expect(pk).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
+    expect(pk.key).toEqual(new Uint8Array(Buffer.alloc(32, 42)));
   });
 });
 
 describe('ethers signer', () => {
   it('proxy', async () => {
-    const wrapped = wrap(wallet, { cipher });
+    const wrapped = wrap(wallet, { fetcher });
     expect(wrapped.address).toEqual(
       '0x11e244400Cf165ade687077984F09c3A037b868F',
     );
     expect(await wrapped.getAddress()).toEqual(wrapped.address);
-    expect((wrapped as any).sapphire).toMatchObject({ cipher });
+    expect((wrapped as any).sapphire).toMatchObject({ fetcher });
   });
 
   it('unsigned call/estimateGas', async () => {
     const upstreamProvider = new MockEIP1193Provider();
-    const wrapped = wrap(wallet, { cipher }).connect(
+    const wrapped = wrap(wallet, { fetcher }).connect(
       new ethers.BrowserProvider(upstreamProvider),
     );
     const callRequest = {
@@ -206,7 +215,7 @@ describe('ethers signer', () => {
 
   runTestBattery(async () => {
     const provider = new MockEIP1193Provider();
-    const signer = wrap(wallet, { cipher }).connect(
+    const signer = wrap(wallet, { fetcher }).connect(
       new ethers.BrowserProvider(provider),
     );
     return [signer, provider, signer.signTransaction.bind(signer)];
@@ -220,11 +229,11 @@ describe('ethers provider', () => {
   beforeEach(() => {
     upstreamProvider = new MockEIP1193Provider();
     const provider = new ethers.BrowserProvider(upstreamProvider);
-    wrapped = wrap(provider, { cipher });
+    wrapped = wrap(provider, { fetcher });
   });
 
   it('proxy', async () => {
-    expect((wrapped as any).sapphire).toMatchObject({ cipher });
+    expect((wrapped as any).sapphire).toMatchObject({ fetcher });
   });
 
   it('unsigned call/estimateGas', async () => {
@@ -254,15 +263,15 @@ describe('ethers provider', () => {
 
 describe('window.ethereum', () => {
   it('proxy', async () => {
-    const wrapped = wrap(new MockEIP1193Provider(), { cipher });
+    const wrapped = wrap(new MockEIP1193Provider(), { fetcher });
     expect(wrapped.isMetaMask).toBe(false);
     expect(wrapped.isConnected()).toBe(false);
-    expect((wrapped as any).sapphire).toMatchObject({ cipher });
+    expect((wrapped as any).sapphire).toMatchObject({ fetcher });
   });
 
   runTestBattery(async () => {
     const provider = new MockEIP1193Provider();
-    const wrapped = wrap(provider, { cipher });
+    const wrapped = wrap(provider, { fetcher });
     const signer = await new ethers.BrowserProvider(wrapped).getSigner();
     const rawSign = async (...args: unknown[]) => {
       const raw = await wrapped.request({
@@ -401,12 +410,15 @@ describe('fetchPublicKeyByChainId', () => {
       .reply(200, {
         result: {
           key: `0x${Buffer.from(publicKey).toString('hex')}`,
-          // TODO: checksum and signature
+          checksum: '0x',
+          epoch: 1,
+          signature: '0x',
+          chainId: CHAIN_ID,
         },
       });
 
     const response = await real_fetchRuntimePublicKeyByChainId(chainId, opts);
-    expect(response).not.toHaveLength(0);
+    expect(response.key).not.toHaveLength(0);
 
     scope.done();
   }

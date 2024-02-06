@@ -13,28 +13,22 @@ describe('Gas Padding', function () {
   });
 
   it('Gas Padding works as Expected', async () => {
-    const expectedGas = 122735;
-
     let tx = await contract.testConstantTime(1, 100000);
     let receipt = await tx.wait();
-    expect(receipt!.cumulativeGasUsed).within(expectedGas - 1, expectedGas + 2);
+    const initialGasUsed = receipt!.cumulativeGasUsed;
 
     tx = await contract.testConstantTime(2, 100000);
     receipt = await tx.wait();
-    expect(receipt!.cumulativeGasUsed).within(expectedGas - 1, expectedGas + 2);
+    expect(receipt!.cumulativeGasUsed).eq(initialGasUsed);
 
-    tx = await contract.testConstantTime(1, 100000);
+    tx = await contract.testConstantTime(1, 110000);
     receipt = await tx.wait();
-    expect(receipt!.cumulativeGasUsed).within(expectedGas - 2, expectedGas + 2);
+    expect(receipt!.cumulativeGasUsed).eq(initialGasUsed + 10000n);
 
     // Note: calldata isn't included in gas padding
     // Thus when the value is 0 it will use 4 gas instead of 16 gas
-    // XXX: sometimes this is off by 1 gas!
     tx = await contract.testConstantTime(0, 100000);
     receipt = await tx.wait();
-    expect(receipt?.cumulativeGasUsed).within(
-      expectedGas - 13,
-      expectedGas - 10,
-    );
+    expect(receipt?.cumulativeGasUsed).eq(initialGasUsed - 12n);
   });
 });
