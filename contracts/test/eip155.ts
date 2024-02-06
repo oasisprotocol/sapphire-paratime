@@ -70,7 +70,7 @@ describe('EIP-155', function () {
     const tx = await testContract.example();
     expect(entropy(tx.data)).gte(EXPECTED_ENTROPY_ENCRYPTED);
     expect(tx.data).not.eq(calldata);
-    expect(tx.data.length).eq(218);
+    expect(tx.data.length).eq(236);
   });
 
   /// Verify that contracts can sign transactions for submission with an unwrapped provider

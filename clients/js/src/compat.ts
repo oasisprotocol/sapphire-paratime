@@ -159,7 +159,6 @@ function hookEIP1193Request(
     const { method, params } = await prepareRequest(
       args,
       signer,
-      options,
       cipher,
     );
     const res = await signer.provider.send(method, params ?? []);
@@ -410,7 +409,6 @@ async function callNeedsSigning(
 async function prepareRequest(
   { method, params }: Web3ReqArgs,
   signer: JsonRpcSigner,
-  options: SapphireWrapOptions,
   cipher: Cipher,
 ): Promise<{ method: string; params?: Array<any> }> {
   if (!Array.isArray(params)) return { method, params };
@@ -427,7 +425,6 @@ async function prepareRequest(
     (await callNeedsSigning(params[0]))
   ) {
     const dataPack = await SignedCallDataPack.make(params[0], signer);
-    const cipher = await options.fetcher.cipher(signer);
     const signedCall = {
       ...params[0],
       data: await dataPack.encryptEncode(cipher),
@@ -442,7 +439,6 @@ async function prepareRequest(
     /^eth_((send|sign)Transaction|call|estimateGas)$/.test(method) &&
     params[0].data // Ignore balance transfers without calldata
   ) {
-    const cipher = await options.fetcher.cipher(signer);
     params[0].data = await cipher.encryptEncode(params[0].data);
     return { method, params };
   }

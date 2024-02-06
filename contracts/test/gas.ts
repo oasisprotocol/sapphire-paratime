@@ -13,7 +13,7 @@ describe('Gas Padding', function () {
   });
 
   it('Gas Padding works as Expected', async () => {
-    const expectedGas = 122735;
+    const expectedGas = 122746;
 
     let tx = await contract.testConstantTime(1, 100000);
     let receipt = await tx.wait();
