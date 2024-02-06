@@ -44,7 +44,7 @@ describe('Gas Padding', function () {
     tx = await contract.testConstantTime(0, 100000);
     receipt = await tx.wait();
     expect(receipt?.cumulativeGasUsed).within(
-      expectedGas - 13,
+      expectedGas - 10 - GAS_MARGIN_OF_ERROR,
       expectedGas - 10,
     );
   });
