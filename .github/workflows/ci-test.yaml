@@ -74,7 +74,7 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v2.4.0
+      - uses: pnpm/action-setup@v3
         name: Install pnpm
         id: pnpm-install
         with:
@@ -134,7 +134,7 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v2.4.0
+      - uses: pnpm/action-setup@v3
         name: Install pnpm
         id: pnpm-install
         with:
@@ -213,7 +213,7 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v2.4.0
+      - uses: pnpm/action-setup@v3
         name: Install pnpm
         id: pnpm-install
         with:
