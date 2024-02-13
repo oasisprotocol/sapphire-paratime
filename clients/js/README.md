@@ -81,7 +81,7 @@ This is useful for methods in contracts that do identity-based access control. F
 in the browser, you should only make signed calls when necessary.
 
 **Fix:** The Sapphire ParaTime compat lib will not sign calls when the `from` address is
-`address(0)`. For Web3.js you can pass `{ from: `0x${'0'.repeat(40)}` }` as the final arg
+`address(0)`. For Web3.js you can pass `` { from: `0x${'0'.repeat(40)}` } `` as the final arg
 to `Contract.method().call` ([ref](https://web3js.readthedocs.io/en/v1.2.11/web3-eth-contract.html)). For Ethers.js please read the next section.
 
 ### `Contract with a Signer cannot override from (operation="overrides.from", code=UNSUPPORTED_OPERATION, ...)`
