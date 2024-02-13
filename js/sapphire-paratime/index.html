@@ -27,7 +27,7 @@ sign calls such that <code>msg.sender</code> can be authenticated during <code>e
 This is useful for methods in contracts that do identity-based access control. For better UX
 in the browser, you should only make signed calls when necessary.</p>
 <p><strong>Fix:</strong> The Sapphire ParaTime compat lib will not sign calls when the <code>from</code> address is
-<code>address(0)</code>. For Web3.js you can pass <code>{ from: </code>0x${&#39;0&#39;.repeat(40)}<code> }</code> as the final arg
+<code>address(0)</code>. For Web3.js you can pass <code>{ from: `0x${&#39;0&#39;.repeat(40)}` }</code> as the final arg
 to <code>Contract.method().call</code> (<a href="https://web3js.readthedocs.io/en/v1.2.11/web3-eth-contract.html">ref</a>). For Ethers.js please read the next section.</p>
 <a id="md:contract-with-a-signer-cannot-override-from-operationquotoverridesfromquot-codeunsupported_operation-" class="tsd-anchor"></a><h3><a href="#md:contract-with-a-signer-cannot-override-from-operationquotoverridesfromquot-codeunsupported_operation-"><code>Contract with a Signer cannot override from (operation=&quot;overrides.from&quot;, code=UNSUPPORTED_OPERATION, ...)</code></a></h3><p><strong>Explanation:</strong> Ethers prevents overriding <code>from</code> when using a Signer <a href="https://github.com/ethers-io/ethers.js/discussions/3327">for safety reasons</a>.</p>
 <p><strong>Fix:</strong> Create a new <code>Contract</code> instance but do not connect it to a signer–just a provider.
