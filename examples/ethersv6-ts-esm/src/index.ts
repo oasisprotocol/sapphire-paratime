@@ -16,6 +16,8 @@ async function testTheContract(contract:BaseContract, signerAddr?:string)
         assert( addr === ZeroAddress );
     }
 
+    // Verifies that calling a function which does require(false,"ThisIsAnError")
+    // Will return the correct error message in the exception to Ethers
     try {
         await contract.getFunction("testViewRevert()").staticCall();
         assert(false);
@@ -25,6 +27,8 @@ async function testTheContract(contract:BaseContract, signerAddr?:string)
         assert(e.reason == 'ThisIsAnError');
     }
 
+    // Verifies that calling a function which does revert CustomError(someInteger)
+    // Will return the correctly encoded custom error type to Ethers
     try {
         await contract.getFunction("testCustomRevert()").staticCall();
         assert(false);
