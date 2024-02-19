@@ -17,6 +17,15 @@ async function testTheContract(contract:BaseContract, signerAddr?:string)
     }
 
     try {
+        await contract.getFunction("testViewRevert()").staticCall();
+        assert(false);
+    }
+    catch(e:any) {
+        assert(e.code == 'CALL_EXCEPTION');
+        assert(e.reason == 'ThisIsAnError');
+    }
+
+    try {
         await contract.getFunction("testCustomRevert()").staticCall();
         assert(false);
     }
