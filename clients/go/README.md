@@ -44,6 +44,14 @@ nft, _ := NewNft(addr, backend)
 tx, _ := nft.Transfer(txOpts, tokenId, recipient)
 ```
 
+Confidential queries signed with your account's key are also supported on the
+Sapphire-wrapped contract above, if you pass the `bind.CallOpts` defining your
+`From` address:
+
+```go
+balance := nft.BalanceOf(&bind.CallOpts{From: "0xYOUR_ADDRESS"}, common.HexToAddress("0xDce075E1C39b1ae0b75D554558b6451A226ffe00"))
+```
+
 ### Bring Your Own Signer
 
 You can also package an Ethereum transaction for Sapphire by:

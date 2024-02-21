@@ -11,64 +11,41 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
+	"github.com/oasisprotocol/curve25519-voi/primitives/x25519"
 	"github.com/oasisprotocol/deoxysii"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	mraeApi "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/api"
 	mrae "github.com/oasisprotocol/oasis-core/go/common/crypto/mrae/deoxysii"
-	"golang.org/x/crypto/curve25519"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
 type Kind uint64
-
-const (
-	Plain          = iota
-	X25519DeoxysII = 1
-)
 
 var (
 	ErrCallFailed       = errors.New("call failed in module")
 	ErrCallResultDecode = errors.New("could not decode call result")
 )
 
-type CallResult struct {
-	Fail    *Failure      `json:"failure,omitempty"`
-	OK      []byte        `json:"ok,omitempty"`
-	Unknown *AeadEnvelope `json:"unknown,omitempty"`
-}
-
-type Inner struct {
-	Fail *Failure `json:"fail"`
-	OK   []byte   `json:"ok"`
-}
-
-type Failure struct {
-	Module  string `json:"module"`
-	Code    uint64 `json:"code"`
-	Message string `json:"message,omitempty"`
-}
-
-type AeadEnvelope struct {
-	Nonce []byte `json:"nonce"`
-	Data  []byte `json:"data"`
-}
-
 type Cipher interface {
-	Kind() uint64
+	CallFormat() types.CallFormat
 	Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte)
 	Decrypt(nonce []byte, ciphertext []byte) (plaintext []byte, err error)
 	EncryptEncode(plaintext []byte) []byte
+	EncryptEnvelope(plaintext []byte) *types.Call
 	DecryptEncoded(result []byte) ([]byte, error)
 	DecryptCallResult(result []byte) ([]byte, error)
 }
 
 type PlainCipher struct{}
 
+// NewPlainCipher creates a cipher instance without encryption support.
 func NewPlainCipher() PlainCipher {
 	return PlainCipher{}
 }
 
-func (c PlainCipher) Kind() uint64 {
-	return Plain
+func (c PlainCipher) CallFormat() types.CallFormat {
+	return types.CallFormatPlain
 }
 
 func (c PlainCipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
@@ -76,25 +53,35 @@ func (c PlainCipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte)
 	return plaintext, nonce
 }
 
-func (c PlainCipher) Decrypt(nonce []byte, ciphertext []byte) (plaintext []byte, err error) {
+func (c PlainCipher) Decrypt(_ []byte, ciphertext []byte) (plaintext []byte, err error) {
 	return ciphertext, nil
 }
 
 func (c PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
-	var callResult CallResult
-	cbor.MustUnmarshal(response, &callResult)
+	var callResult types.CallResult
+	if err := cbor.Unmarshal(response, &callResult); err != nil {
+		return nil, err
+	}
 
 	// TODO: actually decode and return failure
-	if callResult.Fail != nil {
+	if callResult.Failed != nil {
 		return nil, ErrCallFailed
 	}
 
 	if callResult.Unknown != nil {
-		return callResult.Unknown.Data, nil
+		var unknown []byte
+		if err := cbor.Unmarshal(callResult.Unknown, &unknown); err != nil {
+			return nil, fmt.Errorf("failed decoding callResult.Unknown: %w", err)
+		}
+		return unknown, nil
 	}
 
-	if callResult.OK != nil {
-		return callResult.OK, nil
+	if callResult.Ok != nil {
+		var ok []byte
+		if err := cbor.Unmarshal(callResult.Ok, &ok); err != nil {
+			return nil, fmt.Errorf("failed decoding callResult.Ok: %w", err)
+		}
+		return ok, nil
 	}
 
 	return nil, ErrCallResultDecode
@@ -104,16 +91,14 @@ func (c PlainCipher) DecryptEncoded(response []byte) ([]byte, error) {
 	return c.DecryptCallResult(response)
 }
 
-func (c PlainCipher) EncryptEnvelope(plaintext []byte) *DataEnvelope {
+func (c PlainCipher) EncryptEnvelope(plaintext []byte) *types.Call {
 	// Txs without data are just balance transfers, and all data in those is public.
 	if len(plaintext) == 0 {
 		return nil
 	}
-	return &DataEnvelope{
-		Body: cbor.Marshal(Body{
-			Data: plaintext,
-		}),
-		Format: c.Kind(),
+	return &types.Call{
+		Body:   cbor.Marshal(plaintext),
+		Format: c.CallFormat(),
 	}
 }
 
@@ -125,17 +110,18 @@ func (c PlainCipher) EncryptEncode(plaintext []byte) []byte {
 // X25519DeoxysIICipher is the default cipher that does what it says on the tin.
 type X25519DeoxysIICipher struct {
 	cipher  cipher.AEAD
-	keypair Curve25519KeyPair
+	keypair *Curve25519KeyPair
+	epoch   uint64
 }
 
 type Curve25519KeyPair struct {
-	PublicKey [curve25519.PointSize]byte
-	SecretKey [curve25519.ScalarSize]byte
+	PublicKey x25519.PublicKey
+	SecretKey x25519.PrivateKey
 }
 
 // NewCurve25519KeyPair generates a random keypair suitable for use with the X25519DeoxysII cipher.
 func NewCurve25519KeyPair() (*Curve25519KeyPair, error) {
-	public, private, err := mraeApi.GenerateKeyPair(rand.Reader)
+	public, private, err := x25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -145,9 +131,10 @@ func NewCurve25519KeyPair() (*Curve25519KeyPair, error) {
 	}, nil
 }
 
-func NewX25519DeoxysIICipher(keypair Curve25519KeyPair, peerPublicKey [curve25519.PointSize]byte) (*X25519DeoxysIICipher, error) {
+// NewX25519DeoxysIICipher creates a new cipher instance with encryption support.
+func NewX25519DeoxysIICipher(keypair *Curve25519KeyPair, peerPublicKey *x25519.PublicKey, epoch uint64) (*X25519DeoxysIICipher, error) {
 	var sharedKey [deoxysii.KeySize]byte
-	mrae.Box.DeriveSymmetricKey(sharedKey[:], &peerPublicKey, &keypair.SecretKey)
+	mrae.Box.DeriveSymmetricKey(sharedKey[:], peerPublicKey, &keypair.SecretKey)
 	cipher, err := deoxysii.New(sharedKey[:])
 	mraeApi.Bzero(sharedKey[:])
 	if err != nil {
@@ -156,11 +143,12 @@ func NewX25519DeoxysIICipher(keypair Curve25519KeyPair, peerPublicKey [curve2551
 	return &X25519DeoxysIICipher{
 		cipher:  cipher,
 		keypair: keypair,
+		epoch:   epoch,
 	}, nil
 }
 
-func (c X25519DeoxysIICipher) Kind() uint64 {
-	return X25519DeoxysII
+func (c X25519DeoxysIICipher) CallFormat() types.CallFormat {
+	return types.CallFormatEncryptedX25519DeoxysII
 }
 
 func (c X25519DeoxysIICipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
@@ -178,24 +166,26 @@ func (c X25519DeoxysIICipher) Decrypt(nonce []byte, ciphertext []byte) ([]byte, 
 }
 
 func (c X25519DeoxysIICipher) encryptCallData(plaintext []byte) (ciphertext []byte, nonce []byte) {
-	return c.Encrypt(cbor.Marshal(Data{
-		Body: plaintext,
+	return c.Encrypt(cbor.Marshal(types.Call{
+		Body: cbor.Marshal(plaintext),
 	}))
 }
 
-func (c X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *EncryptedBodyEnvelope {
+func (c X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *types.Call {
 	// Txs without data are just balance transfers, and all data in those is public.
 	if len(plaintext) == 0 {
 		return nil
 	}
 	data, nonce := c.encryptCallData(plaintext)
-	return &EncryptedBodyEnvelope{
-		Body: Body{
-			Nonce: nonce,
+
+	return &types.Call{
+		Body: cbor.Marshal(types.CallEnvelopeX25519DeoxysII{
+			Nonce: [deoxysii.NonceSize]byte(nonce),
 			Data:  data,
-			PK:    c.keypair.PublicKey[:],
-		},
-		Format: c.Kind(),
+			Epoch: c.epoch,
+			Pk:    c.keypair.PublicKey,
+		}),
+		Format: c.CallFormat(),
 	}
 }
 
@@ -205,46 +195,66 @@ func (c X25519DeoxysIICipher) EncryptEncode(plaintext []byte) []byte {
 }
 
 func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error) {
-	var callResult CallResult
-	cbor.MustUnmarshal(response, &callResult)
+	var callResult types.CallResult
+	if err := cbor.Unmarshal(response, &callResult); err != nil {
+		return nil, err
+	}
 
 	// TODO: actually decode and return failure
-	if callResult.Fail != nil {
+	if callResult.Failed != nil {
 		return nil, ErrCallFailed
 	}
 
-	var aeadEnvelope AeadEnvelope
-	if callResult.OK != nil {
-		if err := cbor.Unmarshal(callResult.OK, &aeadEnvelope); err != nil {
-			return callResult.OK, nil
+	var aeadEnvelope types.ResultEnvelopeX25519DeoxysII
+	if callResult.Ok != nil {
+		if err := cbor.Unmarshal(callResult.Ok, &aeadEnvelope); err != nil {
+			// If Ok is not CBOR, return raw value.
+			return callResult.Ok, nil
 		}
 	} else if callResult.Unknown != nil {
-		aeadEnvelope = *callResult.Unknown
+		if err := cbor.Unmarshal(callResult.Unknown, &aeadEnvelope); err != nil {
+			// If Unknown is not CBOR, return raw value.
+			return callResult.Unknown, nil
+		}
 	} else {
 		return nil, ErrCallResultDecode
 	}
 
-	decrypted, err := c.Decrypt(aeadEnvelope.Nonce, aeadEnvelope.Data)
+	decrypted, err := c.Decrypt(aeadEnvelope.Nonce[:], aeadEnvelope.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	var innerResult Inner
-	cbor.MustUnmarshal(decrypted, &innerResult)
-
-	if innerResult.OK != nil {
-		return innerResult.OK, nil
+	var innerResult types.CallResult
+	if err = cbor.Unmarshal(decrypted, &innerResult); err != nil {
+		return nil, err
 	}
 
-	if innerResult.Fail != nil {
-		msg := innerResult.Fail.Message
+	if innerResult.Unknown != nil {
+		var unknown []byte
+		if err = cbor.Unmarshal(innerResult.Unknown, &unknown); err != nil {
+			return nil, fmt.Errorf("failed decoding innerResult.Unknown: %w", err)
+		}
+		return unknown, nil
+	}
+
+	if innerResult.Ok != nil {
+		var ok []byte
+		if err = cbor.Unmarshal(innerResult.Ok, &ok); err != nil {
+			return nil, fmt.Errorf("failed decoding innerResult.Ok: %w", err)
+		}
+		return ok, nil
+	}
+
+	if innerResult.Failed != nil {
+		msg := innerResult.Failed.Message
 		if len(msg) == 0 {
-			msg = fmt.Sprintf("Call failed in module %s with code %d", innerResult.Fail.Module, innerResult.Fail.Code)
+			msg = fmt.Sprintf("call failed in module %s with code %d", innerResult.Failed.Module, innerResult.Failed.Code)
 		}
 		return nil, errors.New(msg)
 	}
 
-	return nil, errors.New("Unexpected inner call result:" + string(callResult.Unknown.Data))
+	return nil, fmt.Errorf("unexpected inner call result: %x", callResult.Unknown)
 }
 
 func (c X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {
@@ -252,10 +262,10 @@ func (c X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {
 }
 
 // GetRuntimePublicKey fetches the runtime calldata public key from the default Sapphire gateway.
-func GetRuntimePublicKey(chainID uint64) (*[32]byte, error) {
+func GetRuntimePublicKey(chainID uint64) (*x25519.PublicKey, uint64, error) {
 	network, exists := Networks[chainID]
 	if !exists {
-		return nil, fmt.Errorf("could not fetch public key for network with chain id %d", chainID)
+		return nil, 0, fmt.Errorf("could not fetch public key for network with chain id %d", chainID)
 	}
 	request := Request{
 		Version: "2.0",
@@ -266,31 +276,31 @@ func GetRuntimePublicKey(chainID uint64) (*[32]byte, error) {
 
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, network.DefaultGateway, bytes.NewBuffer(rawReq))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request for runtime calldata public key: %w", err)
+		return nil, 0, fmt.Errorf("failed to create request for runtime calldata public key: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request runtime calldata public key: %w", err)
+		return nil, 0, fmt.Errorf("failed to request runtime calldata public key: %w", err)
 	}
 
 	decoder := json.NewDecoder(res.Body)
 	rpcRes := new(Response)
 	if err := decoder.Decode(&rpcRes); err != nil {
-		return nil, fmt.Errorf("unexpected response to request for runtime calldata public key: %w", err)
+		return nil, 0, fmt.Errorf("unexpected response to request for runtime calldata public key: %w", err)
 	}
 	res.Body.Close()
 
 	var pubKey CallDataPublicKey
 	if err := json.Unmarshal(rpcRes.Result, &pubKey); err != nil {
-		return nil, fmt.Errorf("invalid response when fetching runtime calldata public key: %w", err)
+		return nil, 0, fmt.Errorf("invalid response when fetching runtime calldata public key: %w", err)
 	}
-	if len(pubKey.PublicKey) != 32 {
-		return nil, fmt.Errorf("invalid public key length")
+	if len(pubKey.PublicKey) != x25519.PublicKeySize {
+		return nil, 0, fmt.Errorf("invalid public key length")
 	}
-	return (*[32]byte)(pubKey.PublicKey), nil
+	return (*x25519.PublicKey)(pubKey.PublicKey), pubKey.Epoch, nil
 }
 
 type Request struct {

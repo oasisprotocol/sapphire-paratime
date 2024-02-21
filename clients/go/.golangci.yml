@@ -12,6 +12,15 @@ linters-settings:
     # Enable once suggested fixes are shown: https://github.com/golangci/golangci-lint/issues/2134
     #enable:
     #  - fieldalignment
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+        allow:
+          - $gostd
+          - github.com/oasisprotocol
+          - github.com/ethereum/go-ethereum
 
 linters:
   disable-all: true
