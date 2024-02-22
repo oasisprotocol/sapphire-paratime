@@ -45,6 +45,12 @@ var Networks = map[uint64]NetworkParams{
 		DefaultGateway: "https://sapphire.oasis.io",
 		RuntimeID:      "0x000000000000000000000000000000000000000000000000f80306c9858e7279",
 	},
+	0x5afd: {
+		Name:           "localnet",
+		ChainID:        *big.NewInt(0x5afd),
+		DefaultGateway: "http://localhost:8545",
+		RuntimeID:      "0x8000000000000000000000000000000000000000000000000000000000000000",
+	},
 }
 
 // PackTx prepares a regular Eth transaction for Sapphire. The transaction returned from this function is what must be signed.
