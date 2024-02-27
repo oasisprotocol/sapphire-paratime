@@ -7,6 +7,13 @@ import { ethers } from 'hardhat';
 import { SigningTests__factory } from '../typechain-types/factories/contracts/tests';
 import { SigningTests } from '../typechain-types/contracts/tests/SigningTests';
 
+function randomBytesUnlike(len: number, orig: Buffer): Buffer {
+  do {
+    var bytes = randomBytes(len);
+  } while (len > 0 && bytes.equals(orig));
+  return bytes;
+}
+
 async function testSignThenVerify(
   se: SigningTests,
   alg: number,
@@ -29,7 +36,7 @@ async function testSignThenVerify(
         alg,
         keypair.publicKey,
         ctx,
-        randomBytes(msg.length),
+        randomBytesUnlike(msg.length, msg),
         sig,
       ),
     ).equal(false);
@@ -41,7 +48,7 @@ async function testSignThenVerify(
       await se.testVerify(
         alg,
         keypair.publicKey,
-        randomBytes(ctx.length),
+        randomBytesUnlike(ctx.length, ctx),
         msg,
         sig,
       ),
