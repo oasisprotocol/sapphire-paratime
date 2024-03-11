@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/fxamacker/cbor/v2"
+
+	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/evm"
+	sdkTypes "github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
 const (
 	DefaultGasPrice   = 100_000_000_000
+	DefaultGasLimit   = 30_000_000
 	DefaultBlockRange = 15
 )
-
-// packedTxs stores the txs that have been packed in the signer and therefore do not need to be packed in `backend.SendTransaction`.
-var packedTxs sync.Map
 
 // SignerFn is a function that produces secp256k1 signatures in RSV format.
 type SignerFn = func(digest [32]byte) ([]byte, error)
@@ -44,6 +44,12 @@ var Networks = map[uint64]NetworkParams{
 		ChainID:        *big.NewInt(0x5afe),
 		DefaultGateway: "https://sapphire.oasis.io",
 		RuntimeID:      "0x000000000000000000000000000000000000000000000000f80306c9858e7279",
+	},
+	0x5afd: {
+		Name:           "localnet",
+		ChainID:        *big.NewInt(0x5afd),
+		DefaultGateway: "http://localhost:8545",
+		RuntimeID:      "0x8000000000000000000000000000000000000000000000000000000000000000",
 	},
 }
 
@@ -72,16 +78,40 @@ func PackCall(msg ethereum.CallMsg, cipher Cipher) (*ethereum.CallMsg, error) {
 	return &msg, nil
 }
 
+type rsvSigner struct {
+	sign SignerFn
+}
+
+func (s rsvSigner) SignRSV(digest [32]byte) ([]byte, error) {
+	return s.sign(digest)
+}
+
 // PackSignedCall prepares `msg` in-place for being sent to Sapphire. The call will be end-to-end encrypted and a signature will be used to authenticate the `from` address.
-func PackSignedCall(msg ethereum.CallMsg, cipher Cipher, sign SignerFn, chainID big.Int, leash Leash) (*ethereum.CallMsg, error) {
-	dataPack, err := NewDataPack(sign, chainID.Uint64(), msg.From[:], msg.To[:], 0, msg.GasPrice, msg.Value, msg.Data, leash)
+func PackSignedCall(msg ethereum.CallMsg, cipher Cipher, sign SignerFn, chainID big.Int, leash *evm.Leash) (*ethereum.CallMsg, error) {
+	if msg.Gas == 0 {
+		msg.Gas = DefaultGasLimit // Must be non-zero for signed calls.
+	}
+	if msg.GasPrice == nil {
+		msg.GasPrice = big.NewInt(DefaultGasPrice) // Must be non-zero for signed calls.
+	}
+	dataPack, err := evm.NewSignedCallDataPack(rsvSigner{sign}, chainID.Uint64(), msg.From[:], msg.To[:], msg.Gas, msg.GasPrice, msg.Value, msg.Data, *leash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signed call data back: %w", err)
 	}
-	msg.Data = dataPack.EncryptEncode(cipher)
+
+	if dataPack.Data.Body != nil {
+		var bodyDecoded []byte
+		if err = cbor.Unmarshal(dataPack.Data.Body, &bodyDecoded); err != nil {
+			return nil, fmt.Errorf("failed to decode data body while packing signed call: %w", err)
+		}
+		dataPack.Data = *cipher.EncryptEnvelope(bodyDecoded)
+	}
+	msg.Data = cbor.Marshal(dataPack)
+
 	return &msg, nil
 }
 
+// WrappedBackend implements bind.ContractBackend.
 type WrappedBackend struct {
 	backend bind.ContractBackend
 	chainID big.Int
@@ -98,9 +128,12 @@ func NewWrappedBackend(backend bind.ContractBackend, chainID big.Int, cipher Cip
 	}
 }
 
-// NewCipher creates a default cipher.
+// NewCipher creates a default cipher with encryption support.
+//
+// If you use cipher over a longer period of time, you should create a new
+// cipher instance every epoch to refresh the ParaTime's ephemeral key!
 func NewCipher(chainID uint64) (Cipher, error) {
-	runtimePublicKey, err := GetRuntimePublicKey(chainID)
+	runtimePublicKey, epoch, err := GetRuntimePublicKey(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch runtime callata public key: %w", err)
 	}
@@ -108,7 +141,7 @@ func NewCipher(chainID uint64) (Cipher, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate ephemeral keypair: %w", err)
 	}
-	cipher, err := NewX25519DeoxysIICipher(*keypair, *runtimePublicKey)
+	cipher, err := NewX25519DeoxysIICipher(keypair, runtimePublicKey, epoch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default cipher: %w", err)
 	}
@@ -116,7 +149,7 @@ func NewCipher(chainID uint64) (Cipher, error) {
 }
 
 // WrapClient wraps an ethclient.Client so that it can talk to Sapphire.
-func WrapClient(c ethclient.Client, sign SignerFn) (*WrappedBackend, error) {
+func WrapClient(c *ethclient.Client, sign SignerFn) (bind.ContractBackend, error) {
 	chainID, err := c.ChainID(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch chain ID: %w", err)
@@ -126,7 +159,7 @@ func WrapClient(c ethclient.Client, sign SignerFn) (*WrappedBackend, error) {
 		return nil, err
 	}
 	return &WrappedBackend{
-		backend: &c,
+		backend: c,
 		chainID: *chainID,
 		cipher:  cipher,
 		sign:    sign,
@@ -149,7 +182,6 @@ func (b WrappedBackend) Transactor(from common.Address) *bind.TransactOpts {
 			return nil, err
 		}
 		signedTx, err := packedTx.WithSignature(signer, sig)
-		packedTxs.Store(signedTx.Hash(), struct{}{})
 		return signedTx, err
 	}
 	return &bind.TransactOpts{
@@ -174,22 +206,10 @@ func (b WrappedBackend) CallContract(ctx context.Context, call ethereum.CallMsg,
 			return nil, err
 		}
 	} else {
-		leashBlockNumber := big.NewInt(0)
-		if blockNumber != nil {
-			leashBlockNumber.Sub(blockNumber, big.NewInt(1))
-		} else {
-			latestHeader, err := b.backend.HeaderByNumber(ctx, nil)
-			if err != nil {
-				return nil, fmt.Errorf("failed to fetch latest block number: %w", err)
-			}
-			leashBlockNumber.Sub(latestHeader.Number, big.NewInt(1))
-		}
-		header, err := b.backend.HeaderByNumber(ctx, leashBlockNumber)
+		leash, err := b.makeLeash(ctx, call.From, blockNumber)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch leash block header: %w", err)
+			return nil, err
 		}
-		blockHash := header.Hash()
-		leash := NewLeash(header.Nonce.Uint64(), header.Number.Uint64(), blockHash[:], DefaultBlockRange)
 		if packedCall, err = PackSignedCall(call, b.cipher, b.sign, b.chainID, leash); err != nil {
 			return nil, fmt.Errorf("failed to pack signed call: %w", err)
 		}
@@ -228,40 +248,59 @@ func (b WrappedBackend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) 
 
 // EstimateGas implements ContractTransactor.
 func (b WrappedBackend) EstimateGas(ctx context.Context, call ethereum.CallMsg) (gas uint64, err error) {
-	// Assume latest round in oasis-web3-gateway RPC call
-	return b.backend.EstimateGas(ctx, call)
+	var packedCall *ethereum.CallMsg
+	if call.From == [common.AddressLength]byte{} {
+		var err error
+		if packedCall, err = PackCall(call, b.cipher); err != nil {
+			return 0, err
+		}
+	} else {
+		leash, err := b.makeLeash(ctx, call.From, nil)
+		if err != nil {
+			return 0, err
+		}
+		if packedCall, err = PackSignedCall(call, b.cipher, b.sign, b.chainID, leash); err != nil {
+			return 0, fmt.Errorf("failed to pack signed call: %w", err)
+		}
+	}
+
+	return b.backend.EstimateGas(ctx, *packedCall)
+}
+
+// makeLeash creates a new leash for the given from address and blockNumber.
+// If blockNumber is nil, the latest block is taken.
+func (b WrappedBackend) makeLeash(ctx context.Context, from common.Address, blockNumber *big.Int) (*evm.Leash, error) {
+	leashBlockNumber := big.NewInt(0)
+	header, err := b.backend.HeaderByNumber(ctx, blockNumber) // NB: blockNumber==nil will fetch the latest block.
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch leash block header: %w", err)
+	}
+	// We will build a leash on the pre-last block.
+	blockHash := header.ParentHash
+	leashBlockNumber.Sub(header.Number, big.NewInt(1))
+	nonce, err := b.backend.PendingNonceAt(ctx, from)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch account nonce: %w", err)
+	}
+	return &evm.Leash{
+		Nonce:       nonce,
+		BlockNumber: leashBlockNumber.Uint64(),
+		BlockHash:   blockHash[:],
+		BlockRange:  DefaultBlockRange,
+	}, nil
 }
 
 func txNeedsPacking(tx *types.Transaction) bool {
-	_, isPacked := packedTxs.Load(tx.Hash())
-	if tx == nil || len(tx.Data()) == 0 || isPacked {
+	if tx == nil || len(tx.Data()) == 0 {
 		return false
 	}
-	var envelope Data
+	var envelope sdkTypes.Call
 	return cbor.Unmarshal(tx.Data(), &envelope) != nil // If there is no error, the tx is already packed.
 }
 
 // SendTransaction implements ContractTransactor.
 func (b WrappedBackend) SendTransaction(ctx context.Context, tx *types.Transaction) error {
-	if !txNeedsPacking(tx) {
-		return b.backend.SendTransaction(ctx, tx)
-	}
-	packedTx, err := packTx(*tx, b.cipher)
-	if err != nil {
-		return fmt.Errorf("failed to pack tx: %w", err)
-	}
-	signer := types.LatestSignerForChainID(&b.chainID)
-	txHash := signer.Hash(packedTx).Bytes()
-	signature, err := b.sign(*(*[32]byte)(txHash))
-	if err != nil {
-		return fmt.Errorf("failed to sign wrapped tx: %w", err)
-	}
-	signedTx, err := packedTx.WithSignature(signer, signature)
-	if err != nil {
-		return fmt.Errorf("failed to attach signature to wrapped tx: %w", err)
-	}
-	packedTxs.Delete(signedTx.Hash())
-	return b.backend.SendTransaction(ctx, signedTx)
+	return b.backend.SendTransaction(ctx, tx)
 }
 
 // FilterLogs implements ContractFilterer.
