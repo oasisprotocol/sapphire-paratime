@@ -59,14 +59,14 @@ const config: HardhatUserConfig = {
   },
   networks: {
     'emerald-testnet': {
-      url: 'https://testnet.emerald.oasis.dev',
+      url: 'https://testnet.emerald.oasis.io',
       chainId: 0xa515,
       accounts: process.env.EMERALD_TESTNET_PRIVATE_KEY
         ? [process.env.EMERALD_TESTNET_PRIVATE_KEY]
         : [],
     },
     'sapphire-testnet': {
-      url: 'https://testnet.sapphire.oasis.dev',
+      url: 'https://testnet.sapphire.oasis.io',
       chainId: 0x5aff,
       accounts: process.env.SAPPHIRE_TESTNET_PRIVATE_KEY
         ? [process.env.SAPPHIRE_TESTNET_PRIVATE_KEY]

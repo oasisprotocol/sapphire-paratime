@@ -21,7 +21,7 @@ module.exports = {
       chainId: 0x5afe,
     },
     'sapphire-testnet': {
-      url: "https://testnet.sapphire.oasis.dev",
+      url: "https://testnet.sapphire.oasis.io",
       accounts: process.env.PRIVATE_KEY
         ? [process.env.PRIVATE_KEY]
         : [],

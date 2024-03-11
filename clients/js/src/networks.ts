@@ -7,7 +7,7 @@ const mainnetParams = {
 
 const testnetParams = {
   chainId: 0x5aff,
-  defaultGateway: 'https://testnet.sapphire.oasis.dev/',
+  defaultGateway: 'https://testnet.sapphire.oasis.io/',
   runtimeId:
     '0x000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c',
 };

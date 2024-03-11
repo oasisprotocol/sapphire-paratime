@@ -194,7 +194,7 @@ repository.
 
 :::
 
-[block explorer]: https://testnet.explorer.sapphire.oasis.dev/tx/0x3303dea5d48291d1564cad573f21fc71fcbdc2b862e17e056287fd9207e3bc53
+[block explorer]: https://explorer.oasis.io/testnet/sapphire/tx/0x3303dea5d48291d1564cad573f21fc71fcbdc2b862e17e056287fd9207e3bc53
 [guide-transaction-calls]: guide.mdx#transactions--calls
 [Hardhat boilerplate repo]: https://github.com/NomicFoundation/hardhat-boilerplate
 [Hardhat boilerplate]: https://hardhat.org/tutorial/boilerplate-project
