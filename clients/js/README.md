@@ -59,6 +59,19 @@ const provider = sapphire.wrap(window.ethereum);
 window.ethereum = sapphire.wrap(window.ethereum); // If you're feeling bold.
 ```
 
+### Viem
+
+```ts
+import { sapphireTestnet } from 'viem/chains';
+import * as sapphire from '@oasisprotocol/sapphire-paratime';
+
+const provider = sapphire.wrap(window.ethereum! as EIP1193Provider);
+const walletClient = createWalletClient({
+  chain: sapphireTestnet,
+  transport: custom(provider),
+});
+```
+
 ## Troubleshooting
 
 ### `Error: missing provider (operation="getChainId", code=UNSUPPORTED_OPERATION, ...)`
