@@ -4,7 +4,7 @@ services:
     restart: always
     build: .
     environment:
-      RPC: 'https://testnet.sapphire.oasis.dev'
+      RPC: 'https://testnet.sapphire.oasis.io'
   graph-node:
     image: graphprotocol/graph-node
     ports:

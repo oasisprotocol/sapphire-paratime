@@ -93,6 +93,6 @@ Use that for unsigned queries instead.
 
 ## See Also
 
-- [Oasis Testnet Faucet](https://faucet.testnet.oasis.dev/)
+- [Oasis Testnet Faucet](https://faucet.testnet.oasis.io/)
 - [Creating dapps for Sapphire](https://docs.oasis.io/dapp/sapphire/quickstart)
 - [How to Transfer ROSE into an EVM ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime/)

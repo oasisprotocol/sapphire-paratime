@@ -15,7 +15,7 @@ pnpm install
 ```
 
 You will need some TEST tokens in order to deploy the smart contract. Head to
-https://faucet.testnet.oasis.dev/ and request some.
+https://faucet.testnet.oasis.io/ and request some.
 
 Next, run this to deploy your contract on Sapphire Testnet:
 
@@ -31,8 +31,8 @@ pnpm start
 ```
 
 Open [http://localhost:3000/](http://localhost:3000/) in a browser to see your
-Dapp. You will need to have [Metamask](https://metamask.io) installed and
-connected to `https://testnet.sapphire.oasis.dev/` endpoint with chain ID
+dApp. You will need to have [Metamask](https://metamask.io) installed and
+connected to `https://testnet.sapphire.oasis.io/` endpoint with chain ID
 `23295`.
 
 [Hardhat boilerplate code]: https://hardhat.org/tutorial

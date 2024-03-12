@@ -427,7 +427,7 @@ describe('fetchPublicKeyByChainId', () => {
     await expectFetch(0x5afe, 'https://sapphire.oasis.io', {
       fetch: fetchImpl as unknown as typeof fetch,
     });
-    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.dev', {
+    await expectFetch(0x5aff, 'https://testnet.sapphire.oasis.io', {
       fetch: fetchImpl as unknown as typeof fetch,
     });
   });
