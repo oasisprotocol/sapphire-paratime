@@ -247,6 +247,13 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
     estimateGas: hookEthersCall(provider, 'estimateGas', filled_options),
   };
 
+  if( 'getSigner' in provider ) {
+    hooks['getSigner'] = async function (...args:unknown[]) {
+      const r = await (provider as any).getSigner(...args);
+      return wrapEthersSigner(r);
+    }
+  }
+
   // When a signer is also provided, we can re-pack transactions
   // But only if they've been signed by the same address as the signer
   if (signer) {
