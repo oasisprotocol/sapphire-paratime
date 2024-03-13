@@ -2225,8 +2225,8 @@ dependencies = [
 
 [[package]]
 name = "oasis-runtime-sdk"
-version = "0.8.3"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.8.3#385af35781072dbe3d5e29f93951972f8ed71e92"
+version = "0.8.4"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=kostko/feature/messages-gas#2516bb0706953bf378f8abb1319861809a412b9c"
 dependencies = [
  "anyhow",
  "base64",
@@ -2265,7 +2265,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.5.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.8.3#385af35781072dbe3d5e29f93951972f8ed71e92"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=kostko/feature/messages-gas#2516bb0706953bf378f8abb1319861809a412b9c"
 dependencies = [
  "anyhow",
  "base64",
@@ -2297,7 +2297,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.8.3#385af35781072dbe3d5e29f93951972f8ed71e92"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=kostko/feature/messages-gas#2516bb0706953bf378f8abb1319861809a412b9c"
 dependencies = [
  "darling 0.20.3",
  "proc-macro2 1.0.76",
