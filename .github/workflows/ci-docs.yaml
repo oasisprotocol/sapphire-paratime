@@ -85,6 +85,10 @@ jobs:
           version: 8
           run_install: false
 
+      - name: Install dependencies
+        run: |
+          pnpm install
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
