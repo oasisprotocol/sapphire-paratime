@@ -6,6 +6,12 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.8 (2024-03-15)
+
+### Fixed
+
+ * Declare `@openzeppelin/contracts` as a dependency
+
 ## 0.2.7 (2024-01-17)
 
 ### Fixed
