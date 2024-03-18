@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Retrieves all of the celer cBridge tokens to/from Oasis Sapphire mainnet
+Retrieves all of the Celer cBridge tokens to/from Oasis Sapphire mainnet
 """
 import json
 from urllib.request import urlopen
