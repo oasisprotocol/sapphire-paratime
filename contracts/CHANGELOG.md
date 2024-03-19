@@ -12,6 +12,10 @@ The format is inspired by [Keep a Changelog].
 
  * Declare `@openzeppelin/contracts` as a dependency
 
+### Removed
+
+ - Minimally used `Context` from `opl/Endpoint.sol`
+
 ## 0.2.7 (2024-01-17)
 
 ### Fixed
