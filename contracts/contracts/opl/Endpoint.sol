@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
-
 /// Unable to automatically configure OPL. Please use the manual version of the base contract.
 error AutoConfigUnavailable();
 /// The remote endpoint's contract address was missing.
@@ -36,7 +34,7 @@ interface ICelerMessageBus {
     ) external payable;
 }
 
-contract BaseEndpoint is Context {
+contract BaseEndpoint {
     address internal immutable messageBus;
     bool private immutable inOrder;
 
@@ -119,7 +117,7 @@ contract BaseEndpoint is Context {
         address // executor
     ) external payable returns (uint256) {
         // The method can only be called by the message bus;
-        require(_msgSender() == messageBus, "NotMessageBus");
+        require(msg.sender == messageBus, "NotMessageBus");
         // Messages may only be sent by the remote endpoint (Enclave or Host).
         require(
             _sender == remote && _senderChainId == remoteChainId,
