@@ -1,0 +1,8 @@
+all:
+
+debug:
+	OASIS_UNSAFE_SKIP_AVR_VERIFY=1 OASIS_UNSAFE_SKIP_KM_POLICY=1 OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES=1 OASIS_UNSAFE_USE_LOCALNET_CHAINID=1 cargo build
+	ls -lah target/debug
+
+clean:
+	cargo clean
