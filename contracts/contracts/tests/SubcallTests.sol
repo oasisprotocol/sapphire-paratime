@@ -79,6 +79,15 @@ contract SubcallTests {
         Subcall.consensusDelegate(to, value);
     }
 
+    function testConsensusDelegateMulti(StakingAddress[] memory to, uint128 value)
+        external
+        payable
+    {
+        for( uint i = 0; i < to.length; i++ ) {
+            Subcall.consensusDelegate(to[i], uint128(value / to.length));
+        }
+    }
+
     event Result(bytes data);
 
     function testConsensusDelegateWithReceipt(

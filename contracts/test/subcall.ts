@@ -125,6 +125,30 @@ describe('Subcall', () => {
     };
   });
 
+  /// Verifies that delegation to multiple validators at a time works (when no receipt is requested)
+  it('consensus.Delegate (multiple, without receipt)', async () => {
+    // Ensure contract has an initial balance.
+    const initialBalance = parseEther('1000');
+    await ensureBalance(contract, initialBalance, owner);
+
+    let randomPubkeys : Uint8Array[] = [];
+    for( let i = 0; i < 10; i++ ) {
+      const rawKp = await contract.generateRandomAddress();
+      randomPubkeys.push(getBytes(rawKp.publicKey));
+    }
+
+    const tx = await contract.testConsensusDelegateMulti(
+      randomPubkeys,
+      parseEther('1000'),
+    );
+    const receipt = await tx.wait();
+    console.log('Receipt is', receipt);
+
+    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
+      parseEther('0'),
+    );
+  });
+
   it('Derive Staking Addresses', async () => {
     const newKeypair = await contract.generateRandomAddress();
 
