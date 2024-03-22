@@ -82,6 +82,11 @@ export function wrap<U extends Ethers5Signer>(
   options?: SapphireWrapOptions,
 ): U & SapphireAnnex; // Ethers signers
 
+export function wrap<U extends string>(
+  upstream: U,
+  options?: SapphireWrapOptions,
+): Ethers5Provider & EIP1193Provider & SapphireAnnex; // Gateway URL
+
 export function wrap<U extends UpstreamProvider>(
   upstream: U,
   options?: SapphireWrapOptions,
@@ -124,7 +129,7 @@ function isEIP1193Provider(upstream: object): upstream is EIP1193Provider {
   return 'request' in upstream;
 }
 
-function wrapEIP1193Provider<P extends EIP1193Provider>(
+export function wrapEIP1193Provider<P extends EIP1193Provider>(
   upstream: P,
   options?: SapphireWrapOptions,
 ): P & SapphireAnnex {
@@ -156,7 +161,7 @@ function hookEIP1193Request(
   return async (args: Web3ReqArgs) => {
     const signer = await provider.getSigner();
     const cipher = await options.fetcher.cipher(provider);
-    const { method, params } = await prepareRequest(args, signer, cipher);
+    const { method, params } = await prepareRequest(args, cipher, signer);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') {
       return await cipher.decryptEncoded(res);
@@ -246,6 +251,19 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
     call: hookEthersCall(provider, 'call', filled_options),
     estimateGas: hookEthersCall(provider, 'estimateGas', filled_options),
   };
+
+  // Provide an EIP-1193 compatible endpoint for Ethers providers
+  if( !('request' in provider) && 'send' in provider ) {
+    hooks['request'] = async function (args:{method:string, params:any[]}) {
+      const cipher = await filled_options.fetcher.cipher(provider);
+      const { method, params } = await prepareRequest(args, cipher, signer as any);
+      const res = await (provider as any).send(method, params ?? []);
+      if (method === 'eth_call') {
+        return await cipher.decryptEncoded(res);
+      }
+      return res;
+    }
+  }
 
   // When a signer is also provided, we can re-pack transactions
   // But only if they've been signed by the same address as the signer
@@ -404,8 +422,8 @@ async function callNeedsSigning(
 
 async function prepareRequest(
   { method, params }: Web3ReqArgs,
-  signer: JsonRpcSigner,
   cipher: Cipher,
+  signer?: JsonRpcSigner
 ): Promise<{ method: string; params?: Array<any> }> {
   if (!Array.isArray(params)) return { method, params };
 
@@ -417,6 +435,7 @@ async function prepareRequest(
   }
 
   if (
+    signer &&
     (method === 'eth_call' || method === 'eth_estimateGas') &&
     (await callNeedsSigning(params[0]))
   ) {
