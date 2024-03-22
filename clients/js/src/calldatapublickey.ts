@@ -58,37 +58,7 @@ function toCallDataPublicKey(
   } as CallDataPublicKey;
 }
 
-// TODO: remove, this is unecessary, node has `fetch` now?
-async function fetchRuntimePublicKeyNode(
-  gwUrl: string,
-): Promise<RawCallDataPublicKeyResponse> {
-  // Import http or https, depending on the URI scheme.
-  const https = await import(/* webpackIgnore: true */ gwUrl.split(':')[0]);
-
-  const body = makeCallDataPublicKeyBody();
-  return new Promise((resolve, reject) => {
-    const opts = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'content-length': body.length,
-      },
-    };
-    const req = https.request(gwUrl, opts, (res: any) => {
-      const chunks: Buffer[] = [];
-      res.on('error', (err: any) => reject(err));
-      res.on('data', (chunk: any) => chunks.push(chunk));
-      res.on('end', () => {
-        resolve(JSON.parse(Buffer.concat(chunks).toString()));
-      });
-    });
-    req.on('error', (err: Error) => reject(err));
-    req.write(body);
-    req.end();
-  });
-}
-
-async function fetchRuntimePublicKeyBrowser(
+export async function fetchRuntimePublicKeyFromURL(
   gwUrl: string,
   fetchImpl: typeof fetch,
 ): Promise<RawCallDataPublicKeyResponse> {
@@ -124,9 +94,7 @@ export async function fetchRuntimePublicKeyByChainId(
       `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
     );
   const fetchImpl = opts?.fetch ?? globalThis?.fetch;
-  const res = await (fetchImpl
-    ? fetchRuntimePublicKeyBrowser(defaultGateway, fetchImpl)
-    : fetchRuntimePublicKeyNode(defaultGateway));
+  const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl)
   return toCallDataPublicKey(res.result, chainId);
 }
 
