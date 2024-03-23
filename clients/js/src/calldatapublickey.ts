@@ -93,11 +93,11 @@ export async function fetchRuntimePublicKeyByChainId(
     throw new Error(
       `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
     );
-  const fetchImpl = opts?.fetch ?? globalThis?.fetch;
-  if( ! fetchImpl ) {
+  const fetchImpl = (opts?.fetch ?? globalThis?.fetch) ?? fetch;
+  if (!fetchImpl) {
     throw new Error('No fetch implementation found!');
   }
-  const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl)
+  const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl);
   return toCallDataPublicKey(res.result, chainId);
 }
 
