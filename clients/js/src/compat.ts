@@ -253,16 +253,23 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
   };
 
   // Provide an EIP-1193 compatible endpoint for Ethers providers
-  if( !('request' in provider) && 'send' in provider ) {
-    hooks['request'] = async function (args:{method:string, params:any[]}) {
+  if (!('request' in provider) && 'send' in provider) {
+    hooks['request'] = async function (args: {
+      method: string;
+      params: any[];
+    }) {
       const cipher = await filled_options.fetcher.cipher(provider);
-      const { method, params } = await prepareRequest(args, cipher, signer as any);
+      const { method, params } = await prepareRequest(
+        args,
+        cipher,
+        signer as any,
+      );
       const res = await (provider as any).send(method, params ?? []);
       if (method === 'eth_call') {
         return await cipher.decryptEncoded(res);
       }
       return res;
-    }
+    };
   }
 
   // When a signer is also provided, we can re-pack transactions
@@ -423,7 +430,7 @@ async function callNeedsSigning(
 async function prepareRequest(
   { method, params }: Web3ReqArgs,
   cipher: Cipher,
-  signer?: JsonRpcSigner
+  signer?: JsonRpcSigner,
 ): Promise<{ method: string; params?: Array<any> }> {
   if (!Array.isArray(params)) return { method, params };
 

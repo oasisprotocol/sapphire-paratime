@@ -46,7 +46,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
     // An initial prefetch request will be made to determine of CORS is allowed
     response.writeHead(200, 'Not POST!', {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': '*'
+      'Access-Control-Allow-Headers': '*',
     });
     response.end();
     return;
@@ -69,7 +69,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
 
   let showResult = false;
   for (const body of bodies) {
-    const log = true; // loggedMethods.includes(body.method);
+    const log = loggedMethods.includes(body.method);
 
     if (log) {
       if (body.method === 'oasis_callDataPublicKey') {
@@ -166,7 +166,7 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
   response.writeHead(200, 'OK', {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': '*'
+    'Access-Control-Allow-Headers': '*',
   });
   response.write(JSON.stringify(pj));
   response.end();
