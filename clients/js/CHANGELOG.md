@@ -6,6 +6,16 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 1.3.2 (2024-03-24)
+
+### Fixed
+
+ - Wagmi v2 & Viem v2 support
+
+### Changed
+
+ - Supports only Node v18+
+
 ## 1.3.1 (2024-01-26)
 
 ### Fixed
