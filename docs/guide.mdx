@@ -181,11 +181,37 @@ it'll work just fine.
 
 ### Languages & Frameworks
 
-Sapphire is programmable using any language that targets the EVM, such as Solidity
-or Vyper. If you prefer to use an Ethereum framework like Hardhat or Foundry, you
-can also use those with Sapphire; all you need to do is set your Web3 gateway URL.
+Sapphire is programmable using any language that targets the EVM, such as Solidity,
+Fe or Vyper. If you prefer to use an Ethereum framework like Hardhat or Foundry,
+you can also use those with Sapphire; all you need to do is set your Web3 gateway URL.
 You can find the details of the Oasis Sapphire Web3 endpoints
 [here](https://github.com/oasisprotocol/docs/blob/main/docs/dapp/sapphire/README.mdx#rpc-endpoints).
+
+
+#### Wagmi
+
+Sapphire will mostly work with Wagmi v2 or Viem v2 out of the box, however in
+order to encrypt transactions, gas estimations & queries you will need to import
+the Sapphire encryption client and use either the wrapped Injected connector
+(which wraps `window.ethereum`) or the Sapphire transport.
+
+```ts
+import { createConfig } from 'wagmi'
+import { sapphireTestnet, sapphire } from 'wagmi/chains';
+import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
+
+export const config = createConfig({
+  multiInjectedProviderDiscovery: false,
+  chains: [sapphire, sapphireTestnet],
+  connectors: [
+    injectedWithSapphire()
+  ],
+  transports: {
+    [sapphireLocalnet.id]: sapphireTransport()
+    [sapphire.id]: sapphireTransport()
+  },
+})
+```
 
 ### Transactions & Calls
 

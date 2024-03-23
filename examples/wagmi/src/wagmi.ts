@@ -1,5 +1,5 @@
-import { defineChain } from 'viem'
-import { createConfig } from 'wagmi'
+import { defineChain } from 'viem';
+import { createConfig } from 'wagmi';
 import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
 
 const sapphireLocalnet = defineChain({

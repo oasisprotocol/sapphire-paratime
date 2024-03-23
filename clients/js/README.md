@@ -28,6 +28,34 @@ import '@oasisprotocol/sapphire-hardhat';
 
 [@oasisprotocol/sapphire-hardhat]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
 
+### Wagmi
+
+Try the [@oasisprotocol/sapphire-wagmi] package for your convenience.
+
+```ts
+import { createConfig } from 'wagmi'
+import { sapphireTestnet } from 'wagmi/chains';
+import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
+
+export const config = createConfig({
+  multiInjectedProviderDiscovery: false,
+  chains: [
+    sapphireTestnet
+  ],
+  connectors: [
+    injectedWithSapphire()
+  ],
+  transports: {
+    [sapphireLocalnet.id]: sapphireTransport()
+  },
+})
+```
+
+Please note that [EIP-6963] (Multi Injected Provider Discovery) is not currently
+supported with Wagmi.
+
+[EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
+
 ### ethers.js
 
 ```ts
