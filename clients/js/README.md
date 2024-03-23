@@ -33,22 +33,21 @@ import '@oasisprotocol/sapphire-hardhat';
 Try the [@oasisprotocol/sapphire-wagmi] package for your convenience.
 
 ```ts
-import { createConfig } from 'wagmi'
+import { createConfig } from 'wagmi';
 import { sapphireTestnet } from 'wagmi/chains';
-import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
+import {
+  injectedWithSapphire,
+  sapphireTransport,
+} from '@oasisprotocol/sapphire-wagmi';
 
 export const config = createConfig({
   multiInjectedProviderDiscovery: false,
-  chains: [
-    sapphireTestnet
-  ],
-  connectors: [
-    injectedWithSapphire()
-  ],
+  chains: [sapphireTestnet],
+  connectors: [injectedWithSapphire()],
   transports: {
-    [sapphireLocalnet.id]: sapphireTransport()
+    [sapphireLocalnet.id]: sapphireTransport(),
   },
-})
+});
 ```
 
 Please note that [EIP-6963] (Multi Injected Provider Discovery) is not currently
