@@ -16,19 +16,20 @@
   "dependencies": {
     "@oasisprotocol/sapphire-wagmi": "workspace:^",
     "@tanstack/react-query": "5.0.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "viem": "latest",
-    "wagmi": "latest",
-    "start-server-and-test": "^2.0.0"
+    "react": ">=18",
+    "react-dom": ">=18",
+    "start-server-and-test": "^2.0.0",
+    "viem": "2.x",
+    "wagmi": "2.x"
   },
   "devDependencies": {
-    "@synthetixio/synpress": "^3.7.2-beta.10",
     "@biomejs/biome": "^1.6.1",
+    "@synthetixio/synpress": "^3.7.2-beta.10",
     "@types/react": "^18.2.67",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
     "buffer": "^6.0.3",
+    "rollup-plugin-visualizer": "^5.12.0",
     "typescript": "^5.4.2",
     "vite": "^4.5.2"
   }
