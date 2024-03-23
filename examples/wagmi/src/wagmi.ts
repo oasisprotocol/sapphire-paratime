@@ -19,12 +19,8 @@ const sapphireLocalnet = defineChain({
 export const config = createConfig({
   multiInjectedProviderDiscovery: false,
   chains: [
-    //sapphire,
-    //sapphireTestnet,
     sapphireLocalnet
   ],
-
-  // import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
   connectors: [
     injectedWithSapphire()
   ],
