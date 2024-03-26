@@ -1,5 +1,6 @@
 import { defineChain } from 'viem';
 import { createConfig } from 'wagmi';
+import { sapphireTestnet } from 'wagmi/chains';
 import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
 
 const sapphireLocalnet = defineChain({
@@ -19,12 +20,14 @@ const sapphireLocalnet = defineChain({
 export const config = createConfig({
   multiInjectedProviderDiscovery: false,
   chains: [
+    sapphireTestnet,
     sapphireLocalnet
   ],
   connectors: [
     injectedWithSapphire()
   ],
   transports: {
+    [sapphireTestnet.id]: sapphireTransport(),
     [sapphireLocalnet.id]: sapphireTransport()
   },
 })
