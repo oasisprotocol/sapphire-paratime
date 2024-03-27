@@ -169,6 +169,7 @@ impl sdk::Runtime for Runtime {
                     max_multisig_signers: 8,
                     gas_costs: modules::core::GasCosts {
                         tx_byte: 1,
+                        storage_byte: 1,
                         auth_signature: 1_000,
                         auth_multisig_signer: 1_000,
                         callformat_x25519_deoxysii: 10_000,

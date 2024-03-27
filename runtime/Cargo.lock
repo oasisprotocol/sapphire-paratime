@@ -2084,7 +2084,7 @@ dependencies = [
 [[package]]
 name = "oasis-core-keymanager"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.9#689ebb41d2fc781b5369a882809f62df61028ec4"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.10#96bb870bfe54ff41c70dd828b0c518bf54aa6d8a"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2093,7 +2093,7 @@ dependencies = [
  "lazy_static",
  "lru 0.9.0",
  "oasis-cbor",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.9)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.10)",
  "rand",
  "rustc-hex",
  "sgx-isa",
@@ -2167,7 +2167,7 @@ dependencies = [
 [[package]]
 name = "oasis-core-runtime"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.9#689ebb41d2fc781b5369a882809f62df61028ec4"
+source = "git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.10#96bb870bfe54ff41c70dd828b0c518bf54aa6d8a"
 dependencies = [
  "anyhow",
  "arbitrary",
@@ -2225,8 +2225,8 @@ dependencies = [
 
 [[package]]
 name = "oasis-runtime-sdk"
-version = "0.8.3"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.8.3#385af35781072dbe3d5e29f93951972f8ed71e92"
+version = "0.8.5"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=kostko/feature/evm-simulate-create#44eaec501a97f6ab765006717ebd161437b7bf26"
 dependencies = [
  "anyhow",
  "base64",
@@ -2243,8 +2243,8 @@ dependencies = [
  "merlin",
  "num-traits",
  "oasis-cbor",
- "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.9)",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.9)",
+ "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.10)",
+ "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.10)",
  "oasis-runtime-sdk-macros",
  "once_cell",
  "p256",
@@ -2265,7 +2265,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.5.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.8.3#385af35781072dbe3d5e29f93951972f8ed71e92"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=kostko/feature/evm-simulate-create#44eaec501a97f6ab765006717ebd161437b7bf26"
 dependencies = [
  "anyhow",
  "base64",
@@ -2297,7 +2297,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.8.3#385af35781072dbe3d5e29f93951972f8ed71e92"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=kostko/feature/evm-simulate-create#44eaec501a97f6ab765006717ebd161437b7bf26"
 dependencies = [
  "darling 0.20.3",
  "proc-macro2 1.0.76",
