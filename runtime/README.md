@@ -52,6 +52,7 @@ git checkout directory.
 
 If rust toolchain is not installed on your device, you can install it like this:
 
+```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
@@ -121,3 +122,17 @@ The resulting SGX binary is located at
 
 _NOTE: The SGX binary is always statically linked so it doesn't exhibit the
 portability issues the ELF binary has._
+
+## Debugging
+
+The [sapphire-localnet] Docker container can be launched with a locally built
+debug build of the Sapphire paratime. The `Makefile` contains commands to build
+and then bind-mount the executable into the container.
+
+```shell
+make debug
+
+This can be very useful when debugging or testing new features against Ethereum
+compatible RPC clients.
+
+[sapphire-localnet]: https://github.com/oasisprotocol/oasis-web3-gateway/pkgs/container/sapphire-localnet
