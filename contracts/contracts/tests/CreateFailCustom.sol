@@ -8,7 +8,7 @@ contract CreateFailCustom {
 
     error CustomError(uint256 value);
 
-    constructor () {
+    constructor() {
         revert CustomError(ERROR_NUM);
     }
 }

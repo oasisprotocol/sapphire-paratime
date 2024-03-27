@@ -28,20 +28,20 @@ describe('EVM Semantics', () => {
       const r = await p.call({
         data: tx.data,
         gasPrice: tx.gasPrice,
-        gasLimit: tx.gasLimit
+        gasLimit: tx.gasLimit,
       });
-    } catch(x: any) {
+    } catch (x: any) {
       // XXX: typechain doesn't fully support custom errors from constructor
       const abi = {
         inputs: [
           {
-            internalType: "uint256",
-            name: "value",
-            type: "uint256",
+            internalType: 'uint256',
+            name: 'value',
+            type: 'uint256',
           },
         ],
-        name: "CustomError",
-        type: "error",
+        name: 'CustomError',
+        type: 'error',
       };
       const ef = ErrorFragment.from(abi);
       const iface = Interface.from([ef]);
@@ -61,9 +61,9 @@ describe('EVM Semantics', () => {
       await p.call({
         data: tx.data,
         gasPrice: tx.gasPrice,
-        gasLimit: tx.gasLimit
+        gasLimit: tx.gasLimit,
       });
-    } catch(x: any) {
+    } catch (x: any) {
       expect(x.revert.args[0]).to.eq('ThisIsAnError');
       expect(x.revert.name).to.eq('Error');
       caught = true;
