@@ -129,7 +129,8 @@ The [sapphire-localnet] Docker container can be launched with a locally built
 debug build of the Sapphire paratime. The `Makefile` contains commands to build
 and then bind-mount the executable into the container.
 
-    make debug
+```shell
+make debug
 
 This can be very useful when debugging or testing new features against Ethereum
 compatible RPC clients.
