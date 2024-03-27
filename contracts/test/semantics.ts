@@ -3,7 +3,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SemanticTests } from '../typechain-types/contracts/tests/SemanticTests';
-import { getBytes, parseUnits } from 'ethers';
+import { ErrorFragment, Interface, getBytes } from 'ethers';
 
 const ERROR_NUM =
   '0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef';
@@ -31,9 +31,22 @@ describe('EVM Semantics', () => {
         gasLimit: tx.gasLimit
       });
     } catch(x: any) {
-      console.log(x);
-      expect(x.revert.args[0]).to.eq(ERROR_NUM);
-      expect(x.revert.name).to.eq('CustomError');
+      // XXX: typechain doesn't fully support custom errors from constructor
+      const abi = {
+        inputs: [
+          {
+            internalType: "uint256",
+            name: "value",
+            type: "uint256",
+          },
+        ],
+        name: "CustomError",
+        type: "error",
+      };
+      const ef = ErrorFragment.from(abi);
+      const iface = Interface.from([ef]);
+      const expected = iface.encodeErrorResult(ef, [ERROR_NUM]);
+      expect(x.info.error.data).eq(expected);
       caught = true;
     }
     expect(caught).eq(true);
@@ -45,7 +58,7 @@ describe('EVM Semantics', () => {
     const p = ethers.provider;
     let caught = false;
     try {
-      const r = await p.call({
+      await p.call({
         data: tx.data,
         gasPrice: tx.gasPrice,
         gasLimit: tx.gasLimit
@@ -58,7 +71,7 @@ describe('EVM Semantics', () => {
     expect(caught).eq(true);
   });
 
-  it.skip('eth_call maximum return length vs gas limit', async () => {
+  it('eth_call maximum return length vs gas limit', async () => {
     const i = 1211104;
     const respHex = await c.testViewLength(i);
     const respBytes = getBytes(respHex);
@@ -74,7 +87,7 @@ describe('EVM Semantics', () => {
     expect(caught).eq(true);
   });
 
-  it.skip('Error string in view call', async () => {
+  it('Error string in view call', async () => {
     try {
       await c.testViewRevert();
     } catch (x: any) {
@@ -83,7 +96,7 @@ describe('EVM Semantics', () => {
     }
   });
 
-  it.skip('Custom revert in view call', async () => {
+  it('Custom revert in view call', async () => {
     // Perform view call, which is expected to revert
     try {
       await c.testCustomViewRevert();
