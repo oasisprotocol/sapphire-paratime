@@ -52,7 +52,7 @@ git checkout directory.
 
 If rust toolchain is not installed on your device, you can install it like this:
 
-```
+```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
