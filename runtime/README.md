@@ -60,7 +60,7 @@ source "$HOME/.cargo/env"
 To install the appropriate version of the Rust toolchain, make sure you are
 in an Sapphire ParaTime git checkout directory and run:
 
-```
+```shell
 rustup show
 ```
 
@@ -89,7 +89,7 @@ rustc 1.60.0-nightly (09cb29c64 2022-02-15)
 
 Add the Fortanix SGX tools by running:
 
-```
+```shell
 cargo install --locked fortanix-sgx-tools sgxs-tools
 ```
 
@@ -98,7 +98,7 @@ cargo install --locked fortanix-sgx-tools sgxs-tools
 To build the non-SGX binary of the Sapphire ParaTime, checkout the appropriate
 version and run:
 
-```
+```shell
 cargo build --release --locked
 ```
 
@@ -112,7 +112,7 @@ between machines with different versions of shared libraries._
 To build the SGX binary of the Sapphire ParaTime, checkout the appropriate
 version and run:
 
-```
+```shell
 cargo build --release --target x86_64-fortanix-unknown-sgx --locked
 cargo elf2sgxs --release
 ```
@@ -131,6 +131,7 @@ and then bind-mount the executable into the container.
 
 ```shell
 make debug
+```
 
 This can be very useful when debugging or testing new features against Ethereum
 compatible RPC clients.
