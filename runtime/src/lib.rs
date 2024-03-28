@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        5
+        6
     } else {
         // Mainnet.
         2
@@ -63,7 +63,7 @@ impl modules::core::Config for Config {
 
     /// Estimated gas amount to be added to failed transaction simulations for selected methods.
     const ESTIMATE_GAS_EXTRA_FAIL: Lazy<BTreeMap<&'static str, u64>> =
-        Lazy::new(|| [("evm.Create", 5_000_000), ("evm.Call", 5_000_000)].into());
+        Lazy::new(|| [("evm.Create", 2_000_000), ("evm.Call", 2_000_000)].into());
 }
 
 impl module_evm::Config for Config {
@@ -164,11 +164,12 @@ impl sdk::Runtime for Runtime {
                         min_price_max_change_denominator: 8,
                     },
                     max_batch_gas: 15_000_000,
-                    max_tx_size: 300 * 1024,
+                    max_tx_size: 128 * 1024,
                     max_tx_signers: 1,
                     max_multisig_signers: 8,
                     gas_costs: modules::core::GasCosts {
                         tx_byte: 1,
+                        storage_byte: 0,
                         auth_signature: 1_000,
                         auth_multisig_signer: 1_000,
                         callformat_x25519_deoxysii: 10_000,
