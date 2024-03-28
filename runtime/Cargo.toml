@@ -1,6 +1,6 @@
 [package]
 name = "sapphire-paratime"
-version = "0.7.1-testnet"
+version = "0.7.2-testnet"
 authors = ["Oasis Protocol Foundation <info@oasisprotocol.org>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -12,17 +12,17 @@ runtime-id = "000000000000000000000000000000000000000000000000f80306c9858e7279"
 runtime-id = "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
 
 [package.metadata.fortanix-sgx]
-heap-size = 268435456 # 256 MiB
+heap-size = 536870912 # 512 MiB
 stack-size = 2097152
-threads = 8
+threads = 26
 debug = false
 
 [dependencies]
 keymanager = { git = "https://github.com/oasisprotocol/keymanager-paratime", tag = "v0.4.1-testnet" }
 
 # SDK.
-module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", tag = "runtime-sdk/v0.8.3", package = "oasis-runtime-sdk-evm" }
-oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", tag = "runtime-sdk/v0.8.3" }
+module-evm = { git = "https://github.com/oasisprotocol/oasis-sdk", tag = "runtime-sdk/v0.8.5", package = "oasis-runtime-sdk-evm" }
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", tag = "runtime-sdk/v0.8.5" }
 
 # Third party.
 once_cell = "1.8.0"

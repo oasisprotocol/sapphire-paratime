@@ -44,7 +44,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        5
+        6
     } else {
         // Mainnet.
         2
@@ -63,7 +63,7 @@ impl modules::core::Config for Config {
 
     /// Estimated gas amount to be added to failed transaction simulations for selected methods.
     const ESTIMATE_GAS_EXTRA_FAIL: Lazy<BTreeMap<&'static str, u64>> =
-        Lazy::new(|| [("evm.Create", 5_000_000), ("evm.Call", 5_000_000)].into());
+        Lazy::new(|| [("evm.Create", 2_000_000), ("evm.Call", 2_000_000)].into());
 }
 
 impl module_evm::Config for Config {
@@ -133,8 +133,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 19183313,
-                hash: "54d353e4cebe669384d682aea9d19e7bde9362008128944c6df8b4a594c1ab62".into(),
+                height: 20398467,
+                hash: "1e3d05fa21e113a3dba76f24f1e93d41b418d214e0b2bb4cfa121170a08acf08".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76"
@@ -164,11 +164,12 @@ impl sdk::Runtime for Runtime {
                         min_price_max_change_denominator: 8,
                     },
                     max_batch_gas: 15_000_000,
-                    max_tx_size: 300 * 1024,
+                    max_tx_size: 128 * 1024,
                     max_tx_signers: 1,
                     max_multisig_signers: 8,
                     gas_costs: modules::core::GasCosts {
                         tx_byte: 1,
+                        storage_byte: 0,
                         auth_signature: 1_000,
                         auth_multisig_signer: 1_000,
                         callformat_x25519_deoxysii: 10_000,
