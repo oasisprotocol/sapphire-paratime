@@ -46,3 +46,7 @@ test('EIP-1193', () => {
     const provider = sapphire.wrap(window.ethereum);
   }
 });
+
+test('URL', () => {
+  const provider = sapphire.wrap('https://sapphire.oasis.io');
+});

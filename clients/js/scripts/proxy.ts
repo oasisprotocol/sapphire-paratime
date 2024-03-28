@@ -22,7 +22,7 @@ async function getBody(request: IncomingMessage): Promise<string> {
   });
 }
 
-const LISTEN_PORT = 3000;
+const LISTEN_PORT = 3001;
 const DIE_ON_UNENCRYPTED = true;
 const UPSTREAM_URL = 'http://127.0.0.1:8545';
 const SHOW_ENCRYPTED_RESULTS = false;
@@ -43,7 +43,11 @@ interface JSONRPCRequest {
 
 async function onRequest(req: IncomingMessage, response: ServerResponse) {
   if (req.method !== 'POST') {
-    response.writeHead(500, 'Not POST!');
+    // An initial prefetch request will be made to determine of CORS is allowed
+    response.writeHead(200, 'Not POST!', {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+    });
     response.end();
     return;
   }
@@ -159,7 +163,11 @@ async function onRequest(req: IncomingMessage, response: ServerResponse) {
     console.log(' - RESULT', pj);
   }
 
-  response.writeHead(200, 'OK');
+  response.writeHead(200, 'OK', {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': '*',
+  });
   response.write(JSON.stringify(pj));
   response.end();
 }
