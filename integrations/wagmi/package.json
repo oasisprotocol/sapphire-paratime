@@ -46,11 +46,13 @@
   },
   "dependencies": {
     "@oasisprotocol/sapphire-paratime": "workspace:^",
-    "@wagmi/core": "2.x"
+    "@wagmi/core": "2.x",
+    "viem": "2.x"
   },
   "peerDependencies": {
     "typescript": ">=5.0.4",
-    "@wagmi/core": "2.x"
+    "@wagmi/core": "2.x",
+    "viem": "2.x"
   },
   "peerDependenciesMeta": {
     "typescript": {
