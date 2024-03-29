@@ -8,6 +8,7 @@ packages:
   - examples/web3js-ts-esm
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
+  - examples/hardhat-ignition-ethers
   - examples/onchain-signer
   - examples/truffle
   - integrations/hardhat
