@@ -54,9 +54,6 @@ importers:
       nock:
         specifier: ^13.4.0
         version: 13.4.0
-      node-fetch:
-        specifier: ^2.6.7
-        version: 2.6.12
       prettier:
         specifier: ^2.7.1
         version: 2.8.8
@@ -447,6 +444,9 @@ importers:
       '@tanstack/react-query':
         specifier: 5.0.5
         version: 5.0.5(react-dom@18.2.0)(react-native@0.73.6)(react@18.2.0)
+      abitype:
+        specifier: ^1.0.2
+        version: 1.0.2(typescript@5.4.3)
       react:
         specifier: '>=18'
         version: 18.2.0
@@ -521,6 +521,9 @@ importers:
       '@wagmi/core':
         specifier: 2.x
         version: 2.6.9(@types/react@18.2.67)(react@18.2.0)(typescript@5.4.3)(viem@2.8.18)
+      viem:
+        specifier: 2.x
+        version: 2.8.18(typescript@5.4.3)
     devDependencies:
       '@types/node':
         specifier: ^18.7.18
@@ -7702,6 +7705,20 @@ packages:
 
   /abitype@1.0.0(typescript@5.4.3):
     resolution: {integrity: sha512-NMeMah//6bJ56H5XRj8QCV4AwuW6hB6zqz2LnhhLdcWVQOsXki6/Pn3APeqxCma62nXIcmZWdu1DlHWS74umVQ==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3 >=3.22.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
+    dependencies:
+      typescript: 5.4.3
+    dev: false
+
+  /abitype@1.0.2(typescript@5.4.3):
+    resolution: {integrity: sha512-aFt4k2H+eiAKy/zxtnORa9iIb10BMBeWL18l8v4+QuwYEBXPxxjSB1bFZCzQmKPoj8m7j68K705l3uY+E2gAjg==}
     peerDependencies:
       typescript: '>=5.0.4'
       zod: ^3 >=3.22.0

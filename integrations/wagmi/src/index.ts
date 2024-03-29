@@ -1,12 +1,13 @@
-import { wrapEIP1193Provider, wrap } from '@oasisprotocol/sapphire-paratime';
+import { wrapEIP1193Provider, wrap, type SapphireAnnex } from '@oasisprotocol/sapphire-paratime';
 import type { Transport } from '@wagmi/core';
 import { injected, custom } from '@wagmi/core';
+import type { EIP1193Provider } from 'viem';
 
 type Window = {
-  ethereum?: any;
+  ethereum?: EIP1193Provider;
 };
 
-const cachedProviders: Record<any, any> = {};
+const cachedProviders: Map<EIP1193Provider, EIP1193Provider> = new Map();
 
 /**
  * Wrap the `window.ethereum` with the Sapphire encryption layer.
@@ -39,16 +40,16 @@ export function injectedWithSapphire(): ReturnType<typeof injected> {
             // Note: providers are cached as connectors are frequently retrieved
             //       it prevents sapphire wrapper being called multiple times
             //       which spams the RPC with oasis_callDataPublicKey requests
-            if (!(window.ethereum in cachedProviders)) {
-              cachedProviders[window.ethereum] = wrapEIP1193Provider(
-                window.ethereum,
-              );
+            if( ! (cachedProviders.has(window.ethereum)) ) {
+              const wp = wrapEIP1193Provider(window.ethereum as any) as EIP1193Provider & SapphireAnnex;
+              cachedProviders.set(window.ethereum, wp);
+              return wp;
             }
-            return cachedProviders[window.ethereum];
+            return cachedProviders.get(window.ethereum);
           }
           return undefined;
         },
-      } as unknown as any;
+      };
     },
   });
 }
