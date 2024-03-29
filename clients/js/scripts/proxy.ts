@@ -43,7 +43,7 @@ interface JSONRPCRequest {
 
 async function onRequest(req: IncomingMessage, response: ServerResponse) {
   if (req.method !== 'POST') {
-    // An initial prefetch request will be made to determine of CORS is allowed
+    // An initial prefetch request will be made to determine if CORS is allowed.
     response.writeHead(200, 'Not POST!', {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': '*',
