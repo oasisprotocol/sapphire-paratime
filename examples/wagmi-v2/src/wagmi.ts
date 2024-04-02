@@ -4,7 +4,7 @@ import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
 	injectedWithSapphire,
 	sapphireTransport,
-} from "@oasisprotocol/sapphire-wagmi";
+} from "@oasisprotocol/sapphire-wagmi-v2";
 
 const sapphireLocalnet = defineChain({
 	id: 0x5afd,

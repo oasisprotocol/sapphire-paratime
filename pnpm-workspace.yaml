@@ -7,8 +7,7 @@ packages:
   - examples/ethersv6-ts-esm
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
-  - examples/wagmi
+  - examples/wagmi-v2
   - examples/onchain-signer
   - integrations/hardhat
-  - integrations/wagmi
-
+  - integrations/wagmi-v2

@@ -9,24 +9,19 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"preview": "vite preview",
-		"synpress:run": "synpress run",
-		"start:server": "vite --port 3000",
-		"test": "start-server-and-test 'pnpm start:server' http-get://localhost:3000 'pnpm synpress:run -b chromium'",
-		"test:headless": "start-server-and-test 'pnpm start:server' http-get://localhost:3000 'pnpm synpress:run --headless -b chromium'"
+		"start:server": "vite --port 3000"
 	},
 	"dependencies": {
-		"@oasisprotocol/sapphire-wagmi": "workspace:^",
+		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
 		"@tanstack/react-query": "5.0.5",
 		"abitype": "^1.0.2",
 		"react": ">=18",
 		"react-dom": ">=18",
-		"start-server-and-test": "^2.0.0",
 		"viem": "2.x",
 		"wagmi": "2.x"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.6.1",
-		"@synthetixio/synpress": "^3.7.2-beta.10",
 		"@types/react": "^18.2.67",
 		"@types/react-dom": "^18.2.22",
 		"@vitejs/plugin-react": "^4.2.1",
