@@ -1,10 +1,10 @@
 import {
-	wrapEIP1193Provider,
-	wrap,
 	type SapphireAnnex,
+	wrap,
+	wrapEIP1193Provider,
 } from "@oasisprotocol/sapphire-paratime";
 import type { Transport } from "@wagmi/core";
-import { injected, custom } from "@wagmi/core";
+import { custom, injected } from "@wagmi/core";
 import type { EIP1193Provider } from "viem";
 
 type Window = {
@@ -84,7 +84,10 @@ export function injectedWithSapphire(): ReturnType<typeof injected> {
  */
 export function sapphireTransport(): Transport {
 	return (params) => {
-		const p = wrap(params.chain!.rpcUrls.default.http[0]);
+		if (!params.chain) {
+			throw new Error("sapphireTransport() not possible with no params.chain!");
+		}
+		const p = wrap(params.chain.rpcUrls.default.http[0]);
 		return custom(p)(params);
 	};
 }
