@@ -9,19 +9,8 @@
 		"type": "git",
 		"url": "https://github.com/oasisprotocol/sapphire-paratime.git"
 	},
-	"keywords": [
-		"sapphire",
-		"paratime",
-		"oasis",
-		"web3",
-		"viem",
-		"wagmi"
-	],
-	"files": [
-		"dist",
-		"!dist/*.tsbuildinfo",
-		"src"
-	],
+	"keywords": ["sapphire", "paratime", "oasis", "web3", "viem", "wagmi"],
+	"files": ["dist", "!dist/*.tsbuildinfo", "src"],
 	"sideEffects": false,
 	"main": "./dist/_cjs/index.js",
 	"module": "./dist/_esm/index.js",
