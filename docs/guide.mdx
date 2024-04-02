@@ -104,7 +104,6 @@ but it's made simple by our compatibility library, [@oasisprotocol/sapphire-para
 
 There are compatibility layers in other languages, which may be found in [the repo].
 
-
 [@oasisprotocol/sapphire-paratime]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 [the repo]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients
 
@@ -113,7 +112,7 @@ There are compatibility layers in other languages, which may be found in [the re
 ### Wallets
 
 Sapphire is compatible with popular self-custodial wallets including MetaMask,
-Ledger, Brave, and so forth. You can also use libraries like Web3.js and Ethers
+Ledger, Brave, and so forth. You can also use libraries like Wagmi and Ethers
 to create programmatic wallets. In general, if it generates secp256k1 signatures,
 it'll work just fine.
 
@@ -124,32 +123,6 @@ Fe or Vyper. If you prefer to use an Ethereum framework like Hardhat or Foundry,
 you can also use those with Sapphire; all you need to do is set your Web3 gateway URL.
 You can find the details of the Oasis Sapphire Web3 endpoints
 [here](https://github.com/oasisprotocol/docs/blob/main/docs/dapp/sapphire/README.mdx#rpc-endpoints).
-
-
-#### Wagmi
-
-Sapphire will mostly work with Wagmi v2 or Viem v2 out of the box, however in
-order to encrypt transactions, gas estimations & queries you will need to import
-the Sapphire encryption client and use either the wrapped Injected connector
-(which wraps `window.ethereum`) or the Sapphire transport.
-
-```ts
-import { createConfig } from 'wagmi'
-import { sapphireTestnet, sapphire } from 'wagmi/chains';
-import { injectedWithSapphire, sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
-
-export const config = createConfig({
-  multiInjectedProviderDiscovery: false,
-  chains: [sapphire, sapphireTestnet],
-  connectors: [
-    injectedWithSapphire()
-  ],
-  transports: {
-    [sapphireLocalnet.id]: sapphireTransport()
-    [sapphire.id]: sapphireTransport()
-  },
-})
-```
 
 ### Transactions & Calls
 
