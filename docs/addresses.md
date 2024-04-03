@@ -20,7 +20,7 @@ description: List of Standard Contract Addresses
 [wrose-verify-mainnet]: https://sourcify.dev/#/lookup/0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3
 [wrose-verify-testnet]: https://sourcify.dev/#/lookup/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94
 
-# Celer cBridge Tokens (Mainnet)
+## Celer cBridge Tokens (Mainnet)
 <!-- NOTE: this is generated using `_fetch-cbridge-tokens.py` -->
 <!-- WARNING: please don't manually update the table! -->
 | Source Chain | Token Name | Source Address | Dest. Chain | Dest Address |
@@ -34,7 +34,7 @@ description: List of Standard Contract Addresses
 | Polygon PoS (137) | MATIC | [`0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270`](https://polygonscan.com/address/0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270) | Oasis Sapphire (23294) | [`0xa349005a68FA33e8DACAAa850c45175bbcD49B19`](https://explorer.oasis.io/mainnet/sapphire/address/0xa349005a68FA33e8DACAAa850c45175bbcD49B19) |
 | Oasis Sapphire (23294) | wROSE | [`0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3`](https://explorer.oasis.io/mainnet/sapphire/address/0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3) | BNB Chain (56) | [`0xF00600eBC7633462BC4F9C61eA2cE99F5AAEBd4a`](https://bscscan.com/address/0xF00600eBC7633462BC4F9C61eA2cE99F5AAEBd4a) |
 
-# Testnet cBridge Tokens
+## Celer cBridge Tokens (Testnet)
 <!-- NOTE: this is generated using `_fetch-cbridge-tokens.py` -->
 <!-- WARNING: please don't manually update the table! -->
 | Source Chain | Token Name | Source Address | Dest. Chain | Dest Address |
