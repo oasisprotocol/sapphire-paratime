@@ -30,7 +30,7 @@ contract Example {
         return owner;
     }
 
-    function getMsGSender()
+    function getMsgSender()
         external view
         returns (address)
     {

@@ -172,7 +172,10 @@ export async function fetchRuntimePublicKey(
 }
 
 export abstract class AbstractKeyFetcher {
-  public abstract fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey>;
+  public abstract fetch(
+    upstream: UpstreamProvider,
+    timeoutMilliseconds?: number,
+  ): Promise<CallDataPublicKey>;
   public abstract cipher(upstream: UpstreamProvider): Promise<Cipher>;
 }
 
@@ -199,11 +202,15 @@ export class KeyFetcher extends AbstractKeyFetcher {
    * @param upstream Upstream ETH JSON-RPC provider
    * @returns calldata public key
    */
-  public async fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey> {
+  public async fetch(
+    upstream: UpstreamProvider,
+    timeoutMilliseconds?: number,
+  ): Promise<CallDataPublicKey> {
     if (this.pubkey) {
       const pk = this.pubkey;
-      const expiry = Date.now() - this.timeoutMilliseconds;
-      if (pk.fetched && pk.fetched.valueOf() > expiry) {
+      const expiry =
+        Date.now() - (timeoutMilliseconds ?? this.timeoutMilliseconds);
+      if (pk.fetched && pk.fetched.valueOf() >= expiry) {
         // XXX: if provider switch chain, may return cached key for wrong chain
         return pk;
       }
@@ -229,11 +236,17 @@ export class KeyFetcher extends AbstractKeyFetcher {
   }
 
   public async runInBackground(upstream: UpstreamProvider) {
+    if (this.#isBackgroundRunning) return;
+
+    // Reduce wait time by 10%, so it eagerly fetches
+    const waitMilliseconds =
+      this.timeoutMilliseconds - this.timeoutMilliseconds / 10;
+
     while (this.#isBackgroundRunning) {
       await new Promise((resolve) =>
         setTimeout(resolve, this.timeoutMilliseconds),
       );
-      await this.fetch(upstream);
+      await this.fetch(upstream, waitMilliseconds);
     }
   }
 }
