@@ -486,8 +486,6 @@ async function repackRawTx(
     return raw;
   }
 
-  console.log('Called repackRawTx 1', raw, signer)
-
   // When transaction is signed by another keypair and we don't have that signer
   // bypass re-packing, this allows repacking to pass-thru pre-signed txs
   if (tx.isSigned() && (!signer || (await signer!.getAddress()) !== tx.from!)) {
@@ -496,7 +494,6 @@ async function repackRawTx(
 
   tx.data = cipher.encryptEncode(tx.data);
 
-  console.log('Called repackRawTx 2', raw, signer)
   try {
     return signer!.signTransaction(tx);
   } catch (e) {

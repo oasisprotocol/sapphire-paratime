@@ -53,9 +53,7 @@ export abstract class Cipher {
   }
 
   /** Encrypts the plaintext and formats it into an envelope. */
-  public encryptEnvelope(
-    plaintext?: BytesLike,
-  ): Envelope | undefined {
+  public encryptEnvelope(plaintext?: BytesLike): Envelope | undefined {
     if (plaintext === undefined) return;
     if (!isBytesLike(plaintext)) {
       throw new Error('Attempted to sign tx having non-byteslike data.');
@@ -69,9 +67,7 @@ export abstract class Cipher {
     return { format: this.kind, body };
   }
 
-  protected encryptCallData(
-    plaintext: Uint8Array,
-  ): AeadEnvelope {
+  protected encryptCallData(plaintext: Uint8Array): AeadEnvelope {
     const body = cbor.encode({ body: plaintext });
     const { ciphertext: data, nonce } = this.encrypt(body);
     return { data, nonce };
@@ -109,9 +105,7 @@ export abstract class Cipher {
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
   public decryptEncoded(callResult: BytesLike): string {
-    return hexlify(
-      this.decryptCallResult(cbor.decode(getBytes(callResult))),
-    );
+    return hexlify(this.decryptCallResult(cbor.decode(getBytes(callResult))));
   }
 
   /** Decrypts the data contained within a result envelope. */
@@ -152,16 +146,14 @@ export class Plain extends Cipher {
     return { ciphertext: plaintext, nonce: new Uint8Array() };
   }
 
-  public decrypt(
-    _nonce: Uint8Array,
-    ciphertext: Uint8Array,
-  ): Uint8Array {
+  public decrypt(_nonce: Uint8Array, ciphertext: Uint8Array): Uint8Array {
     return ciphertext;
   }
 
-  public encryptCallData(
-    plaintext: Uint8Array,
-  ): { data: Uint8Array; nonce: Uint8Array } {
+  public encryptCallData(plaintext: Uint8Array): {
+    data: Uint8Array;
+    nonce: Uint8Array;
+  } {
     return { data: plaintext, nonce: new Uint8Array() };
   }
 }
@@ -226,10 +218,7 @@ export class X25519DeoxysII extends Cipher {
     return { nonce, ciphertext };
   }
 
-  public decrypt(
-    nonce: Uint8Array,
-    ciphertext: Uint8Array,
-  ): Uint8Array {
+  public decrypt(nonce: Uint8Array, ciphertext: Uint8Array): Uint8Array {
     return this.cipher.decrypt(nonce, ciphertext);
   }
 }
@@ -249,10 +238,7 @@ export class Mock extends Cipher {
     return { nonce: Mock.NONCE, ciphertext: plaintext };
   }
 
-  public decrypt(
-    nonce: Uint8Array,
-    ciphertext: Uint8Array,
-  ): Uint8Array {
+  public decrypt(nonce: Uint8Array, ciphertext: Uint8Array): Uint8Array {
     if (hexlify(nonce) !== hexlify(Mock.NONCE))
       throw new Error('incorrect nonce');
     return ciphertext;

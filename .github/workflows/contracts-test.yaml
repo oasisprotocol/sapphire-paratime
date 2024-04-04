@@ -66,6 +66,12 @@ jobs:
       - name: Build hardhat integration
         working-directory: integrations/hardhat
         run: pnpm build
+      - name: Build Wagmi integration
+        working-directory: integrations/wagmi-v2
+        run: pnpm build
+      - name: Build Viem integration
+        working-directory: integrations/viem-v2
+        run: pnpm build
       - name: Test contracts with Hardhat
         working-directory: contracts
         run: pnpm hardhat test --network sapphire-localnet-ci
@@ -86,3 +92,6 @@ jobs:
       - name: ethersv6-ts-esm
         working-directory: examples/ethersv6-ts-esm
         run: pnpm run test
+      - name: hardhat-viem
+        working-directory: examples/hardhat-viem
+        run: pnpm run test --network sapphire-localnet
