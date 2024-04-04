@@ -179,7 +179,7 @@ export abstract class AbstractKeyFetcher {
 export class KeyFetcher extends AbstractKeyFetcher {
   readonly timeoutMilliseconds: number;
   public pubkey?: CallDataPublicKey;
-  #isBackgroundRunning: boolean = false;
+  #isBackgroundRunning = false;
 
   get isBackgroundRunning(): boolean {
     return this.#isBackgroundRunning;
@@ -224,7 +224,7 @@ export class KeyFetcher extends AbstractKeyFetcher {
     return X25519DeoxysII.ephemeral(kp.key, kp.epoch);
   }
 
-  public stopBackground () {
+  public stopBackground() {
     this.#isBackgroundRunning = false;
   }
 
