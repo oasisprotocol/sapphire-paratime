@@ -1,11 +1,9 @@
 import {
 	type SapphireAnnex,
-	wrap,
 	wrapEIP1193Provider,
 } from "@oasisprotocol/sapphire-paratime";
-import type { Transport } from "@wagmi/core";
-import { custom, injected } from "@wagmi/core";
-import type { EIP1193Provider } from "viem";
+import { injected } from "@wagmi/core";
+import { type EIP1193Provider } from "viem";
 
 type Window = {
 	ethereum?: EIP1193Provider;
@@ -20,7 +18,7 @@ const cachedProviders: Map<EIP1193Provider, EIP1193Provider> = new Map();
  * Example:
  * ```
  *
- *    import { injectedWithSapphire } from '@oasisprotocol/sapphire-wagmi';
+ *    import { injectedWithSapphire } from '@oasisprotocol/sapphire-wagmi-v2';
  *
  *    export const config = createConfig({
  *      connectors: [
@@ -61,33 +59,4 @@ export function injectedWithSapphire(): ReturnType<typeof injected> {
 			};
 		},
 	});
-}
-
-/**
- * Provide a Sapphire encrypted RPC transport for Wagmi or Viem.
- *
- * Example:
- * ```
- *
- *    import { sapphireTransport } from '@oasisprotocol/sapphire-wagmi';
- *
- *    export const config = createConfig({
- *      transports: {
- *        [sapphireTestnet.id]: sapphireTransport()
- *      },
- *      ...
- *    });
- *
- * ```
- *
- * @returns Same as custom()
- */
-export function sapphireTransport(): Transport {
-	return (params) => {
-		if (!params.chain) {
-			throw new Error("sapphireTransport() not possible with no params.chain!");
-		}
-		const p = wrap(params.chain.rpcUrls.default.http[0]);
-		return custom(p)(params);
-	};
 }

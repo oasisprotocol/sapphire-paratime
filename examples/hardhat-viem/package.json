@@ -1,0 +1,19 @@
+{
+    "name": "examples-hardhat-viem",
+    "version": "0.0.0",
+    "private": true,
+    "description": "",
+    "scripts": {},
+    "keywords": [],
+    "author": "",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "@nomicfoundation/hardhat-toolbox-viem": "3.x",
+        "@nomicfoundation/hardhat-viem": "2.x",
+        "@oasisprotocol/sapphire-viem-v2": "workspace:^",
+        "hardhat": "2.x",
+        "viem": "2.x",
+        "chai": "^4.2.0",
+        "@types/chai": "^4.2.0"
+    }
+}

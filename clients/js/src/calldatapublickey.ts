@@ -210,6 +210,21 @@ export class KeyFetcher extends AbstractKeyFetcher {
     const kp = await this.fetch(upstream);
     return X25519DeoxysII.ephemeral(kp.key, kp.epoch);
   }
+
+  public cipherSync() {
+    if( ! this.pubkey ) {
+      throw new Error('No cached pubkey!');
+    }
+    const kp = this.pubkey;
+    return X25519DeoxysII.ephemeral(kp.key, kp.epoch);
+  }
+
+  public async runInBackground(upstream: UpstreamProvider) {
+    while( true ) {
+      await new Promise( resolve => setTimeout(resolve, this.timeoutMilliseconds) );
+      await this.fetch(upstream);
+    }
+  }
 }
 
 export class MockKeyFetcher extends AbstractKeyFetcher {
