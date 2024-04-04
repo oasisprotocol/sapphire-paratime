@@ -164,7 +164,7 @@ function hookEIP1193Request(
     const { method, params } = await prepareRequest(args, cipher, signer);
     const res = await signer.provider.send(method, params ?? []);
     if (method === 'eth_call') {
-      return await cipher.decryptEncoded(res);
+      return cipher.decryptEncoded(res);
     }
     return res;
   };
@@ -266,7 +266,7 @@ export function wrapEthersProvider<P extends Provider | Ethers5Provider>(
       );
       const res = await (provider as any).send(method, params ?? []);
       if (method === 'eth_call') {
-        return await cipher.decryptEncoded(res);
+        return cipher.decryptEncoded(res);
       }
       return res;
     };
@@ -351,7 +351,7 @@ function hookEthersCall(
   ) => {
     let call_data = call.data;
     if (!is_already_enveloped) {
-      call_data = await cipher.encryptEncode(call.data ?? new Uint8Array());
+      call_data = cipher.encryptEncode(call.data ?? new Uint8Array());
     }
     const result = await runner[method]!({
       ...call,
@@ -394,7 +394,7 @@ function hookEthersCall(
     }
     // NOTE: if it's already enveloped, caller will decrypt it (not us)
     if (!is_already_enveloped && typeof res === 'string') {
-      return await cipher.decryptEncoded(res);
+      return cipher.decryptEncoded(res);
     }
     return res;
   };
@@ -410,7 +410,7 @@ function hookEthersSend<C>(
   return (async (tx: EthCall | TransactionRequest, ...rest: any[]) => {
     if (tx.data) {
       const cipher = await options.fetcher.cipher(signer);
-      tx.data = await cipher.encryptEncode(tx.data);
+      tx.data = cipher.encryptEncode(tx.data);
     }
     return (send as any)(tx, ...rest);
   }) as C;
@@ -461,7 +461,7 @@ async function prepareRequest(
     /^eth_((send|sign)Transaction|call|estimateGas)$/.test(method) &&
     params[0].data // Ignore balance transfers without calldata
   ) {
-    params[0].data = await cipher.encryptEncode(params[0].data);
+    params[0].data = cipher.encryptEncode(params[0].data);
     return { method, params };
   }
 
@@ -486,14 +486,17 @@ async function repackRawTx(
     return raw;
   }
 
+  console.log('Called repackRawTx 1', raw, signer)
+
   // When transaction is signed by another keypair and we don't have that signer
   // bypass re-packing, this allows repacking to pass-thru pre-signed txs
   if (tx.isSigned() && (!signer || (await signer!.getAddress()) !== tx.from!)) {
     return raw;
   }
 
-  tx.data = await cipher.encryptEncode(tx.data);
+  tx.data = cipher.encryptEncode(tx.data);
 
+  console.log('Called repackRawTx 2', raw, signer)
   try {
     return signer!.signTransaction(tx);
   } catch (e) {
