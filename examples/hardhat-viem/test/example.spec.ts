@@ -13,15 +13,16 @@ describe('Example Tests', () => {
     let walletClient : WalletClient;
 
     before(async () => {
+        const transport = sapphireTransport();
         publicClient = await hre.viem.getPublicClient({
             chain: sapphireLocalnet,
-            transport: sapphireTransport()
+            transport
         });
         const account = mnemonicToAccount('test test test test test test test test test test test junk');
         walletClient = await wrapWalletClient(createWalletClient({
             account: account,
             chain: sapphireLocalnet,
-            transport: sapphireTransport()
+            transport
         }));
         keyedClient = {
             public: publicClient,
@@ -35,11 +36,11 @@ describe('Example Tests', () => {
         const receipt = await publicClient.waitForTransactionReceipt({hash});
         expect(receipt.status).eq('success');
 
+        // Encrypted transaction will be enveloped, rather than being 4 bytes
         const tx = await publicClient.getTransaction({hash: receipt.transactionHash});
-        console.log('tx', tx);
-        // TODO: verify transaction is encrypted
+        expect(tx.input.length).eq(236);
 
-        const sender = await example.read.getMsGSender()
+        const sender = await example.read.getMsgSender()
         expect(sender).eq(zeroAddress);
 
         const owner = await example.read.getOwner();
