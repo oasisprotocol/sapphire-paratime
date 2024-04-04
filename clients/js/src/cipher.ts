@@ -37,31 +37,31 @@ export abstract class Cipher {
   public abstract publicKey: Uint8Array;
   public abstract epoch: number | undefined;
 
-  public abstract encrypt(plaintext: Uint8Array): Promise<{
+  public abstract encrypt(plaintext: Uint8Array): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
-  }>;
+  };
   public abstract decrypt(
     nonce: Uint8Array,
     ciphertext: Uint8Array,
-  ): Promise<Uint8Array>;
+  ): Uint8Array;
 
   /** Encrypts the plaintext and encodes it for sending. */
-  public async encryptEncode(plaintext?: BytesLike): Promise<string> {
-    const envelope = await this.encryptEnvelope(plaintext);
+  public encryptEncode(plaintext?: BytesLike): string {
+    const envelope = this.encryptEnvelope(plaintext);
     return envelope ? hexlify(cbor.encode(envelope)) : '';
   }
 
   /** Encrypts the plaintext and formats it into an envelope. */
-  public async encryptEnvelope(
+  public encryptEnvelope(
     plaintext?: BytesLike,
-  ): Promise<Envelope | undefined> {
+  ): Envelope | undefined {
     if (plaintext === undefined) return;
     if (!isBytesLike(plaintext)) {
       throw new Error('Attempted to sign tx having non-byteslike data.');
     }
     if (plaintext.length === 0) return; // Txs without data are just balance transfers, and all data in those is public.
-    const { data, nonce } = await this.encryptCallData(getBytes(plaintext));
+    const { data, nonce } = this.encryptCallData(getBytes(plaintext));
     const pk = this.publicKey;
     const epoch = this.epoch;
     const body = pk.length && nonce.length ? { pk, nonce, data, epoch } : data;
@@ -69,11 +69,11 @@ export abstract class Cipher {
     return { format: this.kind, body };
   }
 
-  protected async encryptCallData(
+  protected encryptCallData(
     plaintext: Uint8Array,
-  ): Promise<AeadEnvelope> {
+  ): AeadEnvelope {
     const body = cbor.encode({ body: plaintext });
-    const { ciphertext: data, nonce } = await this.encrypt(body);
+    const { ciphertext: data, nonce } = this.encrypt(body);
     return { data, nonce };
   }
 
@@ -85,37 +85,37 @@ export abstract class Cipher {
    *  encryption key.
    */
 
-  public async decryptCallData(
+  public decryptCallData(
     nonce: Uint8Array,
     ciphertext: Uint8Array,
-  ): Promise<Uint8Array> {
-    return cbor.decode(await this.decrypt(nonce, ciphertext)).body;
+  ): Uint8Array {
+    return cbor.decode(this.decrypt(nonce, ciphertext)).body;
   }
 
   /**
    * @hidden Encrypts a CallResult in the same way as would be returned by the runtime.
    * This method is not part of the SemVer interface and may be subject to change.
    */
-  public async encryptCallResult(
+  public encryptCallResult(
     result: CallResult,
     reportUnknown = false,
-  ): Promise<Uint8Array> {
+  ): Uint8Array {
     if (result.fail) return cbor.encode(result);
     const encodedResult = cbor.encode(result);
-    const { ciphertext, nonce } = await this.encrypt(encodedResult);
+    const { ciphertext, nonce } = this.encrypt(encodedResult);
     const prop = reportUnknown ? 'unknown' : 'ok';
     return cbor.encode({ [prop]: { nonce, data: ciphertext } });
   }
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
-  public async decryptEncoded(callResult: BytesLike): Promise<string> {
+  public decryptEncoded(callResult: BytesLike): string {
     return hexlify(
-      await this.decryptCallResult(cbor.decode(getBytes(callResult))),
+      this.decryptCallResult(cbor.decode(getBytes(callResult))),
     );
   }
 
   /** Decrypts the data contained within a result envelope. */
-  public async decryptCallResult(res: CallResult): Promise<Uint8Array> {
+  public decryptCallResult(res: CallResult): Uint8Array {
     function formatFailure(fail: CallFailure): string {
       if (fail.message) return fail.message;
       return `Call failed in module '${fail.module}' with code '${fail.code}'`;
@@ -124,7 +124,7 @@ export abstract class Cipher {
     if (res.ok && (typeof res.ok === 'string' || res.ok instanceof Uint8Array))
       return getBytes(res.ok);
     const { nonce, data } = (res.ok as AeadEnvelope) ?? res.unknown;
-    const inner = cbor.decode(await this.decrypt(nonce, data));
+    const inner = cbor.decode(this.decrypt(nonce, data));
     if (inner.ok) return getBytes(inner.ok);
     if (inner.fail) throw new CallError(formatFailure(inner.fail), inner.fail);
     throw new CallError(
@@ -145,23 +145,23 @@ export class Plain extends Cipher {
   public override readonly publicKey = new Uint8Array();
   public override readonly epoch = undefined;
 
-  public async encrypt(plaintext: Uint8Array): Promise<{
+  public encrypt(plaintext: Uint8Array): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
-  }> {
+  } {
     return { ciphertext: plaintext, nonce: new Uint8Array() };
   }
 
-  public async decrypt(
+  public decrypt(
     _nonce: Uint8Array,
     ciphertext: Uint8Array,
-  ): Promise<Uint8Array> {
+  ): Uint8Array {
     return ciphertext;
   }
 
-  async encryptCallData(
+  public encryptCallData(
     plaintext: Uint8Array,
-  ): Promise<{ data: Uint8Array; nonce: Uint8Array }> {
+  ): { data: Uint8Array; nonce: Uint8Array } {
     return { data: plaintext, nonce: new Uint8Array() };
   }
 }
@@ -217,19 +217,19 @@ export class X25519DeoxysII extends Cipher {
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }
 
-  public async encrypt(plaintext: Uint8Array): Promise<{
+  public encrypt(plaintext: Uint8Array): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
-  }> {
+  } {
     const nonce = nacl.randomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
 
-  public async decrypt(
+  public decrypt(
     nonce: Uint8Array,
     ciphertext: Uint8Array,
-  ): Promise<Uint8Array> {
+  ): Uint8Array {
     return this.cipher.decrypt(nonce, ciphertext);
   }
 }
@@ -242,17 +242,17 @@ export class Mock extends Cipher {
 
   public static readonly NONCE = new Uint8Array([10, 20, 30, 40]);
 
-  public async encrypt(plaintext: Uint8Array): Promise<{
+  public encrypt(plaintext: Uint8Array): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
-  }> {
+  } {
     return { nonce: Mock.NONCE, ciphertext: plaintext };
   }
 
-  public async decrypt(
+  public decrypt(
     nonce: Uint8Array,
     ciphertext: Uint8Array,
-  ): Promise<Uint8Array> {
+  ): Uint8Array {
     if (hexlify(nonce) !== hexlify(Mock.NONCE))
       throw new Error('incorrect nonce');
     return ciphertext;

@@ -17,6 +17,7 @@ This monorepo includes the source code for the following Sapphire packages:
 | [Go client][go-pkg]                       | [![version][go-version]][go-pkg]               |                                               |                                   |
 | [Solidity smart contracts][contracts-npm] | [![version][contracts-version]][contracts-npm] |                                               | ![downloads][contracts-downloads] |
 | [Hardhat plugin][hardhat-npm]             | [![version][hardhat-version]][hardhat-npm]     | [![size][hardhat-size]][hardhat-bundlephobia] | ![downloads][hardhat-downloads]   |
+| [Wagmi 2.x support][wagmi-npm]            | [![version][wagmi-version]][wagmi-npm]         | [![size][wagmi-size]][wagmi-bundlephobia]     | ![downloads][wagmi-downloads]     |
 
 
 [go-pkg]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime
@@ -24,21 +25,26 @@ This monorepo includes the source code for the following Sapphire packages:
 [hardhat-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
 [contracts-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-contracts
 [client-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
+[wagmi-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-wagmi-v2
 
 [go-version]: https://img.shields.io/github/go-mod/go-version/oasisprotocol/sapphire-paratime?filename=clients%2Fgo%2Fgo.mod
 [hardhat-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-hardhat
 [contracts-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-contracts
 [client-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-paratime
+[wagmi-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-wagmi-v2
 
 [hardhat-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat
 [client-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime
+[wagmi-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-wagmi-v2
 
 [hardhat-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat
 [client-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-paratime
+[wagmi-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-wagmi-v2
 
 [hardhat-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-hardhat.svg
 [contracts-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-contracts.svg
 [client-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-paratime.svg
+[wagmi-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-wagmi-v2.svg
 
 ## Layout
 
@@ -50,7 +56,7 @@ the following directories:
 - [`docs`](./docs): topic-oriented Sapphire documentation
 - [`examples`](./examples/): sample code snippets in popular Ethereum
 development environments
-- [`integrations`](./integrations/): plugins with popular Solidity tools
+- [`integrations`](./integrations/): plugins for popular Solidity tools
 - [`runtime`](./runtime/): the Sapphire Paratime as based off of the
 [Oasis SDK](https://github.com/oasisprotocol/oasis-sdk)
 

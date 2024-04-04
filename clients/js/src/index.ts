@@ -10,6 +10,7 @@ export * as cipher from './cipher.js';
 export * from './compat.js';
 export * as signedCalls from './signed_calls.js';
 export { NETWORKS } from './networks.js';
+export * from './calldatapublickey.js';
 
 export const OASIS_CALL_DATA_PUBLIC_KEY = 'oasis_callDataPublicKey';
 
