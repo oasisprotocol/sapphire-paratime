@@ -179,6 +179,11 @@ export abstract class AbstractKeyFetcher {
 export class KeyFetcher extends AbstractKeyFetcher {
   readonly timeoutMilliseconds: number;
   public pubkey?: CallDataPublicKey;
+  #isBackgroundRunning: boolean = false;
+
+  get isBackgroundRunning(): boolean {
+    return this.#isBackgroundRunning;
+  }
 
   constructor(in_timeoutMilliseconds?: number) {
     super();
@@ -212,16 +217,22 @@ export class KeyFetcher extends AbstractKeyFetcher {
   }
 
   public cipherSync() {
-    if( ! this.pubkey ) {
+    if (!this.pubkey) {
       throw new Error('No cached pubkey!');
     }
     const kp = this.pubkey;
     return X25519DeoxysII.ephemeral(kp.key, kp.epoch);
   }
 
+  public stopBackground () {
+    this.#isBackgroundRunning = false;
+  }
+
   public async runInBackground(upstream: UpstreamProvider) {
-    while( true ) {
-      await new Promise( resolve => setTimeout(resolve, this.timeoutMilliseconds) );
+    while (this.#isBackgroundRunning) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, this.timeoutMilliseconds),
+      );
       await this.fetch(upstream);
     }
   }
