@@ -107,8 +107,8 @@ describe('X25519DeoxysII', () => {
     res = await cipher.encryptCallResult({
       fail: { module: 'test', code: -1, message: 'out of gas' },
     });
-    await expect(async () => cipher.decryptCallResult(cbor.decode(res))).rejects.toThrow(
-      'out of gas',
-    );
+    await expect(async () =>
+      cipher.decryptCallResult(cbor.decode(res)),
+    ).rejects.toThrow('out of gas');
   });
 });
