@@ -1,5 +1,26 @@
 import { KeyFetcher, wrap } from "@oasisprotocol/sapphire-paratime";
-import { defineChain, type Transport, custom, type WalletClient, serializeTransaction } from "viem";
+import {
+	type Client,
+	type SerializeTransactionFn,
+	type Transport,
+	type WalletClient,
+	custom,
+	defineChain,
+	serializeTransaction,
+} from "viem";
+
+declare let process: {
+	env: {
+		SAPPHIRE_LOCALNET_HTTP_PROXY_PORT?: string;
+	};
+};
+
+// Allows for the sapphire-localnet port to be overridden in command-line
+// Note: this will fail gracefully in-browser
+export const SAPPHIRE_LOCALNET_HTTP_PROXY_PORT = globalThis.process?.env
+	?.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT
+	? Number(process.env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT)
+	: 8545;
 
 export const sapphireLocalnet = defineChain({
 	id: 0x5afd,
@@ -8,13 +29,15 @@ export const sapphireLocalnet = defineChain({
 	nativeCurrency: { name: "Sapphire Local Rose", symbol: "TEST", decimals: 18 },
 	rpcUrls: {
 		default: {
-			http: ["http://localhost:8545"],
-			webSocket: ["ws://localhost:8546/ws"],
+			http: [`http://localhost:${SAPPHIRE_LOCALNET_HTTP_PROXY_PORT}`],
+			//webSocket: ["ws://localhost:8546/ws"],
 		},
 	},
-	testnet: true
+	testnet: true,
 });
 
+// Hidden property used to detect if transport is Sapphire-wrapped
+const SAPPHIRE_WRAPPED_VIEM_TRANSPORT = "#SAPPHIRE_WRAPPED_VIEM_TRANSPORT";
 
 /**
  * Provide a Sapphire encrypted RPC transport for Wagmi or Viem.
@@ -36,49 +59,84 @@ export const sapphireLocalnet = defineChain({
  * @returns Same as custom()
  */
 export function sapphireTransport(): Transport {
+	const cachedProviders: Record<string, ReturnType<typeof wrap>> = {};
 	return (params) => {
 		if (!params.chain) {
 			throw new Error("sapphireTransport() not possible with no params.chain!");
 		}
-		const p = wrap(params.chain.rpcUrls.default.http[0]);
-		return custom(p)(params);
+		const url = params.chain.rpcUrls.default.http[0];
+		if (!(url in cachedProviders)) {
+			cachedProviders[url] = wrap(url);
+		}
+		const p = cachedProviders[url];
+		const q = custom(p)(params);
+		Reflect.set(q, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, true);
+		return q;
 	};
 }
 
-const SAPPHIRE_WRAPPED_VIEM_SERIALIZER = 'SAPPHIRE_WRAPPED_VIEM_SERIALIZER';
+export async function createSapphireSerializer<
+	S extends Client,
+	T extends SerializeTransactionFn,
+>(client: S, originalSerializer: T | undefined): Promise<T> {
+	const fetcher = new KeyFetcher();
 
-export async function wrapWalletClient<T extends WalletClient>(client: T) : Promise<T>
-{
-	if( ! client.chain ) {
-		throw new Error('No chain defined in client');
-	}
+	await fetcher.fetch(client as unknown as Parameters<typeof fetcher.fetch>[0]);
 
-	if( ! client.chain.serializers ) {
-		client.chain.serializers = {}
+	fetcher.runInBackground(
+		client as unknown as Parameters<typeof fetcher.fetch>[0],
+	);
+
+	const wrappedSerializer = ((tx, sig?) => {
+		if (!sig) {
+			// TODO: move logic into core, which detects pre-encrypted txs
+			const cipher = fetcher.cipherSync();
+			const encryptedData = cipher.encryptEncode(tx.data);
+			tx.data = encryptedData as `0x${string}`;
+		}
+		if (originalSerializer) {
+			return originalSerializer(tx, sig);
+		}
+		return serializeTransaction(tx, sig);
+	}) as T;
+
+	Reflect.set(wrappedSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER, true);
+
+	return wrappedSerializer;
+}
+
+// Hidden property to test if serializer is Sapphire-wrapped
+const SAPPHIRE_WRAPPED_VIEM_SERIALIZER = "#SAPPHIRE_WRAPPED_VIEM_SERIALIZER";
+
+/**
+ * Add the Sapphire transaction encryption wrapper to a wallet client
+ *
+ * @param client Wagmi wallet client
+ * @returns wrapped wallet client
+ */
+export async function wrapWalletClient<T extends WalletClient>(
+	client: T,
+): Promise<T> {
+	if (!client.chain) {
+		throw new Error("No chain defined in client");
 	}
 
 	const originalSerializer = client.chain?.serializers?.transaction;
 
-	if( ! originalSerializer || ! Reflect.get(originalSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER) )
-	{
-		const fetcher = new KeyFetcher();
-
-		await fetcher.fetch(client as any);
-
-		fetcher.runInBackground(client as any);
-
-		client.chain.serializers.transaction = (tx, sig?) => {
-			if( ! sig ) {
-				const cipher = fetcher.cipherSync();
-				const encryptedData = cipher.encryptEncode(tx.data);
-				tx.data = encryptedData as `0x${string}`;
-			}
-			if( originalSerializer ) {
-				return originalSerializer(tx, sig);
-			}
-			return serializeTransaction(tx, sig);
+	// Override any existing transaction serializer, or create a new one
+	// With one that auto-encrypts transactions before they're signed
+	if (
+		!originalSerializer ||
+		!Reflect.get(originalSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER)
+	) {
+		if (!client.chain.serializers) {
+			client.chain.serializers = {};
 		}
-		Reflect.set(client.chain.serializers.transaction, SAPPHIRE_WRAPPED_VIEM_SERIALIZER, true);
+
+		client.chain.serializers.transaction = await createSapphireSerializer(
+			client,
+			originalSerializer,
+		);
 	}
 
 	return client;

@@ -21,6 +21,8 @@ jobs:
           --rm
           --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
           --health-start-period=90s
+    env:
+      SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 3001
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -92,6 +94,16 @@ jobs:
       - name: ethersv6-ts-esm
         working-directory: examples/ethersv6-ts-esm
         run: pnpm run test
+      - uses: JarvusInnovations/background-action@v1
+        name: RPC proxy will error if non-encrypted calls are made
+        with:
+          run: pnpm run proxy &
+          wait-on: tcp://localhost:${{ env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT }}
+          tail: true
+          log-output-resume: true
+          wait-for: 5sec
+          log-output: true
+          working-directory: clients/js
       - name: hardhat-viem
         working-directory: examples/hardhat-viem
         run: pnpm hardhat test --network sapphire-localnet
