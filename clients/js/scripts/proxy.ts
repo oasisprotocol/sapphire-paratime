@@ -21,7 +21,8 @@ async function getBody(request: IncomingMessage): Promise<string> {
   });
 }
 
-const LISTEN_PORT = Number(process.env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT) ?? 3001;
+const LISTEN_PORT =
+  Number(process.env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT) ?? 3001;
 const DIE_ON_UNENCRYPTED = true;
 const UPSTREAM_URL = 'http://127.0.0.1:8545';
 const SHOW_ENCRYPTED_RESULTS = false;
