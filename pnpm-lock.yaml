@@ -368,6 +368,9 @@ importers:
       '@nomicfoundation/hardhat-viem':
         specifier: 2.x
         version: 2.0.0(hardhat@2.22.2)(typescript@5.0.4)(viem@2.13.8)
+      '@oasisprotocol/sapphire-paratime':
+        specifier: workspace:^
+        version: link:../../clients/js
       '@oasisprotocol/sapphire-viem-v2':
         specifier: workspace:^
         version: link:../../integrations/viem-v2
@@ -13088,17 +13091,6 @@ packages:
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
 
-  /follow-redirects@1.15.6(debug@4.3.5):
-    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-    dependencies:
-      debug: 4.3.5
-
   /for-each@0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
     dependencies:
@@ -13935,7 +13927,7 @@ packages:
       chalk: 2.4.2
       chokidar: 3.6.0
       ci-info: 2.0.0
-      debug: 4.3.5
+      debug: 4.3.4(supports-color@8.1.1)
       enquirer: 2.4.1
       env-paths: 2.2.1
       ethereum-cryptography: 1.2.0
@@ -13954,7 +13946,7 @@ packages:
       raw-body: 2.5.2
       resolve: 1.17.0
       semver: 6.3.1
-      solc: 0.7.3(debug@4.3.5)
+      solc: 0.7.3(debug@4.3.4)
       source-map-support: 0.5.21
       stacktrace-parser: 0.1.10
       ts-node: 10.9.2(@types/node@18.19.28)(typescript@5.0.4)
@@ -14305,7 +14297,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.6(debug@4.3.5)
+      follow-redirects: 1.15.6(debug@4.3.4)
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -20493,24 +20485,6 @@ packages:
       tmp: 0.0.33
     transitivePeerDependencies:
       - debug
-
-  /solc@0.7.3(debug@4.3.5):
-    resolution: {integrity: sha512-GAsWNAjGzIDg7VxzP6mPjdurby3IkGCjQcM8GFYZT6RyaoUZKmMU6Y7YwG+tFGhv7dwZ8rmR4iwFDrrD99JwqA==}
-    engines: {node: '>=8.0.0'}
-    hasBin: true
-    dependencies:
-      command-exists: 1.2.9
-      commander: 3.0.2
-      follow-redirects: 1.15.6(debug@4.3.5)
-      fs-extra: 0.30.0
-      js-sha3: 0.8.0
-      memorystream: 0.3.1
-      require-from-string: 2.0.2
-      semver: 5.7.2
-      tmp: 0.0.33
-    transitivePeerDependencies:
-      - debug
-    dev: false
 
   /solhint@3.4.1:
     resolution: {integrity: sha512-pzZn2RlZhws1XwvLPVSsxfHrwsteFf5eySOhpAytzXwKQYbTCJV6z8EevYDiSVKMpWrvbKpEtJ055CuEmzp4Xg==}
