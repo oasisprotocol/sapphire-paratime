@@ -11,7 +11,6 @@ describe('Example Tests', () => {
     let example : GetContractReturnType<Example$Type["abi"]>;
     let publicClient : PublicClient;
     let keyedClient : KeyedClient
-    let walletClient : WalletClient;
 
     before(async () => {
         const transport = sapphireTransport();
@@ -20,8 +19,8 @@ describe('Example Tests', () => {
             transport
         });
         const account = mnemonicToAccount('test test test test test test test test test test test junk');
-        walletClient = await wrapWalletClient(createWalletClient({
-            account: account,
+        const walletClient = await wrapWalletClient(createWalletClient({
+            account,
             chain: sapphireLocalnet,
             transport
         }));

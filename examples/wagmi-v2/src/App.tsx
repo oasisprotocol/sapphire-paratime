@@ -8,7 +8,6 @@ import {
 	useWalletClient,
 } from "wagmi";
 import type { Abi } from "abitype";
-import { writeContract } from "viem/actions";
 
 /*
 // SPDX-License-Identifier: UNLICENSED
@@ -66,7 +65,7 @@ function App() {
 	>();
 	const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
 	const [readResult, setReadResult] = useState<bigint | undefined>();
-	const publicClient = usePublicClient();
+	const publicClient = usePublicClient()!;
 	const { data: deployReceipt, error: deployTxError } =
 		useWaitForTransactionReceipt({ hash: deployHash, confirmations: 1 });
 
@@ -93,7 +92,7 @@ function App() {
 
 	async function doWrite() {
 		if (contractAddress) {
-			const result = await writeContract(walletClient!, {
+			const result = await walletClient!.writeContract({
 				account: account.address!,
 				abi: StorageABI,
 				address: contractAddress,
