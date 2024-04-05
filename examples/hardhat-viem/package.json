@@ -11,6 +11,7 @@
         "@nomicfoundation/hardhat-toolbox-viem": "3.x",
         "@nomicfoundation/hardhat-viem": "2.x",
         "@oasisprotocol/sapphire-viem-v2": "workspace:^",
+        "@oasisprotocol/sapphire-paratime": "workspace:^",
         "hardhat": "2.x",
         "viem": "2.x",
         "chai": "^4.2.0",

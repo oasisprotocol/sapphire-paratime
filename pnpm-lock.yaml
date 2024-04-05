@@ -369,6 +369,9 @@ importers:
       '@nomicfoundation/hardhat-viem':
         specifier: 2.x
         version: 2.0.0(hardhat@2.22.2)(typescript@5.0.4)(viem@2.9.9)
+      '@oasisprotocol/sapphire-paratime':
+        specifier: workspace:^
+        version: link:../../clients/js
       '@oasisprotocol/sapphire-viem-v2':
         specifier: workspace:^
         version: link:../../integrations/viem-v2

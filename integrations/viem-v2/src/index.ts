@@ -89,7 +89,6 @@ export async function createSapphireSerializer<
 
 	const wrappedSerializer = ((tx, sig?) => {
 		if (!sig) {
-			// TODO: move logic into core, which detects pre-encrypted txs
 			const cipher = fetcher.cipherSync();
 			const encryptedData = cipher.encryptEncode(tx.data);
 			tx.data = encryptedData as `0x${string}`;

@@ -5,6 +5,7 @@ import { GetContractReturnType, KeyedClient, PublicClient, WalletClient } from "
 import { sapphireLocalnet, sapphireTransport, wrapWalletClient } from '@oasisprotocol/sapphire-viem-v2';
 import { createWalletClient, zeroAddress } from "viem";
 import { mnemonicToAccount } from 'viem/accounts';
+import { isCalldataEnveloped } from "@oasisprotocol/sapphire-paratime";
 
 describe('Example Tests', () => {
     let example : GetContractReturnType<Example$Type["abi"]>;
@@ -38,7 +39,7 @@ describe('Example Tests', () => {
 
         // Encrypted transaction will be enveloped, rather than being 4 bytes
         const tx = await publicClient.getTransaction({hash: receipt.transactionHash});
-        expect(tx.input.length).eq(236);
+        expect(isCalldataEnveloped(tx.input)).eq(true);
 
         const sender = await example.read.getMsgSender()
         expect(sender).eq(zeroAddress);
