@@ -64,11 +64,11 @@ jobs:
       - name: Build hardhat integration
         working-directory: integrations/hardhat
         run: pnpm build
-      - name: Build Wagmi integration
-        working-directory: integrations/wagmi-v2
-        run: pnpm build
       - name: Build Viem integration
         working-directory: integrations/viem-v2
+        run: pnpm build
+      - name: Build Wagmi integration
+        working-directory: integrations/wagmi-v2
         run: pnpm build
       - uses: JarvusInnovations/background-action@v1
         name: RPC proxy will error if non-encrypted calls are made

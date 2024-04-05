@@ -5,7 +5,7 @@ import {
 import type { EIP1193Provider } from "viem";
 import { injected } from "wagmi/connectors";
 
-export * from '@oasisprotocol/sapphire-viem-v2';
+export * from "@oasisprotocol/sapphire-viem-v2";
 
 type Window = {
 	ethereum?: EIP1193Provider;
