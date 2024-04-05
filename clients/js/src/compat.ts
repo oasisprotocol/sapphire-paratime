@@ -519,7 +519,10 @@ function isSignedQuery(x: SignedQueryOrEnvelope): x is SignedQuery {
   return 'data' in x && 'leash' in x && 'signature' in x;
 }
 
-function isCalldataEnveloped(calldata: BytesLike, allowSignedQuery: boolean) {
+export function isCalldataEnveloped(
+  calldata: BytesLike,
+  allowSignedQuery?: boolean,
+) {
   try {
     const outer_envelope = cbor.decode(
       getBytes(calldata),
