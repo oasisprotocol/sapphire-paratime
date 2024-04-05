@@ -6,16 +6,16 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
-## 1.3.3 (2024-04-04)
+## 1.3.3 (2024-04-05)
 
 ### Added
 
-- Wagmi v2 & Viem v2 support
-- `hardhat-viem` example
+- Wagmi v2 & Viem v2 support, with `hardhat-viem` & wagmi examples
 
 ### Fixed
 
 - Calldata public key encryption/decryption routines are no longer async
+- KeyFetcher has `runInBackground` method to eagerly fetch the keys
 
 ### Changed
 

@@ -1,68 +1,45 @@
-# @oasisprotocol/sapphire-wagmi-v2
+# @oasisprotocol/sapphire-viem-v2
 
-A plugin for Wagmi v2 that wraps the providers connected to the Sapphire network to enable end-to-end encryption for transactions, view calls and gas
-estimations
+A plugin for [Viem] 2.x that encrypts transactions, gas estimations and calls to
+the Oasis Sapphire network to enable end-to-end encryption between the dApp and
+smart contracts.
+
+[Viem]: https://viem.sh/
 
 ## Usage
 
 First install the package.
 
 ```
-npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
+npm install @oasisprotocol/sapphire-viem-v2 viem@2.x
 ```
 
-Next, in your Wagmi config definition, setup Sapphire wrapping for the injected
-provide using `injectedWithSapphire()` and then define the transports using the
-`sapphireTransport()` function.
+Next you must ensure that any clients use the `sapphireTransport()` to encrypt
+any unsigned communication, for example when using [hardhat-viem] pass the
+`transport` parameter when constructing a Public Client:
 
 ```typescript
-import { createConfig } from "wagmi";
-import { sapphire, sapphireTestnet } from "wagmi/chains";
-import {
-	injectedWithSapphire,
-	sapphireTransport,
-} from "@oasisprotocol/sapphire-wagmi-v2";
+import { sapphireLocalnet, sapphireTransport } from '@oasisprotocol/sapphire-viem-v2';
 
-export const config = createConfig({
-	multiInjectedProviderDiscovery: false,
-	chains: [sapphire, sapphireTestnet],
-	connectors: [injectedWithSapphire()],
-	transports: {
-		[sapphire.id]: sapphireTransport(),
-		[sapphireTestnet.id]: sapphireTransport()
-	},
+const publicClient = await hre.viem.getPublicClient({
+	chain: sapphireLocalnet,
+	transport: sapphireTransport()
 });
 ```
 
-Please note that while [EIP-6963] (Multi Injected Provider Discovery) is
-supported by Wagmi it is only possible to wrap the default injected [EIP-1193]
-compatible provider. For this reason you must disable MIPD support in the
-Wagmi configuration as additional discovered providers will not be Sapphire
-wrapped.
+The Sapphire transport will only encrypt transactions if connected to an
+in-browser wallet provider which accepts `eth_sendTransaction` calls. To encrypt
+transactions when using a local wallet client you must not only provide the
+`transport` parameter, but must also wrap the wallet client, as such:
 
 ```typescript
-    multiInjectedProviderDiscovery: false,
+import { sapphireLocalnet, sapphireTransport, wrapWalletClient } from '@oasisprotocol/sapphire-viem-v2';
+
+const walletClient = await wrapWalletClient(createWalletClient({
+	account,
+	chain: sapphireLocalnet,
+	transport: sapphireTransport()
+}));
 ```
 
-[EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
-[EIP-1193]: https://eips.ethereum.org/EIPS/eip-1193
-
-
-To connect to your `sapphire-localnet` instance, define a custom chain:
-
-```typescript
-import { defineChain } from "viem";
-
-const sapphireLocalnet = defineChain({
-	id: 0x5afd,
-	name: "Oasis Sapphire Localnet",
-	network: "sapphire-localnet",
-	nativeCurrency: { name: "Sapphire Local Rose", symbol: "TEST", decimals: 18 },
-	rpcUrls: {
-		default: {
-			http: ["http://localhost:8545"],
-		},
-	},
-	testnet: true,
-});
-```
+[hardhat-viem]: https://hardhat.org/hardhat-runner/docs/advanced/using-viem

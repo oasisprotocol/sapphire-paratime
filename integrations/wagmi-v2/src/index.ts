@@ -2,8 +2,10 @@ import {
 	type SapphireAnnex,
 	wrapEIP1193Provider,
 } from "@oasisprotocol/sapphire-paratime";
-import { injected } from "@wagmi/core";
 import type { EIP1193Provider } from "viem";
+import { injected } from "wagmi/connectors";
+
+export * from '@oasisprotocol/sapphire-viem-v2';
 
 type Window = {
 	ethereum?: EIP1193Provider;
