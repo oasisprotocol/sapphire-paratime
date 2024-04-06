@@ -2,7 +2,7 @@
 	"type": "module",
 	"name": "@oasisprotocol/sapphire-wagmi-v2",
 	"license": "Apache-2.0",
-	"version": "2.0.0",
+	"version": "2.0.0-alpha.0",
 	"description": "Wagmi & Viem support for the Oasis Sapphire ParaTime.",
 	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2",
 	"repository": {
