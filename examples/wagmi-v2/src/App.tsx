@@ -10,7 +10,7 @@ import {
 import type { Abi } from "abitype";
 
 /*
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.2 <0.9.0;
 contract Storage {
     uint256 number;

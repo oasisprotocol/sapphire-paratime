@@ -82,8 +82,8 @@ export function wrap<U extends Ethers5Signer>(
   options?: SapphireWrapOptions,
 ): U & SapphireAnnex; // Ethers signers
 
-export function wrap<U extends string>(
-  upstream: U,
+export function wrap(
+  upstream: string,
   options?: SapphireWrapOptions,
 ): Ethers5Provider & EIP1193Provider & SapphireAnnex; // Gateway URL
 

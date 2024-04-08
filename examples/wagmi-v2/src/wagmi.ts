@@ -1,6 +1,10 @@
 import { createConfig } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
-import { injectedWithSapphire, sapphireTransport, sapphireLocalnet } from "@oasisprotocol/sapphire-wagmi-v2";
+import {
+	injectedWithSapphire,
+	sapphireTransport,
+	sapphireLocalnet,
+} from "@oasisprotocol/sapphire-wagmi-v2";
 
 export const config = createConfig({
 	multiInjectedProviderDiscovery: false,

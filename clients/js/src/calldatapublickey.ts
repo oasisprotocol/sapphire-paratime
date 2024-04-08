@@ -182,10 +182,10 @@ export abstract class AbstractKeyFetcher {
 export class KeyFetcher extends AbstractKeyFetcher {
   readonly timeoutMilliseconds: number;
   public pubkey?: CallDataPublicKey;
-  #isBackgroundRunning = false;
+  #isBackgroundRunning?: ReturnType<typeof setTimeout>;
 
   get isBackgroundRunning(): boolean {
-    return this.#isBackgroundRunning;
+    return this.#isBackgroundRunning !== undefined;
   }
 
   constructor(in_timeoutMilliseconds?: number) {
@@ -232,22 +232,24 @@ export class KeyFetcher extends AbstractKeyFetcher {
   }
 
   public stopBackground() {
-    this.#isBackgroundRunning = false;
+    if (this.#isBackgroundRunning) {
+      clearTimeout(this.#isBackgroundRunning);
+      this.#isBackgroundRunning = undefined;
+      return true;
+    }
+    return false;
   }
 
-  public async runInBackground(upstream: UpstreamProvider) {
+  public runInBackground(upstream: UpstreamProvider) {
     if (this.#isBackgroundRunning) return;
 
     // Reduce wait time by 10%, so it eagerly fetches
     const waitMilliseconds =
       this.timeoutMilliseconds - this.timeoutMilliseconds / 10;
 
-    while (this.#isBackgroundRunning) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, this.timeoutMilliseconds),
-      );
+    this.#isBackgroundRunning = setTimeout(async () => {
       await this.fetch(upstream, waitMilliseconds);
-    }
+    }, waitMilliseconds);
   }
 }
 
