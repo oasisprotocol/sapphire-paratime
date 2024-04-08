@@ -6,7 +6,7 @@
     "scripts": {},
     "keywords": [],
     "author": "",
-    "license": "UNLICENSED",
+    "license": "Apache-2.0",
     "dependencies": {
         "@nomicfoundation/hardhat-toolbox-viem": "3.x",
         "@nomicfoundation/hardhat-viem": "2.x",
