@@ -274,8 +274,8 @@ To verify a contract deployed on Sapphire Mainnet or Testnet:
 
    ![Sourcify: Verify contract](images/sourcify3.png)
 
-4. If everything goes well, you will get a ** *Perfect match* notice and your
-   contract is now verified**. Congratulations!
+4. If everything goes well, you will get a *Perfect match* notice and your
+   contract is now verified. Congratulations!
 
 In case of a *Partial match*, the contracts metadata JSON differs from the one
 used for deployment although the compiled contract bytecode matched. Make sure
@@ -294,19 +294,19 @@ You can also explore other verification methods on Sourcify by reading the
 ## Running a Private Oasis Network Locally
 
 For convenient development and testing of your dApps the Oasis team prepared
-the [ghcr.io/oasisprotocol/sapphire-localnet][sapphire-localnet] Docker image which brings you a
-complete Oasis stack to your desktop. The Localnet Sapphire instance **mimics
-confidential transactions**, but it does not run in a trusted execution
-environment nor does it require Intel's SGX on your computer. The network is
-isolated from Mainnet or Testnet and consists of:
+the [ghcr.io/oasisprotocol/sapphire-localnet][sapphire-localnet] Docker image
+which brings you a complete Oasis network stack to your desktop. The Localnet
+Sapphire instance **mimics confidential transactions**, but it does not run in a
+trusted execution environment nor does it require Intel's SGX on your computer.
+The network is isolated from the Mainnet or Testnet and consists of a:
 
 - single Oasis validator node with 1-second block time and 30-second epoch,
 - single Oasis client node,
-- three compute nodes running Oasis Sapphire,
+- single compute node running Oasis Sapphire,
 - single key manager node,
 - PostgreSQL instance,
 - Oasis Web3 gateway with transaction indexer and enabled Oasis RPCs,
-- helper script which populates initial test accounts for you.
+- helper script which populates the account(s) for you.
 
 To run the image, execute:
 
@@ -355,18 +355,33 @@ to `geth --dev` or `ganache-cli` commands or the `geth-dev-assistant` npm
 package. [sapphire-localnet] will spin up a private Oasis Network locally,
 generate and populate test accounts and make the following Web3 endpoints
 available for you to use:
+
 - `http://localhost:8545`
 - `ws://localhost:8546`
 
 :::tip
 
 If you prefer using the same mnemonics each time (e.g. for testing purposes)
-or to populate just a single wallet, use `-to` flag and pass the mnemonics or
-the wallet addresses. For example
+or to populate just a single account, use `-to` flag and pass the mnemonics or
+the wallet addresses. By passing the `-test-mnemonic` flag you can fund the
+standard test accounts provided by the `hardhat node` commmand and that are
+typically used for solidity unit tests.
 
 ```sh
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "bench remain brave curve frozen verify dream margin alarm world repair innocent"
+docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "bench remain brave curve frozen verify dream margin alarm world repair innocent" -n3
 docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "0x75eCF0d4496C2f10e4e9aF3D4d174576Ee9010E2,0xbDA5747bFD65F08deb54cb465eB87D40e51B197E"
+docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -test-mnemonic
+```
+
+:::
+
+:::note Running on Apple M chips
+
+There is currently no `arm64` build available for M Macs, so you will need to
+force the docker image to use the `linux/x86_64` platform, like this:
+
+```sh
+docker run -it -p8545:8545 -p8546:8546 --platform linux/x86_64 ghcr.io/oasisprotocol/sapphire-localnet
 ```
 
 :::
