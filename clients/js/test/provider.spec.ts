@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  Wallet,
-  JsonRpcProvider,
-  BaseContract,
-  BrowserProvider,
-} from 'ethers';
+import { Wallet, JsonRpcProvider, BaseContract, BrowserProvider } from 'ethers';
 import {
   wrapEthereumProvider,
   NETWORKS,
