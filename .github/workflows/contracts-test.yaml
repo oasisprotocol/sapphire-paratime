@@ -65,7 +65,7 @@ jobs:
           wait-on: http://127.0.0.1:${{ env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT }}
           tail: true
           log-output-resume: true
-          wait-for: 30sec
+          wait-for: 31sec
           log-output: true
           log-output-if: true
           log-output-resume: true
