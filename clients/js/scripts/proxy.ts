@@ -77,7 +77,7 @@ async function handleSendRawTransaction(
     // We can enforce that specific senders are required to have encrypted txns
     if (
       !DIE_ON_UNENCRYPTED ||
-      (ALLOW_UNENCRYPTED_DEPLOYS && ! tx.to) ||
+      (ALLOW_UNENCRYPTED_DEPLOYS && !tx.to) ||
       (tx.from &&
         (!DISALLOW_UNENCRYPTED_ONLY_FROM ||
           !DISALLOW_UNENCRYPTED_ONLY_FROM.includes(tx.from)))
@@ -126,7 +126,7 @@ async function handleRequestCallOrEstimate(
   req: IncomingMessage,
   body: JSONRPCRequest,
 ) {
-  const params: { from?: string; data?: string; value?: string; to?:string } =
+  const params: { from?: string; data?: string; value?: string; to?: string } =
     body.params[0];
   const calldata = getBytes(params.data!);
   let envelope: Envelope | undefined = undefined;
@@ -172,7 +172,7 @@ async function handleRequestCallOrEstimate(
   }
 
   // Call is not enveloped
-  if (DIE_ON_UNENCRYPTED && (!params.to && !ALLOW_UNENCRYPTED_DEPLOYS)) {
+  if (DIE_ON_UNENCRYPTED && !params.to && !ALLOW_UNENCRYPTED_DEPLOYS) {
     console.log(
       req.method,
       req.url,
