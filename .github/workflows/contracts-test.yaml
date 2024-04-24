@@ -68,7 +68,6 @@ jobs:
           wait-for: 31sec
           log-output: true
           log-output-if: true
-          log-output-resume: true
           working-directory: clients/js
       - name: Build & test JS client
         run: make -C clients/js
