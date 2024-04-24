@@ -4,7 +4,7 @@ import { formatEther, getBytes, toBigInt, Transaction } from 'ethers';
 
 import { Envelope, EnvelopeError } from '@oasisprotocol/sapphire-paratime';
 
-import * as cborg from 'cborg';
+import { decode as cborgDecode } from 'cborg';
 
 // Environment var can change listen port
 // This will also change listen port in client via sapphire-paratime NETWORKS
@@ -14,6 +14,7 @@ const LISTEN_PORT = process.env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT
 
 const LOG_ALL_METHODS = true;
 const DIE_ON_UNENCRYPTED = true;
+const ALLOW_UNENCRYPTED_DEPLOYS = true;
 const UPSTREAM_URL = 'http://127.0.0.1:8545';
 const SHOW_ENCRYPTED_RESULTS = false;
 const SHOW_ENCRYPTED_REQUESTS = false;
@@ -62,7 +63,7 @@ async function handleSendRawTransaction(
   const tx = Transaction.from(body.params[0]);
   let envelope: Envelope | undefined = undefined;
   try {
-    envelope = cborg.decode(getBytes(tx.data)) as Envelope;
+    envelope = cborgDecode(getBytes(tx.data)) as Envelope;
   } catch (e: any) {
     // Ignore cborg decode errors, this means it's not an envelope
   }
@@ -76,6 +77,7 @@ async function handleSendRawTransaction(
     // We can enforce that specific senders are required to have encrypted txns
     if (
       !DIE_ON_UNENCRYPTED ||
+      (ALLOW_UNENCRYPTED_DEPLOYS && ! tx.to) ||
       (tx.from &&
         (!DISALLOW_UNENCRYPTED_ONLY_FROM ||
           !DISALLOW_UNENCRYPTED_ONLY_FROM.includes(tx.from)))
@@ -124,12 +126,12 @@ async function handleRequestCallOrEstimate(
   req: IncomingMessage,
   body: JSONRPCRequest,
 ) {
-  const params: { from?: string; data?: string; value?: string } =
+  const params: { from?: string; data?: string; value?: string; to?:string } =
     body.params[0];
   const calldata = getBytes(params.data!);
   let envelope: Envelope | undefined = undefined;
   try {
-    envelope = cborg.decode(calldata) as Envelope;
+    envelope = cborgDecode(calldata) as Envelope;
   } catch (e: any) {
     // Ignore cborg decode errors, this means it's not an envelope
   }
@@ -170,7 +172,7 @@ async function handleRequestCallOrEstimate(
   }
 
   // Call is not enveloped
-  if (DIE_ON_UNENCRYPTED) {
+  if (DIE_ON_UNENCRYPTED && (!params.to && !ALLOW_UNENCRYPTED_DEPLOYS)) {
     console.log(
       req.method,
       req.url,
