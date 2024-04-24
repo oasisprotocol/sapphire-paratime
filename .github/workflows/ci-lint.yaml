@@ -158,7 +158,3 @@ jobs:
 
       - name: Install dependencies
         run: pnpm --filter '@oasisprotocol/sapphire-paratime*' install
-
-      - name: Test type-only-test
-        run: pnpm test
-        working-directory: ./clients/js/type-only-test

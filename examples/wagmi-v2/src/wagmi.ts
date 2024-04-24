@@ -2,7 +2,7 @@ import { createConfig } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
 	injectedWithSapphire,
-	sapphireTransport,
+	sapphireHttpTransport,
 	sapphireLocalnet,
 } from "@oasisprotocol/sapphire-wagmi-v2";
 
@@ -11,9 +11,9 @@ export const config = createConfig({
 	chains: [sapphire, sapphireTestnet, sapphireLocalnet],
 	connectors: [injectedWithSapphire()],
 	transports: {
-		[sapphire.id]: sapphireTransport(),
-		[sapphireTestnet.id]: sapphireTransport(),
-		[sapphireLocalnet.id]: sapphireTransport(),
+		[sapphire.id]: sapphireHttpTransport(),
+		[sapphireTestnet.id]: sapphireHttpTransport(),
+		[sapphireLocalnet.id]: sapphireHttpTransport(),
 	},
 });
 

@@ -1,50 +1,52 @@
-import { KeyFetcher, wrap } from "@oasisprotocol/sapphire-paratime";
+// SPDX-License-Identifier: Apache-2.0
+
 import {
-	type Client,
-	type SerializeTransactionFn,
-	type Transport,
-	type WalletClient,
-	custom,
-	defineChain,
-	serializeTransaction,
+	KeyFetcher,
+	NETWORKS as SapphireNETWORKS,
+	wrapEthereumProvider,
+} from "@oasisprotocol/sapphire-paratime";
+
+import type {
+	Chain,
+	Client,
+	SerializeTransactionFn,
+	Transport,
+	WalletClient,
 } from "viem";
 
-declare let process: {
-	env: {
-		SAPPHIRE_LOCALNET_HTTP_PROXY_PORT?: string;
-	};
-};
-
-/**
- * This environment variable allows for the sapphire-localnet port to be
- * overridden via the command-line. This is useful for debugging with a proxy.
- *
- * Note: this will fail gracefully in-browser
- */
-export const SAPPHIRE_LOCALNET_HTTP_PROXY_PORT = globalThis.process?.env
-	?.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT
-	? Number(process.env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT)
-	: 8545;
+import { http, defineChain, serializeTransaction } from "viem";
 
 /**
  * sapphire-localnet chain, a local chain for local people
  */
 export const sapphireLocalnet = defineChain({
-	id: 0x5afd,
+	id: SapphireNETWORKS.localnet.chainId,
 	name: "Oasis Sapphire Localnet",
 	network: "sapphire-localnet",
 	nativeCurrency: { name: "Sapphire Local Rose", symbol: "TEST", decimals: 18 },
 	rpcUrls: {
 		default: {
-			http: [`http://localhost:${SAPPHIRE_LOCALNET_HTTP_PROXY_PORT}`],
+			http: [SapphireNETWORKS.localnet.defaultGateway],
 			//webSocket: ["ws://localhost:8546/ws"],
 		},
 	},
 	testnet: true,
-});
+}) satisfies Chain;
 
 // Hidden property used to detect if transport is Sapphire-wrapped
-const SAPPHIRE_WRAPPED_VIEM_TRANSPORT = "#SAPPHIRE_WRAPPED_VIEM_TRANSPORT";
+export const SAPPHIRE_WRAPPED_VIEM_TRANSPORT = Symbol(
+	"#SAPPHIRE_WRAPPED_VIEM_TRANSPORT",
+);
+
+// biome-ignore lint/suspicious/noExplicitAny: required for viem compatibility
+type EthereumProvider = { request(...args: unknown[]): Promise<any> };
+
+export type SapphireTransport = Transport<
+	"sapphire",
+	// biome-ignore lint/complexity/noBannedTypes: required for viem compatibility
+	{},
+	EthereumProvider["request"]
+>;
 
 /**
  * Provide a Sapphire encrypted RPC transport for Wagmi or Viem.
@@ -52,32 +54,34 @@ const SAPPHIRE_WRAPPED_VIEM_TRANSPORT = "#SAPPHIRE_WRAPPED_VIEM_TRANSPORT";
  * Example:
  * ```
  * import { createConfig } from 'viem';
- * import { sapphireTransport } from '@oasisprotocol/sapphire-viem-v2';
+ * import { sapphireHttpTransport } from '@oasisprotocol/sapphire-viem-v2';
  *
  * export const config = createConfig({
  *   transports: {
- *     [sapphireTestnet.id]: sapphireTransport()
+ *     [sapphireTestnet.id]: sapphireHttpTransport()
  *   },
  *   ...
  * });
  * ```
  *
- * @returns Same as custom()
+ * Results for every instance of sapphireHttpTransport() are cached to prevent
+ * the wrapper from being instantiated multiple times.
+ *
+ * @returns Same as http()
  */
-export function sapphireTransport<T extends Transport>(): T {
-	const cachedProviders: Record<string, ReturnType<typeof wrap>> = {};
+export function sapphireHttpTransport<T extends Transport>(): T {
+	const cachedProviders: Record<string, unknown> = {};
 	return ((params) => {
 		if (!params.chain) {
 			throw new Error("sapphireTransport() not possible with no params.chain!");
 		}
 		const url = params.chain.rpcUrls.default.http[0];
 		if (!(url in cachedProviders)) {
-			cachedProviders[url] = wrap(url);
+			const x = wrapEthereumProvider(http(url)(params));
+			Reflect.set(x, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, true);
+			cachedProviders[url] = x;
 		}
-		const p = cachedProviders[url];
-		const q = custom(p)(params);
-		Reflect.set(q, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, true);
-		return q;
+		return cachedProviders[url];
 	}) as T;
 }
 
@@ -104,9 +108,9 @@ export function sapphireTransport<T extends Transport>(): T {
  * @returns Sapphire wrapped transaction encryption serializer
  */
 export async function createSapphireSerializer<
-	S extends Client,
-	T extends SerializeTransactionFn,
->(client: S, originalSerializer?: T | undefined): Promise<T> {
+	C extends Client,
+	S extends SerializeTransactionFn,
+>(client: C, originalSerializer?: S | undefined): Promise<S> {
 	// Don't double-wrap serializer
 	if (
 		originalSerializer &&
@@ -115,24 +119,25 @@ export async function createSapphireSerializer<
 		return originalSerializer;
 	}
 
-	// As the serialized is synchronous, pre-emptively fetch keys while running
+	// As the serialized is synchronous, fetching keys while running
 	const fetcher = new KeyFetcher();
-	await fetcher.fetch(client as unknown as Parameters<typeof fetcher.fetch>[0]);
-	fetcher.runInBackground(
-		client as unknown as Parameters<typeof fetcher.fetch>[0],
-	);
+	const provider = client as EthereumProvider;
+	await fetcher.fetch(provider);
+	setTimeout(async () => {
+		await fetcher.fetch(provider);
+	}, fetcher.timeoutMilliseconds);
 
 	const wrappedSerializer = ((tx, sig?) => {
 		if (!sig) {
 			const cipher = fetcher.cipherSync();
-			const encryptedData = cipher.encryptEncode(tx.data);
+			const encryptedData = cipher.encryptCall(tx.data);
 			tx.data = encryptedData as `0x${string}`;
 		}
 		if (originalSerializer) {
 			return originalSerializer(tx, sig);
 		}
 		return serializeTransaction(tx, sig);
-	}) as T;
+	}) as S;
 
 	Reflect.set(wrappedSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER, true);
 
@@ -140,7 +145,9 @@ export async function createSapphireSerializer<
 }
 
 // Hidden property to test if serializer is Sapphire-wrapped
-const SAPPHIRE_WRAPPED_VIEM_SERIALIZER = "#SAPPHIRE_WRAPPED_VIEM_SERIALIZER";
+export const SAPPHIRE_WRAPPED_VIEM_SERIALIZER = Symbol(
+	"#SAPPHIRE_WRAPPED_VIEM_SERIALIZER",
+);
 
 /**
  * Add the Sapphire transaction encryption wrapper to a wallet client

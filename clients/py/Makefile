@@ -18,5 +18,7 @@ clean:
 lint:
 	$(PYTHON) -mpylint $(MODULE) -d line-too-long,missing-module-docstring,missing-class-docstring,missing-function-docstring
 
+build: wheel
+
 wheel:
 	$(PYTHON) setup.py bdist_wheel

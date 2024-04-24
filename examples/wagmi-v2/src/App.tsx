@@ -4,9 +4,11 @@ import {
 	useConnect,
 	useDisconnect,
 	usePublicClient,
+	useTransaction,
 	useWaitForTransactionReceipt,
 	useWalletClient,
 } from "wagmi";
+import { isCalldataEnveloped } from '@oasisprotocol/sapphire-paratime';
 import type { Abi } from "abitype";
 
 /*
@@ -72,6 +74,8 @@ function App() {
 	const { data: writeReceipt, error: writeTxError } =
 		useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
 
+	const { data: writeTxInfo } = useTransaction({hash: writeReceipt?.transactionHash});
+
 	async function doDeploy() {
 		const hash = await walletClient?.deployContract({
 			abi: StorageABI,
@@ -92,12 +96,16 @@ function App() {
 
 	async function doWrite() {
 		if (contractAddress) {
-			const result = await walletClient!.writeContract({
+			const callArgs = {
 				account: account.address!,
 				abi: StorageABI,
 				address: contractAddress,
 				functionName: "store",
-				args: [1n],
+				args: [BigInt(Math.round((Math.random() * 100000)))],
+			} as const;
+			const result = await walletClient!.writeContract({
+				...callArgs,
+				gas: await publicClient.estimateContractGas(callArgs)
 			});
 			setWriteTxHash(result);
 		}
@@ -172,11 +180,15 @@ function App() {
 									<>
 										Write Tx Gas: {writeReceipt.gasUsed.toString()}
 										<br />
-										Write Tx BlockHash:{" "}
+										Write Tx BlockHash:&nbsp;
 										<span id="writeReceiptBlockHash">
 											{writeReceipt.blockHash}
 										</span>
 										<br />
+										Write Tx Calldata:&nbsp;
+										<span id="isWriteEnveloped">
+											{isCalldataEnveloped(writeTxInfo?.input) ? 'encrypted' : 'plaintext'}
+										</span>
 									</>
 								)}
 							</>

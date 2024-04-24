@@ -58,18 +58,6 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: pnpm install
-      - name: Build JS client
-        working-directory: clients/js
-        run: pnpm build
-      - name: Build hardhat integration
-        working-directory: integrations/hardhat
-        run: pnpm build
-      - name: Build Viem integration
-        working-directory: integrations/viem-v2
-        run: pnpm build
-      - name: Build Wagmi integration
-        working-directory: integrations/wagmi-v2
-        run: pnpm build
       - uses: JarvusInnovations/background-action@v1
         name: RPC proxy will error if non-encrypted calls are made
         with:
@@ -80,27 +68,14 @@ jobs:
           wait-for: 30sec
           log-output: true
           working-directory: clients/js
-      - name: hardhat-viem
-        working-directory: examples/hardhat-viem
-        run: pnpm hardhat test --network sapphire-localnet
-
-      - name: Test contracts with Hardhat
-        working-directory: contracts
-        run: pnpm hardhat test --network sapphire-localnet-ci
-      - name: hardhat test examples/hardhat
-        working-directory: examples/hardhat
-        run: pnpm hardhat run --network sapphire-localnet scripts/run-vigil.ts
-        env:
-          PRIVATE_KEY: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-      - name: hardhat test examples/onchain-signer
-        working-directory: examples/onchain-signer
-        run: pnpm run test --network sapphire-localnet
-      - name: ethersv5-ts-esm
-        working-directory: examples/ethersv5-ts-esm
-        run: pnpm run test
-      - name: ethersv6-ts-esm
-        working-directory: examples/ethersv6-ts-esm
-        run: pnpm run test
+      - name: Build & test JS client
+        run: make -C clients/js
+      - name: Build & Test integrations
+        run: make -C integrations
+      - name: Build & Test Examples
+        run: make -C examples
+      - name: Build & Test sapphire-contracts package
+        run: make -C contracts
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Install forge doc deps

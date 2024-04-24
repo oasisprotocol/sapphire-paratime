@@ -1,0 +1,16 @@
+NPM ?= pnpm
+
+all: build test lint
+
+build test lint::
+	$(NPM) $@
+
+clean:
+	rm -rf lib coverage
+
+full: clean all
+
+veryclean: clean
+	rm -rf node_modules *.tgz
+
+.PHONY: all clean veryclean dependencies full
