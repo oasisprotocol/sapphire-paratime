@@ -7,6 +7,7 @@ import {
   isLegacyProvider,
   isWrappedEthereumProvider,
   isWrappedRequestFn,
+  KeyFetcher,
 } from '@oasisprotocol/sapphire-paratime';
 
 /*
@@ -99,11 +100,12 @@ describe('Provider Integration Test', () => {
 
     const expectedValue = 123n;
 
-    // Submit transaction which modifies stored value
+    // Submit encrypted transaction which modifies stored value
     const store = bc.getFunction('store');
     const storeTxRequest = await w.populateTransaction(
       await store.populateTransaction(expectedValue),
     );
+    storeTxRequest.data = (await new KeyFetcher().cipher(wp)).encryptCall(storeTxRequest.data);
     const storeTxRaw = await w.signTransaction(storeTxRequest);
     const storeTx = await bp.broadcastTransaction(storeTxRaw);
     await storeTx.wait();
