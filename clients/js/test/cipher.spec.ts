@@ -1,43 +1,8 @@
-import { hexlify, getBytes } from 'ethers';
-import * as cbor from 'cborg';
-import { TagSize } from '@oasisprotocol/deoxysii';
+// SPDX-License-Identifier: Apache-2.0
+
 import nacl from 'tweetnacl';
-
-import {
-  Plain,
-  X25519DeoxysII,
-} from '@oasisprotocol/sapphire-paratime/cipher.js';
-
-const DATA = new Uint8Array([1, 2, 3, 4, 5]);
-
-describe('Plain', () => {
-  it('roundtrip', async () => {
-    const cipher = new Plain();
-    expect(cipher.publicKey).toHaveLength(0);
-    expect(cipher.kind).toEqual(0);
-
-    const { ciphertext, nonce } = await cipher.encrypt(DATA);
-    expect(nonce).toHaveLength(0);
-    expect(ciphertext).toEqual(DATA);
-
-    const envelope = await cipher.encryptEnvelope(DATA);
-    expect(envelope).toBeDefined();
-    expect({ body: DATA }).toMatchObject(envelope!);
-    expect(await cipher.encryptEnvelope()).not.toBeDefined();
-
-    expect(await cipher.encryptEncode(DATA)).toEqual(
-      hexlify(cbor.encode(envelope)),
-    );
-    expect(await cipher.encryptEncode()).toEqual('');
-
-    expect(await cipher.decrypt(nonce, ciphertext)).toEqual(DATA);
-    expect(
-      await cipher.decryptEncoded(
-        hexlify(cbor.encode({ ok: `0x${Buffer.from(DATA).toString('hex')}` })),
-      ),
-    ).toEqual(hexlify(DATA));
-  });
-});
+import { hexlify, getBytes } from 'ethers';
+import { X25519DeoxysII } from '@oasisprotocol/sapphire-paratime';
 
 describe('X25519DeoxysII', () => {
   it('key derivation', () => {
@@ -61,54 +26,22 @@ describe('X25519DeoxysII', () => {
     expect(alsoCipher.publicKey).toEqual(cipher.publicKey);
   });
 
-  it('roundtrip', async () => {
+  it('envelope roundtrip call', () => {
     const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
-
-    const { ciphertext, nonce } = await cipher.encrypt(DATA);
-    expect(ciphertext).toHaveLength(DATA.length + TagSize);
-    expect(ciphertext).not.toEqual(DATA);
-    const plaintext = await cipher.decrypt(nonce, ciphertext);
-    expect(plaintext).toEqual(DATA);
-
-    const envelope = (await cipher.encryptEnvelope(DATA))!;
-    expect(envelope.format).toEqual(1);
-    if (!('nonce' in envelope.body)) throw new Error('unenveloped body');
-    expect(envelope.body.pk).toEqual(cipher.publicKey);
-    const resData = await cipher.encrypt(cbor.encode({ ok: DATA }));
-    expect(
-      await cipher.decryptCallResult({
-        unknown: {
-          nonce: resData.nonce,
-          data: resData.ciphertext,
-        },
-      }),
-    ).toEqual(DATA);
+    for (let i = 1; i < 512; i += 30) {
+      const expected = nacl.randomBytes(i);
+      const decoded = cipher.decryptCall(cipher.encryptCall(expected));
+      expect(hexlify(decoded)).toEqual(hexlify(expected));
+    }
   });
 
-  it('decryptCallData', async () => {
+  it('envelope roundtrip result', () => {
     const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
-    const envelope = (await cipher.encryptEnvelope(DATA))!;
-    if (!('nonce' in envelope.body)) throw new Error('unenveloped body');
-    const { data, nonce } = envelope.body;
-    expect(await cipher.decryptCallData(nonce, data)).toEqual(DATA);
-  });
-
-  it('encryptCallResult', async () => {
-    const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
-    let res = await cipher.encryptCallResult({ ok: DATA });
-    expect(await cipher.decryptCallResult(cbor.decode(res))).toEqual(DATA);
-
-    res = await cipher.encryptCallResult(
-      { ok: DATA },
-      true /* report unknown */,
-    );
-    expect(await cipher.decryptCallResult(cbor.decode(res))).toEqual(DATA);
-
-    res = await cipher.encryptCallResult({
-      fail: { module: 'test', code: -1, message: 'out of gas' },
-    });
-    await expect(async () =>
-      cipher.decryptCallResult(cbor.decode(res)),
-    ).rejects.toThrow('out of gas');
+    for (let i = 1; i < 512; i += 30) {
+      const ok = nacl.randomBytes(i);
+      const encrypted = cipher.encryptResult(ok);
+      const decrypted = cipher.decryptResult(encrypted);
+      expect(hexlify(decrypted)).toEqual(hexlify(ok));
+    }
   });
 });

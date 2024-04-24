@@ -36,28 +36,35 @@
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
-		"wagmi": "2.x",
-		"viem": "2.x"
+		"viem": "2.x",
+		"@wagmi/core": "2.x"
 	},
 	"peerDependencies": {
-		"wagmi": "2.x",
-		"viem": "2.x",
-		"typescript": ">=5.0.4",
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
-		"@oasisprotocol/sapphire-viem-v2": "workspace:^"
+		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
+		"@wagmi/core": "^2.6.9",
+		"typescript": ">=5.0.4",
+		"viem": "2.x",
+		"wagmi": "2.x"
 	},
 	"peerDependenciesMeta": {
 		"typescript": {
 			"optional": true
 		},
+		"@wagmi/core": {
+			"optional": true
+		},
 		"@oasisprotocol/sapphire-paratime": {
+			"optional": true
+		},
+		"@oasisprotocol/sapphire-viem-v2": {
 			"optional": true
 		}
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.6.3",
-		"@types/node": "^18.19.28",
+		"@biomejs/biome": "^1.7.0",
+		"@types/node": "^18.19.31",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.3.3"
+		"typescript": "^5.4.5"
 	}
 }

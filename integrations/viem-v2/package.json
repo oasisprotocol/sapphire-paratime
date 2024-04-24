@@ -28,22 +28,22 @@
 	"scripts": {
 		"lint": "biome check .",
 		"format": "biome format --write .",
-		"build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+		"clean": "rm -rf dist",
+		"build": "npm run build:cjs && npm run build:esm && npm run build:types",
 		"build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./dist/_cjs/package.json && node scripts/rename-cjs.js",
 		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
 		"build:types": "tsc --project ./tsconfig.build.json --module esnext --declarationDir ./dist/_types --emitDeclarationOnly --declaration --declarationMap",
-		"clean": "rm -rf dist",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
-		"viem": "2.x"
+		"viem": "^2.6.9"
 	},
 	"peerDependencies": {
-		"typescript": ">=5.0.4",
+		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@wagmi/core": "2.x",
-		"viem": "2.x",
-		"@oasisprotocol/sapphire-paratime": "workspace:^"
+		"typescript": ">=5.0.4",
+		"viem": "^2.6.9"
 	},
 	"peerDependenciesMeta": {
 		"typescript": {
@@ -57,9 +57,9 @@
 		}
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.6.3",
-		"@types/node": "^18.19.28",
+		"@biomejs/biome": "^1.7.0",
+		"@types/node": "^18.19.31",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.3.3"
+		"typescript": "^5.4.5"
 	}
 }

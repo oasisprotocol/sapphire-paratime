@@ -1,0 +1,31 @@
+{
+  "include": ["src"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "lib": ["esnext", "dom"],
+    "module": "es2020",
+    "moduleResolution": "node",
+    "outDir": "lib/esm",
+    "paths": {
+      "@oasisprotocol/sapphire-paratime": ["src/index"],
+      "@oasisprotocol/sapphire-paratime/*": ["src/*"]
+    },
+    "sourceMap": true,
+    "strict": true,
+    "target": "es6",
+    "types": ["node", "jest"]
+  },
+  "ts-node": {
+    "esm": true,
+    "transpileOnly": true
+  },
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"],
+    "out": "docs/api",
+    "excludeInternal": true,
+    "excludePrivate": true
+  }
+}

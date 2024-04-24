@@ -1,39 +1,48 @@
-import * as cbor from 'cborg';
-import { BytesLike, isBytesLike, hexlify, getBytes } from 'ethers';
+// SPDX-License-Identifier: Apache-2.0
+
+import { decode as cborDecode, encode as cborEncode } from 'cborg';
 import deoxysii from '@oasisprotocol/deoxysii';
 import { sha512_256 } from '@noble/hashes/sha512';
 import { hmac } from '@noble/hashes/hmac';
 import nacl, { BoxKeyPair } from 'tweetnacl';
 
-import { CallError } from './index.js';
+import { BytesLike, isBytesLike, getBytes, hexlify } from './ethersutils.js';
 
-export enum Kind {
-  Plain = 0,
+export enum CipherKind {
   X25519DeoxysII = 1,
-  Mock = Number.MAX_SAFE_INTEGER,
 }
 
-export type Envelope = {
-  format?: Kind;
-  body:
-    | Uint8Array
-    | {
-        pk: Uint8Array;
-        nonce: Uint8Array;
-        data: Uint8Array;
-      };
+export type InnerEnvelope = {
+  body: Uint8Array;
 };
 
-type AeadEnvelope = { nonce: Uint8Array; data: Uint8Array };
+export type Envelope = {
+  format: CipherKind;
+  body: {
+    pk: Uint8Array;
+    nonce: Uint8Array;
+    data: Uint8Array;
+    epoch?: number;
+  };
+};
+
+export type AeadEnvelope = { nonce: Uint8Array; data: Uint8Array };
+
 export type CallResult = {
   ok?: string | Uint8Array | AeadEnvelope;
   fail?: CallFailure;
   unknown?: AeadEnvelope;
 };
+
 export type CallFailure = { module: string; code: number; message?: string };
 
+function formatFailure(fail: CallFailure): string {
+  if (fail.message) return fail.message;
+  return `Call failed in module '${fail.module}' with code '${fail.code}'`;
+}
+
 export abstract class Cipher {
-  public abstract kind: Kind;
+  public abstract kind: CipherKind;
   public abstract publicKey: Uint8Array;
   public abstract epoch: number | undefined;
 
@@ -41,120 +50,115 @@ export abstract class Cipher {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   };
+
   public abstract decrypt(
     nonce: Uint8Array,
     ciphertext: Uint8Array,
   ): Uint8Array;
 
   /** Encrypts the plaintext and encodes it for sending. */
-  public encryptEncode(plaintext?: BytesLike): string {
-    const envelope = this.encryptEnvelope(plaintext);
-    return envelope ? hexlify(cbor.encode(envelope)) : '';
-  }
+  public encryptCall(calldata?: BytesLike | null): string {
+    // Txs without data are just balance transfers, and all data in those is public.
+    if (calldata === undefined || calldata === null || calldata.length === 0)
+      return '';
 
-  /** Encrypts the plaintext and formats it into an envelope. */
-  public encryptEnvelope(plaintext?: BytesLike): Envelope | undefined {
-    if (plaintext === undefined) return;
-    if (!isBytesLike(plaintext)) {
+    if (!isBytesLike(calldata)) {
       throw new Error('Attempted to sign tx having non-byteslike data.');
     }
-    if (plaintext.length === 0) return; // Txs without data are just balance transfers, and all data in those is public.
-    const { data, nonce } = this.encryptCallData(getBytes(plaintext));
-    const pk = this.publicKey;
-    const epoch = this.epoch;
-    const body = pk.length && nonce.length ? { pk, nonce, data, epoch } : data;
-    if (this.kind === Kind.Plain) return { body };
-    return { format: this.kind, body };
+
+    const innerEnvelope = cborEncode({ body: getBytes(calldata) });
+
+    const { ciphertext, nonce } = this.encrypt(innerEnvelope);
+
+    const envelope: Envelope = {
+      format: this.kind,
+      body: {
+        pk: this.publicKey,
+        nonce,
+        data: ciphertext,
+        epoch: this.epoch,
+      },
+    };
+
+    return hexlify(cborEncode(envelope));
   }
 
-  protected encryptCallData(plaintext: Uint8Array): AeadEnvelope {
-    const body = cbor.encode({ body: plaintext });
-    const { ciphertext: data, nonce } = this.encrypt(body);
-    return { data, nonce };
+  public decryptCall(envelopeBytes: BytesLike): Uint8Array {
+    const envelope = cborDecode(getBytes(envelopeBytes));
+    if (!isEnvelopeFormatOk(envelope)) {
+      throw new EnvelopeError('Unexpected non-envelope!');
+    }
+    const result = this.decrypt(envelope.body.nonce, envelope.body.data);
+    const inner = cborDecode(result) as InnerEnvelope;
+    return inner.body;
   }
 
-  /**
-   *  Decrypts the data contained within call
-   *
-   *  This is useful for creating tools, and also decoding
-   *  previously-sent transactions that have used the same
-   *  encryption key.
-   */
-
-  public decryptCallData(
-    nonce: Uint8Array,
-    ciphertext: Uint8Array,
+  public encryptResult(
+    ok?: Uint8Array,
+    innerFail?: string,
+    outerFail?: string,
   ): Uint8Array {
-    return cbor.decode(this.decrypt(nonce, ciphertext)).body;
-  }
+    if (ok || innerFail) {
+      if ((ok && innerFail) || outerFail) {
+        throw new EnvelopeError('Conflicting result envelope', {
+          ok,
+          innerFail,
+          outerFail,
+        });
+      }
 
-  /**
-   * @hidden Encrypts a CallResult in the same way as would be returned by the runtime.
-   * This method is not part of the SemVer interface and may be subject to change.
-   */
-  public encryptCallResult(
-    result: CallResult,
-    reportUnknown = false,
-  ): Uint8Array {
-    if (result.fail) return cbor.encode(result);
-    const encodedResult = cbor.encode(result);
-    const { ciphertext, nonce } = this.encrypt(encodedResult);
-    const prop = reportUnknown ? 'unknown' : 'ok';
-    return cbor.encode({ [prop]: { nonce, data: ciphertext } });
+      // Inner envelope is encrypted
+      const inner = cborEncode(innerFail ? { fail: innerFail } : { ok });
+      const { nonce, ciphertext: data } = this.encrypt(inner);
+
+      // Outer envelope is plaintext
+      const envelope = cborEncode({
+        ok: { nonce, data } as AeadEnvelope,
+      });
+      return envelope;
+    }
+    if (outerFail) {
+      // Outer failures are returned in plaintext
+      return cborEncode({ fail: outerFail });
+    }
+    throw new EnvelopeError('Cannot encrypt result with no data or failures!', {
+      ok,
+      innerFail,
+      outerFail,
+    });
   }
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
-  public decryptEncoded(callResult: BytesLike): string {
-    return hexlify(this.decryptCallResult(cbor.decode(getBytes(callResult))));
-  }
-
-  /** Decrypts the data contained within a result envelope. */
-  public decryptCallResult(res: CallResult): Uint8Array {
-    function formatFailure(fail: CallFailure): string {
-      if (fail.message) return fail.message;
-      return `Call failed in module '${fail.module}' with code '${fail.code}'`;
+  public decryptResult(callResult: BytesLike): Uint8Array {
+    const envelope = cborDecode(getBytes(callResult));
+    if (envelope.fail) {
+      throw new EnvelopeError(formatFailure(envelope.fail), envelope.fail);
     }
-    if (res.fail) throw new CallError(formatFailure(res.fail), res.fail);
-    if (res.ok && (typeof res.ok === 'string' || res.ok instanceof Uint8Array))
-      return getBytes(res.ok);
-    const { nonce, data } = (res.ok as AeadEnvelope) ?? res.unknown;
-    const inner = cbor.decode(this.decrypt(nonce, data));
-    if (inner.ok) return getBytes(inner.ok);
-    if (inner.fail) throw new CallError(formatFailure(inner.fail), inner.fail);
-    throw new CallError(
+
+    // Unencrypted results will have `ok` as bytes, not a struct
+    if (
+      envelope.ok &&
+      (typeof envelope.ok === 'string' || envelope.ok instanceof Uint8Array)
+    ) {
+      return getBytes(envelope.ok);
+    }
+
+    // Encrypted result will have `ok` as a CBOR encoded struct
+    const { nonce, data } = (envelope.ok as AeadEnvelope) ?? envelope.unknown;
+    const inner = cborDecode(this.decrypt(nonce, data));
+
+    if (inner.ok) {
+      return getBytes(inner.ok);
+    }
+
+    if (inner.fail) {
+      throw new EnvelopeError(formatFailure(inner.fail), inner.fail);
+    }
+
+    throw new EnvelopeError(
       `Unexpected inner call result: ${JSON.stringify(inner)}`,
       inner,
     );
-  }
-}
-
-/**
- * A {@link Cipher} that does not encrypt data.
- *
- * This cipher is useful for debugging and sending messages that
- * you would prefer everyone to be able to see (e.g., for auditing purposes).
- */
-export class Plain extends Cipher {
-  public override readonly kind = Kind.Plain;
-  public override readonly publicKey = new Uint8Array();
-  public override readonly epoch = undefined;
-
-  public encrypt(plaintext: Uint8Array): {
-    ciphertext: Uint8Array;
-    nonce: Uint8Array;
-  } {
-    return { ciphertext: plaintext, nonce: new Uint8Array() };
-  }
-
-  public decrypt(_nonce: Uint8Array, ciphertext: Uint8Array): Uint8Array {
-    return ciphertext;
-  }
-
-  public encryptCallData(plaintext: Uint8Array): {
-    data: Uint8Array;
-    nonce: Uint8Array;
-  } {
-    return { data: plaintext, nonce: new Uint8Array() };
   }
 }
 
@@ -164,7 +168,7 @@ export class Plain extends Cipher {
  * This is the default cipher.
  */
 export class X25519DeoxysII extends Cipher {
-  public override readonly kind = Kind.X25519DeoxysII;
+  public override readonly kind = CipherKind.X25519DeoxysII;
   public override readonly publicKey: Uint8Array;
   public override readonly epoch: number | undefined;
 
@@ -223,24 +227,50 @@ export class X25519DeoxysII extends Cipher {
   }
 }
 
-/** A cipher that pretends to be an encrypting cipher. Used for tests. */
-export class Mock extends Cipher {
-  public override readonly kind = Kind.Mock;
-  public override readonly publicKey = new Uint8Array([1, 2, 3]);
-  public override readonly epoch = undefined;
+// -----------------------------------------------------------------------------
+// Determine if the CBOR encoded calldata is a signed query or an evelope
 
-  public static readonly NONCE = new Uint8Array([10, 20, 30, 40]);
+export class EnvelopeError extends Error {
+  public constructor(message: string, public readonly response?: unknown) {
+    super(message);
+  }
+}
 
-  public encrypt(plaintext: Uint8Array): {
-    ciphertext: Uint8Array;
-    nonce: Uint8Array;
-  } {
-    return { nonce: Mock.NONCE, ciphertext: plaintext };
+function isEnvelopeFormatOk(envelope: any): envelope is Envelope {
+  const { format, body } = envelope;
+
+  if (!body || !format) {
+    throw new EnvelopeError('No body or format specified', envelope);
   }
 
-  public decrypt(nonce: Uint8Array, ciphertext: Uint8Array): Uint8Array {
-    if (hexlify(nonce) !== hexlify(Mock.NONCE))
-      throw new Error('incorrect nonce');
-    return ciphertext;
+  if (format !== CipherKind.X25519DeoxysII) {
+    throw new EnvelopeError('Not encrypted format', envelope);
   }
+
+  if (isBytesLike(body))
+    throw new EnvelopeError('Requires struct body', envelope);
+
+  if (!isBytesLike(body.data))
+    throw new EnvelopeError('No body data', envelope);
+
+  return true;
+}
+
+export function isCalldataEnveloped(calldata?: BytesLike) {
+  if (calldata === undefined) {
+    return false;
+  }
+  try {
+    const envelope = cborDecode(getBytes(calldata));
+
+    if (!isEnvelopeFormatOk(envelope)) {
+      throw new EnvelopeError(
+        'Bogus Sapphire enveloped data found in transaction!',
+      );
+    }
+    return true;
+  } catch (e: any) {
+    if (e instanceof EnvelopeError) throw e;
+  }
+  return false;
 }

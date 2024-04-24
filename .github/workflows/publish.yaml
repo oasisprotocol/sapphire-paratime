@@ -5,6 +5,7 @@ on:
     tags:
       - clients/js/v[0-9]\.[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?
       - contracts/v[0-9]\.[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?
+      - integrations/ethers-v6/v[0-9]\.[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?
       - integrations/hardhat/v[0-9]\.[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?
       - integrations/viem-v2/v[0-9]\.[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?
       - integrations/wagmi-v2/v[0-9]\.[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?
@@ -25,6 +26,9 @@ jobs:
           run_install: true
       - name: Build JS client
         working-directory: clients/js
+        run: pnpm build
+      - name: Build ethers-v6 integration
+        working-directory: integrations/ethers-v6
         run: pnpm build
       - name: Build hardhat integration
         working-directory: integrations/hardhat

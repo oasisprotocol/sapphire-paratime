@@ -3,18 +3,22 @@
     "version": "0.0.0",
     "private": true,
     "description": "",
-    "scripts": {},
+    "scripts": {
+        "build": "hardhat compile",
+        "test": "hardhat test --network sapphire-localnet"
+    },
     "keywords": [],
     "author": "",
     "license": "Apache-2.0",
     "dependencies": {
-        "@nomicfoundation/hardhat-toolbox-viem": "3.x",
-        "@nomicfoundation/hardhat-viem": "2.x",
-        "@oasisprotocol/sapphire-viem-v2": "workspace:^",
+        "@nomicfoundation/hardhat-toolbox-viem": "~3.0.0",
+        "@nomicfoundation/hardhat-viem": "~2.0.0",
         "@oasisprotocol/sapphire-paratime": "workspace:^",
-        "hardhat": "2.x",
-        "viem": "2.x",
-        "chai": "^4.2.0",
-        "@types/chai": "^4.2.0"
+        "@oasisprotocol/sapphire-hardhat": "workspace:^",
+        "@oasisprotocol/sapphire-viem-v2": "workspace:^",
+        "@types/chai": "^4.3.14",
+        "chai": "^4.4.1",
+        "hardhat": "~2.22.2",
+        "viem": "~2.9.19"
     }
 }

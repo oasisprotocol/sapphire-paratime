@@ -6,11 +6,11 @@ import { SemanticTests } from '../typechain-types/contracts/tests/SemanticTests'
 import { getBytes } from 'ethers';
 
 const ERROR_NUM =
-  '0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef';
+  0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdefn;
 
 describe('EVM Semantics', () => {
   let c: SemanticTests;
-  let chainId: number;
+  let chainId: bigint;
 
   before(async () => {
     const f = await ethers.getContractFactory('SemanticTests');
@@ -19,37 +19,34 @@ describe('EVM Semantics', () => {
     chainId = (await ethers.provider.getNetwork()).chainId;
   });
 
-  it('eth_call maximum return length vs gas limit', async () => {
+  it('eth_call maximum return length vs gas limit', async function () {
+    // Skip this test on non-sapphire chains
+    // It tests exact gas semantics of Sapphire with calldata limits
+    if (chainId == 31337n) {
+      this.skip();
+    }
     const i = 1211104;
     const respHex = await c.testViewLength(i);
     const respBytes = getBytes(respHex);
     expect(respBytes.length).eq(i);
 
+    let caught = false;
     try {
       await c.testViewLength(i + 1);
-      expect(false).eq(true);
-    } catch (e: any) {
-      expect(e.info.error.message).contains('out of gas');
+    } catch (e: unknown) {
+      caught = true;
+      expect((e as Error).message).contains('out of gas');
     }
+    expect(caught).eq(true);
   });
 
   it('Error string in view call', async () => {
-    try {
-      await c.testViewRevert();
-    } catch (x: any) {
-      expect(x.revert.args[0]).to.eq('ThisIsAnError');
-      expect(x.revert.name).to.eq('Error');
-    }
+    await expect(c.testViewRevert()).to.be.revertedWith('ThisIsAnError');
   });
 
   it('Custom revert in view call', async () => {
-    // Perform view call, which is expected to revert
-    try {
-      await c.testCustomViewRevert();
-      expect(false).to.be.true;
-    } catch (x: any) {
-      expect(x.revert.args[0]).to.eq(ERROR_NUM);
-      expect(x.revert.name).to.eq('CustomError');
-    }
+    await expect(c.testCustomViewRevert())
+      .to.be.revertedWithCustomError(c, 'CustomError')
+      .withArgs(ERROR_NUM);
   });
 });

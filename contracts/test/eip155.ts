@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
+import { wrapEthersSigner } from '@oasisprotocol/sapphire-ethers-v6';
 import { EIP155Tests__factory } from '../typechain-types/factories/contracts/tests';
 import { EIP155Tests } from '../typechain-types/contracts/tests/EIP155Tests';
 import { HardhatNetworkHDAccountsConfig } from 'hardhat/types';
@@ -122,7 +122,8 @@ describe('EIP-155', function () {
   /// Verify that the wrapped wallet will encrypt a manually signed transaction
   it('Self-Signed transaction submission via wrapped wallet', async function () {
     const provider = ethers.provider;
-    const wallet = sapphire.wrap(getWallet(0).connect(provider));
+    const wp = getWallet(0).connect(provider);
+    const wallet = wrapEthersSigner(wp);
 
     const tx = Transaction.from({
       gasLimit: 250000,
