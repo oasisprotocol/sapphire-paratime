@@ -58,6 +58,8 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: pnpm install
+      - name: Build
+        run: make -C clients/js build
       - uses: JarvusInnovations/background-action@v1
         name: RPC proxy will error if non-encrypted calls are made
         with:
@@ -69,8 +71,8 @@ jobs:
           log-output: true
           log-output-if: true
           working-directory: clients/js
-      - name: Build & test JS client
-        run: make -C clients/js
+      - name: Test JS client
+        run: make -C clients/js test lint
       - name: Build & Test integrations
         run: make -C integrations
       - name: Build & Test Examples
