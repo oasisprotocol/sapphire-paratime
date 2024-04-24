@@ -193,7 +193,7 @@ export function makeTaggedProxyObject<T extends object>(
 ): T {
   return new Proxy(upstream, {
     has(target, p) {
-      if( p === propname ) return true;
+      if (p === propname) return true;
       return Reflect.has(target, p);
     },
     get(upstream, prop) {

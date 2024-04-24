@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromQuantity, isBytesLike, isHexString } from '@oasisprotocol/sapphire-paratime';
+import {
+  fromQuantity,
+  isBytesLike,
+  isHexString,
+} from '@oasisprotocol/sapphire-paratime';
 
 describe('ethersutils', () => {
   it('fromQuantity', () => {

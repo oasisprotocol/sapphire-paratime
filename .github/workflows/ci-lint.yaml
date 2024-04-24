@@ -43,7 +43,7 @@ jobs:
         run: cargo fmt -- --check
 
   lint-js:
-    name: lint-client-js
+    name: lint-js
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -123,38 +123,3 @@ jobs:
           working-directory: ./clients/go
         # Always run this step so that all linting errors can be seen at once.
         if: always()
-
-  type-test-client-js:
-    name: type-test-client-js
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: 8
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: |
-          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-
-      - uses: actions/cache@v4
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm --filter '@oasisprotocol/sapphire-paratime*' install
