@@ -185,7 +185,7 @@ async function sendUnsignedCall(
 ) {
 	let call_data = call.data ?? undefined;
 	if (!is_already_enveloped) {
-		call_data = cipher.encryptCall(call.data ?? new Uint8Array());
+		call_data = hexlify(cipher.encryptCall(call.data));
 	}
 	return await fn?.({
 		...call,
@@ -234,7 +234,7 @@ function hookEthersSend<
 	return (async (tx: TransactionRequest) => {
 		if (tx.data) {
 			const cipher = await options.fetcher.cipher({ request });
-			tx.data = cipher.encryptCall(tx.data);
+			tx.data = hexlify(cipher.encryptCall(tx.data));
 		}
 		return send(tx);
 	}) as C;

@@ -8,6 +8,35 @@ import nacl, { BoxKeyPair } from 'tweetnacl';
 
 import { BytesLike, isBytesLike, getBytes, hexlify } from './ethersutils.js';
 
+/**
+ * Some Ethereum libraries are picky about hex encoding vs Uint8Array
+ *
+ * The ethers BytesLike type can be either, so the request came as a hex encoded
+ * string we should return hex encoded string, if request came as Uint8Array we
+ * should return one.
+ *
+ * Notably hardhat-ignition doesn't work well with Uint8Array responses
+ *
+ * @param example Some example data, where we should return the same type
+ * @param output Output data
+ * @returns Output data, as either hex encoded 0x-prefixed string, or Uint8Array
+ */
+function asBytesLike(example: BytesLike, output: BytesLike) {
+  if (!isBytesLike(example) || !isBytesLike(output)) {
+    throw new Error('Not byteslike data!');
+  }
+  if (typeof example === 'string') {
+    if (typeof output === 'string') {
+      return output;
+    }
+    return hexlify(output);
+  }
+  if (typeof output === 'string') {
+    return hexlify(output);
+  }
+  return output;
+}
+
 export enum CipherKind {
   X25519DeoxysII = 1,
 }
@@ -39,26 +68,6 @@ export type CallFailure = { module: string; code: number; message?: string };
 function formatFailure(fail: CallFailure): string {
   if (fail.message) return fail.message;
   return `Call failed in module '${fail.module}' with code '${fail.code}'`;
-}
-
-/**
- * Some Ethereum libraries are picky about hex encoding vs Uint8Array
- *
- * The ethers BytesLike type can be either, so the request came as a hex encoded
- * string we should return hex encoded string, if request came as Uint8Array we
- * should return one.
- *
- * Notably hardhat-ignition doesn't work well with Uint8Array responses
- *
- * @param example Some example data, where we should return the same type
- * @param output Output data
- * @returns Output data, as either hex encoded 0x-prefixed string, or Uint8Array
- */
-function asBytesLikeForSame(example: BytesLike, output: Uint8Array) {
-  if (typeof example === 'string') {
-    return hexlify(output);
-  }
-  return output;
 }
 
 export abstract class Cipher {
@@ -100,7 +109,7 @@ export abstract class Cipher {
       },
     };
 
-    return asBytesLikeForSame(calldata, cborEncode(envelope));
+    return asBytesLike(calldata, cborEncode(envelope));
   }
 
   public decryptCall(envelopeBytes: BytesLike): BytesLike {
@@ -110,7 +119,7 @@ export abstract class Cipher {
     }
     const result = this.decrypt(envelope.body.nonce, envelope.body.data);
     const inner = cborDecode(result) as InnerEnvelope;
-    return asBytesLikeForSame(envelopeBytes, inner.body);
+    return asBytesLike(envelopeBytes, inner.body);
   }
 
   public encryptResult(
@@ -169,7 +178,7 @@ export abstract class Cipher {
     const inner = cborDecode(this.decrypt(nonce, data));
 
     if (inner.ok) {
-      return asBytesLikeForSame(callResult, getBytes(inner.ok));
+      return asBytesLike(callResult, getBytes(inner.ok));
     }
 
     if (inner.fail) {
