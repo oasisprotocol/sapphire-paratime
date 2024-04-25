@@ -14,10 +14,13 @@ dependencies:
 
 full: dependencies build
 
+test:
+	@echo Please make tests for wagmi-v2 example!
+
 run:
 	$(NPM) run dev
 
 run-proxied:
 	SAPPHIRE_LOCALNET_HTTP_PROXY_PORT=3001 $(NPM) run dev
 
-.PHONY: all clean veryclean dependencies full run run-proxied
+.PHONY: all clean veryclean dependencies full test run run-proxied
