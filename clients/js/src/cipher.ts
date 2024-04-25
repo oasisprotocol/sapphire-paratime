@@ -41,10 +41,30 @@ function formatFailure(fail: CallFailure): string {
   return `Call failed in module '${fail.module}' with code '${fail.code}'`;
 }
 
+/**
+ * Some Ethereum libraries are picky about hex encoding vs Uint8Array
+ *
+ * The ethers BytesLike type can be either, so the request came as a hex encoded
+ * string we should return hex encoded string, if request came as Uint8Array we
+ * should return one.
+ *
+ * Notably hardhat-ignition doesn't work well with Uint8Array responses
+ *
+ * @param example Some example data, where we should return the same type
+ * @param output Output data
+ * @returns Output data, as either hex encoded 0x-prefixed string, or Uint8Array
+ */
+function asBytesLikeForSame(example:BytesLike, output:Uint8Array) {
+  if( typeof example === 'string' ) {
+    return hexlify(output);
+  }
+  return output;
+}
+
 export abstract class Cipher {
   public abstract kind: CipherKind;
   public abstract publicKey: Uint8Array;
-  public abstract epoch: number | undefined;
+  public abstract epoch?: number;
 
   public abstract encrypt(plaintext: Uint8Array): {
     ciphertext: Uint8Array;
@@ -57,7 +77,7 @@ export abstract class Cipher {
   ): Uint8Array;
 
   /** Encrypts the plaintext and encodes it for sending. */
-  public encryptCall(calldata?: BytesLike | null): string {
+  public encryptCall(calldata?: BytesLike | null): BytesLike {
     // Txs without data are just balance transfers, and all data in those is public.
     if (calldata === undefined || calldata === null || calldata.length === 0)
       return '';
@@ -80,17 +100,17 @@ export abstract class Cipher {
       },
     };
 
-    return hexlify(cborEncode(envelope));
+    return asBytesLikeForSame(calldata, cborEncode(envelope));
   }
 
-  public decryptCall(envelopeBytes: BytesLike): Uint8Array {
+  public decryptCall(envelopeBytes: BytesLike): BytesLike {
     const envelope = cborDecode(getBytes(envelopeBytes));
     if (!isEnvelopeFormatOk(envelope)) {
       throw new EnvelopeError('Unexpected non-envelope!');
     }
     const result = this.decrypt(envelope.body.nonce, envelope.body.data);
     const inner = cborDecode(result) as InnerEnvelope;
-    return inner.body;
+    return asBytesLikeForSame(envelopeBytes, inner.body);
   }
 
   public encryptResult(
@@ -129,7 +149,7 @@ export abstract class Cipher {
   }
 
   /** Decrypts the data contained within a hex-encoded serialized envelope. */
-  public decryptResult(callResult: BytesLike): Uint8Array {
+  public decryptResult(callResult: BytesLike): BytesLike {
     const envelope = cborDecode(getBytes(callResult));
     if (envelope.fail) {
       throw new EnvelopeError(formatFailure(envelope.fail), envelope.fail);
@@ -140,7 +160,8 @@ export abstract class Cipher {
       envelope.ok &&
       (typeof envelope.ok === 'string' || envelope.ok instanceof Uint8Array)
     ) {
-      return getBytes(envelope.ok);
+      throw new EnvelopeError('Received unencrypted envelope', envelope);
+      //return getBytes(envelope.ok);
     }
 
     // Encrypted result will have `ok` as a CBOR encoded struct
@@ -148,7 +169,7 @@ export abstract class Cipher {
     const inner = cborDecode(this.decrypt(nonce, data));
 
     if (inner.ok) {
-      return getBytes(inner.ok);
+      return asBytesLikeForSame(callResult, getBytes(inner.ok));
     }
 
     if (inner.fail) {
@@ -196,11 +217,11 @@ export class X25519DeoxysII extends Cipher {
     epoch?: number,
   ) {
     super();
-    this.publicKey = keypair.publicKey;
-    // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
 
+    this.publicKey = keypair.publicKey;
     this.epoch = epoch;
 
+    // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
     const keyBytes = hmac
       .create(
         sha512_256,

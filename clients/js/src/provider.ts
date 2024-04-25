@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Cipher } from './cipher.js';
 import { BytesLike } from './ethersutils.js';
 import { AbstractKeyFetcher, KeyFetcher } from './calldatapublickey.js';
 
@@ -124,25 +123,6 @@ export function wrapEthereumProvider<P extends EIP2696_EthereumProvider>(
   );
 }
 
-function prepareRequest(args: EIP1193_RequestArguments, cipher: Cipher) {
-  const { method, params } = args;
-  if (!Array.isArray(params)) return { method, params };
-
-  if (method === 'eth_sendRawTransaction') {
-    return { method, params };
-  }
-
-  if (
-    /^eth_((send|sign)Transaction|call|estimateGas)$/.test(method) &&
-    params[0].data // Ignore balance transfers without calldata
-  ) {
-    params[0].data = cipher.encryptCall(params[0].data);
-    return { method, params };
-  }
-
-  return { method, params };
-}
-
 const SAPPHIRE_EIP1193_REQUESTFN = '#SAPPHIRE_EIP1193_REQUESTFN' as const;
 
 export function isWrappedRequestFn<
@@ -169,14 +149,27 @@ export function makeSapphireRequestFn(
 
   const f = async (args: EIP1193_RequestArguments) => {
     const cipher = await filled_options.fetcher.cipher(provider);
-    const { method, params } = prepareRequest(args, cipher);
+    const { method, params } = args;
+
+    // Encrypt requests which can be encrypted
+    if (
+      params && Array.isArray(params) &&
+      /^eth_((send|sign)Transaction|call|estimateGas)$/.test(method) &&
+      params[0].data // Ignore balance transfers without calldata
+    ) {
+      params[0].data = cipher.encryptCall(params[0].data);
+    }
+
     const res = await provider.request({
       method,
       params: params ?? [],
     });
+
+    // Decrypt responses which return encrypted data
     if (method === 'eth_call') {
       return cipher.decryptResult(res as BytesLike);
     }
+
     return res;
   };
 
