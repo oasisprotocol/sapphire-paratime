@@ -8,6 +8,7 @@ import {
   isWrappedEthereumProvider,
   isWrappedRequestFn,
   KeyFetcher,
+  hexlify,
 } from '@oasisprotocol/sapphire-paratime';
 
 /*
@@ -105,9 +106,10 @@ describe('Provider Integration Test', () => {
     const storeTxRequest = await w.populateTransaction(
       await store.populateTransaction(expectedValue),
     );
-    storeTxRequest.data = (await new KeyFetcher().cipher(wp)).encryptCall(
+    const encryptedCalldata = (await new KeyFetcher().cipher(wp)).encryptCall(
       storeTxRequest.data,
     );
+    storeTxRequest.data = hexlify(encryptedCalldata!);
     const storeTxRaw = await w.signTransaction(storeTxRequest);
     const storeTx = await bp.broadcastTransaction(storeTxRaw);
     await storeTx.wait();

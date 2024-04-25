@@ -54,8 +54,8 @@ function formatFailure(fail: CallFailure): string {
  * @param output Output data
  * @returns Output data, as either hex encoded 0x-prefixed string, or Uint8Array
  */
-function asBytesLikeForSame(example:BytesLike, output:Uint8Array) {
-  if( typeof example === 'string' ) {
+function asBytesLikeForSame(example: BytesLike, output: Uint8Array) {
+  if (typeof example === 'string') {
     return hexlify(output);
   }
   return output;
