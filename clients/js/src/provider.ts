@@ -153,7 +153,8 @@ export function makeSapphireRequestFn(
 
     // Encrypt requests which can be encrypted
     if (
-      params && Array.isArray(params) &&
+      params &&
+      Array.isArray(params) &&
       /^eth_((send|sign)Transaction|call|estimateGas)$/.test(method) &&
       params[0].data // Ignore balance transfers without calldata
     ) {
