@@ -1,11 +1,21 @@
 NPM ?= pnpm
 
-subdirs = hardhat-boilerplate hardhat-viem onchain-signer wagmi-v2
+SUBDIRS := $(wildcard */.)  # e.g. "foo/. bar/."
+TARGETS := all clean lint test build veryclean  # whatever else, but must not contain '/'
 
-all: build test
+# foo/.all bar/.all foo/.clean bar/.clean
+SUBDIRS_TARGETS := \
+    $(foreach t,$(TARGETS),$(addsuffix $t,$(SUBDIRS)))
 
-build:
-	for sd in $(subdirs); do $(MAKE) -C $$sd $@; done
+.PHONY : $(TARGETS) $(SUBDIRS_TARGETS)
 
-test:
-	for sd in $(subdirs); do $(MAKE) -C $$sd $@; done
+# static pattern rule, expands into:
+# all clean : % : foo/.% bar/.%
+$(TARGETS) : % : $(addsuffix %,$(SUBDIRS))
+
+# here, for foo/.all:
+#   $(@D) is foo
+#   $(@F) is .all, with leading period
+#   $(@F:.%=%) is just all
+$(SUBDIRS_TARGETS) :
+	$(MAKE) -C $(@D) $(@F:.%=%)
