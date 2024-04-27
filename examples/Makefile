@@ -1,7 +1,7 @@
 NPM ?= pnpm
 
 SUBDIRS := $(wildcard */.)  # e.g. "foo/. bar/."
-TARGETS := all clean lint test build veryclean  # whatever else, but must not contain '/'
+TARGETS := all clean lint test build distclean  # whatever else, but must not contain '/'
 
 # foo/.all bar/.all foo/.clean bar/.clean
 SUBDIRS_TARGETS := \

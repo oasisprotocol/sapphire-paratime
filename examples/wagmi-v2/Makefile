@@ -6,7 +6,7 @@ build:
 clean:
 	rm -rf dist stats.html
 
-veryclean: clean
+distclean: clean
 	rm -rf node_modules
 
 dependencies:
@@ -23,4 +23,4 @@ run:
 run-proxied:
 	SAPPHIRE_LOCALNET_HTTP_PROXY_PORT=3001 $(NPM) run dev
 
-.PHONY: all clean veryclean dependencies full test run run-proxied
+.PHONY: all clean distclean dependencies full test run run-proxied

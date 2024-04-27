@@ -21,7 +21,7 @@ import { BytesLike, isBytesLike, getBytes, hexlify } from './ethersutils.js';
  * @param output Output data
  * @returns Output data, as either hex encoded 0x-prefixed string, or Uint8Array
  */
-function asBytesLike(example: BytesLike, output: BytesLike) {
+function asBytesLike(example: BytesLike, output: BytesLike) : BytesLike {
   if (!isBytesLike(example) || !isBytesLike(output)) {
     throw new Error('Not byteslike data!');
   }
@@ -286,7 +286,7 @@ function isEnvelopeFormatOk(envelope: any): envelope is Envelope {
   return true;
 }
 
-export function isCalldataEnveloped(calldata?: BytesLike) {
+export function isCalldataEnveloped(calldata?: BytesLike) : boolean {
   if (calldata === undefined) {
     return false;
   }

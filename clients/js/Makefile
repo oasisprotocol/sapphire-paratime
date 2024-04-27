@@ -10,7 +10,7 @@ clean:
 
 full: clean all
 
-veryclean: clean
+distclean: clean
 	rm -rf node_modules *.tgz
 
-.PHONY: all clean veryclean dependencies full
+.PHONY: all clean distclean dependencies full

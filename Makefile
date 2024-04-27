@@ -5,7 +5,7 @@ subdirs = runtime clients integrations contracts
 all:
 	@echo ...
 
-clean veryclean build::
+clean distclean build::
 	for sd in $(subdirs); do $(MAKE) -C $$sd $@; done
 
 $(subdirs)::
