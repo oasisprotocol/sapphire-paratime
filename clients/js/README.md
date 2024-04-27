@@ -43,7 +43,6 @@ import '@oasisprotocol/sapphire-hardhat';
 
 [@oasisprotocol/sapphire-hardhat]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
 
-
 ## Troubleshooting
 
 ### `Error: missing provider (operation="getChainId", code=UNSUPPORTED_OPERATION, ...)`
