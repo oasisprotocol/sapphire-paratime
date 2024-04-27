@@ -8,7 +8,7 @@ build lint format::
 clean:
 	rm -rf dist
 
-veryclean: clean
+distclean: clean
 	rm -rf node_modules
 
 test:
@@ -19,4 +19,4 @@ dependencies:
 
 full: clean dependencies build
 
-.PHONY: all clean test veryclean dependencies full
+.PHONY: all clean test distclean dependencies full

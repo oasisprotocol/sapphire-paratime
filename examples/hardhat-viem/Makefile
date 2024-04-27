@@ -1,15 +1,17 @@
 NPM ?= pnpm
 
+all: build test
+
 build:
-	$(NPM) build
+	$(NPM) $@
 
 test: build
-	$(NPM) test
+	$(NPM) $@
 
 clean:
 	rm -rf artifacts cache typechain-types
 
-veryclean: clean
+distclean: clean
 	rm -rf node_modules
 
-.PHONY: build test clean veryclean
+.PHONY: build test clean distclean

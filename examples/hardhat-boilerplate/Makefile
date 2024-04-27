@@ -9,5 +9,7 @@ clean:
 	$(MAKE) -C frontend $@
 	rm -rf artifact cache
 
-veryclean: clean
+distclean: clean
 	$(MAKE) -C frontend $@
+
+.PHONY: build clean distclean

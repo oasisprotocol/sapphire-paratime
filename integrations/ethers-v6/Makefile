@@ -6,9 +6,9 @@ build lint test format::
 	$(NPM) $@
 
 clean:
-	rm -rf dist
+	rm -rf dist coverage
 
-veryclean:
+distclean:
 	rm -rf node_modules *.tgz
 
 dependencies:
@@ -16,4 +16,4 @@ dependencies:
 
 full: clean dependencies all
 
-.PHONY: all clean veryclean dependencies full
+.PHONY: all clean distclean dependencies full
