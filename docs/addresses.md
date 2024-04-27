@@ -49,6 +49,7 @@ description: List of Standard Contract Addresses
 | ---- | --------------- | --------------- | ------ |
 | [Celer IM Executor][message-executor] | Multiple executors available | [`0x9C850D230FFFaCEf1E2D1741a00080856630e455`][message-executor-testnet] | [Message Executor][message-executor-source] |
 | [Celer MessageBus][message-bus] | [`0x9Bb46D5100d2Db4608112026951c9C965b233f4D`][message-bus-mainnet] | [`0x9Bb46D5100d2Db4608112026951c9C965b233f4D`][message-bus-testnet] | [Message bus][message-bus-source] |
+| [Safe Singleton Factory][singleton-factory] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-mainnet] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-testnet] | [Singleton Factory][singleton-factory] |
 
 [message-executor]: https://im-docs.celer.network/developer/development-guide/message-executor
 [message-executor-source]: https://github.com/celer-network/im-executor
@@ -57,3 +58,6 @@ description: List of Standard Contract Addresses
 [message-bus-source]: https://github.com/celer-network/sgn-v2-contracts/blob/6af81b55a13a7aacab9a4d92a38d374d46c0fdbf/contracts/message/messagebus/MessageBus.sol
 [message-bus-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x9Bb46D5100d2Db4608112026951c9C965b233f4D
 [message-bus-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x9Bb46D5100d2Db4608112026951c9C965b233f4D
+[singleton-factory]: https://github.com/safe-global/safe-singleton-factory/
+[singleton-factory-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7
+[singleton-factory-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7
