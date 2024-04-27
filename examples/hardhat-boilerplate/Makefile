@@ -3,6 +3,7 @@ NPM ?= pnpm
 all: build
 
 build:
+	$(NPM) $@
 	$(MAKE) -C frontend $@
 
 clean:

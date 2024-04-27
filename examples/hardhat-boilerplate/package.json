@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A boilerplate repository to get you started with Hardhat and Ethereum development",
   "scripts": {
+    "build": "hardhat compile --force",
     "test": "hardhat --network sapphire-localnet test"
   },
   "repository": {
