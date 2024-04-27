@@ -4,13 +4,13 @@ import { decode as cborDecode, encode as cborEncode } from 'cborg';
 import deoxysii from '@oasisprotocol/deoxysii';
 import { sha512_256 } from '@noble/hashes/sha512';
 import { hmac } from '@noble/hashes/hmac';
+import { randomBytes } from '@noble/hashes/utils';
 
 import {
   BoxKeyPair,
   boxKeyPairFromSecretKey,
-  naclRandomBytes,
+  crypto_box_SECRETKEYBYTES,
   naclScalarMult,
-  randomBoxKeyPair,
 } from './munacl.js';
 
 import { BytesLike, isBytesLike, getBytes, hexlify } from './ethersutils.js';
@@ -214,7 +214,9 @@ export class X25519DeoxysII extends Cipher {
 
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
   static ephemeral(peerPublicKey: BytesLike, epoch?: number): X25519DeoxysII {
-    const keypair = randomBoxKeyPair();
+    const keypair = boxKeyPairFromSecretKey(
+      randomBytes(crypto_box_SECRETKEYBYTES),
+    );
     return new X25519DeoxysII(keypair, getBytes(peerPublicKey), epoch);
   }
 
@@ -254,7 +256,7 @@ export class X25519DeoxysII extends Cipher {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   } {
-    const nonce = naclRandomBytes(deoxysii.NonceSize);
+    const nonce = randomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
