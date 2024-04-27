@@ -1,5 +1,7 @@
 NPM ?= pnpm
 
+all: build
+
 build:
 	$(NPM) build
 

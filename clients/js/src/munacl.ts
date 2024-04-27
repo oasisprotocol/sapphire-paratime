@@ -6,10 +6,10 @@ function gf(init?: number[]): Float64Array {
   return r;
 }
 
-const crypto_box_SECRETKEYBYTES = 32 as const;
-const crypto_box_PUBLICKEYBYTES = 32 as const;
-const crypto_scalarmult_BYTES = 32 as const;
-const crypto_scalarmult_SCALARBYTES = 32 as const;
+export const crypto_box_SECRETKEYBYTES = 32 as const;
+export const crypto_box_PUBLICKEYBYTES = 32 as const;
+export const crypto_scalarmult_BYTES = 32 as const;
+export const crypto_scalarmult_SCALARBYTES = 32 as const;
 
 const _9 = new Uint8Array(32);
 _9[0] = 9;
@@ -37,10 +37,9 @@ function inv25519(o: Float64Array, i: Float64Array) {
 }
 
 function car25519(o: Float64Array) {
-  let i,
-    v,
+  let v,
     c = 1;
-  for (i = 0; i < 16; i++) {
+  for (let i = 0; i < 16; i++) {
     v = o[i] + c + 65535;
     c = Math.floor(v / 65536);
     o[i] = v - c * 65536;
@@ -617,34 +616,27 @@ function crypto_scalarmult_base(q: Uint8Array, n: Uint8Array) {
 
 export class MuNaclError extends Error {}
 
-export function naclRandomBytes(n: number): Uint8Array {
-  // Both Node v18 and all modern browser support getRandomValues
-  // However, tools like Vite and WebPack will fail miserably if you import it
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require('crypto').getRandomValues(new Uint8Array(n));
-}
-
-export function randomBoxKeyPair(): BoxKeyPair {
-  return boxKeyPairFromSecretKey(naclRandomBytes(crypto_box_SECRETKEYBYTES));
-}
-
 export interface BoxKeyPair {
   publicKey: Uint8Array;
   secretKey: Uint8Array;
 }
 
 export function naclScalarMult(n: Uint8Array, p: Uint8Array) {
-  if (n.length !== crypto_scalarmult_SCALARBYTES)
+  if (n.length !== crypto_scalarmult_SCALARBYTES) {
     throw new MuNaclError('bad n size');
-  if (p.length !== crypto_scalarmult_BYTES) throw new MuNaclError('bad p size');
+  }
+  if (p.length !== crypto_scalarmult_BYTES) {
+    throw new MuNaclError('bad p size');
+  }
   const q = new Uint8Array(crypto_scalarmult_BYTES);
   crypto_scalarmult(q, n, p);
   return q;
 }
 
 export function boxKeyPairFromSecretKey(secretKey: Uint8Array): BoxKeyPair {
-  if (secretKey.length !== crypto_box_SECRETKEYBYTES)
+  if (secretKey.length !== crypto_box_SECRETKEYBYTES) {
     throw new MuNaclError('bad secret key size');
+  }
   const publicKey = new Uint8Array(crypto_box_PUBLICKEYBYTES);
   crypto_scalarmult_base(publicKey, secretKey);
   return { publicKey, secretKey: new Uint8Array(secretKey) };
