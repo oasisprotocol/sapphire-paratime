@@ -4,6 +4,7 @@ all: build
 
 build:
 	$(NPM) $@
+	$(NPM) run-deploy
 	$(MAKE) -C frontend $@
 
 clean:
