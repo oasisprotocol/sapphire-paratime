@@ -4,7 +4,14 @@ import { decode as cborDecode, encode as cborEncode } from 'cborg';
 import deoxysii from '@oasisprotocol/deoxysii';
 import { sha512_256 } from '@noble/hashes/sha512';
 import { hmac } from '@noble/hashes/hmac';
-import nacl, { BoxKeyPair } from 'tweetnacl';
+
+import {
+  BoxKeyPair,
+  boxKeyPairFromSecretKey,
+  naclRandomBytes,
+  naclScalarMult,
+  randomBoxKeyPair,
+} from './munacl.js';
 
 import { BytesLike, isBytesLike, getBytes, hexlify } from './ethersutils.js';
 
@@ -207,7 +214,7 @@ export class X25519DeoxysII extends Cipher {
 
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
   static ephemeral(peerPublicKey: BytesLike, epoch?: number): X25519DeoxysII {
-    const keypair = nacl.box.keyPair();
+    const keypair = randomBoxKeyPair();
     return new X25519DeoxysII(keypair, getBytes(peerPublicKey), epoch);
   }
 
@@ -216,7 +223,7 @@ export class X25519DeoxysII extends Cipher {
     peerPublicKey: BytesLike,
     epoch?: number,
   ): X25519DeoxysII {
-    const keypair = nacl.box.keyPair.fromSecretKey(getBytes(secretKey));
+    const keypair = boxKeyPairFromSecretKey(getBytes(secretKey));
     return new X25519DeoxysII(keypair, getBytes(peerPublicKey), epoch);
   }
 
@@ -236,7 +243,7 @@ export class X25519DeoxysII extends Cipher {
         sha512_256,
         new TextEncoder().encode('MRAE_Box_Deoxys-II-256-128'),
       )
-      .update(nacl.scalarMult(keypair.secretKey, peerPublicKey))
+      .update(naclScalarMult(keypair.secretKey, peerPublicKey))
       .digest().buffer;
 
     this.key = new Uint8Array(keyBytes);
@@ -247,7 +254,7 @@ export class X25519DeoxysII extends Cipher {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   } {
-    const nonce = nacl.randomBytes(deoxysii.NonceSize);
+    const nonce = naclRandomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
