@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BytesLike } from './ethersutils.js';
-import { AbstractKeyFetcher, KeyFetcher } from './calldatapublickey.js';
+import { KeyFetcher } from './calldatapublickey.js';
 
 // -----------------------------------------------------------------------------
 // https://eips.ethereum.org/EIPS/eip-2696#interface
@@ -41,7 +41,7 @@ export function isLegacyProvider<T extends object>(
 // -----------------------------------------------------------------------------
 
 export interface SapphireWrapOptions {
-  fetcher: AbstractKeyFetcher;
+  fetcher: KeyFetcher;
 }
 
 export function fillOptions(

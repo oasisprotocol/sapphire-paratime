@@ -9,3 +9,4 @@ export * from './provider.js';
 export * from './ethersutils.js';
 export { NETWORKS } from './networks.js';
 export * from './calldatapublickey.js';
+export * from './munacl.js';

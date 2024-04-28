@@ -177,7 +177,6 @@ export abstract class Cipher {
       (typeof envelope.ok === 'string' || envelope.ok instanceof Uint8Array)
     ) {
       throw new EnvelopeError('Received unencrypted envelope', envelope);
-      //return getBytes(envelope.ok);
     }
 
     // Encrypted result will have `ok` as a CBOR encoded struct
