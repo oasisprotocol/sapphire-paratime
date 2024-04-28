@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: Unlicense
+
+// Minimum necessary functions extracted and made TypeScript compatible from:
+// https://github.com/dchest/tweetnacl-js/blob/fecde6ecf0eb81e31d54ca0509531ab1b825f490/nacl-fast.js
+
 function gf(init?: number[]): Float64Array {
   const r = new Float64Array(16);
   if (init) {
@@ -607,7 +612,7 @@ function crypto_scalarmult(q: Uint8Array, n: Uint8Array, p: Uint8Array) {
   inv25519(x32, x32);
   M(x16, x16, x32);
   pack25519(q, x16);
-  return 0;
+  return q;
 }
 
 function crypto_scalarmult_base(q: Uint8Array, n: Uint8Array) {
@@ -621,23 +626,29 @@ export interface BoxKeyPair {
   secretKey: Uint8Array;
 }
 
-export function naclScalarMult(n: Uint8Array, p: Uint8Array) {
+export function naclScalarMult(n: Uint8Array, p: Uint8Array): Uint8Array {
   if (n.length !== crypto_scalarmult_SCALARBYTES) {
     throw new MuNaclError('bad n size');
   }
   if (p.length !== crypto_scalarmult_BYTES) {
     throw new MuNaclError('bad p size');
   }
-  const q = new Uint8Array(crypto_scalarmult_BYTES);
-  crypto_scalarmult(q, n, p);
-  return q;
+  return crypto_scalarmult(new Uint8Array(crypto_scalarmult_BYTES), n, p);
+}
+
+export function naclScalarMultBase(n: Uint8Array): Uint8Array {
+  return naclScalarMult(n, _9);
 }
 
 export function boxKeyPairFromSecretKey(secretKey: Uint8Array): BoxKeyPair {
   if (secretKey.length !== crypto_box_SECRETKEYBYTES) {
     throw new MuNaclError('bad secret key size');
   }
-  const publicKey = new Uint8Array(crypto_box_PUBLICKEYBYTES);
-  crypto_scalarmult_base(publicKey, secretKey);
-  return { publicKey, secretKey: new Uint8Array(secretKey) };
+  return {
+    publicKey: crypto_scalarmult_base(
+      new Uint8Array(crypto_box_PUBLICKEYBYTES),
+      secretKey,
+    ),
+    secretKey: new Uint8Array(secretKey),
+  };
 }
