@@ -1,4 +1,4 @@
-// Usage: pnpm hardhat run --network <network> scripts/deploy-bridge-adapter-v1.ts
+// Usage: pnpm hardhat run --network <network> scripts/run-counter.ts
 
 import { ethers } from 'hardhat';
 
