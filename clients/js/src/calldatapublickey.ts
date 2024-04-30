@@ -156,25 +156,15 @@ export async function fetchRuntimePublicKey(
   return fetchRuntimePublicKeyByChainId(chainId);
 }
 
-export abstract class AbstractKeyFetcher {
-  public abstract fetch(
-    upstream: EIP2696_EthereumProvider,
-    timeoutMilliseconds?: number,
-  ): Promise<CallDataPublicKey>;
-  public abstract cipher(upstream: EIP2696_EthereumProvider): Promise<Cipher>;
-}
-
 /**
  * Retrieves calldata public keys from RPC provider
  */
-export class KeyFetcher extends AbstractKeyFetcher {
+export class KeyFetcher {
   public pubkey?: CallDataPublicKey;
 
   constructor(
     readonly timeoutMilliseconds: number = DEFAULT_PUBKEY_CACHE_EXPIRATION_MS,
-  ) {
-    super();
-  }
+  ) {}
 
   /**
    * Retrieve cached key if possible, otherwise fetch a fresh one

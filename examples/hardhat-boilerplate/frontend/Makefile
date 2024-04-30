@@ -5,7 +5,7 @@ all: build
 clean:
 	rm -rf build report.html src/contracts
 
-veryclean: clean
+distclean: clean
 	rm -rf node_modules
 
 report.html: build/bundle-stats.json
@@ -19,4 +19,4 @@ build:
 start eject::
 	$(NPM) $@
 
-.PHONY: build clean veryclean all
+.PHONY: build clean distclean all

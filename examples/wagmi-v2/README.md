@@ -1,4 +1,6 @@
-This is a [Vite](https://vitejs.dev) project bootstrapped with [`create-wagmi`](https://github.com/wevm/wagmi/tree/main/packages/create-wagmi).
+This is a [Vite](https://vitejs.dev) project bootstrapped with [create-wagmi].
+
+[create-wagmi]: https://github.com/wevm/wagmi/tree/main/packages/create-wagmi
 
 It uses the Sapphire wrapper to encrypt contract deployments, transactions,
 view calls & gas estimations using the `injectedWithSapphire()` connector and

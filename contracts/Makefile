@@ -8,7 +8,7 @@ build lint format test::
 clean:
 	rm -rf artifacts cache typechain-types
 
-veryclean:
+distclean:
 	rm -rf node_modules *.tgz
 
 dependencies:
@@ -16,4 +16,4 @@ dependencies:
 
 full: clean dependencies all
 
-.PHONY: all clean test veryclean dependencies full
+.PHONY: all clean test distclean dependencies full
