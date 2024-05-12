@@ -3,7 +3,7 @@ module github.com/oasisprotocol/sapphire-paratime/clients/go
 go 1.22
 
 require (
-	github.com/ethereum/go-ethereum v1.13.12
+	github.com/ethereum/go-ethereum v1.13.15
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a
 	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.7.2
 )
