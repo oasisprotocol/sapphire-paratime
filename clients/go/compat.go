@@ -54,14 +54,14 @@ var Networks = map[uint64]NetworkParams{
 }
 
 // PackTx prepares a regular Eth transaction for Sapphire. The transaction returned from this function is what must be signed.
-func PackTx(tx types.Transaction, cipher Cipher) (*types.Transaction, error) {
-	if !txNeedsPacking(&tx) {
-		return &tx, nil
+func PackTx(tx *types.Transaction, cipher Cipher) (*types.Transaction, error) {
+	if !txNeedsPacking(tx) {
+		return tx, nil
 	}
 	return packTx(tx, cipher)
 }
 
-func packTx(tx types.Transaction, cipher Cipher) (*types.Transaction, error) {
+func packTx(tx *types.Transaction, cipher Cipher) (*types.Transaction, error) {
 	return types.NewTx(&types.LegacyTx{
 		Nonce:    tx.Nonce(),
 		GasPrice: tx.GasPrice(),
@@ -94,7 +94,12 @@ func PackSignedCall(msg ethereum.CallMsg, cipher Cipher, sign SignerFn, chainID 
 	if msg.GasPrice == nil {
 		msg.GasPrice = big.NewInt(DefaultGasPrice) // Must be non-zero for signed calls.
 	}
-	dataPack, err := evm.NewSignedCallDataPack(rsvSigner{sign}, chainID.Uint64(), msg.From[:], msg.To[:], msg.Gas, msg.GasPrice, msg.Value, msg.Data, *leash)
+	// msg.To is nil when deploying.
+	var to []byte
+	if msg.To != nil {
+		to = msg.To[:]
+	}
+	dataPack, err := evm.NewSignedCallDataPack(rsvSigner{sign}, chainID.Uint64(), msg.From[:], to, msg.Gas, msg.GasPrice, msg.Value, msg.Data, *leash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signed call data back: %w", err)
 	}
@@ -173,7 +178,7 @@ func (b WrappedBackend) Transactor(from common.Address) *bind.TransactOpts {
 		if addr != from {
 			return nil, bind.ErrNotAuthorized
 		}
-		packedTx, err := PackTx(*tx, b.cipher)
+		packedTx, err := PackTx(tx, b.cipher)
 		if err != nil {
 			return nil, fmt.Errorf("failed to pack tx: %w", err)
 		}
