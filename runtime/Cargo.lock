@@ -1612,8 +1612,8 @@ dependencies = [
 
 [[package]]
 name = "keymanager"
-version = "0.4.1-testnet"
-source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.4.1-testnet#1b20792680b245a610ee428876ca0f6ddc99a436"
+version = "0.4.1"
+source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.4.1#8d87e456cdb3156ecea932110de1aac2a675f4af"
 dependencies = [
  "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.1)",
  "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v23.0.1)",
@@ -2879,7 +2879,7 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "0.7.3-testnet"
+version = "0.7.3"
 dependencies = [
  "keymanager",
  "oasis-runtime-sdk",
