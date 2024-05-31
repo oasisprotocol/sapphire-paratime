@@ -24,21 +24,21 @@ your contract to a non-confidential EVM network (e.g., Ropsten, Emerald).
 The Oasis Network consists of the consensus layer and a number of ParaTimes.
 ParaTimes are independent replicated state machines that settle transactions
 using the consensus layer (to learn more, check the [Oasis Network
-Overview][overview chapter]). Sapphire is a ParaTime which implements the Ethereum
-Virtual Machine (EVM).
+Overview][overview chapter]). Sapphire is a ParaTime which implements the
+Ethereum Virtual Machine (EVM).
 
 The minimum and also expected block time in Sapphire is **6 seconds**. Any
 Sapphire transaction will require at least this amount of time to be executed,
 and probably no more.
 
-ParaTimes, Sapphire included, are not allowed to directly access your tokens stored
-in consensus layer accounts. You will need to _deposit_ tokens from your consensus
-account to Sapphire. Consult the [How to transfer ROSE into an EVM
-ParaTime][how-to-deposit-rose] chapter to learn more.
+ParaTimes, Sapphire included, are not allowed to directly access your tokens
+stored in consensus layer accounts. You will need to _deposit_ tokens from your
+consensus account to Sapphire. Consult the [Manage your
+Tokens][how-to-deposit-rose] chapter to learn more.
 
 
 [overview chapter]: https://github.com/oasisprotocol/docs/blob/main/docs/general/oasis-network/README.mdx
-[how-to-deposit-rose]: https://github.com/oasisprotocol/docs/blob/main/docs/general/manage-tokens/README.mdx
+[how-to-deposit-rose]: https://github.com/oasisprotocol/docs/blob/main/docs/general/manage-tokens/README.mdx#rose-and-the-paratimes
 [Testnet faucet]: https://faucet.testnet.oasis.io/
 
 ## Testnet and Mainnet
@@ -74,36 +74,98 @@ ParaTime.
 
 ## Sapphire vs Ethereum
 
-Sapphire is generally compatible with Ethereum, the EVM, and all of the
-user and developer tooling that you already use. There are a few breaking changes,
-but we think that you'll like them:
+Sapphire is generally compatible with Ethereum, the EVM, and all the user and
+developer tooling that you are used to. In addition to confidentiality
+features, you get a few extra benefits including the ability to **generate
+private entropy**, and **make signatures on-chain**. An example of a dApp that
+uses both is an HSM contract that generates an Ethereum wallet and signs
+transactions sent to it via transactions.
 
-* Contract state is only visible to the contract that wrote it. With respect
-  to the contract API, it's as if all state variables are declared as `private`, but
-  with the further restriction that not even full nodes can read the values. Public or
-  access-controlled values are provided instead through explicit getters.
-* Transactions and calls are end-to-end encrypted into the contract. Only the caller
-  and the contract can see the data sent to/received from the ParaTime. This ends up
-  defeating most of the utility of block explorers, however.
-* The `from` address using of calls is derived from a signature attached to the call.
-  Unsigned calls have their sender set to the zero address. This allows contract authors
-  to write getters that release secrets to authenticated callers, but without
-  requiring a transaction to be posted on-chain.
+There are also a few breaking changes compared to Ethereum though, but we think
+that you'll quickly grasp them:
 
-In addition to confidentiality, you get a few extra benefits including the ability to generate private
-entropy, and make signatures on-chain. An example of a dApp that uses both is a HSM contract
-that generates an Ethereum wallet and signs transactions sent to it via transactions.
+- [Encrypted Contract State](#encrypted-contract-state)
+- [End-to-End Encrypted Transactions and Calls](#end-to-end-encrypted-transactions-and-calls)
+- [`from` Address is Zero for Unsigned Calls](#from-address-is-zero-for-unsigned-calls)
+- [Override `receive` and `fallback` when Funding the Contract](#override-receive-and-fallback-when-funding-the-contract)
+- [Instant Finality](#instant-finality)
 
-Otherwise Sapphire is like Emerald, which is like a fast, cheap Ethereum.
+Read below to learn more about them. Otherwise, Sapphire is like Emerald, a
+fast, cheap Ethereum.
+
+### Encrypted Contract State
+
+The contract state is only visible to the contract that wrote it. With respect
+to the contract API, it's as if all state variables are declared as `private`,
+but with the further restriction that not even full nodes can read the values.
+Public or access-controlled values are provided instead through explicit
+getters.
+
+Calling `eth_getStorageAt()` will return zero.
+
+### End-to-End Encrypted Transactions and Calls
+
+Transactions and calls are end-to-end encrypted into the contract. Only the
+caller and the contract can see the data sent to/received from the ParaTime.
+This ends up defeating some utility of block explorers, however.
+
+The status of the transaction is public and so are the error code, the revert
+message and logs (emitted events).
+
+### `from` Address is Zero for Unsigned Calls
+
+The `from` address using of calls is derived from a signature attached to the
+call. Unsigned calls have their sender set to the zero address. This allows
+contract authors to write getters that release secrets to authenticated callers
+(e.g. by checking the `msg.sender` value), but without requiring a transaction
+to be posted on-chain.
+
+### Override `receive` and `fallback` when Funding the Contract
+
+In Ethereum, you can fund a contract by sending Ether along the transaction in
+two ways:
+
+1. a transaction must call a *payable* function in the contract, or
+2. not calling any specific function (i.e. empty *calldata*). In this case,
+   the payable `receive()` and/or `fallback()` functions need to be defined in
+   the contract. If no such functions exist, the transaction will revert.
+
+The behavior described above is the same in Sapphire when using EVM transactions
+to fund a contract.
+
+However, the Oasis Network also uses [Oasis-native transactions] such as a
+deposit to a ParaTime account or a transfer. In this case, **you will be able to
+fund the contract's account even though the contract may not implement payable
+`receive()` or `fallback()`!** Or, if these functions do exist, **they will not
+be triggered**. You can send such Oasis-native transactions by using the [Oasis
+CLI] for example.
+
+[Oasis-native transactions]: https://github.com/oasisprotocol/docs/blob/main/docs/general/manage-tokens/README.mdx
+[Oasis CLI]: https://github.com/oasisprotocol/cli/blob/master/docs/README.md
+
+### Instant Finality
+
+The Oasis Network is a proof of stake network where 2/3+ of the validator nodes
+need to verify each block in order to consider it final. However, in Ethereum
+the signatures of those validator nodes can be submitted minutes after the block
+is proposed, which makes the block proposal mechanism independent of the
+validation, but adds uncertainty if and when will the proposed block actually be
+finalized.
+
+In the Oasis Network, the 2/3+ of signatures need to be provided immediately
+after the block is proposed and **the network will halt, until the required
+number signatures are provided**. This means that you can rest assured that any
+validated block is final. As a consequence, the cross-chain bridges are more
+responsive yet safe on the Oasis Network.
 
 ## Integrating Sapphire
 
-Once ROSE tokens are [deposited into Sapphire][how-to-deposit-rose], it should be painless for users to begin
-using dApps. To achieve this ideal user experience, we have to modify the dApp a little,
-but it's made simple by our compatibility library, [@oasisprotocol/sapphire-paratime].
+Once ROSE tokens are [deposited into Sapphire][how-to-deposit-rose], it should
+be painless for users to begin using dApps. To achieve this ideal user
+experience, we have to modify the dApp a little, but it's made simple by our
+compatibility library, [@oasisprotocol/sapphire-paratime].
 
 There are compatibility layers in other languages, which may be found in [the repo].
-
 
 [@oasisprotocol/sapphire-paratime]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 [the repo]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients
@@ -113,7 +175,7 @@ There are compatibility layers in other languages, which may be found in [the re
 ### Wallets
 
 Sapphire is compatible with popular self-custodial wallets including MetaMask,
-Ledger, Brave, and so forth. You can also use libraries like Web3.js and Ethers
+Ledger, Brave, and so forth. You can also use libraries like Ethers and Viem
 to create programmatic wallets. In general, if it generates secp256k1 signatures,
 it'll work just fine.
 
@@ -130,19 +192,20 @@ You can find the details of the Oasis Sapphire Web3 endpoints
 <!-- https://github.com/oasisprotocol/docs/blob/455980674563cad92ff1e1b62a7a5f2d4d6809f0/docs/general/images/architecture/client-km-compute.svg -->
 ![Client, Key Manager, Compute Node diagram](../../general/images/architecture/client-km-compute.svg)
 
-The figure above illustrates the flow of a confidential smart contract
-*transaction* executed on the Sapphire ParaTime.
+The figure above illustrates the flow of a **confidential smart contract
+transaction** on Sapphire.
 
 Transactions and calls must be encrypted and signed for maximum security.
-You can use the [@oasisprotocol/sapphire-paratime] JS package to make your life
+The [@oasisprotocol/sapphire-paratime] npm package will make your life
 easy. It'll handle cryptography and signing for you.
 
 You should be aware that taking actions based on the value of private data may
-leak the private data through side channels like time spent and gas use. If you
-need to branch on private data, you should in most cases ensure that both
-branches exhibit similar time/gas and storage patterns.
+**leak the private data through side channels** like time spent, gas use and
+accessed memory locations. If you need to branch on private data, you should in
+most cases ensure that both branches exhibit the same time/gas and storage
+patterns.
 
-You can also make confidential smart contract *calls* on Sapphire. If you
+You can also make **confidential smart contract calls** on Sapphire. If you
 use `msg.sender` for access control in your contract, the call **must be
 signed**, otherwise `msg.sender` will be zeroed. On the other hand, set the
 `from` address to all zeros, if you want to avoid annoying signature popups in
@@ -176,7 +239,7 @@ The Sapphire state model is like Ethereum's except for all state being encrypted
 and not accessible to anyone except the contract. The contract, executing in an
 active (attested) Oasis compute node is the only entity that can request its
 state encryption key from the Oasis key manager. Both the keys and values of the
-items stored in state are encrypted, but the size of either is *not* hidden. You
+items stored in state are encrypted, but the **size of either is not hidden**. Your
 app may need to pad state items to a constant length, or use other obfuscation.
 Observers may also be able to infer computation based on storage access patterns,
 so you may need to obfuscate that, too. See [Security chapter] for more
@@ -226,7 +289,7 @@ compiling contracts (Hardhat stores it inside the `artifacts/build-info` folder
 and names it as a 32-digit hex number). If your project contains multiple
 contracts, you will need to verify each contract separately.
 
-:::danger Contract deployment encryption
+:::warning Contract deployment encryption
 
 **Do not deploy your contract with an encrypted contract deployment transaction,
 if you want to verify it.** For example, if your `hardhat.config.ts`
@@ -317,37 +380,41 @@ docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet
 After a while, the tool will show you something like this:
 
 ```
-sapphire-localnet 2023-02-28-git84730b2 (oasis-core: 22.2.6, sapphire-paratime: 0.4.0, oasis-web3-gateway: 3.2.0-git84730b2)
+sapphire-localnet 2024-05-28-git37b7166 (oasis-core: 24.0-gitfb49717, sapphire-paratime: 0.7.3-testnet, oasis-web3-gateway: 5.1.0)
 
-Starting oasis-net-runner with sapphire...
-Starting postgresql...
-Starting oasis-web3-gateway...
-Bootstrapping network and populating account(s) (this might take a minute)...
+ * Starting oasis-net-runner with sapphire...
+ * Waiting for Postgres to start...
+ * Waiting for Oasis node to start.....
+ * Starting oasis-web3-gateway...
+ * Bootstrapping network (this might take a minute)...
+ * Waiting for key manager......
+ * Populating accounts...
 
 Available Accounts
 ==================
-(0) 0x75eCF0d4496C2f10e4e9aF3D4d174576Ee9010E2 (100 ROSE)
-(1) 0x903a7dce5a26a3f4DE2d157606c2191740Bc4BC9 (100 ROSE)
-(2) 0xF149ad5CBFfD92ba84F5784106f6Cb071A32a1b8 (100 ROSE)
-(3) 0x2315F40C1122400Df55483743B051D2997ef0a62 (100 ROSE)
-(4) 0xf6FdcacbA93A428A07d27dacEf1fBF25E2C65B0F (100 ROSE)
+(0) 0x41b0C13e747F8Cb1c4E980712504437cb1792327 (10000 TEST)
+(1) 0xa521f94f8a38b1d027D526017EB229327B9D6cA0 (10000 TEST)
+(2) 0x1e0f8369215D6C5Af5E14eD6A0D6ae7372776A79 (10000 TEST)
+(3) 0xB60cA28B491747a27C057AdBF3E71F3CCC52332C (10000 TEST)
+(4) 0x88D7d924e521a6d07008a373D5b33281148ffEDc (10000 TEST)
 
 Private Keys
 ==================
-(0) 0x160f52faa5c0aecfa26c793424a04d53cbf23dcad5901ce15b50c2e85b9d6ca7
-(1) 0x0ba685723b47d8e744b1b70a9bea9d4d968f60205385ae9de99865174c1af110
-(2) 0xfa990cf0c22af455d2734c879a2a844ff99bd779b400bb0e2919758d1be284b5
-(3) 0x3bf225ef73b1b56b03ceec8bb4dfb4830b662b073b312beb7e7fec3159b1bb4f
-(4) 0xad0dd7ceb896fd5f5ddc76d56e54ee6d5c2a3ffeac7714d3ef544d3d6262512c
+(0) 0x617346c545d62b8213ea907acf1b570a7405683e2c6dcaf963fc21fd677e0c56
+(1) 0xf82d6e09208b0bd44a397f7e73b05c564e6c9f70b151ee7677e2bb8d6ce5d882
+(2) 0xeb2f21d20086f3dd6bfe7184dad1cb8b0fb802f27b1334e836a19eda0a43a1c2
+(3) 0x82b0203d6063992b1052004b90411c45d4f3afab696346f006e74c6abd8f855e
+(4) 0x7179c6e1add3a2993822653b9c98fe606f47fb6d4c0d0d81b31b067cf6bb5f83
 
 HD Wallet
 ==================
-Mnemonic:       bench remain brave curve frozen verify dream margin alarm world repair innocent
+Mnemonic:       coach genre beach child crunch champion tell adult critic peace canoe stable
 Base HD Path:   m/44'/60'/0'/0/%d
 
 WARNING: The chain is running in ephemeral mode. State will be lost after restart!
 
-Listening on http://localhost:8545 and ws://localhost:8546
+ * Listening on http://localhost:8545 and ws://localhost:8546. Chain ID: 0x5afd
+ * Container start-up took 66 seconds, node log level is set to warn.
 ```
 
 Those familiar with local dApp environments will find the output above similar
