@@ -93,7 +93,7 @@ export function wrapEthereumProvider<P extends EIP2696_EthereumProvider>(
 
   const filled_options = fillOptions(options);
 
-  // if it providers a send() function but no request function
+  // if upstream provides a send() function but not request function
   // then derive a request() function from the send() function
   // if we do this, don't then re-wrap the send() function
   // only wrap the send() function if there was a request() function

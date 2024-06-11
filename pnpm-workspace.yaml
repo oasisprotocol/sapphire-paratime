@@ -10,4 +10,5 @@ packages:
   - examples/hardhat-viem
   - examples/onchain-signer
   - examples/wagmi-v2
+  - examples/wagmi-v1
 

@@ -9,8 +9,18 @@
 		"type": "git",
 		"url": "https://github.com/oasisprotocol/sapphire-paratime.git"
 	},
-	"keywords": ["sapphire", "paratime", "oasis", "web3", "viem"],
-	"files": ["dist", "!dist/*.tsbuildinfo", "src"],
+	"keywords": [
+		"sapphire",
+		"paratime",
+		"oasis",
+		"web3",
+		"viem"
+	],
+	"files": [
+		"dist",
+		"!dist/*.tsbuildinfo",
+		"src"
+	],
 	"sideEffects": false,
 	"main": "./dist/_cjs/index.js",
 	"module": "./dist/_esm/index.js",
@@ -29,6 +39,7 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"clean": "rm -rf dist",
+		"test": "vitest --run",
 		"build": "npm run build:cjs && npm run build:esm && npm run build:types",
 		"build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./dist/_cjs/package.json && node scripts/rename-cjs.js",
 		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
@@ -60,6 +71,7 @@
 		"@biomejs/biome": "^1.7.0",
 		"@types/node": "^18.19.31",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+		"vitest": "^1.6.0"
 	}
 }

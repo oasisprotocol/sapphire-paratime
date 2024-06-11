@@ -42,7 +42,7 @@ This monorepo includes the source code for the following Sapphire packages:
 [hardhat-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-hardhat
 [client-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-paratime
 [ethers-v6-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-ethers-v6
-[wagmi-v2-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-viem-v2
+[viem-v2-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-viem-v2
 [wagmi-v2-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-wagmi-v2
 
 [hardhat-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-hardhat
