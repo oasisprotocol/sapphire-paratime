@@ -6,7 +6,7 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
-## 1.3.3 (2024-04-05)
+## 2.0.0-alpha.1 (2024-06)
 
 ### Added
 

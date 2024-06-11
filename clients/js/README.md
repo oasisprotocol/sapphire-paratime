@@ -54,8 +54,7 @@ then you'll see this error.
 
 **Fix:** The simplest thing to do is connect a provider. Alternatively, you can pass in
 a pre-initialized `Cipher` object as the second argument to `wrap`; and then also generate
-signed queries manually using the `overrides` parameter to `SignedCallDataPack.make`. This
-latter approach
+signed queries manually using the `overrides` parameter to `SignedCallDataPack.make`.
 
 ## See Also
 

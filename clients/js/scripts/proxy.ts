@@ -1,8 +1,8 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 
-import { formatEther, getBytes, toBigInt, Transaction } from 'ethers';
+import { formatEther, toBigInt, Transaction } from 'ethers';
 
-import { Envelope, EnvelopeError } from '@oasisprotocol/sapphire-paratime';
+import { Envelope, EnvelopeError, getBytes } from '@oasisprotocol/sapphire-paratime';
 
 import { decode as cborgDecode } from 'cborg';
 
