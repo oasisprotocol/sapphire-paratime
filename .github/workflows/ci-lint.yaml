@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         id: pnpm-install
         with:
@@ -117,7 +117,7 @@ jobs:
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Lint Go
-        uses: golangci/golangci-lint-action@v5
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.56.2
           working-directory: ./clients/go

@@ -47,7 +47,7 @@ const fn state_version() -> u32 {
         6
     } else {
         // Mainnet.
-        2
+        3
     }
 }
 
@@ -133,8 +133,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 20398467,
-                hash: "1e3d05fa21e113a3dba76f24f1e93d41b418d214e0b2bb4cfa121170a08acf08".into(),
+                height: 21044750,
+                hash: "defbded6ddb4b9fda7dc6ed9d4c2b9b977a711495d7ba97028c4ba0b362326f8".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76"
@@ -143,8 +143,8 @@ impl sdk::Runtime for Runtime {
         } else {
             // Mainnet.
             Some(TrustRoot {
-                height: 16887695,
-                hash: "a3382aaaf7ff53c364ecddaf9577a819d415521d0b0a6362c9c3ea6a13a2356c".into(),
+                height: 19327937,
+                hash: "965b97464e8cb549926a0f39670025af9e0fdc271114cb1c9e7fdebb5516cd5f".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000f80306c9858e7279"
                     .into(),
                 chain_context: "bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55"
