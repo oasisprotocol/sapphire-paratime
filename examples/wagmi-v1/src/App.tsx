@@ -71,9 +71,9 @@ function App() {
 	const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
 	const [readResult, setReadResult] = useState<bigint | undefined>();
 	const publicClient = usePublicClient()!;
-	const [deployReceipt,setDeployReceipt] = useState<TransactionReceipt|undefined>(); // = waitForTransaction({ hash: deployHash, confirmations: 1 });
+	const [deployReceipt,setDeployReceipt] = useState<TransactionReceipt|undefined>();
 
-	const [writeReceipt,setWriteReceipt] = useState<TransactionReceipt|undefined>(); // = waitForTransaction({ hash: writeTxHash, confirmations: 1 });
+	const [writeReceipt,setWriteReceipt] = useState<TransactionReceipt|undefined>();
 
 	const { data: writeTxInfo } = useTransaction({hash: writeReceipt?.transactionHash});
 
