@@ -23,7 +23,11 @@ const config: HardhatUserConfig = {
     sapphire: { ...sapphireMainnet, accounts },
     'sapphire-testnet': { ...sapphireTestnet, accounts },
     'sapphire-localnet': { ...sapphireLocalnet, accounts },
-    'sapphire-localnet-proxy': { ...sapphireLocalnet, accounts, url: 'http://localhost:3001' },
+    'sapphire-localnet-proxy': {
+      ...sapphireLocalnet,
+      accounts,
+      url: 'http://localhost:3001',
+    },
   },
   solidity: '0.8.24',
   mocha: {
