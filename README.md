@@ -13,13 +13,13 @@ This monorepo includes the source code for the following Sapphire packages:
 
 | Sub-Project                               | Version                                        | Size                                              | Downloads                         |
 | ----------------------------------------- | ---------------------------------------------- | ------------------------------------------------- | --------------------------------- |
-| [TypeScript client][client-npm]           | [![version][client-version]][client-npm]       | [![size][client-size]][client-bundlephobia]       | ![downloads][client-downloads]    |
-| [Go client][go-pkg]                       | [![version][go-version]][go-pkg]               |                                                   |                                   |
-| [Solidity smart contracts][contracts-npm] | [![version][contracts-version]][contracts-npm] |                                                   | ![downloads][contracts-downloads] |
-| [Hardhat plugin][hardhat-npm]             | [![version][hardhat-version]][hardhat-npm]     | [![size][hardhat-size]][hardhat-bundlephobia]     | ![downloads][hardhat-downloads]   |
-| [Ethers 6.x support][ethers-v6-npm]       | [![version][ethers-v6-version]][ethers-v6-npm] | [![size][ethers-v6-size]][ethers-v6-bundlephobia] | ![downloads][ethers-v6-downloads] |
-| [Wagmi 2.x support][wagmi-v2-npm]         | [![version][wagmi-v2-version]][wagmi-v2-npm]   | [![size][wagmi-v2-size]][wagmi-v2-bundlephobia]   | ![downloads][wagmi-v2-downloads]  |
-| [Viem 2.x support][viem-v2-npm]           | [![version][viem-v2-version]][viem-v2-npm]     | [![size][viem-v2-size]][viem-v2-bundlephobia]     | ![downloads][viem-v2-downloads]   |
+| [TypeScript][client-npm]           | [![version][client-version]][client-npm]       | [![size][client-size]][client-bundlephobia]       | ![downloads][client-downloads]    |
+| [Go][go-pkg]                       | [![version][go-version]][go-pkg]               |                                                   |                                   |
+| [Solidity][contracts-npm] | [![version][contracts-version]][contracts-npm] |                                                   | ![downloads][contracts-downloads] |
+| [Hardhat][hardhat-npm]             | [![version][hardhat-version]][hardhat-npm]     | [![size][hardhat-size]][hardhat-bundlephobia]     | ![downloads][hardhat-downloads]   |
+| [Ethers 6.x][ethers-v6-npm]       | [![version][ethers-v6-version]][ethers-v6-npm] | [![size][ethers-v6-size]][ethers-v6-bundlephobia] | ![downloads][ethers-v6-downloads] |
+| [Wagmi 2.x][wagmi-v2-npm]         | [![version][wagmi-v2-version]][wagmi-v2-npm]   | [![size][wagmi-v2-size]][wagmi-v2-bundlephobia]   | ![downloads][wagmi-v2-downloads]  |
+| [Viem 2.x][viem-v2-npm]           | [![version][viem-v2-version]][viem-v2-npm]     | [![size][viem-v2-size]][viem-v2-bundlephobia]     | ![downloads][viem-v2-downloads]   |
 
 
 [go-pkg]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime
