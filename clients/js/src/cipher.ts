@@ -18,7 +18,7 @@ import { BytesLike, isBytesLike, getBytes, hexlify } from './ethersutils.js';
 /**
  * Some Ethereum libraries are picky about hex encoding vs Uint8Array
  *
- * The ethers BytesLike type can be either, so the request came as a hex encoded
+ * The ethers BytesLike type can be either, if the request came as a hex encoded
  * string we should return hex encoded string, if request came as Uint8Array we
  * should return one.
  *
