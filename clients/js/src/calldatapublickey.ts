@@ -111,6 +111,9 @@ export async function fetchRuntimePublicKeyByChainId(
     throw new Error('No fetch implementation found!');
   }
   const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl);
+  if( ! res.result ) {
+    throw new Error(`fetchRuntimePublicKeyByChainId failed, empty result in: ${JSON.stringify(res)}`);
+  }
   return toCallDataPublicKey(res.result, chainId);
 }
 
@@ -170,7 +173,7 @@ export class KeyFetcher {
    * Retrieve cached key if possible, otherwise fetch a fresh one
    *
    * @param upstream Upstream ETH JSON-RPC provider
-   * @returns calldata public key`
+   * @returns calldata public key
    */
   public async fetch(
     upstream: EIP2696_EthereumProvider,

@@ -165,13 +165,14 @@ async function verifyTransactionEncryption(contract: Contract) {
 describe("Ethers v6 + Sapphire", () => {
 	let wallet1: Wallet;
 	let contract: Contract;
+	let rawProvider1: JsonRpcProvider;
 
 	before(async function () {
 		this.timeout(10000);
 
 		wallet1 = new Wallet(WELL_KNOWN_WALLET_PRIVATE_KEY);
 
-		const rawProvider1 = new JsonRpcProvider(NETWORKS.localnet.defaultGateway);
+		rawProvider1 = new JsonRpcProvider(NETWORKS.localnet.defaultGateway);
 		const provider1 = wrapEthersProvider(rawProvider1);
 
 		const cw1 = wallet1.connect(provider1);

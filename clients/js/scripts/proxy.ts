@@ -22,6 +22,10 @@ const ALLOW_UNENCRYPTED_DEPLOYS = true;
 const UPSTREAM_URL = 'http://127.0.0.1:8545';
 const SHOW_ENCRYPTED_RESULTS = false;
 const SHOW_ENCRYPTED_REQUESTS = false;
+
+// These are the first 4 'test' accounts
+// It's assumed that all tests from these addresses require transaction encryption
+// This is to verify that the client encryption wrapper is working correctly.
 const DISALLOW_UNENCRYPTED_ONLY_FROM = [
   '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
   '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
