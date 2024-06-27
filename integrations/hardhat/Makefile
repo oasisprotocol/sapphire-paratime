@@ -6,10 +6,10 @@ build lint format test::
 	$(NPM) $@
 
 clean:
-	rm -rf dist artifacts cache typechain-types
+	rm -rf dist artifacts cache typechain-types ignition/deployments
 
-distclean:
-	rm -rf node_modules *.tgz ignition/deployments
+distclean: clean
+	rm -rf node_modules *.tgz
 
 dependencies:
 	$(MAKE) -C ../../clients/js full
