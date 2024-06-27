@@ -1,0 +1,67 @@
+{
+	"type": "module",
+	"name": "@oasisprotocol/sapphire-ethers-v6",
+	"license": "Apache-2.0",
+	"version": "6.0.0-alpha.0",
+	"description": "Ethers v6 support for the Oasis Sapphire ParaTime.",
+	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/ethers-v6",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/oasisprotocol/sapphire-paratime.git"
+	},
+	"keywords": ["sapphire", "paratime", "oasis", "web3", "viem"],
+	"files": ["dist", "!dist/*.tsbuildinfo", "src"],
+	"sideEffects": false,
+	"main": "./dist/_cjs/index.js",
+	"module": "./dist/_esm/index.js",
+	"types": "./dist/_types/index.d.ts",
+	"typings": "./dist/_types/index.d.ts",
+	"exports": {
+		"node": {
+			"import": "./dist/_esm/index.js",
+			"require": "./dist/_cjs/index.cjs",
+			"types": "./dist/_types/index.d.ts"
+		},
+		"types": "./dist/_types/index.d.ts",
+		"default": "./dist/_esm/index.js"
+	},
+	"scripts": {
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+		"build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./dist/_cjs/package.json && node scripts/rename-cjs.js",
+		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
+		"build:types": "tsc --project ./tsconfig.build.json --module esnext --declarationDir ./dist/_types --emitDeclarationOnly --declaration --declarationMap",
+		"clean": "rm -rf dist",
+		"prepublishOnly": "npm run build",
+		"test": "c8 --reporter=text --reporter=html mocha"
+	},
+	"dependencies": {
+		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"ethers": "6.x"
+	},
+	"peerDependencies": {
+		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"ethers": "6.x",
+		"typescript": ">=5.0.4"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		},
+		"@oasisprotocol/sapphire-paratime": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.6.3",
+		"@types/chai": "^4.3.14",
+		"@types/mocha": "^9.1.1",
+		"@types/node": "^18.19.28",
+		"c8": "^9.1.0",
+		"chai": "^5.1.0",
+		"mocha": "^10.4.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.3.3"
+	}
+}

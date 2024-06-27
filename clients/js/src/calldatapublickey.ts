@@ -1,27 +1,40 @@
-import { getBytes } from 'ethers';
+// SPDX-License-Identifier: Apache-2.0
 
-import { UpstreamProvider, EIP1193Provider } from './interfaces.js';
-import { CallError, OASIS_CALL_DATA_PUBLIC_KEY } from './index.js';
+import { fromQuantity, getBytes } from './ethersutils.js';
+import type { EIP2696_EthereumProvider } from './provider.js';
 import { NETWORKS } from './networks.js';
-import { Cipher, Mock as MockCipher, X25519DeoxysII } from './cipher.js';
+import { Cipher, X25519DeoxysII } from './cipher.js';
 
-const DEFAULT_PUBKEY_CACHE_EXPIRATION_MS = 60 * 5 * 1000; // 5 minutes in milliseconds
+/**
+ * calldata public keys are cached for this amount of time
+ * This prevents frequent unnecessary re-fetches
+ * This time is in milliseconds
+ */
+const DEFAULT_PUBKEY_CACHE_EXPIRATION_MS = 60 * 5 * 1000;
+
+export const OASIS_CALL_DATA_PUBLIC_KEY = 'oasis_callDataPublicKey';
 
 // -----------------------------------------------------------------------------
 // Fetch calldata public key
 // Well use provider when possible, and fallback to HTTP(S)? requests
 // e.g. MetaMask doesn't allow the oasis_callDataPublicKey JSON-RPC method
 
-type RawCallDataPublicKeyResponseResult = {
+export type RawCallDataPublicKeyResponseResult = {
   key: string;
   checksum: string;
   signature: string;
   epoch: number;
 };
 
-type RawCallDataPublicKeyResponse = {
+export type RawCallDataPublicKeyResponse = {
   result: RawCallDataPublicKeyResponseResult;
 };
+
+export class FetchError extends Error {
+  public constructor(message: string, public readonly response?: unknown) {
+    super(message);
+  }
+}
 
 export interface CallDataPublicKey {
   // PublicKey is the requested public key.
@@ -58,37 +71,7 @@ function toCallDataPublicKey(
   } as CallDataPublicKey;
 }
 
-// TODO: remove, this is unecessary, node has `fetch` now?
-async function fetchRuntimePublicKeyNode(
-  gwUrl: string,
-): Promise<RawCallDataPublicKeyResponse> {
-  // Import http or https, depending on the URI scheme.
-  const https = await import(/* webpackIgnore: true */ gwUrl.split(':')[0]);
-
-  const body = makeCallDataPublicKeyBody();
-  return new Promise((resolve, reject) => {
-    const opts = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'content-length': body.length,
-      },
-    };
-    const req = https.request(gwUrl, opts, (res: any) => {
-      const chunks: Buffer[] = [];
-      res.on('error', (err: any) => reject(err));
-      res.on('data', (chunk: any) => chunks.push(chunk));
-      res.on('end', () => {
-        resolve(JSON.parse(Buffer.concat(chunks).toString()));
-      });
-    });
-    req.on('error', (err: Error) => reject(err));
-    req.write(body);
-    req.end();
-  });
-}
-
-async function fetchRuntimePublicKeyBrowser(
+export async function fetchRuntimePublicKeyFromURL(
   gwUrl: string,
   fetchImpl: typeof fetch,
 ): Promise<RawCallDataPublicKeyResponse> {
@@ -100,7 +83,7 @@ async function fetchRuntimePublicKeyBrowser(
     body: makeCallDataPublicKeyBody(),
   });
   if (!res.ok) {
-    throw new CallError('Failed to fetch runtime public key.', res);
+    throw new FetchError('Failed to fetch runtime public key.', res);
   }
   return await res.json();
 }
@@ -124,69 +107,49 @@ export async function fetchRuntimePublicKeyByChainId(
       `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
     );
   const fetchImpl = opts?.fetch ?? globalThis?.fetch;
-  const res = await (fetchImpl
-    ? fetchRuntimePublicKeyBrowser(defaultGateway, fetchImpl)
-    : fetchRuntimePublicKeyNode(defaultGateway));
-  return toCallDataPublicKey(res.result, chainId);
-}
-
-function fromQuantity(x: number | string): number {
-  if (typeof x === 'string') {
-    if (x.startsWith('0x')) {
-      return parseInt(x, 16);
-    }
-    return parseInt(x); // Assumed to be base 10
+  if (!fetchImpl) {
+    throw new Error('No fetch implementation found!');
   }
-  return x;
+  const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl);
+  if (!res.result) {
+    throw new Error(
+      `fetchRuntimePublicKeyByChainId failed, empty result in: ${JSON.stringify(
+        res,
+      )}`,
+    );
+  }
+  return toCallDataPublicKey(res.result, chainId);
 }
 
 /**
  * Picks the most user-trusted runtime calldata public key source based on what
  * connections are available.
  *
- * NOTE: MetaMask does not support Web3 methods it doesn't know about, so we have to
- *       fall-back to manually querying the default gateway.
+ * NOTE: MetaMask does not support Web3 methods it doesn't know about, so we
+ *       have to fall-back to fetch()ing directly via the default chain gateway.
  */
 export async function fetchRuntimePublicKey(
-  upstream: UpstreamProvider,
-): Promise<CallDataPublicKey> {
-  const provider = 'provider' in upstream ? upstream['provider'] : upstream;
-  let chainId: number | undefined;
-  if (provider) {
-    let resp;
-    // It's probably an EIP-1193 provider
-    if ('request' in provider) {
-      const source = provider as EIP1193Provider;
-      chainId = fromQuantity(
-        (await source.request({ method: 'eth_chainId' })) as string | number,
-      );
-      try {
-        resp = await source.request({
-          method: OASIS_CALL_DATA_PUBLIC_KEY,
-          params: [],
-        });
-      } catch (ex) {
-        // don't do anything, move on to try next
-      }
+  args: { upstream: EIP2696_EthereumProvider } | { chainId: number },
+) {
+  let chainId: number | undefined = undefined;
+  if ('upstream' in args) {
+    let resp: any | undefined = undefined;
+    const { upstream } = args;
+    chainId = fromQuantity(
+      (await upstream.request({
+        method: 'eth_chainId',
+      })) as string | number,
+    );
+
+    try {
+      resp = await upstream.request({
+        method: OASIS_CALL_DATA_PUBLIC_KEY,
+        params: [],
+      });
+    } catch (ex) {
+      // ignore RPC errors / failures
     }
-    // If it's a `send` provider
-    else if ('send' in provider) {
-      const source = provider as {
-        send: (method: string, params: any[]) => Promise<any>;
-      };
-      chainId = fromQuantity(await source.send('eth_chainId', []));
-      try {
-        resp = await source.send(OASIS_CALL_DATA_PUBLIC_KEY, []);
-      } catch (ex) {
-        // don't do anything, move on to try chainId fetch
-      }
-    }
-    // Otherwise, we have no idea what to do with this provider!
-    else {
-      throw new Error(
-        'fetchRuntimePublicKey does not support non-request non-send provier!',
-      );
-    }
+
     if (resp && 'key' in resp) {
       return toCallDataPublicKey(resp, chainId);
     }
@@ -200,22 +163,15 @@ export async function fetchRuntimePublicKey(
   return fetchRuntimePublicKeyByChainId(chainId);
 }
 
-export abstract class AbstractKeyFetcher {
-  public abstract fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey>;
-  public abstract cipher(upstream: UpstreamProvider): Promise<Cipher>;
-}
-
-export class KeyFetcher extends AbstractKeyFetcher {
-  readonly timeoutMilliseconds: number;
+/**
+ * Retrieves calldata public keys from RPC provider
+ */
+export class KeyFetcher {
   public pubkey?: CallDataPublicKey;
 
-  constructor(in_timeoutMilliseconds?: number) {
-    super();
-    if (!in_timeoutMilliseconds) {
-      in_timeoutMilliseconds = DEFAULT_PUBKEY_CACHE_EXPIRATION_MS;
-    }
-    this.timeoutMilliseconds = in_timeoutMilliseconds;
-  }
+  constructor(
+    readonly timeoutMilliseconds: number = DEFAULT_PUBKEY_CACHE_EXPIRATION_MS,
+  ) {}
 
   /**
    * Retrieve cached key if possible, otherwise fetch a fresh one
@@ -223,37 +179,33 @@ export class KeyFetcher extends AbstractKeyFetcher {
    * @param upstream Upstream ETH JSON-RPC provider
    * @returns calldata public key
    */
-  public async fetch(upstream: UpstreamProvider): Promise<CallDataPublicKey> {
+  public async fetch(
+    upstream: EIP2696_EthereumProvider,
+  ): Promise<CallDataPublicKey> {
+    if (upstream === undefined) {
+      throw new Error('fetch() Upstream must not be undefined!');
+    }
     if (this.pubkey) {
       const pk = this.pubkey;
       const expiry = Date.now() - this.timeoutMilliseconds;
-      if (pk.fetched && pk.fetched.valueOf() > expiry) {
+      if (pk.fetched && pk.fetched.valueOf() >= expiry) {
         // XXX: if provider switch chain, may return cached key for wrong chain
         return pk;
       }
     }
-    return (this.pubkey = await fetchRuntimePublicKey(upstream));
+    return (this.pubkey = await fetchRuntimePublicKey({ upstream }));
   }
 
-  public async cipher(upstream: UpstreamProvider): Promise<Cipher> {
-    const kp = await this.fetch(upstream);
-    return X25519DeoxysII.ephemeral(kp.key, kp.epoch);
-  }
-}
-
-export class MockKeyFetcher extends AbstractKeyFetcher {
-  #_cipher: MockCipher;
-
-  constructor(in_cipher: MockCipher) {
-    super();
-    this.#_cipher = in_cipher;
+  public async cipher(upstream: EIP2696_EthereumProvider): Promise<Cipher> {
+    const { key, epoch } = await this.fetch(upstream);
+    return X25519DeoxysII.ephemeral(key, epoch);
   }
 
-  public async fetch(): Promise<CallDataPublicKey> {
-    throw new Error("MockKeyFetcher doesn't support fetch(), only cipher()");
-  }
-
-  public async cipher(): Promise<Cipher> {
-    return this.#_cipher;
+  public cipherSync() {
+    if (!this.pubkey) {
+      throw new Error('No cached pubkey!');
+    }
+    const { key, epoch } = this.pubkey;
+    return X25519DeoxysII.ephemeral(key, epoch);
   }
 }

@@ -6,6 +6,28 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 2.0.0-alpha.1 (2024-06)
+
+### Added
+
+- Wagmi v2 & Viem v2 support, with `hardhat-viem` & wagmi examples
+
+### Fixed
+
+- Calldata public key encryption/decryption routines are no longer async
+- KeyFetcher has `runInBackground` method to eagerly fetch the keys
+
+### Changed
+
+- Supports only Node v18+
+
+## 1.3.2 (2024-02-06)
+
+### Changed
+
+- Refactored calldata public key handling
+- Added `epoch` support for calldata public key, which makes web UIs which are open for a long time more reliable
+
 ## 1.3.1 (2024-01-26)
 
 ### Fixed

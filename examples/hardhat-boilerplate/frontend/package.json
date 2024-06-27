@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "react-scripts": "5.0.1",
+    "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {

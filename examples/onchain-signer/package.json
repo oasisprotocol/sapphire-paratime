@@ -13,13 +13,15 @@
     "format:prettier": "prettier --write --plugin=prettier-plugin-solidity '*.json' '**/*.ts' '**/*.sol'",
     "format": "npm-run-all format:**",
     "build": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test --network sapphire-localnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "@nomicfoundation/hardhat-ignition": "^0.15.1",
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.1",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-verify": "^2.0.2",
     "@oasisprotocol/sapphire-contracts": "workspace:^",
     "@oasisprotocol/sapphire-hardhat": "workspace:^",

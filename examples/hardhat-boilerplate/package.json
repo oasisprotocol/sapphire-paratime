@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "A boilerplate repository to get you started with Hardhat and Ethereum development",
   "scripts": {
-    "test": "hardhat test"
+    "build": "hardhat compile --force",
+    "test": "hardhat --network sapphire-localnet test",
+    "run-deploy": "hardhat run --network sapphire-localnet scripts/deploy.js"
   },
   "repository": {
     "type": "git",

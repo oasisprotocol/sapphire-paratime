@@ -1,0 +1,15 @@
+{
+	// This configuration is used for local development and type checking.
+	"extends": "./tsconfig.base.json",
+	"include": ["src", "test"],
+	"exclude": [],
+	"compilerOptions": {
+		"baseUrl": ".",
+		"resolveJsonModule": true,
+		"types": ["mocha", "chai"],
+		"paths": {
+			"@oasisprotocol/sapphire-ethers-v6": ["./src/index"],
+			"@oasisprotocol/sapphire-ethers-v6/*": ["./src/*"]
+		}
+	}
+}

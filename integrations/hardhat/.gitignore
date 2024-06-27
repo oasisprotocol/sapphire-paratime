@@ -1,1 +1,5 @@
 dist/
+cache/
+artifacts/
+typechain-types/
+ignition/deployments/
