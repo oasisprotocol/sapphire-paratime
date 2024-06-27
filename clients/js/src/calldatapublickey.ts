@@ -111,8 +111,12 @@ export async function fetchRuntimePublicKeyByChainId(
     throw new Error('No fetch implementation found!');
   }
   const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl);
-  if( ! res.result ) {
-    throw new Error(`fetchRuntimePublicKeyByChainId failed, empty result in: ${JSON.stringify(res)}`);
+  if (!res.result) {
+    throw new Error(
+      `fetchRuntimePublicKeyByChainId failed, empty result in: ${JSON.stringify(
+        res,
+      )}`,
+    );
   }
   return toCallDataPublicKey(res.result, chainId);
 }
