@@ -52,7 +52,7 @@ library Subcall {
     error InvalidMap();
 
     /// While parsing CBOR structure, data length was unexpected
-    error InvalidLength(uint);
+    error InvalidLength(uint256);
 
     /// Invalid receipt ID
     error InvalidReceiptId();
@@ -189,32 +189,26 @@ library Subcall {
         returns (uint256 newOffset, uint256 value)
     {
         uint8 prefix = uint8(result[offset]);
-        uint len;
+        uint256 len;
 
-        if( prefix <= 0x17 ) {
+        if (prefix <= 0x17) {
             return (offset + 1, prefix);
         }
         // byte array, parsed as a big-endian integer
-        else if ( prefix & 0x40 == 0x40 )
-        {
+        else if (prefix & 0x40 == 0x40) {
             len = uint8(result[offset++]) ^ 0x40;
         }
         // unsigned integer, CBOR encoded
-        else if( prefix & 0x10 == 0x10 )
-        {
-            if( prefix == 0x18 ) {
+        else if (prefix & 0x10 == 0x10) {
+            if (prefix == 0x18) {
                 len = 1;
-            }
-            else if( prefix == 0x19 ) {
+            } else if (prefix == 0x19) {
                 len = 2;
-            }
-            else if( prefix == 0x1a ) {
+            } else if (prefix == 0x1a) {
                 len = 4;
-            }
-            else if( prefix == 0x1b ) {
+            } else if (prefix == 0x1b) {
                 len = 8;
-            }
-            else {
+            } else {
                 revert InvalidUintSize(prefix);
             }
             offset += 1;

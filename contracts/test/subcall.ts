@@ -289,10 +289,14 @@ describe('Subcall', () => {
     expect(result.receipt).eq(nextReceiptId);
 
     // Try decoding undelegate start receipt
-    const undelegateDecoded = await contract.testDecodeReceiptUndelegateStart(resultBytes);
+    const undelegateDecoded = await contract.testDecodeReceiptUndelegateStart(
+      resultBytes,
+    );
     expect(undelegateDecoded[1]).eq(result.receipt);
 
-    const initialContractBalance = await ethers.provider.getBalance(await contract.getAddress())
+    const initialContractBalance = await ethers.provider.getBalance(
+      await contract.getAddress(),
+    );
 
     await dockerSkipEpochs({ targetEpoch: result.epoch });
 
