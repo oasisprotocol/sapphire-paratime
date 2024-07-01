@@ -299,9 +299,6 @@ library Subcall {
                 (offset, endReceipt) = _parseCBORUint64(result, offset);
 
                 hasReceipt = true;
-            } else {
-                // TODO: skip unknown keys & values? For forward compatibility
-                revert InvalidKey();
             }
         }
 
@@ -328,9 +325,6 @@ library Subcall {
                 (offset, amount) = _parseCBORUint128(result, offset);
 
                 hasAmount = true;
-            } else {
-                // TODO: skip unknown keys & values? For forward compatibility
-                revert InvalidKey();
             }
         }
 
