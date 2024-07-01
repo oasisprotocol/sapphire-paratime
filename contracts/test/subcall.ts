@@ -78,7 +78,9 @@ async function ensureBalance(
     await resp.wait();
   }
   const newBalance = await provider.getBalance(address);
-  expect(newBalance).eq(initialBalance);
+  expect(newBalance).gte(initialBalance);
+
+  return newBalance;
 }
 
 function decodeResult(receipt: ContractTransactionReceipt) {
@@ -240,8 +242,7 @@ describe('Subcall', () => {
     );
 
     // Ensure contract has an initial balance, above minimum delegation amount
-    const initialBalance = parseEther('100');
-    await ensureBalance(contract, initialBalance, owner);
+    await ensureBalance(contract, parseEther('100'), owner);
 
     // Perform delegation, and request a receipt
     let receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
@@ -283,17 +284,25 @@ describe('Subcall', () => {
     // Retrieve UndelegateStart receipt
     tx = await contract.testTakeReceipt(2, nextReceiptId);
     receipt = await tx.wait();
-    result = cborg.decode(getBytes((receipt?.logs![0] as EventLog).args!.data));
+    let resultBytes = (receipt?.logs![0] as EventLog).args!.data;
+    result = cborg.decode(getBytes(resultBytes));
     expect(result.receipt).eq(nextReceiptId);
+
+    // Try decoding undelegate start receipt
+    const undelegateDecoded = await contract.testDecodeReceiptUndelegateStart(resultBytes);
+    expect(undelegateDecoded[1]).eq(result.receipt);
+
+    const initialContractBalance = await ethers.provider.getBalance(await contract.getAddress())
 
     await dockerSkipEpochs({ targetEpoch: result.epoch });
 
-    // Retrieve UndelegateStart receipt
+    // Retrieve UndelegateDone receipt
     tx = await contract.testTakeReceipt(3, result.receipt);
     receipt = await tx.wait();
-    result = cborg.decode(getBytes((receipt?.logs![0] as EventLog).args!.data));
+    resultBytes = (receipt?.logs![0] as EventLog).args!.data;
+    result = cborg.decode(getBytes(resultBytes));
     expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
-      parseEther('100'),
+      initialContractBalance + parseEther('100'),
     );
   });
 
