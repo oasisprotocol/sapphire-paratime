@@ -194,7 +194,7 @@ library Subcall {
         if (prefix <= 0x17) {
             return (offset + 1, prefix);
         }
-        // byte array, parsed as a big-endian integer
+        // Byte array, parsed as a big-endian integer.
         else if (prefix & 0x40 == 0x40) {
             len = uint8(result[offset++]) ^ 0x40;
         }
