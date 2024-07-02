@@ -198,7 +198,7 @@ library Subcall {
         else if (prefix & 0x40 == 0x40) {
             len = uint8(result[offset++]) ^ 0x40;
         }
-        // unsigned integer, CBOR encoded
+        // Unsigned integer, CBOR encoded.
         else if (prefix & 0x10 == 0x10) {
             if (prefix == 0x18) {
                 len = 1;
