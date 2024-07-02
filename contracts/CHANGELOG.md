@@ -6,6 +6,12 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.9 (2024-07-01)
+
+### Fixed
+
+ * CBOR unsigned integer decoding in Subcall.sol
+
 ## 0.2.8 (2024-03-15)
 
 ### Fixed
