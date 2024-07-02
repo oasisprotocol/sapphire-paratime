@@ -63,7 +63,7 @@ library Subcall {
     /// CBOR parser expected a key, but it was not found in the map!
     error MissingKey();
 
-    /// Valid cannot be parsed as a uint
+    /// Value cannot be parsed as a uint
     error InvalidUintPrefix(uint8);
 
     /// Unsigned integer of unknown size
