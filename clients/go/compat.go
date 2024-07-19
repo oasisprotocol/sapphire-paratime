@@ -116,21 +116,13 @@ func PackSignedCall(msg ethereum.CallMsg, cipher Cipher, sign SignerFn, chainID 
 	return &msg, nil
 }
 
-// WrappedBackend implements bind.ContractBackend.
+// WrappedBackend implements bind.ContractBackend and bind.DeployBackend.
 type WrappedBackend struct {
-	backend bind.ContractBackend
-	chainID big.Int
-	cipher  Cipher
-	sign    SignerFn
-}
-
-func NewWrappedBackend(backend bind.ContractBackend, chainID big.Int, cipher Cipher, sign SignerFn) WrappedBackend {
-	return WrappedBackend{
-		backend: backend,
-		chainID: chainID,
-		cipher:  cipher,
-		sign:    sign,
-	}
+	backend       bind.ContractBackend
+	deployBackend bind.DeployBackend
+	chainID       big.Int
+	cipher        Cipher
+	sign          SignerFn
 }
 
 // NewCipher creates a default cipher with encryption support.
@@ -154,7 +146,7 @@ func NewCipher(chainID uint64) (Cipher, error) {
 }
 
 // WrapClient wraps an ethclient.Client so that it can talk to Sapphire.
-func WrapClient(c *ethclient.Client, sign SignerFn) (bind.ContractBackend, error) {
+func WrapClient(c *ethclient.Client, sign SignerFn) (*WrappedBackend, error) {
 	chainID, err := c.ChainID(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch chain ID: %w", err)
@@ -164,10 +156,11 @@ func WrapClient(c *ethclient.Client, sign SignerFn) (bind.ContractBackend, error
 		return nil, err
 	}
 	return &WrappedBackend{
-		backend: c,
-		chainID: *chainID,
-		cipher:  cipher,
-		sign:    sign,
+		backend:       c,
+		deployBackend: c,
+		chainID:       *chainID,
+		cipher:        cipher,
+		sign:          sign,
 	}, nil
 }
 
@@ -197,7 +190,7 @@ func (b WrappedBackend) Transactor(from common.Address) *bind.TransactOpts {
 	}
 }
 
-// CodeAt implements ContractCaller.
+// CodeAt implements ContractCaller and DeployBackend.
 func (b WrappedBackend) CodeAt(ctx context.Context, contract common.Address, blockNumber *big.Int) ([]byte, error) {
 	return b.backend.CodeAt(ctx, contract, blockNumber)
 }
@@ -316,4 +309,9 @@ func (b WrappedBackend) FilterLogs(ctx context.Context, query ethereum.FilterQue
 // SubscribeFilterLogs implements ContractFilterer.
 func (b WrappedBackend) SubscribeFilterLogs(ctx context.Context, query ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error) {
 	return b.backend.SubscribeFilterLogs(ctx, query, ch)
+}
+
+// TransactionReceipt implements DeployBackend.
+func (b WrappedBackend) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
+	return b.deployBackend.TransactionReceipt(ctx, txHash)
 }
