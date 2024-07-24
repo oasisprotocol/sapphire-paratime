@@ -178,23 +178,47 @@ library Subcall {
     }
 
     function _parseCBORUint(bytes memory result, uint256 offset)
-        public
-        pure
-        returns (uint256 newOffset, uint256 value)
+    public
+    pure
+    returns (uint256 newOffset, uint256 value)
     {
-        if (result[offset] & 0x40 != 0x40) revert InvalidLength();
+        bytes1 UINT8_CODEC = 0x18;
+        bytes1 UINT32_CODEC = 0x1A;
+        bytes1 UINT64_CODEC = 0x1B;
+        bytes1 UINT128_CODEC = 0x1D;
+        bytes1 NEGATIVE_INT_CODEC = 0xC0;
 
-        uint256 len = uint8(result[offset++]) ^ 0x40;
+        if (result[offset] == UINT8_CODEC) {
+            value = uint8(result[offset + 1]);
+            newOffset = offset + 2;
+        } else if (result[offset] == UINT32_CODEC) {
+            for (uint8 i = 0; i < 4; i++) {
+                value |= uint32(uint8(result[offset + i + 1])) << ((3 - i) * 8);
+            }
+            newOffset = offset + 5;
+        } else if (result[offset] == UINT64_CODEC) {
+            for (uint8 i = 0; i < 8; i++) {
+                value |= uint64(uint8(result[offset + i + 1])) << ((7 - i) * 8);
+            }
+            newOffset = offset + 9;
+        } else if (result[offset] == UINT128_CODEC) {
+            for (uint8 i = 0; i < 16; i++) {
+                value |= uint128(uint8(result[offset + i + 1])) << ((15 - i) * 8);
+            }
+            newOffset = offset + 17;
+        } else if ((result[offset] & 0xE0) == NEGATIVE_INT_CODEC) {
+            uint8 additionalBytes = uint8(result[offset] & 0x1F);
+            if (additionalBytes > 0x18) revert InvalidLength();
 
-        if (len >= 0x20) revert InvalidLength();
-
-        assembly {
-            value := mload(add(add(0x20, result), offset))
+            value = 0;
+            for (uint256 i = 1; i <= additionalBytes; i++) {
+                value <<= 8;
+                value |= uint8(result[offset + i]);
+            }
+            newOffset = offset + additionalBytes + 1;
+        } else {
+            revert InvalidLength();
         }
-
-        value = value >> (256 - (len * 8));
-
-        newOffset = offset + len;
     }
 
     function _parseCBORUint64(bytes memory result, uint256 offset)
