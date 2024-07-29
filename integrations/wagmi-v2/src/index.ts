@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { wrapEthereumProvider } from "@oasisprotocol/sapphire-paratime";
-import { injected } from "@wagmi/core";
+import { type InjectedParameters, injected } from "@wagmi/core";
 import type { EIP1193Provider } from "viem";
 
 export * from "@oasisprotocol/sapphire-viem-v2";
@@ -55,5 +55,5 @@ export function injectedWithSapphire(): ReturnType<typeof injected> {
 				},
 			};
 		},
-	});
+	} as InjectedParameters);
 }
