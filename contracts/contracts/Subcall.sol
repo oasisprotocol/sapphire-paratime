@@ -176,6 +176,11 @@ library Subcall {
             (uint64, bytes)
         );
 
+        // 0xf6 = null, returns null in case receiptId not found
+        if (result[0] == 0xf6) {
+            revert InvalidReceiptId();
+        }
+
         if (status != 0) {
             revert ConsensusTakeReceiptError(status, string(result));
         }
