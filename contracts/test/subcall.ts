@@ -106,7 +106,13 @@ describe('Subcall', () => {
   let provider: Provider;
 
   before(async () => {
-    const factory = await ethers.getContractFactory('SubcallTests');
+    const subcallFactory = await ethers.getContractFactory('Subcall');
+    const subcallLib = await subcallFactory.deploy();
+    await subcallLib.waitForDeployment();
+
+    const factory = await ethers.getContractFactory('SubcallTests', {
+      libraries: { Subcall: await subcallLib.getAddress() },
+    });
     contract = (await factory.deploy({
       value: parseEther('1.0'),
     })) as unknown as SubcallTests;
@@ -362,5 +368,107 @@ describe('Subcall', () => {
       const shares = await contract.testDecodeReceiptDelegate(payload);
       expect(shares).eq(toBigInt(num));
     }
+  });
+
+  describe('Should successfully parse CBOR uint/s', () => {
+    it('Should successfully parse CBOR uint8', async () => {
+      const MAX_SAFE_UINT8 = 255n;
+
+      // bytes = 0x18FF
+      const bytes = cborg.encode(MAX_SAFE_UINT8);
+
+      const [newOffset, parsedCborUint] = await contract.testParseCBORUint(
+        bytes,
+        0,
+      );
+
+      expect(parsedCborUint).eq(MAX_SAFE_UINT8);
+      expect(newOffset).eq(1 + 1);
+    });
+
+    it('Should successfully parse CBOR uint16', async () => {
+      const MAX_SAFE_UINT16 = 65535n;
+
+      // bytes = 0x19FFFF
+      const bytes = cborg.encode(MAX_SAFE_UINT16);
+
+      const [newOffset, parsedCborUint] = await contract.testParseCBORUint(
+        bytes,
+        0,
+      );
+
+      expect(parsedCborUint).eq(MAX_SAFE_UINT16);
+      expect(newOffset).eq(2 + 1);
+    });
+
+    it('Should successfully parse CBOR uint32', async () => {
+      const MAX_SAFE_UINT32 = 4294967295n;
+
+      // bytes = 0x1AFFFFFFFF
+      const bytes = cborg.encode(MAX_SAFE_UINT32);
+
+      const [newOffset, parsedCborUint] = await contract.testParseCBORUint(
+        bytes,
+        0,
+      );
+
+      expect(parsedCborUint).eq(MAX_SAFE_UINT32);
+      expect(newOffset).eq(4 + 1);
+    });
+
+    it('Should successfully parse CBOR uint64', async () => {
+      const MAX_SAFE_UINT64 = 18446744073709551615n;
+
+      // bytes = 0x1BFFFFFFFFFFFFFFFF
+      const bytes = cborg.encode(MAX_SAFE_UINT64);
+
+      const [newOffset, parsedCborUint] = await contract.testParseCBORUint(
+        bytes,
+        0,
+      );
+
+      expect(parsedCborUint).eq(MAX_SAFE_UINT64);
+      expect(newOffset).eq(8 + 1);
+    });
+
+    it('Should successfully parse CBOR uint128', async () => {
+      const MAX_SAFE_UINT128 = 340282366920938463463374607431768211455n;
+
+      const hex = '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF';
+      const uint128bytes = Uint8Array.from(
+        Buffer.from(hex.replace('0x', ''), 'hex'),
+      );
+
+      const bytes = cborg.encode(uint128bytes);
+
+      const [newOffset, parsedCborUint] = await contract.testParseCBORUint(
+        bytes,
+        0,
+      );
+
+      expect(parsedCborUint).eq(MAX_SAFE_UINT128);
+      expect(newOffset).eq(16 + 1);
+    });
+
+    it('Should successfully parse CBOR uint256', async () => {
+      const MAX_SAFE_UINT256 =
+        115792089237316195423570985008687907853269984665640564039457584007913129639935n;
+
+      const hex =
+        '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF';
+      const uint256bytes = Uint8Array.from(
+        Buffer.from(hex.replace('0x', ''), 'hex'),
+      );
+
+      const bytes = cborg.encode(uint256bytes);
+
+      const [newOffset, parsedCborUint] = await contract.testParseCBORUint(
+        bytes,
+        0,
+      );
+
+      expect(parsedCborUint).eq(MAX_SAFE_UINT256);
+      expect(newOffset).eq(33 + 1);
+    });
   });
 });

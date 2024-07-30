@@ -108,4 +108,12 @@ contract SubcallTests {
     function testConsensusWithdraw(StakingAddress to, uint128 value) external {
         Subcall.consensusWithdraw(to, value);
     }
+
+    function testParseCBORUint(bytes memory result, uint256 offset)
+        external
+        pure
+        returns (uint256, uint256)
+    {
+        return Subcall._parseCBORUint(result, offset);
+    }
 }
