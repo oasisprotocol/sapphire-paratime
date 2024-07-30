@@ -2,7 +2,7 @@ import React from "react";
 
 // We'll use ethers to interact with the Ethereum network and our contract
 import { ethers } from "ethers";
-import * as sapphire from '@oasisprotocol/sapphire-paratime';
+import { wrapEthereumProvider } from '@oasisprotocol/sapphire-paratime';
 
 // We import the contract's artifacts and address here, as we are going to be
 // using them with ethers
@@ -24,8 +24,8 @@ import { NoTokensMessage } from "./NoTokensMessage";
 // Here's a list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
 // to use when deploying to other networks.
 //const HARDHAT_NETWORK_ID = '23294'; // Sapphire Mainnet
-const HARDHAT_NETWORK_ID = '23295'; // Sapphire Testnet
-//const HARDHAT_NETWORK_ID = '23293'; // Sapphire Localnet
+//const HARDHAT_NETWORK_ID = '23295'; // Sapphire Testnet
+const HARDHAT_NETWORK_ID = '23293'; // Sapphire Localnet
 
 // This is an error code that indicates that the user canceled a transaction
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
@@ -197,10 +197,10 @@ export class Dapp extends React.Component {
       if (newAddress === undefined) {
         return this._resetState();
       }
-      
+
       this._initialize(newAddress);
     });
-    
+
     // We reset the dapp state if the network is changed
     window.ethereum.on("chainChanged", ([networkId]) => {
       this._stopPollingData();
@@ -228,7 +228,7 @@ export class Dapp extends React.Component {
 
   async _initializeEthers() {
     // We first initialize ethers by creating a provider using window.ethereum
-    this._provider = sapphire.wrap(new ethers.providers.Web3Provider(window.ethereum));
+    this._provider = new ethers.providers.Web3Provider(wrapEthereumProvider(window.ethereum));
 
     // Then, we initialize two contract instances:
     // - _token: Used for query transactions (e.g. balanceOf, name, symbol)

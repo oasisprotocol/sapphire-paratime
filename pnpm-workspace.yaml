@@ -1,13 +1,14 @@
 packages:
   - clients/js
-  - clients/js/type-only-test
+  - integrations/viem-v2
+  - integrations/wagmi-v2
+  - integrations/ethers-v6
+  - integrations/hardhat
   - contracts/
-  - examples/hardhat
-  - examples/ethersv5-ts-esm
-  - examples/ethersv6-ts-esm
-  - examples/web3js-ts-esm
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
+  - examples/hardhat-viem
   - examples/onchain-signer
-  - examples/truffle
-  - integrations/hardhat
+  - examples/wagmi-v2
+  - examples/wagmi-v1
+

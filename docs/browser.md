@@ -48,6 +48,9 @@ out [line 66]. Read [the guide](guide.mdx#contract-logs) to learn more.
 
 :::
 
+[`wagmi`]: https://wagmi.sh/
+[`viem`]: https://viem.sh/
+
 ## Signing Sapphire Calls and Transactions in Browser
 
 Now, let's explore the frontend of our dApp. Begin by moving into the
@@ -65,11 +68,11 @@ the following changes:
 --- a/hardhat-boilerplate/frontend/src/components/Dapp.js
 +++ b/hardhat-boilerplate/frontend/src/components/Dapp.js
 @@ -2,6 +2,7 @@
- 
+
  // We'll use ethers to interact with the Ethereum network and our contract
  import { ethers } from "ethers";
 +import * as sapphire from '@oasisprotocol/sapphire-paratime';
- 
+
  // We import the contract's artifacts and address here, as we are going to be
  // using them with ethers
 @@ -22,7 +23,7 @@
@@ -78,16 +81,16 @@ the following changes:
  // to use when deploying to other networks.
 -const HARDHAT_NETWORK_ID = '1337';
 +const HARDHAT_NETWORK_ID = '23295'; // Sapphire Testnet
- 
+
  // This is an error code that indicates that the user canceled a transaction
  const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
 @@ -225,14 +226,20 @@
- 
+
    async _initializeEthers() {
      // We first initialize ethers by creating a provider using window.ethereum
 -    this._provider = new ethers.providers.Web3Provider(window.ethereum);
 +    this._provider = sapphire.wrap(new ethers.providers.Web3Provider(window.ethereum));
- 
+
 -    // Then, we initialize the contract using that provider and the token's
 -    // artifact. You can do this same thing with your contracts.
 +    // Then, we initialize two contract instances:
@@ -105,26 +108,26 @@ the following changes:
 +      this._provider.getSigner()
      );
    }
- 
+
 @@ -294,7 +301,7 @@
- 
+
        // We send the transaction, and save its hash in the Dapp's state. This
        // way we can indicate that we are waiting for it to be mined.
 -      const tx = await this._token.transfer(to, amount);
 +      const tx = await this._tokenWrite.transfer(to, amount);
        this.setState({ txBeingSent: tx.hash });
- 
+
        // We use .wait() to wait for the transaction to be mined. This method
 @@ -360,8 +367,8 @@
        return true;
      }
- 
--    this.setState({ 
+
+-    this.setState({
 -      networkError: 'Please connect Metamask to Localhost:8545'
 +    this.setState({
 +      networkError: 'Please connect to Sapphire ParaTime Testnet'
      });
- 
+
      return false;
 ```
 

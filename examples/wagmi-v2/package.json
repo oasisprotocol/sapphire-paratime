@@ -1,0 +1,34 @@
+{
+	"name": "sapphire-examples-wagmi-v2",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"license": "Apache-2.0",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"preview": "vite preview",
+		"start:server": "vite --port 3000"
+	},
+	"dependencies": {
+		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
+		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@tanstack/react-query": "5.0.5",
+		"abitype": "^1.0.2",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"wagmi": "~2.5.20"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.7.0",
+		"@types/react": "^18.2.79",
+		"@types/react-dom": "^18.2.25",
+		"@vitejs/plugin-react": "^4.2.1",
+		"buffer": "^6.0.3",
+		"rollup-plugin-visualizer": "^5.12.0",
+		"typescript": "^5.4.5",
+		"vite": "^4.5.3"
+	}
+}

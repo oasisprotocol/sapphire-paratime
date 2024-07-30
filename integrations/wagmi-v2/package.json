@@ -1,0 +1,70 @@
+{
+	"type": "module",
+	"name": "@oasisprotocol/sapphire-wagmi-v2",
+	"license": "Apache-2.0",
+	"version": "2.0.0-alpha.0",
+	"description": "Wagmi & Viem support for the Oasis Sapphire ParaTime.",
+	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/oasisprotocol/sapphire-paratime.git"
+	},
+	"keywords": ["sapphire", "paratime", "oasis", "web3", "viem", "wagmi"],
+	"files": ["dist", "!dist/*.tsbuildinfo", "src"],
+	"sideEffects": false,
+	"main": "./dist/_cjs/index.js",
+	"module": "./dist/_esm/index.js",
+	"types": "./dist/_types/index.d.ts",
+	"typings": "./dist/_types/index.d.ts",
+	"exports": {
+		"node": {
+			"import": "./dist/_esm/index.js",
+			"types": "./dist/_types/index.d.ts"
+		},
+		"types": "./dist/_types/index.d.ts",
+		"default": "./dist/_esm/index.js"
+	},
+	"scripts": {
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"build": "npm run clean && npm run build:esm && npm run build:types",
+		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
+		"build:types": "tsc --project ./tsconfig.build.json --module esnext --declarationDir ./dist/_types --emitDeclarationOnly --declaration --declarationMap",
+		"clean": "rm -rf dist",
+		"prepublishOnly": "npm run build"
+	},
+	"dependencies": {
+		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
+		"viem": "2.x",
+		"@wagmi/core": "2.x"
+	},
+	"peerDependencies": {
+		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
+		"@wagmi/core": "^2.6.9",
+		"typescript": ">=5.0.4",
+		"viem": "2.x",
+		"wagmi": "2.x"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		},
+		"@wagmi/core": {
+			"optional": true
+		},
+		"@oasisprotocol/sapphire-paratime": {
+			"optional": true
+		},
+		"@oasisprotocol/sapphire-viem-v2": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.7.0",
+		"@types/node": "^18.19.31",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.4.5"
+	}
+}
