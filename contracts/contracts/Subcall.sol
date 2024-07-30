@@ -52,7 +52,7 @@ library Subcall {
     error InvalidMap();
 
     /// While parsing CBOR structure, data length was unexpected
-    error InvalidLength();
+    error InvalidLength(uint256);
 
     /// Invalid receipt ID
     error InvalidReceiptId();
@@ -62,6 +62,12 @@ library Subcall {
 
     /// CBOR parser expected a key, but it was not found in the map!
     error MissingKey();
+
+    /// Value cannot be parsed as a uint
+    error InvalidUintPrefix(uint8);
+
+    /// Unsigned integer of unknown size
+    error InvalidUintSize(uint8);
 
     /**
      * @notice Submit a native message to the Oasis runtime layer. Messages
@@ -170,6 +176,11 @@ library Subcall {
             (uint64, bytes)
         );
 
+        // 0xf6 = null, returns null in case receiptId not found
+        if (result[0] == 0xf6) {
+            revert InvalidReceiptId();
+        }
+
         if (status != 0) {
             revert ConsensusTakeReceiptError(status, string(result));
         }
@@ -182,11 +193,42 @@ library Subcall {
         pure
         returns (uint256 newOffset, uint256 value)
     {
-        if (result[offset] & 0x40 != 0x40) revert InvalidLength();
+        uint8 prefix = uint8(result[offset]);
+        uint256 len;
 
-        uint256 len = uint8(result[offset++]) ^ 0x40;
+        if (prefix <= 0x17) {
+            return (offset + 1, prefix);
+        }
+        // Byte array(uint256), parsed as a big-endian integer.
+        else if (prefix == 0x58) {
+            len = uint8(result[++offset]);
+            offset++;
+        }
+        // Byte array, parsed as a big-endian integer.
+        else if (prefix & 0x40 == 0x40) {
+            len = uint8(result[offset++]) ^ 0x40;
+        }
+        // Unsigned integer, CBOR encoded.
+        else if (prefix & 0x10 == 0x10) {
+            if (prefix == 0x18) {
+                len = 1;
+            } else if (prefix == 0x19) {
+                len = 2;
+            } else if (prefix == 0x1a) {
+                len = 4;
+            } else if (prefix == 0x1b) {
+                len = 8;
+            } else {
+                revert InvalidUintSize(prefix);
+            }
+            offset += 1;
+        }
+        // Unknown...
+        else {
+            revert InvalidUintPrefix(prefix);
+        }
 
-        if (len >= 0x20) revert InvalidLength();
+        if (len > 0x20) revert InvalidLength(len);
 
         assembly {
             value := mload(add(add(0x20, result), offset))
@@ -267,9 +309,6 @@ library Subcall {
                 (offset, endReceipt) = _parseCBORUint64(result, offset);
 
                 hasReceipt = true;
-            } else {
-                // TODO: skip unknown keys & values? For forward compatibility
-                revert InvalidKey();
             }
         }
 
@@ -296,9 +335,6 @@ library Subcall {
                 (offset, amount) = _parseCBORUint128(result, offset);
 
                 hasAmount = true;
-            } else {
-                // TODO: skip unknown keys & values? For forward compatibility
-                revert InvalidKey();
             }
         }
 
@@ -321,7 +357,7 @@ library Subcall {
             // Delegation succeeded, decode number of shares.
             uint8 sharesLen = uint8(result[8]) & 0x1f; // Assume shares field is never greater than 16 bytes.
 
-            if (9 + sharesLen != result.length) revert InvalidLength();
+            if (9 + sharesLen != result.length) revert InvalidLength(sharesLen);
 
             for (uint256 offset = 0; offset < sharesLen; offset++) {
                 uint8 v = uint8(result[9 + offset]);
