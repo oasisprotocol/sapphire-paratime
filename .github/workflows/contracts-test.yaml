@@ -71,7 +71,7 @@ jobs:
           log-output: true
           log-output-if: true
           working-directory: clients/js
-      - name: test-client-js
+      - name: Test JS client
         run: make -C clients/js test lint
       - name: Build & Test integrations
         run: make -C integrations

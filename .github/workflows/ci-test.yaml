@@ -59,6 +59,34 @@ jobs:
       - name: Check SGX buildability
         run: cargo check --locked --release --target x86_64-fortanix-unknown-sgx
 
+  test-client-js:
+    name: test-client-js
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/js
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Test JS client
+        run: pnpm test:unit
+
   test-client-go:
     name: test-client-go
     runs-on: ubuntu-latest

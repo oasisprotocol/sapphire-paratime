@@ -38,6 +38,7 @@
     "build:esm": "tsc -p ./tsconfig.esm.json",
     "build:cjs": "tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
     "test": "jest --coverage",
+    "test:unit": "jest --coverage --testPathIgnorePatterns '(calldatapublickey|provider).spec.ts'",
     "prepublishOnly": "npm run build",
     "proxy": "node --loader ts-node/esm scripts/proxy.ts"
   },
