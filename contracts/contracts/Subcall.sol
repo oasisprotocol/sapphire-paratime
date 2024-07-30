@@ -398,7 +398,7 @@ library Subcall {
         returns (uint128 amount)
     {
         bytes memory result = consensusTakeReceipt(
-            SubcallReceiptKind.UndelegateStart,
+            SubcallReceiptKind.UndelegateDone,
             receiptId
         );
 
