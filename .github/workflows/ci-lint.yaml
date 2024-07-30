@@ -43,7 +43,7 @@ jobs:
         run: cargo fmt -- --check
 
   lint-js:
-    name: lint-js
+    name: lint-client-js
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
