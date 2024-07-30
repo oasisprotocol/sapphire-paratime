@@ -199,6 +199,11 @@ library Subcall {
         if (prefix <= 0x17) {
             return (offset + 1, prefix);
         }
+        // Byte array(uint256), parsed as a big-endian integer.
+        else if (prefix == 0x58) {
+            len = uint8(result[++offset]);
+            offset++;
+        }
         // Byte array, parsed as a big-endian integer.
         else if (prefix & 0x40 == 0x40) {
             len = uint8(result[offset++]) ^ 0x40;
@@ -223,7 +228,7 @@ library Subcall {
             revert InvalidUintPrefix(prefix);
         }
 
-        if (len >= 0x20) revert InvalidLength(len);
+        if (len > 0x20) revert InvalidLength(len);
 
         assembly {
             value := mload(add(add(0x20, result), offset))
