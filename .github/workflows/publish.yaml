@@ -50,3 +50,4 @@ jobs:
           ignore-scripts: false
           token: ${{ secrets.NPM_TOKEN }}
           package: ${{ steps.extract-tag.outputs.NPM_PACKAGE }}
+          access: public
