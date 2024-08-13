@@ -109,6 +109,10 @@ contract SubcallTests {
         Subcall.consensusWithdraw(to, value);
     }
 
+    function testRoflEnsureAuthorizedOrigin(bytes21 appId) external {
+        Subcall.roflEnsureAuthorizedOrigin(appId);
+    }
+
     function testParseCBORUint(bytes memory result, uint256 offset)
         external
         pure
