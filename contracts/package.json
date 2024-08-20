@@ -19,7 +19,7 @@
     "format::prettier": "prettier --write --plugin-search-dir=. '*.json' '**/*.ts' '**/*.sol'",
     "format": "npm-run-all format:**",
     "build": "hardhat compile",
-    "test": "hardhat test --network sapphire-localnet"
+    "test": "hardhat test --network sapphire-localnet --verbose"
   },
   "files": [
     "contracts"

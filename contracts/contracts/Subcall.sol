@@ -16,11 +16,16 @@ enum SubcallReceiptKind {
  * @notice Interact with Oasis Runtime SDK modules from Sapphire.
  */
 library Subcall {
+    // Consensus
     string private constant CONSENSUS_DELEGATE = "consensus.Delegate";
     string private constant CONSENSUS_UNDELEGATE = "consensus.Undelegate";
     string private constant CONSENSUS_WITHDRAW = "consensus.Withdraw";
     string private constant CONSENSUS_TAKE_RECEIPT = "consensus.TakeReceipt";
+    // Accounts
     string private constant ACCOUNTS_TRANSFER = "accounts.Transfer";
+    // ROFL
+    string private constant ROFL_IS_AUTHORIZED_ORIGIN =
+        "rofl.IsAuthorizedOrigin";
 
     /// Address of the SUBCALL precompile
     address internal constant SUBCALL =
@@ -41,6 +46,9 @@ library Subcall {
     error ConsensusWithdrawError(uint64 status, string data);
 
     error AccountsTransferError(uint64 status, string data);
+
+    /// The origin is not authorized for the given ROFL app
+    error RoflOriginNotAuthorizedForApp();
 
     /// Name of token cannot be CBOR encoded with current functions
     error TokenNameTooLong();
@@ -576,6 +584,24 @@ library Subcall {
 
         if (status != 0) {
             revert AccountsTransferError(status, string(data));
+        }
+    }
+
+    /**
+     * @notice Verify whether the origin transaction is signed by an authorized
+     * ROFL instance for the given application.
+     * @param appId ROFL app identifier
+     */
+    function roflEnsureAuthorizedOrigin(bytes21 appId) internal {
+        (uint64 status, bytes memory data) = subcall(
+            ROFL_IS_AUTHORIZED_ORIGIN,
+            abi.encodePacked(hex"55", appId) // CBOR byte string, 21 bytes.
+        );
+
+        // The result should be a CBOR-encoded boolean with the value true indicating
+        // that the origin is authorized for the given ROFL app.
+        if (status != 0 || data.length != 1 || data[0] != 0xf5) {
+            revert RoflOriginNotAuthorizedForApp();
         }
     }
 }

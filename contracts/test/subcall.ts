@@ -370,6 +370,26 @@ describe('Subcall', () => {
     }
   });
 
+  /// Verifies that the 'rofl.IsAuthorizedOrigin' operation can be executed
+  /// Currently it should always revert as there is no way to mock a ROFL app in tests.
+  it('rofl.IsAuthorizedOrigin', async () => {
+    const appId = getBytes(zeroPadValue(ownerAddr, 21));
+
+    // First test the raw subcall.
+    const msg = cborg.encode(appId);
+    let tx = await contract.testSubcall('rofl.IsAuthorizedOrigin', msg);
+    let receipt = await tx.wait();
+
+    if (!receipt) throw new Error('tx failed');
+    const event = decodeResult(receipt);
+    expect(event.status).eq(0n); // rofl.IsAuthorizedOrigin response status, 0 = success
+    expect(event.data).eq(false); // Boolean false to indicate failure.
+
+    // Also test the Subcall.roflEnsureAuthorizedOrigin wrapper.
+    tx = await contract.testRoflEnsureAuthorizedOrigin(appId);
+    await expect(tx).to.be.reverted;
+  });
+
   describe('Should successfully parse CBOR uint/s', () => {
     it('Should successfully parse CBOR uint8', async () => {
       const MAX_SAFE_UINT8 = 255n;
