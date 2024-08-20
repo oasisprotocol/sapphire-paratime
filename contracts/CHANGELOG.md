@@ -6,11 +6,22 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
-## 0.2.9 (2024-07-01)
+## 0.2.10 (2024-08-20)
+
+### Added
+
+ * `Subcall.sol` support for ROFL app authorized origin checks
+
+## 0.2.9 (2024-07-30)
 
 ### Fixed
 
  * CBOR unsigned integer decoding in Subcall.sol
+ * Subcall undelegation done receipt
+
+### Added
+
+ * Initial SIWE support
 
 ## 0.2.8 (2024-03-15)
 
