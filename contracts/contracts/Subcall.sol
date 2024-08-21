@@ -600,7 +600,7 @@ library Subcall {
 
         // The result should be a CBOR-encoded boolean with the value true indicating
         // that the origin is authorized for the given ROFL app.
-        if (status != 0 || data.length != 1 || data[0] != 0xf5) {
+        if (status != 0 || data.len != 1 || data[0] != 0xf5) {
             revert RoflOriginNotAuthorizedForApp();
         }
     }
