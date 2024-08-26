@@ -50,8 +50,9 @@ jobs:
           echo "NPM_PACKAGE=$(echo $REF_NAME | grep -oE '(clients/js|contracts|integrations/(ethers-v6|hardhat|wagmi-v2|viem-v2))')" >> $GITHUB_OUTPUT
           echo "NPM_TAG=$(echo $REF_NAME | grep -oP '(?<=\-)(rc|next|alpha|beta)' || echo 'latest')" >> $GITHUB_OUTPUT
       - name: Publish ${{ github.ref_name }} to NPM
-        run: pnpm publish --access public --no-git-checks --tag ${{ steps.extract-tag.outputs.NPM_TAG }}
+        run: pnpm publish --access public --no-git-checks --tag $NPM_TAG
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
+          NPM_TAG: ${{ steps.extract-tag.outputs.NPM_TAG }}
         working-directory: ${{ steps.extract-tag.outputs.NPM_PACKAGE }}
