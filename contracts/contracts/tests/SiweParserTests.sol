@@ -6,13 +6,13 @@ import {ParsedSiweMessage, SiweParser} from "../SiweParser.sol";
 contract SiweParserTests {
     function testHexStringToAddress(bytes memory addr)
         external
-        view
+        pure
         returns (address)
     {
         return SiweParser._hexStringToAddress(addr);
     }
 
-    function testFromHexChar(uint8 c) external view returns (uint8) {
+    function testFromHexChar(uint8 c) external pure returns (uint8) {
         return SiweParser._fromHexChar(c);
     }
 
@@ -20,11 +20,11 @@ contract SiweParserTests {
         bytes memory str,
         uint256 startIndex,
         uint256 endIndex
-    ) external view returns (bytes memory) {
+    ) external pure returns (bytes memory) {
         return SiweParser._substr(str, startIndex, endIndex);
     }
 
-    function testParseUint(bytes memory b) external view returns (uint256) {
+    function testParseUint(bytes memory b) external pure returns (uint256) {
         return SiweParser._parseUint(b);
     }
 
@@ -32,13 +32,13 @@ contract SiweParserTests {
         bytes calldata str,
         string memory name,
         uint256 i
-    ) external view returns (bytes memory value, uint256) {
+    ) external pure returns (bytes memory value, uint256) {
         return SiweParser._parseField(str, name, i);
     }
 
     function testParseArray(bytes calldata str, uint256 i)
         external
-        view
+        pure
         returns (bytes[] memory values, uint256 count)
     {
         return SiweParser._parseArray(str, i);
@@ -46,7 +46,7 @@ contract SiweParserTests {
 
     function testParseSiweMsg(bytes calldata siweMsg)
         external
-        view
+        pure
         returns (ParsedSiweMessage memory)
     {
         return SiweParser.parseSiweMsg(siweMsg);
