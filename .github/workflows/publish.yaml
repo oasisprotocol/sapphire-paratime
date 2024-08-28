@@ -14,6 +14,7 @@ on:
 # See: https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds
 permissions:
   id-token: write # to enable use of OIDC for npm provenance
+  contents: read
 
 jobs:
   publish:
