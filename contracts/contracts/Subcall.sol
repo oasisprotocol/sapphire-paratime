@@ -23,6 +23,9 @@ library Subcall {
     string private constant CONSENSUS_TAKE_RECEIPT = "consensus.TakeReceipt";
     // Accounts
     string private constant ACCOUNTS_TRANSFER = "accounts.Transfer";
+    // Core
+    string private constant CORE_CALLDATAPUBLICKEY = "core.CallDataPublicKey";
+    string private constant CORE_CURRENT_EPOCH = "core.CurrentEpoch";
     // ROFL
     string private constant ROFL_IS_AUTHORIZED_ORIGIN =
         "rofl.IsAuthorizedOrigin";
@@ -76,6 +79,12 @@ library Subcall {
 
     /// Unsigned integer of unknown size
     error InvalidUintSize(uint8);
+
+    /// Error while trying to retrieve current epoch
+    error CoreCurrentEpochError(uint64);
+
+    /// Error while trying to retrieve the calldata public key
+    error CoreCallDataPublicKeyError(uint64);
 
     /**
      * @notice Submit a native message to the Oasis runtime layer. Messages
@@ -603,5 +612,139 @@ library Subcall {
         if (status != 0 || data.length != 1 || data[0] != 0xf5) {
             revert RoflOriginNotAuthorizedForApp();
         }
+    }
+
+    function _parseCBORMapStart(bytes memory in_data, uint256 in_offset)
+        internal
+        pure
+        returns (uint256 n_entries, uint256 out_offset)
+    {
+        uint256 b = uint256(uint8(in_data[in_offset]));
+        if (b < 0xa0 || b > 0xb7) {
+            revert InvalidMap();
+        }
+
+        n_entries = b - 0xa0;
+        out_offset = in_offset + 1;
+    }
+
+    struct CallDataPublicKey {
+        bytes32 key;
+        bytes32 checksum;
+        bytes32[2] signature;
+        uint256 expiration;
+    }
+
+    function _parseCBORPublicKeyInner(bytes memory in_data, uint256 in_offset)
+        internal
+        pure
+        returns (uint256 offset, CallDataPublicKey memory public_key)
+    {
+        uint256 mapLen;
+
+        (mapLen, offset) = _parseCBORMapStart(in_data, in_offset);
+
+        while (mapLen > 0) {
+            mapLen -= 1;
+
+            bytes32 keyDigest;
+
+            (offset, keyDigest) = _parseCBORKey(in_data, offset);
+
+            if (keyDigest == keccak256("key")) {
+                uint256 tmp;
+                (offset, tmp) = _parseCBORUint(in_data, offset);
+                public_key.key = bytes32(tmp);
+            } else if (keyDigest == keccak256("checksum")) {
+                uint256 tmp;
+                (offset, tmp) = _parseCBORUint(in_data, offset);
+                public_key.checksum = bytes32(tmp);
+            } else if (keyDigest == keccak256("expiration")) {
+                (offset, public_key.expiration) = _parseCBORUint(
+                    in_data,
+                    offset
+                );
+            } else if (keyDigest == keccak256("signature")) {
+                if (in_data[offset++] != 0x58) {
+                    revert InvalidUintPrefix(uint8(in_data[offset - 1]));
+                }
+                if (in_data[offset++] != 0x40) {
+                    revert InvalidUintSize(uint8(in_data[offset - 1]));
+                }
+                uint256 tmp;
+                assembly {
+                    tmp := mload(add(in_data, add(offset, 0x20)))
+                }
+                public_key.signature[0] = bytes32(tmp);
+                assembly {
+                    tmp := mload(add(in_data, add(offset, 0x40)))
+                }
+                public_key.signature[1] = bytes32(tmp);
+
+                offset += 0x40;
+            } else {
+                revert InvalidKey();
+            }
+        }
+    }
+
+    function _parseCBORCallDataPublicKey(bytes memory in_data)
+        internal
+        pure
+        returns (uint256 epoch, CallDataPublicKey memory public_key)
+    {
+        (uint256 outerMapLen, uint256 offset) = _parseCBORMapStart(in_data, 0);
+
+        while (outerMapLen > 0) {
+            bytes32 keyDigest;
+
+            outerMapLen -= 1;
+
+            (offset, keyDigest) = _parseCBORKey(in_data, offset);
+
+            if (keyDigest == keccak256("epoch")) {
+                (offset, epoch) = _parseCBORUint(in_data, offset);
+            } else if (keyDigest == keccak256("public_key")) {
+                (offset, public_key) = _parseCBORPublicKeyInner(
+                    in_data,
+                    offset
+                );
+            } else {
+                revert InvalidKey();
+            }
+        }
+    }
+
+    // core.CallDataPublicKey
+    function coreCallDataPublicKey()
+        internal
+        returns (uint256 epoch, CallDataPublicKey memory public_key)
+    {
+        (uint64 status, bytes memory data) = subcall(
+            CORE_CALLDATAPUBLICKEY,
+            hex"f6" // null
+        );
+
+        if (status != 0) {
+            revert CoreCallDataPublicKeyError(status);
+        }
+
+        return _parseCBORCallDataPublicKey(data);
+    }
+
+    // core.CurrentEpoch
+    function coreCurrentEpoch() internal returns (uint256) {
+        (uint64 status, bytes memory data) = subcall(
+            CORE_CURRENT_EPOCH,
+            hex"f6" // null
+        );
+
+        if (status != 0) {
+            revert CoreCurrentEpochError(status);
+        }
+
+        (, uint256 result) = _parseCBORUint(data, 0);
+
+        return result;
     }
 }
