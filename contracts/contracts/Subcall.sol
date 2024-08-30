@@ -128,16 +128,16 @@ library Subcall {
 
         (status, data) = subcall(
             method,
-            abi.encodePacked(
-                hex"a262",
+            abi.encodePacked( // CBOR encoded, {to: to, amount: [value, token]}
+                hex"a262", // map, 2 pairs + UTF-8 string, 2 byte
                 "to",
-                hex"55",
+                hex"55", // byte string, 21 bytes
                 to,
-                hex"66",
+                hex"66", // UTF-8 string, 6 bytes
                 "amount",
-                hex"8250",
+                hex"8250", // Array, 2 elements + byte string, 16 bytes
                 value,
-                uint8(0x40 + token.length),
+                uint8(0x40 + token.length), // byte string, 0+token.length bytes
                 token
             )
         );
@@ -173,9 +173,9 @@ library Subcall {
         (bool success, bytes memory data) = SUBCALL.call(
             abi.encode(
                 CONSENSUS_TAKE_RECEIPT,
-                abi.encodePacked(
+                abi.encodePacked( // CBOR encoded, {'id': x, 'kind': y}
                     hex"a2", // Map, 2 pairs
-                    hex"62",
+                    hex"62", // UTF-8 string, 2 bytes
                     "id", // Byte string, 2 bytes
                     hex"1b",
                     receiptId, // Unsigned 64bit integer
@@ -530,7 +530,7 @@ library Subcall {
 
         (status, data) = subcall(
             CONSENSUS_DELEGATE,
-            abi.encodePacked( // CBOR encoded, {to: w, amount: [x, y], receipt: z}
+            abi.encodePacked( // CBOR encoded, {to: to, amount: [amount, token], receipt: receiptId}
                 hex"a3", // map, 3 pairs
                 // pair 1
                 hex"62", // UTF-8 string, 2 byte
@@ -544,12 +544,12 @@ library Subcall {
                 hex"50", // byte string, 16 bytes
                 amount,
                 // TODO: handle non-native token!
-                hex"40", // byte string, 0 to 23 bytes
+                hex"40", // byte string, 0 bytes
                 // pair 3
-                hex"67",
-                "receipt", // UTF-8 string, 7 bytes
-                hex"1b",
-                receiptId // uint64, 8 bytes
+                hex"67", // UTF-8 string, 7 bytes
+                "receipt",
+                hex"1b", // uint64, 8 bytes
+                receiptId
             )
         );
 
