@@ -50,6 +50,7 @@ description: List of Standard Contract Addresses
 | [Celer IM Executor][message-executor] | Multiple executors available | [`0x9C850D230FFFaCEf1E2D1741a00080856630e455`][message-executor-testnet] | [Message Executor][message-executor-source] |
 | [Celer MessageBus][message-bus] | [`0x9Bb46D5100d2Db4608112026951c9C965b233f4D`][message-bus-mainnet] | [`0x9Bb46D5100d2Db4608112026951c9C965b233f4D`][message-bus-testnet] | [Message bus][message-bus-source] |
 | [Safe Singleton Factory][singleton-factory] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-mainnet] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-testnet] | [Singleton Factory][singleton-factory] |
+| [Band Oracle][band-oracle] | [`0xDA7a001b254CD22e46d3eAB04d937489c93174C3`][band-oracle-mainnet] | [`0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A`][band-oracle-testnet] | [Oracle][band-oracle-source] |
 
 [message-executor]: https://im-docs.celer.network/developer/development-guide/message-executor
 [message-executor-source]: https://github.com/celer-network/im-executor
@@ -61,3 +62,7 @@ description: List of Standard Contract Addresses
 [singleton-factory]: https://github.com/safe-global/safe-singleton-factory/
 [singleton-factory-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7
 [singleton-factory-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7
+[band-oracle]: https://docs.bandchain.org/
+[band-oracle-source]: https://github.com/bandprotocol/band-std-reference-contracts-solidity
+[band-oracle-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0xDA7a001b254CD22e46d3eAB04d937489c93174C3
+[band-oracle-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A
