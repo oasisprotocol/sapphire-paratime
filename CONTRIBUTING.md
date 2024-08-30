@@ -102,7 +102,7 @@ Building documentation lies at the top-level
     gives a nice URL to track the ongoing work.
 
 - _main_ branch is protected and will require at least 1 code review approval
-  from a code owner before it can be merged.
+  from a team member before it can be merged.
 
 - When coding, please follow these standard practices:
 
