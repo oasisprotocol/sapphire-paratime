@@ -6,6 +6,12 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.11 (2024-09)
+
+### Added
+
+ * `Subcall.sol` support for `core.CallDataPublicKey` and `core.CurrentEpoch`
+
 ## 0.2.10 (2024-08-20)
 
 ### Added

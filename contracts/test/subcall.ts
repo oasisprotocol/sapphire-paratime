@@ -5,6 +5,7 @@ import * as cborg from 'cborg';
 import { SubcallTests } from '../typechain-types/contracts/tests/SubcallTests';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import {
+  AbiCoder,
   ContractTransactionReceipt,
   EventLog,
   Provider,
@@ -126,11 +127,14 @@ describe('Subcall', () => {
     ownerNativeAddr = getBytes(zeroPadValue(ownerAddr, 21));
     expect(ownerNativeAddr.length).eq(21);
 
-    const rawKp = await contract.generateRandomAddress();
-    kp = {
-      publicKey: getBytes(rawKp.publicKey),
-      secretKey: getBytes(rawKp.secretKey),
-    };
+    // Skip random address generation when running in hardhat
+    if ((await provider.getNetwork()).chainId != 31337n) {
+      const rawKp = await contract.generateRandomAddress();
+      kp = {
+        publicKey: getBytes(rawKp.publicKey),
+        secretKey: getBytes(rawKp.secretKey),
+      };
+    }
   });
 
   it('Derive Staking Addresses', async () => {
@@ -490,5 +494,74 @@ describe('Subcall', () => {
       expect(parsedCborUint).eq(MAX_SAFE_UINT256);
       expect(newOffset).eq(33 + 1);
     });
+  });
+
+  it('CallDataPublicKey CBOR parsing works', async () => {
+    const example =
+      '0xa26565706f636818336a7075626c69635f6b6579a4636b65795820969010b54ebcda50415eedf2554109edac4735a58ddf1e4b43b9a765fa734f0a68636865636b73756d5820dfe9285ada1376ac95a411ee68d3991a8c72b68cea1fcc79d084f8df2d93f646697369676e617475726558405ed83560ea48a003993cb0b1c5610272a4077bc02242215996029c14476fd33e1c04a84dc99a8c76f4111a758dd185cd0b588469cfde1214898c8571ac170e066a65787069726174696f6e183d';
+    const data = cborg.decode(getBytes(example));
+    const result = await contract.testParseCallDataPublicKey(example);
+    expect(result.epoch).eq(data.epoch);
+    expect(result.public_key.key).eq(hexlify(data.public_key.key));
+    expect(result.public_key.checksum).eq(hexlify(data.public_key.checksum));
+    expect(result.public_key.expiration).eq(data.public_key.expiration);
+    expect(result.public_key.signature[0]).eq(
+      hexlify(data.public_key.signature.slice(0, 32)),
+    );
+    expect(result.public_key.signature[1]).eq(
+      hexlify(data.public_key.signature.slice(32)),
+    );
+  });
+
+  it('core.CallDataPublicKey works', async () => {
+    // Perform call directly using eth_call
+    const coder = AbiCoder.defaultAbiCoder();
+    const doop = await provider.call({
+      to: '0x0100000000000000000000000000000000000103',
+      data: coder.encode(
+        ['string', 'bytes'],
+        ['core.CallDataPublicKey', cborg.encode(null)],
+      ),
+    });
+    const [subcall_status, subcall_raw_response] = coder.decode(
+      ['uint', 'bytes'],
+      doop,
+    );
+    expect(subcall_status).eq(0n);
+
+    // Verify the form of the raw response
+    const subcall_data = cborg.decode(getBytes(subcall_raw_response));
+    expect(subcall_data).haveOwnProperty('epoch');
+    expect(subcall_data).haveOwnProperty('public_key');
+
+    const subcall_publickey = subcall_data.public_key;
+    expect(subcall_publickey).has.haveOwnProperty('key');
+    expect(subcall_publickey.key).lengthOf(32);
+    expect(subcall_publickey).has.haveOwnProperty('checksum');
+    expect(subcall_publickey.checksum).lengthOf(32);
+    expect(subcall_publickey).has.haveOwnProperty('signature');
+    expect(subcall_publickey.signature).lengthOf(64);
+    expect(subcall_publickey).has.haveOwnProperty('expiration');
+
+    // Verify CBOR parsing via contract returns the same result
+    const result = await contract.testCoreCallDataPublicKey.staticCall();
+    expect(result.epoch).eq(subcall_data.epoch);
+    expect(result.public_key.key).eq(hexlify(subcall_data.public_key.key));
+    expect(result.public_key.checksum).eq(
+      hexlify(subcall_data.public_key.checksum),
+    );
+    expect(result.public_key.expiration).eq(subcall_data.public_key.expiration);
+
+    // Signature is sliced in half, to fit into two bytes32 elements
+    const sig0 = subcall_publickey.signature.slice(0, 32);
+    const sig1 = subcall_publickey.signature.slice(32);
+    expect(result.public_key.signature[0]).eq(hexlify(sig0), 'Sig0 mismatch');
+    expect(result.public_key.signature[1]).eq(hexlify(sig1), 'Sig1 mismatch');
+  });
+
+  it('core.CurrentEpoch works', async () => {
+    const actualEpoch = await contract.testCoreCurrentEpoch.staticCall();
+    const expectedEpoch = await getDockerEpoch(await getDockerName());
+    expect(Number(actualEpoch)).eq(expectedEpoch);
   });
 });

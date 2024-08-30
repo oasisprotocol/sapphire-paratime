@@ -120,4 +120,25 @@ contract SubcallTests {
     {
         return Subcall._parseCBORUint(result, offset);
     }
+
+    event RawResult(uint64, bytes);
+
+    function testParseCallDataPublicKey(bytes memory data)
+        external
+        pure
+        returns (uint256 epoch, Subcall.CallDataPublicKey memory public_key)
+    {
+        (epoch, public_key) = Subcall._parseCBORCallDataPublicKey(data);
+    }
+
+    function testCoreCallDataPublicKey()
+        external
+        returns (uint256 epoch, Subcall.CallDataPublicKey memory public_key)
+    {
+        (epoch, public_key) = Subcall.coreCallDataPublicKey();
+    }
+
+    function testCoreCurrentEpoch() external returns (uint256 epoch) {
+        return Subcall.coreCurrentEpoch();
+    }
 }
