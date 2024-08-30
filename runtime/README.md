@@ -93,18 +93,25 @@ Add the Fortanix SGX tools by running:
 cargo install --locked fortanix-sgx-tools sgxs-tools
 ```
 
-### Non-SGX Binary
+### Mock SGX Binary
 
-To build the non-SGX binary of the Sapphire ParaTime, checkout the appropriate
-version and run:
+Mock SGX allows a developer to run the Sapphire ParaTime binary without
+performing the attestation and requiring actual SGX hardware. While you can't
+connect to a production Mainnet or Testnet with such a setup, it is useful for
+testing Sapphire locally and/or testing dApps that require
+Sapphire-specific features, for example in the CI environments.
+
+To build the unsafe, mock SGX binary of the Sapphire ParaTime for Localnet
+checkout the appropriate version and run:
 
 ```shell
-cargo build --release --locked
+export OASIS_UNSAFE_SKIP_AVR_VERIFY=1 OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES=1 OASIS_UNSAFE_USE_LOCALNET_CHAINID=1
+cargo build --release --locked --features debug-mock-sgx
 ```
 
 The resulting ELF binary is located at `target/release/sapphire-paratime`.
 
-_NOTE: The non-SGX binary is dynamically linked so it may not be portable
+_NOTE: The mock SGX binary is dynamically linked so it may not be portable
 between machines with different versions of shared libraries._
 
 ### SGX Binary
