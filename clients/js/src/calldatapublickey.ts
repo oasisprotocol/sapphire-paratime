@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { decode as cborDecode } from 'cborg';
 import { fromQuantity, getBytes } from './ethersutils.js';
 import type { EIP2696_EthereumProvider } from './provider.js';
-import { NETWORKS } from './networks.js';
+import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
 import { Cipher, X25519DeoxysII } from './cipher.js';
 
 /**
@@ -11,8 +12,6 @@ import { Cipher, X25519DeoxysII } from './cipher.js';
  * This time is in milliseconds
  */
 const DEFAULT_PUBKEY_CACHE_EXPIRATION_MS = 60 * 5 * 1000;
-
-export const OASIS_CALL_DATA_PUBLIC_KEY = 'oasis_callDataPublicKey';
 
 // -----------------------------------------------------------------------------
 // Fetch calldata public key
@@ -56,69 +55,30 @@ export interface CallDataPublicKey {
   fetched: Date;
 }
 
-function toCallDataPublicKey(
-  result: RawCallDataPublicKeyResponseResult,
-  chainId: number,
-) {
-  const key = getBytes(result.key);
-  return {
-    key,
-    checksum: getBytes(result.checksum),
-    signature: getBytes(result.signature),
-    epoch: result.epoch,
-    chainId,
-    fetched: new Date(),
-  } as CallDataPublicKey;
+function parseBigIntFromByteArray(bytes: Uint8Array): bigint {
+  return bytes.reduce((acc, byte) => (acc << 8n) | BigInt(byte), 0n);
 }
 
-export async function fetchRuntimePublicKeyFromURL(
-  gwUrl: string,
-  fetchImpl: typeof fetch,
-): Promise<RawCallDataPublicKeyResponse> {
-  const res = await fetchImpl(gwUrl, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: makeCallDataPublicKeyBody(),
-  });
-  if (!res.ok) {
-    throw new FetchError('Failed to fetch runtime public key.', res);
-  }
-  return await res.json();
-}
+class AbiDecodeError extends Error {}
 
-function makeCallDataPublicKeyBody(): string {
-  return JSON.stringify({
-    jsonrpc: '2.0',
-    id: Math.floor(Math.random() * 1e9),
-    method: OASIS_CALL_DATA_PUBLIC_KEY,
-    params: [],
-  });
-}
-
-export async function fetchRuntimePublicKeyByChainId(
-  chainId: number,
-  opts?: { fetch?: typeof fetch },
-): Promise<CallDataPublicKey> {
-  const { defaultGateway } = NETWORKS[chainId];
-  if (!defaultGateway)
-    throw new Error(
-      `Unable to fetch runtime public key for network with unknown ID: ${chainId}.`,
-    );
-  const fetchImpl = opts?.fetch ?? globalThis?.fetch;
-  if (!fetchImpl) {
-    throw new Error('No fetch implementation found!');
+/// Manual ABI-parsing of ['uint', 'bytes']
+function parseAbiEncodedUintBytes(bytes: Uint8Array): [bigint, Uint8Array] {
+  if (bytes.length < 32 * 3) {
+    throw new AbiDecodeError('too short');
   }
-  const res = await fetchRuntimePublicKeyFromURL(defaultGateway, fetchImpl);
-  if (!res.result) {
-    throw new Error(
-      `fetchRuntimePublicKeyByChainId failed, empty result in: ${JSON.stringify(
-        res,
-      )}`,
-    );
+  const status = parseBigIntFromByteArray(bytes.slice(0, 32));
+  const offset = Number(parseBigIntFromByteArray(bytes.slice(32, 64)));
+  if (bytes.length < offset + 32) {
+    throw new AbiDecodeError('too short, offset');
   }
-  return toCallDataPublicKey(res.result, chainId);
+  const data_length = Number(
+    parseBigIntFromByteArray(bytes.slice(offset, offset + 32)),
+  );
+  if (bytes.length < offset + 32 + data_length) {
+    throw new AbiDecodeError('too short, data');
+  }
+  const data = bytes.slice(offset + 32, offset + 32 + data_length);
+  return [status, data];
 }
 
 /**
@@ -128,39 +88,48 @@ export async function fetchRuntimePublicKeyByChainId(
  * NOTE: MetaMask does not support Web3 methods it doesn't know about, so we
  *       have to fall-back to fetch()ing directly via the default chain gateway.
  */
-export async function fetchRuntimePublicKey(
-  args: { upstream: EIP2696_EthereumProvider } | { chainId: number },
-) {
+export async function fetchRuntimePublicKey(args: {
+  upstream: EIP2696_EthereumProvider;
+}) {
   let chainId: number | undefined = undefined;
-  if ('upstream' in args) {
-    let resp: any | undefined = undefined;
-    const { upstream } = args;
-    chainId = fromQuantity(
-      (await upstream.request({
-        method: 'eth_chainId',
-      })) as string | number,
-    );
 
-    try {
-      resp = await upstream.request({
-        method: OASIS_CALL_DATA_PUBLIC_KEY,
-        params: [],
-      });
-    } catch (ex) {
-      // ignore RPC errors / failures
-    }
+  const { upstream } = args;
+  chainId = fromQuantity(
+    (await upstream.request({
+      method: 'eth_chainId',
+    })) as string | number,
+  );
 
-    if (resp && 'key' in resp) {
-      return toCallDataPublicKey(resp, chainId);
-    }
+  // NOTE: we hard-code the eth_call data, as it never changes
+  //       It's equivalent to: // abi_encode(['string', 'bytes'], ['core.CallDataPublicKey', cborEncode(null)])
+  const call_resp = (await upstream.request({
+    method: 'eth_call',
+    params: [
+      {
+        to: SUBCALL_ADDR,
+        data: CALLDATAPUBLICKEY_CALLDATA,
+      },
+      'latest',
+    ],
+  })) as string;
+  const resp_bytes = getBytes(call_resp);
+
+  // NOTE: to avoid pulling-in a full ABI decoder dependency, slice it manually
+  const [resp_status, resp_cbor] = parseAbiEncodedUintBytes(resp_bytes);
+  if (resp_status !== 0n) {
+    throw new Error(`fetchRuntimePublicKey - invalid status: ${resp_status}`);
   }
 
-  if (!chainId) {
-    throw new Error(
-      'fetchRuntimePublicKey failed to retrieve chainId from provider',
-    );
-  }
-  return fetchRuntimePublicKeyByChainId(chainId);
+  const response = cborDecode(resp_cbor);
+
+  return {
+    key: response.public_key.key,
+    checksum: response.public_key.checksum,
+    signature: response.public_key.signature,
+    epoch: response.epoch,
+    chainId,
+    fetched: new Date(),
+  } as CallDataPublicKey;
 }
 
 /**

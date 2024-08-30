@@ -2,6 +2,7 @@
 
 import { BytesLike } from './ethersutils.js';
 import { KeyFetcher } from './calldatapublickey.js';
+import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
 
 // -----------------------------------------------------------------------------
 // https://eips.ethereum.org/EIPS/eip-2696#interface
@@ -168,7 +169,16 @@ export function makeSapphireRequestFn(
 
     // Decrypt responses which return encrypted data
     if (method === 'eth_call') {
-      return cipher.decryptResult(res as BytesLike);
+      // If it's an unencrypted core.CallDataPublicKey query, don't attempt to decrypt the response
+      const isCDPKQuery =
+        params &&
+        Array.isArray(params) &&
+        params.length > 0 &&
+        params[0].to === SUBCALL_ADDR &&
+        params[0].data === CALLDATAPUBLICKEY_CALLDATA;
+      if (!isCDPKQuery) {
+        return cipher.decryptResult(res as BytesLike);
+      }
     }
 
     return res;
