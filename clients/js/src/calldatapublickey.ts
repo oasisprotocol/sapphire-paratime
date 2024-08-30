@@ -56,7 +56,8 @@ export interface CallDataPublicKey {
 }
 
 function parseBigIntFromByteArray(bytes: Uint8Array): bigint {
-  return bytes.reduce((acc, byte) => (acc << 8n) | BigInt(byte), 0n);
+  const eight = BigInt(8);
+  return bytes.reduce((acc, byte) => (acc << eight) | BigInt(byte), BigInt(0));
 }
 
 class AbiDecodeError extends Error {}
@@ -116,7 +117,7 @@ export async function fetchRuntimePublicKey(args: {
 
   // NOTE: to avoid pulling-in a full ABI decoder dependency, slice it manually
   const [resp_status, resp_cbor] = parseAbiEncodedUintBytes(resp_bytes);
-  if (resp_status !== 0n) {
+  if (resp_status !== BigInt(0)) {
     throw new Error(`fetchRuntimePublicKey - invalid status: ${resp_status}`);
   }
 
