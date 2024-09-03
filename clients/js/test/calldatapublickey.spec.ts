@@ -17,7 +17,6 @@ describe('fetchRuntimePublicKey', () => {
   /// Verifies call data public key fetching works
   it('mock provider', async () => {
     const upstream = new MockEIP1193Provider(NETWORKS.localnet.chainId);
-    //await upstream.request({ method: OASIS_CALL_DATA_PUBLIC_KEY });
 
     const pk = await fetchRuntimePublicKey({ upstream });
     expect(hexlify(pk.key)).toEqual(hexlify(upstream.calldatapublickey));
