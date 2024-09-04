@@ -123,9 +123,6 @@ export async function createSapphireSerializer<
 	const fetcher = new KeyFetcher();
 	const provider = client as EthereumProvider;
 	await fetcher.fetch(provider);
-	setTimeout(async () => {
-		await fetcher.fetch(provider);
-	}, fetcher.timeoutMilliseconds);
 
 	const wrappedSerializer = ((tx, sig?) => {
 		if (!sig) {
