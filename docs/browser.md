@@ -197,6 +197,15 @@ repository.
 
 :::
 
+:::info Example
+
+If your project involves building both a contract backend and a web frontend,
+we recommend that you check out the official [Oasis starter] files.
+
+[Oasis starter]: https://github.com/oasisprotocol/demo-starter
+
+:::
+
 [block explorer]: https://explorer.oasis.io/testnet/sapphire/tx/0x3303dea5d48291d1564cad573f21fc71fcbdc2b862e17e056287fd9207e3bc53
 [guide-transaction-calls]: guide.mdx#transactions--calls
 [Hardhat boilerplate repo]: https://github.com/NomicFoundation/hardhat-boilerplate
