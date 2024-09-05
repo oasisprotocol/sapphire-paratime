@@ -16,10 +16,10 @@ jobs:
           - 8545:8545
           - 8546:8546
         env:
-          OASIS_DEPOSIT: /oasis-deposit -test-mnemonic -n 5
+          OASIS_DEPOSIT_BINARY: /oasis-deposit -test-mnemonic -n 5
         options: >-
           --rm
-          --health-cmd="/oasis-node debug control wait-ready -a unix:/serverdir/node/net-runner/network/client-0/internal.sock"
+          --health-cmd="test -f /CONTAINER_READY"
           --health-start-period=90s
     env:
       SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 3001
@@ -28,8 +28,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Install jq
         run: sudo apt install -y jq
-      - name: Wait for gateway
-        run: bash .github/wait-until-ready.sh
       - name: Python client tests
         working-directory: clients/py
         run: |
