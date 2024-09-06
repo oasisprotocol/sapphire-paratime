@@ -190,14 +190,14 @@ transactions!
 Should you have any questions or ideas to share, feel free to reach out to us
 on [discord and other social media channels][social-media].
 
-:::info Example
+:::info Example: Hardhat boilerplate
 
 You can download a full working example from the [Sapphire ParaTime examples]
 repository.
 
 :::
 
-:::info Example
+:::info Example: Starter project
 
 If your project involves building both a contract backend and a web frontend,
 we recommend that you check out the official [Oasis starter] files.
