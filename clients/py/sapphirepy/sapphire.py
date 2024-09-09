@@ -7,6 +7,12 @@ from eth_typing import HexStr
 
 from .envelope import TransactionCipher
 
+NETWORKS = {
+    "sapphire": "https://sapphire.oasis.io",
+    "sapphire-testnet": "https://testnet.sapphire.oasis.io",
+    "sapphire-localnet": "http://localhost:8545",
+}
+
 # Should transactions which deploy contracts be encrypted?
 ENCRYPT_DEPLOYS = False
 
