@@ -119,13 +119,23 @@ export async function createSapphireSerializer<
 		return originalSerializer;
 	}
 
-	// As the serialized is synchronous, fetching keys while running
+	// As the serializer is synchronous, fetching keys while running
 	const fetcher = new KeyFetcher();
 	const provider = client as EthereumProvider;
 	await fetcher.fetch(provider);
-	setTimeout(async () => {
+
+	// The fetcher runs in the background, routinely fetching the keys
+	// This means when the serializer requests a calldata public key one will
+	// have been retrieved pre-emptively.
+	const intervalId: NodeJS.Timeout | number = setInterval(async () => {
 		await fetcher.fetch(provider);
 	}, fetcher.timeoutMilliseconds);
+	// The interval ID is unreferenced to prevent Node from hanging at exit
+	// See discussion on https://github.com/oasisprotocol/sapphire-paratime/pull/379
+	// This is only available in NodeJS, and not in browsers
+	if (typeof intervalId.unref === "function") {
+		intervalId.unref();
+	}
 
 	const wrappedSerializer = ((tx, sig?) => {
 		if (!sig) {
