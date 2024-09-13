@@ -9,28 +9,14 @@ import {findSidebarItem} from '@site/src/sidebarUtils';
 
 In this tutorial, you will build and deploy a unique dApp that requires
 confidentiality to work. By the end of the tutorial, you should feel
-comfortable setting up your Eth development environment to target Sapphire,
+comfortable setting up your EVM development environment to target Sapphire,
 and know how and when to use confidentiality.
 
 The expected completion time of this tutorial is 15 minutes.
 
-:::info Sunsetting Truffle
-
-Per Consensys [announcement], Oasis will no longer support Truffle as of
-2023-10-05 and encourage immediate [migration] to Hardhat. Please see our
-repository for the archived Truffle [tutorial] and the deprecated [example].
-
-:::
-
-[announcement]: https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat
-[migration]: https://trufflesuite.com/docs/truffle/how-to/migrate-to-hardhat/
-[tutorial]: https://github.com/oasisprotocol/docs/blob/2f4a1a3c217b82687ab9440bf051762ae369ed45/docs/dapp/sapphire/quickstart.mdx
-[example]: https://github.com/oasisprotocol/sapphire-paratime/tree/3a85e42e6c1cc090c28a521cf7df6353aa8a30c8/examples/truffle
-
-
 ## Create a Sapphire-Native dApp
 
-Porting an existing Eth app is cool, and will provide benefits such as
+Porting an existing EVM app is cool, and will provide benefits such as
 protection against MEV.
 However, starting from scratch with confidentiality in mind can unlock some
 really novel dApps and provide a [higher level of security].
@@ -48,43 +34,38 @@ Let's make it happen!
 We're going to use Hardhat, but Sapphire should be compatible with your dev
 environment of choice. Let us know if things are not as expected!
 
-1. Make & enter a new directory
-2. `npx hardhat@~2.19.2 init` then create a TypeScript project.
+1. Make & enter a new directory `mkdir quickstart && cd quickstart`
+2. `npx hardhat@~2.19.4 init` then create a TypeScript project and install the project dependencies.
 3. Add [`@oasisprotocol/sapphire-hardhat`] as dependency:
 
   ```shell npm2yarn
   npm install -D @oasisprotocol/sapphire-hardhat
   ```
 
-4. Install `@nomicfoundation/hardhat-toolbox`, TypeScript and other peer
-   dependencies required by HardHat.
-
 ### Add the Sapphire Testnet to Hardhat
 
 Open up your `hardhat.config.ts` and drop in these lines.
 
-```diff
-diff --git a/hardhat.config.ts b/hardhat.config.ts
-index 414e974..49c95f9 100644
---- a/hardhat.config.ts
-+++ b/hardhat.config.ts
-@@ -1,8 +1,19 @@
+```js title="hardhat.config.ts"
  import { HardhatUserConfig } from "hardhat/config";
-+import '@oasisprotocol/sapphire-hardhat';
+ // highlight-next-line
+ import '@oasisprotocol/sapphire-hardhat';
  import "@nomicfoundation/hardhat-toolbox";
 
  const config: HardhatUserConfig = {
-   solidity: "0.8.17",
-+  networks: {
-+    'sapphire-testnet': {
-+      // This is Testnet! If you want Mainnet, add a new network config item.
-+      url: "https://testnet.sapphire.oasis.io",
-+      accounts: process.env.PRIVATE_KEY
-+        ? [process.env.PRIVATE_KEY]
-+        : [],
-+      chainId: 0x5aff,
-+    },
-+  },
+  solidity: "0.8.19",
+  // highlight-start
+  networks: {
+    'sapphire-testnet': {
+      // This is Testnet! If you want Mainnet, add a new network config item.
+      url: "https://testnet.sapphire.oasis.io",
+      accounts: process.env.PRIVATE_KEY
+        ? [process.env.PRIVATE_KEY]
+        : [],
+      chainId: 0x5aff,
+    },
+  },
+  // highlight-end
  };
 
  export default config;
@@ -97,9 +78,9 @@ transactions**.
 
 ### Get some Sapphire Testnet tokens
 
-Now for the fun part. We need to configure the Sapphire network and get some tokens.
-Hit up the one and only [Oasis Testnet faucet] and select "Sapphire".
-Submit the form and be on your way.
+Now for the fun part. As you have configured the Sapphire Test network, get some native TEST tokens.
+Hit up the one and only [Oasis Testnet faucet], select "Sapphire" and enter your address.
+Submit the form and TEST be on your way.
 
 [Oasis Testnet faucet]: https://faucet.testnet.oasis.io
 
