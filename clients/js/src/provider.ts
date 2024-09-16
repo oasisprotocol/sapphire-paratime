@@ -132,7 +132,7 @@ export function isWrappedRequestFn<
   return p && SAPPHIRE_EIP1193_REQUESTFN in p;
 }
 
-function isCallDataPublicKeyQuery(params?: object | readonly unknown[]) {
+export function isCallDataPublicKeyQuery(params?: object | readonly unknown[]) {
   return (
     params &&
     Array.isArray(params) &&

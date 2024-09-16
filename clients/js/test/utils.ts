@@ -3,6 +3,7 @@
 import {
   EIP2696_EthereumProvider,
   hexlify,
+  isCallDataPublicKeyQuery,
 } from '@oasisprotocol/sapphire-paratime';
 import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from '../src/constants';
 import { encode as cborEncode } from 'cborg';
@@ -31,9 +32,7 @@ export class MockEIP1193Provider {
       // Intercept calls to the `core.CallDataPublicKey` subcall
       if (
         method === 'eth_call' &&
-        Array.isArray(params) &&
-        params[0].to === SUBCALL_ADDR &&
-        params[0].data === CALLDATAPUBLICKEY_CALLDATA
+        isCallDataPublicKeyQuery(params)
       ) {
         const signature = nacl.sign(
           this.calldatapublickey,
