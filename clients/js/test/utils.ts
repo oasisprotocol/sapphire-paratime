@@ -30,10 +30,7 @@ export class MockEIP1193Provider {
     this.calldatakeypair = nacl.sign.keyPair();
     this.request = jest.fn(async ({ method, params }) => {
       // Intercept calls to the `core.CallDataPublicKey` subcall
-      if (
-        method === 'eth_call' &&
-        isCallDataPublicKeyQuery(params)
-      ) {
+      if (method === 'eth_call' && isCallDataPublicKeyQuery(params)) {
         const signature = nacl.sign(
           this.calldatapublickey,
           this.calldatakeypair.secretKey,
