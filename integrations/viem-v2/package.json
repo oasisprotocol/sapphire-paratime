@@ -2,7 +2,7 @@
 	"type": "module",
 	"name": "@oasisprotocol/sapphire-viem-v2",
 	"license": "Apache-2.0",
-	"version": "2.0.0-next.1",
+	"version": "2.0.1",
 	"description": "Viem support for the Oasis Sapphire ParaTime.",
 	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/viem-v2",
 	"repository": {
