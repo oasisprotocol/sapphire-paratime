@@ -18,6 +18,8 @@ Next you must ensure that any clients use the `sapphireTransport()` to encrypt
 any unsigned communication, for example when using [hardhat-viem] pass the
 `transport` parameter when constructing a Public Client:
 
+[hardhat-viem]: https://hardhat.org/hardhat-runner/docs/advanced/using-viem
+
 ```typescript
 import { sapphireLocalnet, sapphireTransport } from '@oasisprotocol/sapphire-viem-v2';
 
@@ -42,4 +44,10 @@ const walletClient = await wrapWalletClient(createWalletClient({
 }));
 ```
 
-[hardhat-viem]: https://hardhat.org/hardhat-runner/docs/advanced/using-viem
+### Chains
+
+The chain configuration for `sapphireLocalnet` is available in the `@oasisprotocol/sapphire-viem-v2` package as seen above.
+The Sapphire `mainnet` and `testnet` configurations are available in `viem/chains`
+```ts
+import { sapphire, sapphireTestnet } from 'viem/chains';
+```
