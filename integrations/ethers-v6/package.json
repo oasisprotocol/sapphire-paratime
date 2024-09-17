@@ -48,9 +48,6 @@
 	"peerDependenciesMeta": {
 		"typescript": {
 			"optional": true
-		},
-		"@oasisprotocol/sapphire-paratime": {
-			"optional": true
 		}
 	},
 	"devDependencies": {
