@@ -5,7 +5,6 @@ import {
   hexlify,
   isCallDataPublicKeyQuery,
 } from '@oasisprotocol/sapphire-paratime';
-import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from '../src/constants';
 import { encode as cborEncode } from 'cborg';
 import nacl from 'tweetnacl';
 import { AbiCoder } from 'ethers';
