@@ -2,7 +2,7 @@
 	"type": "module",
 	"name": "@oasisprotocol/sapphire-ethers-v6",
 	"license": "Apache-2.0",
-	"version": "6.0.0",
+	"version": "6.0.1",
 	"description": "Ethers v6 support for the Oasis Sapphire ParaTime.",
 	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/ethers-v6",
 	"repository": {
