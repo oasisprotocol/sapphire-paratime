@@ -5,6 +5,8 @@ import { fromQuantity, getBytes } from './ethersutils.js';
 import type { EIP2696_EthereumProvider } from './provider.js';
 import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
 import { Cipher, X25519DeoxysII } from './cipher.js';
+import { ed25519_verify_raw } from './munacl.js';
+import { sha512_256 } from '@noble/hashes/sha512';
 
 /**
  * calldata public keys are cached for this amount of time
@@ -17,17 +19,6 @@ const DEFAULT_PUBKEY_CACHE_EXPIRATION_MS = 60 * 5 * 1000;
 // Fetch calldata public key
 // Well use provider when possible, and fallback to HTTP(S)? requests
 // e.g. MetaMask doesn't allow the oasis_callDataPublicKey JSON-RPC method
-
-export type RawCallDataPublicKeyResponseResult = {
-  key: string;
-  checksum: string;
-  signature: string;
-  epoch: number;
-};
-
-export type RawCallDataPublicKeyResponse = {
-  result: RawCallDataPublicKeyResponseResult;
-};
 
 export class FetchError extends Error {
   public constructor(message: string, public readonly response?: unknown) {
@@ -46,7 +37,10 @@ export interface CallDataPublicKey {
   signature: Uint8Array;
 
   // Epoch is the epoch of the ephemeral runtime key.
-  epoch: number;
+  epoch?: bigint;
+
+  // At which epoch does this key become invalid
+  expiration?: bigint;
 
   // Which chain ID is this key for?
   chainId: number;
@@ -80,6 +74,48 @@ function parseAbiEncodedUintBytes(bytes: Uint8Array): [bigint, Uint8Array] {
   }
   const data = bytes.slice(offset + 32, offset + 32 + data_length);
   return [status, data];
+}
+
+function u64tobytes(x: bigint): Uint8Array {
+  if (x < 0n || x > 18446744073709551615n) {
+    throw new Error('Value out of range for uint64');
+  }
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  view.setBigUint64(0, x, false); // false for big-endian
+  return new Uint8Array(buffer);
+}
+
+function verifyRuntimePublicKey(
+  pk: CallDataPublicKey,
+  runtime_id: Uint8Array,
+  key_pair_id: Uint8Array,
+) {
+  const PUBLIC_KEY_SIGNATURE_CONTEXT = new TextEncoder().encode(
+    'oasis-core/keymanager: pk signature',
+  );
+
+  let body = new Uint8Array([
+    ...pk.key,
+    ...pk.checksum,
+    ...runtime_id,
+    ...key_pair_id,
+  ]);
+
+  if (pk.epoch !== undefined) {
+    body = new Uint8Array([...body, ...u64tobytes(pk.epoch)]);
+  }
+
+  if (pk.expiration !== undefined) {
+    body = new Uint8Array([...body, ...u64tobytes(pk.expiration)]);
+  }
+
+  const ctx = sha512_256.create();
+  ctx.update(PUBLIC_KEY_SIGNATURE_CONTEXT);
+  ctx.update(body);
+  const digest = ctx.digest();
+
+  return ed25519_verify_raw(pk.signature, pk.key, digest);
 }
 
 /**
