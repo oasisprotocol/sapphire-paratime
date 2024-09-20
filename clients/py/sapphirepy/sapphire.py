@@ -23,12 +23,13 @@ ENCRYPT_DEPLOYS = False
 
 # Number of epochs to keep public keys for
 EPOCH_LIMIT = 5
-#Default gas price
+# Default gas price
 DEFAULT_GAS_PRICE = 100_000_000_000
-#Default gas limit
+# Default gas limit
 DEFAULT_GAS_LIMIT = 30_000_000
-#Default block range
+# Default block range
 DEFAULT_BLOCK_RANGE = 15
+
 
 class CalldataPublicKey(TypedDict):
     epoch: int
@@ -83,73 +84,93 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
     elif isinstance(data, str):
         if len(data) < 2 or data[:2] != '0x':
             raise ValueError('Data is not hex encoded!', data)
+        # Testing
         data_bytes = unhexlify(data[2:])
     else:
         raise TypeError("Invalid 'data' type", type(data))
     encrypted_data = c.encrypt(data_bytes)
 
     # if False:
-    if params[0]['from'] and params[0]['from'] == account.address:
-        domain_data = {
-            "name": "oasis-runtime-sdk/evm: signed query",
-            "version": "1.0.0",
-            "chainId": web3.eth.chain_id,
-            # "verifyingContract": "",
-            # "salt": "",
-        }
-        msg_types = {
-            "Call": [
-                {"name": "from", "type": "address"},
-                {"name": "to", "type": "address"},
-                {"name": "gasLimit", "type": "uint64"},
-                {"name": "gasPrice", "type": "uint256"},
-                {"name": "value", "type": "uint256"},
-                {"name": "data", "type": "bytes"},
-                {"name": "leash", "type": "Leash"},
-            ],
-            "Leash": [
-                {"name": "nonce", "type": "uint64"},
-                {"name": "blockNumber", "type": "uint64"},
-                {"name": "blockHash", "type": "bytes32"},
-                {"name": "blockRange", "type": "uint64"},
-            ],
-        }
-        msg_data = {
-            "from": params[0].get('from'),
-            "to": params[0].get('to', '0x'),
-            "value": params[0].get('value', 0),
-            "gasLimit": params[0].get('gas', DEFAULT_GAS_LIMIT),
-            "gasPrice": params[0].get('gasPrice', DEFAULT_GAS_PRICE),
-            "data": params[0].get('data'),
-            "leash":
-                {
-                    "nonce": web3.eth.get_transaction_count(params[0].get('from')),
-                    "blockNumber": web3.eth.block_number-1,
-                    "blockHash": web3.eth.get_block(web3.eth.block_number)['hash'],
-                    "blockRange": DEFAULT_BLOCK_RANGE,
-                }
-        }
-
-        # sign the message with the private key:
-        signed_msg = Account.sign_typed_data(account.key, domain_data, msg_types, msg_data)
-        leash = {
-            'Nonce': web3.eth.get_transaction_count(params[0]['from']),
-            'BlockNumber': web3.eth.block_number-1,
-            'BlockHash': web3.eth.get_block(web3.eth.block_number)['hash'],
-            'BlockRange': DEFAULT_BLOCK_RANGE,
-        }
-        data_pack = {
-            'data': params[0]['data'],
-            # 'data': encrypted_data,
-            'leash': leash,
-            'signature': signed_msg['signature'],
-        }
+    if params[0]['from']: # and params[0]['from'] == account.address:
+        data_pack = _new_signed_call_data_pack(encrypted_data, data_bytes, params, web3, account)
         params[0]['data'] = cbor2.dumps(data_pack, canonical=True)
         params[0]['data'] = '0x' + params[0]['data'].hex()
         return c
 
     params[0]['data'] = HexStr('0x' + hexlify(encrypted_data).decode('ascii'))
     return c
+
+
+def _new_signed_call_data_pack(encrypted_data: bytes,
+                               data_bytes: bytes,
+                               params: tuple[TxParams],
+                               web3: Web3,
+                               account: LocalAccount) -> dict:
+
+    # Update params with default values, these get used outside the scope of this function
+    params[0]['gas'] =  params[0].get('gas', DEFAULT_GAS_LIMIT)
+    params[0]['gasPrice'] = params[0].get('gasPrice', DEFAULT_GAS_PRICE)
+
+
+    domain_data = {
+        "name": "oasis-runtime-sdk/evm: signed query",
+        "version": "1.0.0",
+        "chainId": web3.eth.chain_id,
+        # "verifyingContract": "",
+        # "salt": "",
+    }
+    msg_types = {
+        "Call": [
+            {"name": "from", "type": "address"},
+            {"name": "to", "type": "address"},
+            {"name": "gasLimit", "type": "uint64"},
+            {"name": "gasPrice", "type": "uint256"},
+            {"name": "value", "type": "uint256"},
+            {"name": "data", "type": "bytes"},
+            {"name": "leash", "type": "Leash"},
+        ],
+        "Leash": [
+            {"name": "Nonce", "type": "uint64"},
+            {"name": "blockNumber", "type": "uint64"},
+            {"name": "blockHash", "type": "bytes32"},
+            {"name": "blockRange", "type": "uint64"},
+        ],
+    }
+    nonce = web3.eth.get_transaction_count(params[0]['from'])
+    block_number = web3.eth.block_number
+    block_hash = web3.eth.get_block(block_number)['hash'].hex()
+    msg_data = {
+        "from": params[0].get('from'),
+        "to": params[0].get('to'),
+        "value": params[0].get('value', 0),
+        "gasLimit": params[0]['gas'],
+        "gasPrice": params[0]['gasPrice'],
+        "data": data_bytes,
+        "leash":
+            {
+                "Nonce": nonce,
+                "blockNumber": block_number - 1,
+                "blockHash": unhexlify(block_hash[2:]),
+                "blockRange": DEFAULT_BLOCK_RANGE,
+            }
+    }
+
+    # sign the message with the private key:
+    signed_msg = Account.sign_typed_data(account.key, domain_data, msg_types, msg_data)
+
+    leash = {
+        "nonce": nonce,
+        "block_number": block_number - 1,
+        "block_hash": unhexlify(block_hash[2:]),
+        "block_range": DEFAULT_BLOCK_RANGE,
+    }
+    data_pack = {
+        'data': cbor2.loads(encrypted_data),
+        'leash': leash,
+        'signature': signed_msg['signature'],
+    }
+    return data_pack
+
 
 def construct_sapphire_middleware(
         account: LocalAccount = None
@@ -159,6 +180,7 @@ def construct_sapphire_middleware(
     :param account: Used to encrypt signed queries.
     :return: A Sapphire middleware function.
     """
+
     def sapphire_middleware(
             make_request: Callable[[RPCEndpoint, Any], Any], w3: "Web3"
     ) -> Callable[[RPCEndpoint, Any], RPCResponse]:
@@ -197,7 +219,7 @@ def construct_sapphire_middleware(
                         raise RuntimeError('Could not retrieve callDataPublicKey!')
                     do_fetch = False
 
-                    c = _encrypt_tx_params(pk, params, w3,  account)
+                    c = _encrypt_tx_params(pk, params, w3, account)
 
                     # We may encounter three errors here:
                     #  'core: invalid call format: epoch too far in the past'
@@ -225,6 +247,7 @@ def construct_sapphire_middleware(
         return middleware
 
     return sapphire_middleware
+
 
 def wrap(w3: Web3, account: LocalAccount = None):
     """
