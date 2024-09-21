@@ -1060,9 +1060,9 @@ function pack(r: Uint8Array, p: Float64Array[]) {
   r[31] ^= par25519(tx) << 7; // set sign bit
 }
 
-function crypto_hash(output:Uint8Array, input:Uint8Array, nbytes:number) {
+function crypto_hash(output: Uint8Array, input: Uint8Array, nbytes: number) {
   const r = sha512(input.slice(0, nbytes));
-  for( let i = 0; i < r.length; i++ ) {
+  for (let i = 0; i < r.length; i++) {
     output[i] = r[i];
   }
 }
@@ -1076,14 +1076,15 @@ function crypto_hash(output:Uint8Array, input:Uint8Array, nbytes:number) {
  * @returns
  */
 export function crypto_sign_open(
-  m:Uint8Array,
-  sm:Uint8Array,
-  n:number,
-  pk:Uint8Array
+  m: Uint8Array,
+  sm: Uint8Array,
+  n: number,
+  pk: Uint8Array,
 ) {
-  const t = new Uint8Array(32), h = new Uint8Array(64);
+  const t = new Uint8Array(32),
+    h = new Uint8Array(64);
   const p = [gf(), gf(), gf(), gf()],
-        q = [gf(), gf(), gf(), gf()];
+    q = [gf(), gf(), gf(), gf()];
 
   if (n < 64) return -1;
 
@@ -1093,7 +1094,7 @@ export function crypto_sign_open(
   }
 
   for (let i = 0; i < n; i++) m[i] = sm[i];
-  for (let i = 0; i < 32; i++) m[i+32] = pk[i];
+  for (let i = 0; i < 32; i++) m[i + 32] = pk[i];
   crypto_hash(h, m, n);
   reduce(h);
 
@@ -1226,7 +1227,7 @@ export function ed25519_verify_raw(
   }
 
   if (!ed25519_is_valid_scalar(S_bits)) {
-    console.log('S is not minimal (reject malleability)')
+    console.log('S is not minimal (reject malleability)');
     return false; // S is not minimal (reject malleability)
   }
 

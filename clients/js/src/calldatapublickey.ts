@@ -76,8 +76,11 @@ function parseAbiEncodedUintBytes(bytes: Uint8Array): [bigint, Uint8Array] {
   return [status, data];
 }
 
+const UINT64_MIN = BigInt(0);
+const UINT64_MAX = BigInt(1) << BigInt(64);
+
 function u64tobytes(x: bigint): Uint8Array {
-  if (x < 0n || x > 18446744073709551615n) {
+  if (x < UINT64_MIN || x > UINT64_MAX) {
     throw new Error('Value out of range for uint64');
   }
   const buffer = new ArrayBuffer(8);
@@ -86,7 +89,8 @@ function u64tobytes(x: bigint): Uint8Array {
   return new Uint8Array(buffer);
 }
 
-function verifyRuntimePublicKey(
+export function verifyRuntimePublicKey(
+  signerPk: CallDataPublicKey,
   pk: CallDataPublicKey,
   runtime_id: Uint8Array,
   key_pair_id: Uint8Array,
@@ -107,7 +111,7 @@ function verifyRuntimePublicKey(
   }
 
   if (pk.expiration !== undefined) {
-    body = new Uint8Array([...body, ...u64tobytes(pk.expiration)]);
+    body = new Uint8Array([...body, ...u64tobytes(BigInt(pk.expiration))]);
   }
 
   const ctx = sha512_256.create();
@@ -115,7 +119,7 @@ function verifyRuntimePublicKey(
   ctx.update(body);
   const digest = ctx.digest();
 
-  return ed25519_verify_raw(pk.signature, pk.key, digest);
+  return ed25519_verify_raw(pk.signature, signerPk.key, digest);
 }
 
 /**
