@@ -33,6 +33,7 @@ For more information, please refer to <http://unlicense.org>
 // https://github.com/dchest/tweetnacl-js/blob/fecde6ecf0eb81e31d54ca0509531ab1b825f490/nacl-fast.js
 
 import { sha512 } from '@noble/hashes/sha512';
+import { hexlify } from './ethersutils.js';
 
 function gf(init?: number[]): Float64Array {
   const r = new Float64Array(16);
@@ -1236,7 +1237,7 @@ export function ed25519_verify_raw(
   // Decompress A (PublicKey)
   const negA = [gf(), gf(), gf(), gf()];
   if (unpackneg(negA, publicKey) !== 0) {
-    console.log('Point compression failed, pubkey (A)');
+    console.log('Point decompression failed, pubkey (A)', hexlify(publicKey));
     return false; // Point decompression failed
   }
 
