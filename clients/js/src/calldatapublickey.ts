@@ -5,7 +5,7 @@ import { fromQuantity, getBytes } from './ethersutils.js';
 import type { EIP2696_EthereumProvider } from './provider.js';
 import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
 import { Cipher, X25519DeoxysII } from './cipher.js';
-import { ed25519_verify_raw } from './munacl.js';
+import { ed25519_verify_raw_cofactorless } from './munacl.js';
 import { sha512_256 } from '@noble/hashes/sha512';
 
 /**
@@ -14,6 +14,10 @@ import { sha512_256 } from '@noble/hashes/sha512';
  * This time is in milliseconds
  */
 const DEFAULT_PUBKEY_CACHE_EXPIRATION_MS = 60 * 5 * 1000;
+
+const BIGINT_ZERO = BigInt(0);
+const UINT64_MAX = BigInt(1) << BigInt(64);
+const BIGINT_EIGHT = BigInt(8);
 
 // -----------------------------------------------------------------------------
 // Fetch calldata public key
@@ -57,8 +61,7 @@ export interface CachedCallDataPublicKey extends CallDataPublicKey {
 }
 
 function parseBigIntFromByteArray(bytes: Uint8Array): bigint {
-  const eight = BigInt(8);
-  return bytes.reduce((acc, byte) => (acc << eight) | BigInt(byte), BigInt(0));
+  return bytes.reduce((acc, byte) => (acc << BIGINT_EIGHT) | BigInt(byte), BIGINT_ZERO);
 }
 
 class AbiDecodeError extends Error {}
@@ -79,20 +82,16 @@ function parseAbiEncodedUintBytes(bytes: Uint8Array): [bigint, Uint8Array] {
   if (bytes.length < offset + 32 + data_length) {
     throw new AbiDecodeError('too short, data');
   }
-  const data = bytes.slice(offset + 32, offset + 32 + data_length);
-  return [status, data];
+  return [status, bytes.slice(offset + 32, offset + 32 + data_length)];
 }
 
-const UINT64_MIN = BigInt(0);
-const UINT64_MAX = BigInt(1) << BigInt(64);
-
-function u64tobytes(x: bigint): Uint8Array {
-  if (x < UINT64_MIN || x > UINT64_MAX) {
+function u64tobytes(x: bigint|number): Uint8Array {
+  const y = BigInt(x);
+  if (y < BIGINT_ZERO || y > UINT64_MAX) {
     throw new Error('Value out of range for uint64');
   }
   const buffer = new ArrayBuffer(8);
-  const view = new DataView(buffer);
-  view.setBigUint64(0, x, false); // false for big-endian
+  new DataView(buffer).setBigUint64(0, y, false); // false for big-endian
   return new Uint8Array(buffer);
 }
 
@@ -105,7 +104,7 @@ export function verifyRuntimePublicKey(
   cdpk: CallDataPublicKey,
   runtime_id: Uint8Array,
   key_pair_id: Uint8Array,
-) {
+): boolean {
   let body = new Uint8Array([
     ...cdpk.public_key.key,
     ...cdpk.public_key.checksum,
@@ -114,20 +113,20 @@ export function verifyRuntimePublicKey(
   ]);
 
   if (cdpk.epoch !== undefined) {
-    body = new Uint8Array([...body, ...u64tobytes(BigInt(cdpk.epoch))]);
+    body = new Uint8Array([...body, ...u64tobytes(cdpk.epoch)]);
   }
 
   const expiration = cdpk.public_key.expiration;
   if (expiration !== undefined) {
-    body = new Uint8Array([...body, ...u64tobytes(BigInt(expiration))]);
+    body = new Uint8Array([...body, ...u64tobytes(expiration)]);
   }
 
-  const ctx = sha512_256.create();
-  ctx.update(PUBLIC_KEY_SIGNATURE_CONTEXT);
-  ctx.update(body);
-  const digest = ctx.digest();
+  const digest = sha512_256.create()
+                           .update(PUBLIC_KEY_SIGNATURE_CONTEXT)
+                           .update(body)
+                           .digest();
 
-  return ed25519_verify_raw(cdpk.public_key.signature, signerPk, digest);
+  return ed25519_verify_raw_cofactorless(cdpk.public_key.signature, signerPk, digest);
 }
 
 /**
@@ -165,17 +164,17 @@ export async function fetchRuntimePublicKey(args: {
 
   // NOTE: to avoid pulling-in a full ABI decoder dependency, slice it manually
   const [resp_status, resp_cbor] = parseAbiEncodedUintBytes(resp_bytes);
-  if (resp_status !== BigInt(0)) {
+  if (resp_status !== BIGINT_ZERO) {
     throw new Error(`fetchRuntimePublicKey - invalid status: ${resp_status}`);
   }
 
-  // TODO: validate response?
+  // TODO: validate resp_cbor?
 
   return {
-    ...cborDecode(resp_cbor),
+    ...cborDecode(resp_cbor) as CallDataPublicKey,
     chainId,
     fetched: new Date(),
-  } as CachedCallDataPublicKey;
+  };
 }
 
 /**
@@ -216,7 +215,7 @@ export class KeyFetcher {
     return X25519DeoxysII.ephemeral(public_key.key, epoch);
   }
 
-  public cipherSync() {
+  public cipherSync(): X25519DeoxysII {
     if (!this.pubkey) {
       throw new Error('No cached pubkey!');
     }

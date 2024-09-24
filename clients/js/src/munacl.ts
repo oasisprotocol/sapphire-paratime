@@ -99,6 +99,9 @@ const I = gf([
   0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83,
 ]);
 
+const _8 = new Uint8Array(32);
+_8[0] = 8;
+
 const _9 = new Uint8Array(32);
 _9[0] = 9;
 const _121665 = gf([0xdb41, 1]);
@@ -169,6 +172,7 @@ function A(o: Float64Array, a: Float64Array, b: Float64Array) {
   for (let i = 0; i < 16; i++) o[i] = a[i] + b[i];
 }
 
+/// Subtract field elements, o = a - b
 function Z(o: Float64Array, a: Float64Array, b: Float64Array) {
   for (let i = 0; i < 16; i++) o[i] = a[i] - b[i];
 }
@@ -807,6 +811,10 @@ function par25519(a: Float64Array) {
   return d[0] & 1;
 }
 
+function unpack(r: Float64Array[], p: Uint8Array) {
+  return unpackneg(r, p, true);
+}
+
 /**
  * Unpacks a compressed Edwards point, then negates it
  *
@@ -814,7 +822,7 @@ function par25519(a: Float64Array) {
  * @param p Input compressed point (32-byte Uint8Array)
  * @returns 0 on success, -1 if point is invalid
  */
-function unpackneg(r: Float64Array[], p: Uint8Array) {
+function unpackneg(r: Float64Array[], p: Uint8Array, dontnegate?:boolean) {
   const t = gf(),
     chk = gf(),
     num = gf(),
@@ -850,7 +858,9 @@ function unpackneg(r: Float64Array[], p: Uint8Array) {
   M(chk, chk, den);
   if (neq25519(chk, num)) return -1;
 
-  if (par25519(r[0]) === p[31] >> 7) Z(r[0], gf0, r[0]);
+  if( ! dontnegate ) {
+    if (par25519(r[0]) === p[31] >> 7) Z(r[0], gf0, r[0]);
+  }
 
   M(r[3], r[0], r[1]);
   return 0;
@@ -1210,12 +1220,11 @@ function ed25519_is_small_order(p: Uint8Array): boolean {
   return false;
 }
 
-/// Verify signature without applying domain separation.
-export function ed25519_verify_raw(
+function _ed25519_verify_raw_common(
   signature: Uint8Array,
   publicKey: Uint8Array,
   msg: Uint8Array,
-): boolean {
+) {
   if (ed25519_is_small_order(publicKey)) {
     return false; // Small order A
   }
@@ -1224,11 +1233,12 @@ export function ed25519_verify_raw(
   const S_bits = signature.subarray(32, 64);
 
   if (ed25519_is_small_order(R_bits)) {
+    console.log('Small order R', hexlify(R_bits));
     return false; // Small order R
   }
 
   if (!ed25519_is_valid_scalar(S_bits)) {
-    console.log('S is not minimal (reject malleability)');
+    console.log('S is not minimal (reject malleability)', hexlify(S_bits));
     return false; // S is not minimal (reject malleability)
   }
 
@@ -1237,7 +1247,7 @@ export function ed25519_verify_raw(
   // Decompress A (PublicKey)
   const negA = [gf(), gf(), gf(), gf()];
   if (unpackneg(negA, publicKey) !== 0) {
-    console.log('Point decompression failed, pubkey (A)', hexlify(publicKey));
+    console.log('Decompress A (PublicKey) failed!', hexlify(publicKey));
     return false; // Point decompression failed
   }
 
@@ -1254,6 +1264,22 @@ export function ed25519_verify_raw(
   // kA = -A^k
   scalarmult(kA, negA, k);
 
+  return {kA, sB, k};
+}
+
+/// Verify signature without applying domain separation.
+export function ed25519_verify_raw_cofactorless(
+  signature: Uint8Array,
+  publicKey: Uint8Array,
+  msg: Uint8Array,
+): boolean {
+  const result = _ed25519_verify_raw_common(signature, publicKey, msg);
+  if( result === false ) {
+    return false;
+  }
+
+  const {sB, kA, k} = result;
+
   // sB = G^s - A^k
   add(sB, kA);
 
@@ -1261,6 +1287,38 @@ export function ed25519_verify_raw(
 
   // R == G^s - A^k
   return crypto_verify_32(signature, 0, k, 0) === 0;
+}
+
+/// Verify signature without applying domain separation.
+export function ed25519_verify_raw_cofactored(
+  signature: Uint8Array,
+  publicKey: Uint8Array,
+  msg: Uint8Array,
+): boolean {
+  const result = _ed25519_verify_raw_common(signature, publicKey, msg);
+  if( result === false ) {
+    return false;
+  }
+
+  const {sB, kA, k} = result;
+
+  scalarmult(sB, sB, _8);
+
+  // kA = 8 * -A^k
+  scalarmult(kA, kA, _8);
+
+  // R = 8*r
+  const R = [gf(), gf(), gf(), gf()];
+  unpack(R, signature);
+  scalarmult(R, R, _8);
+
+  // Check the cofactored group equation ([8][S]B = [8]R - [8][k]A)
+  add(R, kA);
+  pack(k, R);
+  const j = new Uint8Array(32);
+  pack(j, sB);
+
+  return crypto_verify_32(j, 0, k, 0) === 0;
 }
 
 export class MuNaclError extends Error {}
@@ -1295,4 +1353,54 @@ export function boxKeyPairFromSecretKey(secretKey: Uint8Array): BoxKeyPair {
     ),
     secretKey: new Uint8Array(secretKey),
   };
+}
+
+/**
+ * https://eprint.iacr.org/2008/013.pdf
+ *
+ * The birational maps are:
+ *
+ *     (u, v) = ((1+y)/(1-y), sqrt(-486664)*u/x)
+ *     (x, y) = (sqrt(-486664)*u/v, (u-1)/(u+1))
+ *
+ * @param pk Curve25519 public key
+ * @returns Ed25519 public key
+ */
+export function curve25519_to_ed25519(pk: Uint8Array) {
+  const z = new Uint8Array(32),
+        u = gf(),
+        a = gf(),
+        b = gf();
+
+  unpack25519(u, pk);
+
+  A(a, u, gf1);   // a = u+1
+  Z(b, u, gf1);   // b = u-1
+  inv25519(a, a); // a = 1/(u+1)
+  M(a, a, b);     // a = a * b
+
+  pack25519(z, a);
+  return z;
+}
+
+export function ed25519_to_curve25519(pk: Uint8Array) {
+  const z = new Uint8Array(32)
+  const q = [gf(), gf(), gf(), gf()]
+  const a = gf()
+  const b = gf()
+
+  if (unpackneg(q, pk)) {
+    return null
+  }
+
+  const y = q[1]
+
+  A(a, gf1, y)
+  Z(b, gf1, y)
+  inv25519(b, b)
+  M(a, a, b)
+
+  pack25519(z, a)
+
+  return z
 }
