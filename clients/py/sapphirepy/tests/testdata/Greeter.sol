@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 contract Greeter {
     string public greeting;
+    address public owner;
 
     constructor() {
         greeting = 'Hello';
