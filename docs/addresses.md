@@ -44,9 +44,7 @@ description: List of Standard Contract Addresses
 <!-- WARNING: please don't manually update the table! -->
 | Source Chain | Token Name | Source Address | Dest. Chain | Dest Address |
 | ------------ | ---------- | -------------- | ----------- | ------------ |
-| Goerli (5) | USDT | [`0xf4B2cbc3bA04c478F0dC824f4806aC39982Dce73`](https://goerli.etherscan.io/address/0xf4B2cbc3bA04c478F0dC824f4806aC39982Dce73) | Oasis Sapphire Testnet (23295) | [`0xa55C7E1274bE5db2275a0BDd055f81e8263b7954`](https://testnet.explorer.sapphire.oasis.dev/address/0xa55C7E1274bE5db2275a0BDd055f81e8263b7954) |
 | Oasis Sapphire Testnet (23295) | wROSE | [`0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94`](https://testnet.explorer.sapphire.oasis.dev/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94) | BSC Testnet (97) | [`0x26a6f43BaEDD1767c283e2555A9E1236E5aE3A55`](https://testnet.bscscan.com/address/0x26a6f43BaEDD1767c283e2555A9E1236E5aE3A55) |
-| Oasis Sapphire Testnet (23295) | wROSE | [`0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94`](https://testnet.explorer.sapphire.oasis.dev/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94) | Polygon Mumbai (80001) | [`0xE9533976C590200E32d95C53f06AE12d292cFc47`](https://mumbai.polygonscan.com/address/0xE9533976C590200E32d95C53f06AE12d292cFc47) |
 
 ## Deployments
 
