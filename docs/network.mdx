@@ -1,42 +1,22 @@
 ---
-id: network
-title: Network Information
-description: Detailed information about chains, RPCs, block explorer and indexer
-sidebar_label: Network
+description: Detailed information for Sapphire about chains, RPCs, block explorers and indexers
 ---
 
 import {AddSapphireToMetaMask as S, AddSapphireTestnetToMetaMask as ST} from '@site/src/AddToMetaMask';
 
 # Network information
 
-### Mainnet
+## Networks
 
-- Network name: `sapphire`
-- Long network name: `Oasis Sapphire`
-- Chain ID:
-  - Hex: `0x5afe`
-  - Decimal: `23294`
+|                   | Mainnet                             | Testnet                             | Localnet                                   |
+| ------------------| ----------------------------------- | ----------------------------------- | ------------------------------------------ |
+| Network name      | `sapphire`                          | `sapphire-testnet`                  | `sapphire-localnet`                        |
+| Long network name | `Oasis Sapphire`                    | `Oasis Sapphire Testnet`            | `Oasis Sapphire Localnet`                  |
+| Chain ID          | Hex:`0x5afe`<br /> Decimal: `23294` | Hex:`0x5aff`<br /> Decimal: `23295` | Hex:`0x5afd`<br /> Decimal: `23293`        |
+| Tools             |                                     | [Testing token Faucet][faucet]      | [Local development Docker image][localnet] |
 
-### Testnet
-
-- Network name: `sapphire-testnet`
-- Long network name: `Oasis Sapphire Testnet`
-- Chain ID:
-  - Hex: `0x5aff`
-  - Decimal: `23295`
-- Testing token [Faucet][faucet]
 
 [faucet]: https://faucet.testnet.oasis.io/
-
-### Localnet
-
-- Network name: `sapphire-localnet`
-- Long network name: `Localnet`
-- Chain ID:
-  - Hex: `0x5afd`
-  - Decimal: `23293`
-- Local development Docker [image][localnet]
-
 [localnet]: https://github.com/oasisprotocol/oasis-web3-gateway/tree/main/docker
 
 ## RPC Endpoints
