@@ -4,14 +4,14 @@ This is a [Vite](https://vitejs.dev) project bootstrapped with [create-wagmi].
 
 It uses the Sapphire wrapper to encrypt contract deployments, transactions,
 view calls & gas estimations using the `injectedWithSapphire()` connector and
-`sapphireTransport` adapter configured in `src/wagmi.ts`:
+`sapphireHttpTransport` adapter configured in `src/wagmi.ts`:
 
 The connector and transport must be configured to use Sapphire to ensure
 that both transactions and view calls are encrypted.
 
 ```typescript
 import { injectedWithSapphire,
-         sapphireTransport,
+         sapphireHttpTransport,
          sapphireLocalnet } from "@oasisprotocol/sapphire-wagmi-v2";
 
 export const config = createConfig({
@@ -19,9 +19,9 @@ export const config = createConfig({
 	chains: [sapphire, sapphireTestnet, sapphireLocalnet],
 	connectors: [injectedWithSapphire()],
 	transports: {
-		[sapphire.id]: sapphireTransport(),
-		[sapphireTestnet.id]: sapphireTransport(),
-		[sapphireLocalnet.id]: sapphireTransport(),
+		[sapphire.id]: sapphireHttpTransport(),
+		[sapphireTestnet.id]: sapphireHttpTransport(),
+		[sapphireLocalnet.id]: sapphireHttpTransport(),
 	},
 });
 ```

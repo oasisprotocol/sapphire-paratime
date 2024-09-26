@@ -41,7 +41,7 @@ export const SAPPHIRE_WRAPPED_VIEM_TRANSPORT = Symbol(
 // biome-ignore lint/suspicious/noExplicitAny: required for viem compatibility
 type EthereumProvider = { request(...args: unknown[]): Promise<any> };
 
-export type SapphireTransport = Transport<
+export type SapphireHttpTransport = Transport<
 	"sapphire",
 	// biome-ignore lint/complexity/noBannedTypes: required for viem compatibility
 	{},
@@ -73,7 +73,9 @@ export function sapphireHttpTransport<T extends Transport>(): T {
 	const cachedProviders: Record<string, unknown> = {};
 	return ((params) => {
 		if (!params.chain) {
-			throw new Error("sapphireTransport() not possible with no params.chain!");
+			throw new Error(
+				"sapphireHttpTransport() not possible with no params.chain!",
+			);
 		}
 		const url = params.chain.rpcUrls.default.http[0];
 		if (!(url in cachedProviders)) {
@@ -167,7 +169,7 @@ export const SAPPHIRE_WRAPPED_VIEM_SERIALIZER = Symbol(
  * walletClient = await wrapWalletClient(createWalletClient({
  *   account,
  *   chain: sapphireLocalnet,
- *   transport: sapphireTransport()
+ *   transport: sapphireHttpTransport()
  * }));
  * ```
  *
