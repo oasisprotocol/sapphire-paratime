@@ -21,6 +21,7 @@ any unsigned communication, for example when using [hardhat-viem] pass the
 [hardhat-viem]: https://hardhat.org/hardhat-runner/docs/advanced/using-viem
 
 ```typescript
+import hre from "hardhat";
 import { sapphireLocalnet, sapphireHttpTransport } from '@oasisprotocol/sapphire-viem-v2';
 
 const publicClient = await hre.viem.getPublicClient({
@@ -35,7 +36,11 @@ transactions when using a local wallet client you must not only provide the
 `transport` parameter, but must also wrap the wallet client, as such:
 
 ```typescript
+import { createWalletClient } from 'viem'
+import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
 import { sapphireLocalnet, sapphireHttpTransport, wrapWalletClient } from '@oasisprotocol/sapphire-viem-v2';
+
+const account = mnemonicToAccount(generateMnemonic(english));
 
 const walletClient = await wrapWalletClient(createWalletClient({
 	account,

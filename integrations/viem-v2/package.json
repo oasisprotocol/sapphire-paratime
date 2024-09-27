@@ -59,7 +59,11 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
+		"@nomicfoundation/hardhat-viem": "~2.0.0",
 		"@types/node": "^18.19.31",
+		"@zaeny/literate": "^1.0.8",
+		"hardhat": "^2.22.12",
+		"rimraf": "^6.0.1",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.4.5",
 		"vitest": "^1.6.0"
