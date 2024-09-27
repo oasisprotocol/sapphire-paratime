@@ -75,6 +75,7 @@ def _should_intercept(method: RPCEndpoint, params: tuple[TxParams]):
 
 def _encrypt_tx_params(pk: CalldataPublicKey,
                        params: tuple[TxParams],
+                       method,
                        web3: Web3,
                        account: LocalAccount) -> TransactionCipher:
     c = TransactionCipher(peer_pubkey=pk['key'], peer_epoch=pk['epoch'])
@@ -84,26 +85,26 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
     elif isinstance(data, str):
         if len(data) < 2 or data[:2] != '0x':
             raise ValueError('Data is not hex encoded!', data)
-        # Testing
         data_bytes = unhexlify(data[2:])
     else:
         raise TypeError("Invalid 'data' type", type(data))
     encrypted_data = c.encrypt(data_bytes)
 
-    if params[0]['from']:  # and params[0]['from'] == account.address:
-        data_pack = _new_signed_call_data_pack(encrypted_data,
+    if params[0]['from'] and method == 'eth_call':
+        data_pack = _new_signed_call_data_pack(c.encrypt_envelope(data_bytes),
                                                data_bytes,
                                                params,
                                                web3,
                                                account)
-        params[0]['data'] = HexStr('0x' + hexlify(cbor2.dumps(data_pack)).decode('ascii'))
-        # params[0]['data'] = '0x' + params[0]['data'].hex()
+        data_pack['signature'] = bytes(data_pack['signature'])
+        params[0]['data'] = cbor2.dumps(data_pack, canonical=True)
     else:
         params[0]['data'] = HexStr('0x' + hexlify(encrypted_data).decode('ascii'))
+
     return c
 
 
-def _new_signed_call_data_pack(encrypted_data: bytes,
+def _new_signed_call_data_pack(encrypted_data: dict,
                                data_bytes: bytes,
                                params: tuple[TxParams],
                                web3: Web3,
@@ -136,14 +137,14 @@ def _new_signed_call_data_pack(encrypted_data: bytes,
         ],
         "Leash": [
             {"name": "nonce", "type": "uint64"},
-            {"name": "block_number", "type": "uint64"},
-            {"name": "block_hash", "type": "bytes32"},
-            {"name": "block_range", "type": "uint64"},
+            {"name": "blockNumber", "type": "uint64"},
+            {"name": "blockHash", "type": "bytes32"},
+            {"name": "blockRange", "type": "uint64"},
         ],
     }
     nonce = web3.eth.get_transaction_count(params[0]['from'])
     block_number = web3.eth.block_number
-    block_hash = web3.eth.get_block(block_number)['hash'].hex()
+    block_hash = web3.eth.get_block(block_number-1)['hash'].hex()
     msg_data = {
         "from": params[0].get('from'),
         "to": params[0].get('to'),
@@ -154,37 +155,12 @@ def _new_signed_call_data_pack(encrypted_data: bytes,
         "leash":
             {
                 "nonce": nonce,
-                "block_number": block_number - 1,
-                "block_hash": unhexlify(block_hash[2:]),
-                "block_range": DEFAULT_BLOCK_RANGE,
+                "blockNumber": block_number - 1,
+                "blockHash": unhexlify(block_hash[2:]),
+                "blockRange": DEFAULT_BLOCK_RANGE,
             }
     }
 
-    # Testing
-    domain_data_test = {
-        "name": "oasis-runtime-sdk/evm: signed query",
-        "version": "1.0.0",
-        "chainId": 0x5aff,
-        # "verifyingContract": "",
-        # "salt": "",
-    }
-
-    msg_data_test = {
-        "from": '0xDce075E1C39b1ae0b75D554558b6451A226ffe00',
-        # "to": params[0].get('to', '0x'),
-        "to": '0x595cce2312b7dfb068eb7dbb8c2b0b593b5c8883',
-        "value": params[0].get('value', 0),
-        "gasLimit": params[0].get('gas', DEFAULT_GAS_LIMIT),
-        "gasPrice": params[0].get('gasPrice', DEFAULT_GAS_PRICE),
-        "data": unhexlify('e21f37ce'),
-        "leash":
-            {
-                "nonce": 0x12,
-                "blockNumber": 0x1234,
-                "blockHash": unhexlify('2ec361fee28d09a3ad2c4d5f7f95d409ce2b68c39b5d647edf0ea651e069e4a8'),
-                "blockRange": 15,
-            }
-    }
     full_message = {
         "types": msg_types,
         "primaryType": "Call",
@@ -196,26 +172,15 @@ def _new_signed_call_data_pack(encrypted_data: bytes,
     signed_msg = Account.sign_typed_data(account.key,
                                          full_message=full_message)
 
-    # Testing
-    # signed_msg = Account.sign_typed_data('c07b151fbc1e7a11dff926111188f8d872f62eba0396da97c0a24adb75161750', full_message=full_message)
-    # signed_msg = Account.sign_typed_data('c07b151fbc1e7a11dff926111188f8d872f62eba0396da97c0a24adb75161750',
-    #                                      domain_data, msg_types, msg_data)
+    leash = {
+        "nonce": nonce,
+        "block_number": block_number - 1,
+        "block_hash": unhexlify(block_hash[2:]),
+        "block_range": DEFAULT_BLOCK_RANGE,
+    }
 
-    # leash = {
-    #     "nonce": nonce,
-    #     "block_number": block_number - 1,
-    #     "block_hash": unhexlify(block_hash[2:]),
-    #     "block_range": DEFAULT_BLOCK_RANGE,
-    # }
-    leash = msg_data['leash']
-
-    class RequestPack(TypedDict):
-        Data: bytes
-        Leash: dict
-        Signature: HexStr
-
-    data_pack: RequestPack = {
-        'data': cbor2.loads(encrypted_data),
+    data_pack= {
+        'data': encrypted_data,
         'leash': leash,
         'signature': signed_msg['signature'],
     }
@@ -269,7 +234,7 @@ def construct_sapphire_middleware(
                         raise RuntimeError('Could not retrieve callDataPublicKey!')
                     do_fetch = False
 
-                    c = _encrypt_tx_params(pk, params, w3, account)
+                    c = _encrypt_tx_params(pk, params, method, w3, account)
 
                     # We may encounter three errors here:
                     #  'core: invalid call format: epoch too far in the past'

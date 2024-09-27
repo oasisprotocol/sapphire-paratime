@@ -23,8 +23,8 @@ def compiled_test_contract():
         import solcx   # type: ignore
 
         with open(GREETER_SOL, 'r', encoding='utf-8') as handle:
-
-            solcx.set_solc_version(solcx.install_solc())
+            solcx.install_solc(version='0.8.9')
+            solcx.set_solc_version('0.8.9')
             compiled_sol = solcx.compile_source(
                 handle.read(),
                 output_values=['abi', 'bin']
@@ -51,9 +51,10 @@ class TestEndToEnd(unittest.TestCase):
 
     def setUp(self):
         account: LocalAccount = Account.from_key("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")  # pylint: disable=no-value-for-parameter
-        # account2: LocalAccount = Account.from_key("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d")  # pylint: disable=no-value-for-parameter
+
 
         w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
+        # w3 = Web3(Web3.HTTPProvider('https://testnet.sapphire.oasis.io'))
         w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
         self.w3 = w3 = sapphire.wrap(w3, account)
 
@@ -61,24 +62,24 @@ class TestEndToEnd(unittest.TestCase):
 
         iface = compiled_test_contract()
 
-        contract = w3.eth.contract(abi=iface['abi'], bytecode=iface['bin'])
+        contract = w3.eth.contract(abi=iface['abi'], bytecode=iface['bin'], )
         tx_hash = contract.constructor().transact({'gasPrice': w3.eth.gas_price})
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
         self.greeter = w3.eth.contract(address=tx_receipt['contractAddress'], abi=iface['abi'])
 
-    # def test_viewcall_revert_custom(self):
-    #     with self.assertRaises(ContractCustomError) as cm:
-    #         self.greeter.functions.revertWithCustomError().call()
-    #     data = self.greeter.encodeABI(
-    #         fn_name="MyCustomError", args=["thisIsCustom"]
-    #     )
-    #     self.assertEqual(cm.exception.args[0], data)
-    #
-    # def test_viewcall_revert_reason(self):
-    #     with self.assertRaises(ContractLogicError) as cm:
-    #         self.greeter.functions.revertWithReason().call()
-    #     self.assertEqual(cm.exception.message, 'execution reverted: reasonGoesHere')
+    def test_viewcall_revert_custom(self):
+        with self.assertRaises(ContractCustomError) as cm:
+            self.greeter.functions.revertWithCustomError().call()
+        data = self.greeter.encodeABI(
+            fn_name="MyCustomError", args=["thisIsCustom"]
+        )
+        self.assertEqual(cm.exception.args[0], data)
+
+    def test_viewcall_revert_reason(self):
+        with self.assertRaises(ContractLogicError) as cm:
+            self.greeter.functions.revertWithReason().call()
+        self.assertEqual(cm.exception.message, 'execution reverted: reasonGoesHere')
 
     def test_viewcall(self):
         self.assertEqual(self.greeter.functions.greet().call(), 'Hello')
@@ -86,14 +87,14 @@ class TestEndToEnd(unittest.TestCase):
     def test_viewcall_only_owner(self):
         self.assertEqual(self.greeter.functions.greetOnlyOwner().call(), 'Hello')
 
-    # def test_transaction(self):
-    #     w3 = self.w3
-    #     greeter = self.greeter
-    #
-    #     x = self.greeter.functions.blah().transact({'gasPrice': w3.eth.gas_price})
-    #     y = w3.eth.wait_for_transaction_receipt(x)
-    #     z = greeter.events.Greeting().process_receipt(y)
-    #     self.assertEqual(z[0].args['g'], 'Hello')
+    def test_transaction(self):
+        w3 = self.w3
+        greeter = self.greeter
+
+        x = self.greeter.functions.blah().transact({'gasPrice': w3.eth.gas_price})
+        y = w3.eth.wait_for_transaction_receipt(x)
+        z = greeter.events.Greeting().process_receipt(y)
+        self.assertEqual(z[0].args['g'], 'Hello')
 
 if __name__ == '__main__':
     unittest.main()
