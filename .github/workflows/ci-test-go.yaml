@@ -1,0 +1,43 @@
+name: ci-test
+
+on:
+  push:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+  pull_request:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+
+jobs:
+  test-client-go:
+    name: test-client-go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/go
+    services:
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
+        ports:
+          - 8545:8545
+          - 8546:8546
+        env:
+          OASIS_DEPOSIT_BINARY: /oasis-deposit -test-mnemonic -n 2
+        options: >-
+          --rm
+          --health-cmd="test -f /CONTAINER_READY"
+          --health-start-period=90s
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+
+      - name: Test
+        run: go test -v ./...
