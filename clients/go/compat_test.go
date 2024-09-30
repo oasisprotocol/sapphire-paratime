@@ -1,18 +1,24 @@
 package sapphire
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
+	"log"
 	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/evm"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 func TestPackSignedCall(t *testing.T) {
@@ -87,5 +93,61 @@ func TestPackSignedCall(t *testing.T) {
 	}
 	if string(leashOrig) != string(leashDecoded) {
 		t.Fatalf("err innerdata leash mismatch: expected %s got %s", leashOrig, leashDecoded)
+	}
+}
+
+func TestDial(t *testing.T) {
+	key, err := crypto.HexToECDSA("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	addr1 := crypto.PubkeyToAddress(key.PublicKey)
+
+	key2, err := crypto.GenerateKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+	addr2 := crypto.PubkeyToAddress(key2.PublicKey)
+
+	SapphireChainID := uint64(0x5afd)
+	client, _ := ethclient.Dial(Networks[SapphireChainID].DefaultGateway)
+	backend, err := WrapClient(client, func(digest [32]byte) ([]byte, error) {
+		// Pass in a custom signing function to interact with the signer
+		return crypto.Sign(digest[:], key)
+	})
+	if err != nil {
+		t.Fatalf("failed to wrap client %v", err)
+	}
+
+	nonce, err := client.PendingNonceAt(context.Background(), addr1)
+	if err != nil {
+		t.Fatalf("failed to get pending nonce %v", err)
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		t.Fatalf("failed to get gas price %v", err)
+	}
+
+	txOpts := backend.Transactor(addr1)
+
+	tx := types.NewTransaction(nonce, addr2, big.NewInt(1), uint64(100000), gasPrice, nil)
+	signedTx, err := txOpts.Signer(addr1, tx)
+	if err != nil {
+		t.Fatalf("failed to sign transaction %v", err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		t.Fatalf("failed to send transaction %v", err)
+	}
+
+	receipt, err := bind.WaitMined(context.Background(), client, signedTx)
+	if err != nil {
+		t.Fatalf("transaction failed! %v", err)
+	}
+
+	if receipt.Status != uint64(1) {
+		t.Fatalf("transaction failed! (status=%v)", receipt.Status)
 	}
 }
