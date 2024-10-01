@@ -14,5 +14,11 @@
     "@oasisprotocol/sapphire-hardhat": ["src/index"],
     "@oasisprotocol/sapphire-hardhat/*": ["src/*"]
   },
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"],
+    "out": "docs/api",
+    "excludeInternal": true,
+    "excludePrivate": true
+  }
 }
