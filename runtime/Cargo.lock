@@ -2107,7 +2107,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.9.6"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.9.6#22b89224fbce558c6cb1088d9b30e552a61ba64f"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=CedarMist/GetPublicKey#2e959ec447f39963eeee55ff8143a2d7abc1147e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2148,7 +2148,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.6.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.9.6#22b89224fbce558c6cb1088d9b30e552a61ba64f"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=CedarMist/GetPublicKey#2e959ec447f39963eeee55ff8143a2d7abc1147e"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2180,7 +2180,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.9.6#22b89224fbce558c6cb1088d9b30e552a61ba64f"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=CedarMist/GetPublicKey#2e959ec447f39963eeee55ff8143a2d7abc1147e"
 dependencies = [
  "darling 0.20.10",
  "proc-macro2 1.0.86",
