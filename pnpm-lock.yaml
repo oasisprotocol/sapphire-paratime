@@ -563,9 +563,6 @@ importers:
       '@types/node':
         specifier: ^18.19.31
         version: 18.19.31
-      '@zaeny/literate':
-        specifier: ^1.0.8
-        version: 1.0.8
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -9914,10 +9911,6 @@ packages:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
     dev: true
 
-  /@zaeny/literate@1.0.8:
-    resolution: {integrity: sha512-kIMdfvR3FT6Fc7m0CQuF1e/k1G23l/Nt0d07RR4OOYOu/4bQI78D2AvbEH5rzhm85KCDnY2HA26BqX3a4nqt5w==}
-    dev: true
-
   /abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
     deprecated: Use your platform's native atob() and btoa() methods instead
@@ -15557,7 +15550,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.6(debug@4.3.5)
+      follow-redirects: 1.15.6(debug@4.3.4)
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
