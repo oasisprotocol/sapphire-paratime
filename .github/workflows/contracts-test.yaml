@@ -32,6 +32,7 @@ jobs:
         working-directory: clients/py
         run: |
           python3 -mpip install --user -r requirements.txt
+          python3 -mpip install --user -r requirements.dev.txt
           python3 -munittest discover
       - name: Install Node.js
         uses: actions/setup-node@v4

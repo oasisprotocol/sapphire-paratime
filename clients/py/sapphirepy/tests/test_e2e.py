@@ -73,7 +73,7 @@ class TestEndToEnd(unittest.TestCase):
     def test_viewcall_revert_custom(self):
         with self.assertRaises(ContractCustomError) as cm:
             self.greeter.functions.revertWithCustomError().call()
-        data = self.greeter.encodeABI(
+        data = self.greeter.encode_abi(
             fn_name="MyCustomError", args=["thisIsCustom"]
         )
         self.assertEqual(cm.exception.args[0], data)

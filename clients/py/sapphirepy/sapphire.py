@@ -1,20 +1,18 @@
-from typing import Any, Callable, cast, TypedDict, Optional
 from binascii import unhexlify, hexlify
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Optional,
+    TypedDict,
+)
 
 import cbor2
 from web3 import Web3
 from web3.types import RPCEndpoint, RPCResponse, TxParams, Middleware
 from eth_typing import HexStr
 from eth_account import Account
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Union,
-)
-from eth_account.signers.local import (
-    LocalAccount,
-)
+from eth_account.signers.local import LocalAccount
 
 from .envelope import TransactionCipher
 
@@ -169,8 +167,7 @@ def _new_signed_call_data_pack(encrypted_data: dict,
     }
 
     # sign the message with the private key:
-    signed_msg = Account.sign_typed_data(account.key,
-                                         full_message=full_message)
+    signed_msg = Account().sign_typed_data(account.key, full_message=full_message)
 
     leash = {
         "nonce": nonce,
