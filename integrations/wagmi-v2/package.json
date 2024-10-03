@@ -36,13 +36,13 @@
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
-		"viem": "2.x",
-		"@wagmi/core": "2.x"
+		"@wagmi/core": "2.x",
+		"viem": "2.x"
 	},
 	"peerDependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
-		"@wagmi/core": "^2.6.9",
+		"@wagmi/core": "2.x",
 		"typescript": ">=5.0.4",
 		"viem": "2.x",
 		"wagmi": "2.x"
@@ -65,6 +65,7 @@
 		"@biomejs/biome": "^1.7.0",
 		"@types/node": "^18.19.31",
 		"ts-node": "^10.9.2",
+		"typedoc": "^0.25.13",
 		"typescript": "^5.4.5"
 	}
 }

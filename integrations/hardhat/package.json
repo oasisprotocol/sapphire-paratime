@@ -47,6 +47,7 @@
     "prettier": "^2.8.8",
     "ts-node": "^8.10.2",
     "typechain": "^8.3.2",
+    "typedoc": "^0.25.13",
     "typescript": "5.x"
   },
   "peerDependencies": {

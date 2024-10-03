@@ -19,7 +19,7 @@
 		"abitype": "^1.0.2",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"wagmi": "~2.5.20"
+		"wagmi": "2.x"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
