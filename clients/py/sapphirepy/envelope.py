@@ -97,7 +97,7 @@ class TransactionCipher:
         }
         return cbor2.dumps(envelope, canonical=True)
 
-    def encrypt_envelope(self, plaintext: bytes):
+    def make_envelope(self, plaintext: bytes):
         ciphertext, nonce = self._encrypt_calldata(plaintext)
         envelope = {
             'body': {

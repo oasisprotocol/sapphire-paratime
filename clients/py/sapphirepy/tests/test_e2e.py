@@ -56,6 +56,7 @@ class TestEndToEnd(unittest.TestCase):
         w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
         # w3 = Web3(Web3.HTTPProvider('https://testnet.sapphire.oasis.io'))
         w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+        self.w3_no_signer = Web3(Web3.HTTPProvider('http://localhost:8545'))
         self.w3 = w3 = sapphire.wrap(w3, account)
 
         w3.eth.default_account = account.address
@@ -67,6 +68,7 @@ class TestEndToEnd(unittest.TestCase):
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
         self.greeter = w3.eth.contract(address=tx_receipt['contractAddress'], abi=iface['abi'])
+        self.greeter_no_signer = self.w3_no_signer.eth.contract(address=tx_receipt['contractAddress'], abi=iface['abi'])
 
     def test_viewcall_revert_custom(self):
         with self.assertRaises(ContractCustomError) as cm:
@@ -86,6 +88,11 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_viewcall_only_owner(self):
         self.assertEqual(self.greeter.functions.greetOnlyOwner().call(), 'Hello')
+
+    def test_viewcall_only_owner_no_signer(self):
+        with self.assertRaises(ContractLogicError) as cm:
+            self.greeter_no_signer.functions.greetOnlyOwner().call()
+        self.assertEqual(cm.exception.message, 'execution reverted: Only owner can call this function')
 
     def test_transaction(self):
         w3 = self.w3

@@ -77,7 +77,7 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
                        params: tuple[TxParams],
                        method,
                        web3: Web3,
-                       account: LocalAccount) -> TransactionCipher:
+                       account: Optional[LocalAccount]) -> TransactionCipher:
     c = TransactionCipher(peer_pubkey=pk['key'], peer_epoch=pk['epoch'])
     data = params[0]['data']
     if isinstance(data, bytes):
@@ -91,12 +91,12 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
     encrypted_data = c.encrypt(data_bytes)
 
     if params[0]['from'] and method == 'eth_call':
-        data_pack = _new_signed_call_data_pack(c.encrypt_envelope(data_bytes),
+        assert account is not None, 'Account must be provided for encrypted calls!'
+        data_pack = _new_signed_call_data_pack(c.make_envelope(data_bytes),
                                                data_bytes,
                                                params,
                                                web3,
                                                account)
-        data_pack['signature'] = bytes(data_pack['signature'])
         params[0]['data'] = cbor2.dumps(data_pack, canonical=True)
     else:
         params[0]['data'] = HexStr('0x' + hexlify(encrypted_data).decode('ascii'))
@@ -111,7 +111,7 @@ def _new_signed_call_data_pack(encrypted_data: dict,
                                account: LocalAccount) -> dict:
     # Update params with default values, these get used outside the scope of this function
     params[0]['gas'] = params[0].get('gas', DEFAULT_GAS_LIMIT)
-    params[0]['gasPrice'] = params[0].get('gasPrice', DEFAULT_GAS_PRICE)
+    params[0]['gasPrice'] = params[0].get('gasPrice', web3.to_wei(DEFAULT_GAS_PRICE, 'wei'))
 
     domain_data = {
         "name": "oasis-runtime-sdk/evm: signed query",
@@ -142,7 +142,7 @@ def _new_signed_call_data_pack(encrypted_data: dict,
             {"name": "blockRange", "type": "uint64"},
         ],
     }
-    nonce = web3.eth.get_transaction_count(params[0]['from'])
+    nonce = web3.eth.get_transaction_count(web3.to_checksum_address(params[0]['from']))
     block_number = web3.eth.block_number
     block_hash = web3.eth.get_block(block_number-1)['hash'].hex()
     msg_data = {
@@ -182,13 +182,13 @@ def _new_signed_call_data_pack(encrypted_data: dict,
     data_pack= {
         'data': encrypted_data,
         'leash': leash,
-        'signature': signed_msg['signature'],
+        'signature': bytes(signed_msg['signature']),
     }
     return data_pack
 
 
 def construct_sapphire_middleware(
-        account: LocalAccount = None
+        account: Optional[LocalAccount] = None
 ) -> Middleware:
     """
     Construct a Sapphire middleware for Web3.py.
@@ -264,7 +264,7 @@ def construct_sapphire_middleware(
     return sapphire_middleware
 
 
-def wrap(w3: Web3, account: LocalAccount = None):
+def wrap(w3: Web3, account: Optional[LocalAccount] = None):
     """
     Adds the Sapphire transaction encryption middleware to a Web3.py provider.
 
