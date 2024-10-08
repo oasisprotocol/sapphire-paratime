@@ -103,3 +103,45 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+
+  test-client-py:
+    name: test-client-py
+    runs-on: ubuntu-latest
+    services:
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
+        ports:
+          - 8545:8545
+          - 8546:8546
+        env:
+          OASIS_DEPOSIT_BINARY: /oasis-deposit -test-mnemonic -n 5
+        options: >-
+          --rm
+          --health-cmd="test -f /CONTAINER_READY"
+          --health-start-period=90s
+    defaults:
+      run:
+        working-directory: ./clients/py
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Build sapphirepy .whl file
+        run: |
+          pip3 install --user -r requirements.txt
+          pip3 install --user -r requirements.dev.txt
+          make
+        
+      - name: Install sapphirepy .whl file
+        run: |
+          pip3 install --user /dist/sapphirepy-0.1.0-py3-none-any.whl
+          pip3 install --user -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest /sapphirepy/tests/
