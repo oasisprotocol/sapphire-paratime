@@ -3,3 +3,4 @@ mypy
 pylint
 ruff
 setuptools
+pytest
