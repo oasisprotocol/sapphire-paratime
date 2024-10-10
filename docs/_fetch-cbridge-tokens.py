@@ -12,7 +12,11 @@ def format_result(data):
     for p in data['pegged_pair_configs']:
         org_chain = chains[p['org_chain_id']]
         pegged_chain = chains[p['pegged_chain_id']]
-        if p['org_chain_id'] in [0x5afe,0x5aff] or p['pegged_chain_id'] in [0x5afe,0x5aff]:
+        org_chain_is_sapph = p['org_chain_id'] in [0x5afe,0x5aff]
+        pegged_chain_is_sapph = p['pegged_chain_id'] in [0x5afe,0x5aff]
+        chain_is_not_deprecated = (p['org_chain_id'] not in [0x5, 0x13881] and
+                                   p['pegged_chain_id'] not in [0x5, 0x13881])
+        if (org_chain_is_sapph or pegged_chain_is_sapph) and chain_is_not_deprecated:
             src_url = org_chain['explore_url'] + 'address/' + p["org_token"]["token"]["address"]
             dest_url = pegged_chain['explore_url'] + 'address/' + p["pegged_token"]["token"]["address"]
             print(f'| {org_chain["name"]} ({org_chain["id"]}) | {p["org_token"]["token"]["symbol"]} | [`{p["org_token"]["token"]["address"]}`]({src_url}) | {pegged_chain["name"]} ({pegged_chain["id"]}) | [`{p["pegged_token"]["token"]["address"]}`]({dest_url}) |')

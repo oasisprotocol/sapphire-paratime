@@ -2,7 +2,7 @@
 	"type": "module",
 	"name": "@oasisprotocol/sapphire-viem-v2",
 	"license": "Apache-2.0",
-	"version": "2.0.0-next.1",
+	"version": "2.0.1",
 	"description": "Viem support for the Oasis Sapphire ParaTime.",
 	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/viem-v2",
 	"repository": {
@@ -29,7 +29,7 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"clean": "rm -rf dist",
-		"test": "vitest --run",
+		"test": "vitest --run && timeout -k 5s 2s pnpm ts-node ./scripts/test.js",
 		"build": "npm run build:cjs && npm run build:esm && npm run build:types",
 		"build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./dist/_cjs/package.json && node scripts/rename-cjs.js",
 		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
@@ -60,7 +60,9 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
 		"@types/node": "^18.19.31",
+		"rimraf": "^6.0.1",
 		"ts-node": "^10.9.2",
+		"typedoc": "^0.25.13",
 		"typescript": "^5.4.5",
 		"vitest": "^1.6.0"
 	}

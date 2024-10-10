@@ -1,0 +1,68 @@
+import DocCardList from '@theme/DocCardList';
+import {findSidebarItem} from '@site/src/sidebarUtils';
+
+# Sapphire ParaTime
+
+Sapphire is our official confidential ParaTime for smart contract development
+with [Ethereum Virtual Machine (EVM)] compatibility.
+
+* Confidential state, end-to-end encryption, confidential randomness
+* Easy integration with EVM-based dApps, such as DeFi, NFT, Metaverse and
+crypto gaming
+* Scalability: increased throughput of transactions
+* Low-cost: 99%+ lower fees than Ethereum
+* 6 second finality (1 block)
+* Cross-chain bridges to enable cross-chain interoperability
+
+If you are not bound to EVM and you wish to develop dApps with more
+fine-grained confidentiality, check out the
+[Cipher ParaTime](../cipher/README.mdx).
+
+[Ethereum Virtual Machine (EVM)]: https://ethereum.org/en/developers/docs/evm/
+
+### Getting Started
+
+Develop and deploy a dApp on Sapphire:
+- follow along with a video walkthrough via [quickstart][quickstart]
+- start with a working dApp [demo][demo]
+- explore showcase dApps deployed on Sapphire on the [playground][playground]
+
+[quickstart]: ./quickstart.mdx
+[playground]: https://playground.oasis.io/
+[demo]: https://github.com/oasisprotocol/demo-starter
+
+### Understanding EVM compatibility
+
+Get to know the differences between Sapphire and Ethereum, and learn about
+the high level concepts of developing a confidential smart contract with our
+[guide][guide].
+
+[guide]: ./guide.mdx
+
+### Building on Sapphire
+
+Take your existing dApp building knowledge and add Sapphire with our developer
+[cheatsheet](./images/cheatsheet.pdf).
+
+### Network Information
+
+See crucial network information [here][network].
+
+[network]: ./network.mdx
+
+### Faucet
+
+Visit the [faucet][faucet] to obtain testnet tokens for development purposes.
+
+[faucet]: https://faucet.testnet.oasis.io/
+
+## See also
+
+<DocCardList items={[
+    findSidebarItem('/general/manage-tokens/'),
+    findSidebarItem('/node/run-your-node/paratime-node'),
+    findSidebarItem('/node/run-your-node/paratime-client-node'),
+    findSidebarItem('/node/web3'),
+    findSidebarItem('/dapp/emerald/'),
+    findSidebarItem('/dapp/cipher/'),
+]} />

@@ -2,7 +2,7 @@ NPM ?= pnpm
 
 all: build test lint
 
-build test lint::
+build test lint format::
 	$(NPM) $@
 
 clean:

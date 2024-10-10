@@ -85,9 +85,9 @@ visible on the docs website:
 3. Merge changes into Oasis docs repository `main` branch. CI will deploy the
    docs to the website automatically.
 
-Note: If you want to introduce a new markdown file, don't forget to add
-it to the [Oasis documentation's sidebar](https://github.com/oasisprotocol/docs/blob/main/sidebarDapp.js).
-If you remove any chapters, don't forget to define sensible [redirects](https://github.com/oasisprotocol/docs/blob/main/redirects.js).
+Note: If you want to introduce a new markdown file, you will need to add it to
+the [Oasis documentation's sidebar](https://github.com/oasisprotocol/docs/blob/main/sidebarDapp.ts).
+If you remove any chapters, don't forget to define sensible [redirects](https://github.com/oasisprotocol/docs/blob/main/redirects.ts).
 For more info on how to write the Oasis documentation, manage images and
 diagrams, reference cross-repo markdown files and similar consult the
 [official README](https://github.com/oasisprotocol/docs/blob/main/README.md).

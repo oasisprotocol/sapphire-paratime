@@ -2,6 +2,7 @@
 
 import { BytesLike } from './ethersutils.js';
 import { KeyFetcher } from './calldatapublickey.js';
+import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
 
 // -----------------------------------------------------------------------------
 // https://eips.ethereum.org/EIPS/eip-2696#interface
@@ -131,6 +132,16 @@ export function isWrappedRequestFn<
   return p && SAPPHIRE_EIP1193_REQUESTFN in p;
 }
 
+export function isCallDataPublicKeyQuery(params?: object | readonly unknown[]) {
+  return (
+    params &&
+    Array.isArray(params) &&
+    params.length > 0 &&
+    params[0].to === SUBCALL_ADDR &&
+    params[0].data === CALLDATAPUBLICKEY_CALLDATA
+  );
+}
+
 /**
  * Creates an EIP-1193 compatible request() function
  * @param provider Upstream EIP-1193 provider to forward requests to
@@ -168,7 +179,10 @@ export function makeSapphireRequestFn(
 
     // Decrypt responses which return encrypted data
     if (method === 'eth_call') {
-      return cipher.decryptResult(res as BytesLike);
+      // If it's an unencrypted core.CallDataPublicKey query, don't attempt to decrypt the response
+      if (!isCallDataPublicKeyQuery(params)) {
+        return cipher.decryptResult(res as BytesLike);
+      }
     }
 
     return res;

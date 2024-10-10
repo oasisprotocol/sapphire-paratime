@@ -13,14 +13,14 @@ npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
 
 Next, in your Wagmi config definition, setup Sapphire wrapping for the injected
 provide using `injectedWithSapphire()` and then define the transports using the
-`sapphireTransport()` function.
+`sapphireHttpTransport()` function.
 
 ```typescript
 import { createConfig } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
 	injectedWithSapphire,
-	sapphireTransport,
+	sapphireHttpTransport,
 } from "@oasisprotocol/sapphire-wagmi-v2";
 
 export const config = createConfig({
@@ -28,8 +28,8 @@ export const config = createConfig({
 	chains: [sapphire, sapphireTestnet],
 	connectors: [injectedWithSapphire()],
 	transports: {
-		[sapphire.id]: sapphireTransport(),
-		[sapphireTestnet.id]: sapphireTransport()
+		[sapphire.id]: sapphireHttpTransport(),
+		[sapphireTestnet.id]: sapphireHttpTransport()
 	},
 });
 ```

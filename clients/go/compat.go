@@ -129,8 +129,8 @@ type WrappedBackend struct {
 //
 // If you use cipher over a longer period of time, you should create a new
 // cipher instance every epoch to refresh the ParaTime's ephemeral key!
-func NewCipher(chainID uint64) (Cipher, error) {
-	runtimePublicKey, epoch, err := GetRuntimePublicKey(chainID)
+func NewCipher(c *ethclient.Client) (Cipher, error) {
+	runtimePublicKey, epoch, err := GetRuntimePublicKey(c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch runtime callata public key: %w", err)
 	}
@@ -151,7 +151,7 @@ func WrapClient(c *ethclient.Client, sign SignerFn) (*WrappedBackend, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch chain ID: %w", err)
 	}
-	cipher, err := NewCipher(chainID.Uint64())
+	cipher, err := NewCipher(c)
 	if err != nil {
 		return nil, err
 	}

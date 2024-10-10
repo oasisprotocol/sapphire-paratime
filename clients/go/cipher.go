@@ -1,16 +1,14 @@
 package sapphire
 
 import (
-	"bytes"
-	"context"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/oasisprotocol/curve25519-voi/primitives/x25519"
 	"github.com/oasisprotocol/deoxysii"
@@ -262,44 +260,17 @@ func (c X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {
 }
 
 // GetRuntimePublicKey fetches the runtime calldata public key from the default Sapphire gateway.
-func GetRuntimePublicKey(chainID uint64) (*x25519.PublicKey, uint64, error) {
-	network, exists := Networks[chainID]
-	if !exists {
-		return nil, 0, fmt.Errorf("could not fetch public key for network with chain id %d", chainID)
-	}
-	request := Request{
-		Version: "2.0",
-		Method:  "oasis_callDataPublicKey",
-		ID:      1,
-	}
-	rawReq, _ := json.Marshal(request)
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, network.DefaultGateway, bytes.NewBuffer(rawReq))
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to create request for runtime calldata public key: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to request runtime calldata public key: %w", err)
-	}
-
-	decoder := json.NewDecoder(res.Body)
-	rpcRes := new(Response)
-	if err := decoder.Decode(&rpcRes); err != nil {
-		return nil, 0, fmt.Errorf("unexpected response to request for runtime calldata public key: %w", err)
-	}
-	res.Body.Close()
-
+func GetRuntimePublicKey(c *ethclient.Client) (*x25519.PublicKey, uint64, error) {
 	var pubKey CallDataPublicKey
-	if err := json.Unmarshal(rpcRes.Result, &pubKey); err != nil {
+
+	if err := c.Client().Call(&pubKey, "oasis_callDataPublicKey"); err != nil {
 		return nil, 0, fmt.Errorf("invalid response when fetching runtime calldata public key: %w", err)
 	}
+
 	if len(pubKey.PublicKey) != x25519.PublicKeySize {
 		return nil, 0, fmt.Errorf("invalid public key length")
 	}
+
 	return (*x25519.PublicKey)(pubKey.PublicKey), pubKey.Epoch, nil
 }
 

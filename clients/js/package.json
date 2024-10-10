@@ -2,7 +2,7 @@
   "type": "module",
   "name": "@oasisprotocol/sapphire-paratime",
   "license": "Apache-2.0",
-  "version": "2.0.0-next.3",
+  "version": "2.0.1",
   "description": "The Sapphire ParaTime Web3 integration library.",
   "homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/js",
   "repository": {
@@ -60,7 +60,7 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "tweetnacl": "^1.0.3",
-    "typedoc": "^0.25.4",
+    "typedoc": "^0.25.13",
     "typescript": "^4.8.3"
   }
 }

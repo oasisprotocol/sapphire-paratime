@@ -6,18 +6,20 @@ import { Signer } from 'ethers';
 import { SiweMessage } from 'siwe';
 import '@nomicfoundation/hardhat-chai-matchers';
 
-import { SiweAuthTests__factory } from '../typechain-types/factories/contracts/tests';
-import { SiweAuthTests } from '../typechain-types/contracts/tests/auth/SiweAuthTests';
 import { NETWORKS } from '@oasisprotocol/sapphire-paratime';
+import { HardhatNetworkHDAccountsConfig } from 'hardhat/types';
+import { SiweAuthTests } from '../typechain-types/contracts/tests/auth/SiweAuthTests';
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 describe('Auth', function () {
   async function deploy(domain: string) {
-    const SiweAuthTests_factory = await ethers.getContractFactory(
-      'SiweAuthTests',
-    );
-    const siweAuthTests = await SiweAuthTests_factory.deploy(domain);
+    const factory = await ethers.getContractFactory('SiweAuthTests');
+    const siweAuthTests = await factory.deploy(domain);
     await siweAuthTests.waitForDeployment();
-    return siweAuthTests;
+    return siweAuthTests as unknown as SiweAuthTests;
   }
 
   async function siweMsg(
@@ -54,7 +56,8 @@ describe('Auth', function () {
     const siweAuthTests = await deploy('localhost');
 
     // Correct login.
-    const accounts = config.networks.hardhat.accounts;
+    const accounts = config.networks.hardhat
+      .accounts as HardhatNetworkHDAccountsConfig;
     const account = ethers.HDNodeWallet.fromMnemonic(
       ethers.Mnemonic.fromPhrase(accounts.mnemonic),
       accounts.path + '/0',
@@ -113,7 +116,8 @@ describe('Auth', function () {
     const siweAuthTests = await deploy('localhost');
 
     // Author should read a very secret message.
-    const accounts = config.networks.hardhat.accounts;
+    const accounts = config.networks.hardhat
+      .accounts as HardhatNetworkHDAccountsConfig;
     const account = ethers.HDNodeWallet.fromMnemonic(
       ethers.Mnemonic.fromPhrase(accounts.mnemonic),
       accounts.path + '/0',
@@ -123,7 +127,7 @@ describe('Auth', function () {
       siweStr,
       await erc191sign(siweStr, account),
     );
-    await expect(await siweAuthTests.testVerySecretMessage(bearer)).to.be.equal(
+    expect(await siweAuthTests.testVerySecretMessage(bearer)).to.be.equal(
       'Very secret message',
     );
 
@@ -148,21 +152,18 @@ describe('Auth', function () {
     );
     await expect(siweAuthTests.testVerySecretMessage(bearer3)).to.be.reverted;
 
-    // Expired bearer.
-    const siweStr4 = await siweMsg('localhost', 0, new Date(Date.now() + 10)); // Expire after 0.01 seconds.
+    // Expired bearer
+    // on-chain block timestamps are integers representing seconds
+    const expiration = new Date(Date.now() + 1000);
+    const siweStr4 = await siweMsg('localhost', 0, expiration);
     const bearer4 = await siweAuthTests.testLogin(
       siweStr4,
       await erc191sign(siweStr4, account),
     );
-    // Wait for 2 blocks. The first block may still have a timestamp earlier than the expiration time.
-    await new Promise(async (r) => {
-      const desiredBlockNumber = (await ethers.provider.getBlockNumber()) + 2;
-      ethers.provider.on('block', (blockNumber) => {
-        if (blockNumber == desiredBlockNumber) {
-          r();
-        }
-      });
-    });
+    // Wait until the next second after expiration
+    await delay(expiration.getTime() - Date.now() + 1000);
+    const tx = await siweAuthTests.doNothing();
+    await tx.wait();
     await expect(siweAuthTests.testVerySecretMessage(bearer4)).to.be.reverted;
 
     // Revoke bearer.

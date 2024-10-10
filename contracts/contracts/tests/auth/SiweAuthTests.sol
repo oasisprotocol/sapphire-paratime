@@ -41,4 +41,8 @@ contract SiweAuthTests is SiweAuth {
     function testRevokeBearer(bytes32 bearer) external {
         return revokeBearer(bearer);
     }
+
+    function doNothing() external {
+        // Does nothing
+    }
 }

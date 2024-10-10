@@ -15,7 +15,7 @@ from web3 import Web3
 from sapphirepy import sapphire
 
 # Setup your Web3 provider with a signing account.
-w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
+w3 = Web3(Web3.HTTPProvider(sapphire.NETWORKS['sapphire-localnet']))
 w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 
 # Finally, wrap the provider to add Sapphire end-to-end encryption.

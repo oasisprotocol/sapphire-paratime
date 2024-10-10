@@ -2,7 +2,7 @@
 	"type": "module",
 	"name": "@oasisprotocol/sapphire-wagmi-v2",
 	"license": "Apache-2.0",
-	"version": "2.0.0-next.1",
+	"version": "2.0.0",
 	"description": "Wagmi & Viem support for the Oasis Sapphire ParaTime.",
 	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2",
 	"repository": {
@@ -36,13 +36,13 @@
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
-		"viem": "2.x",
-		"@wagmi/core": "2.x"
+		"@wagmi/core": "2.x",
+		"viem": "2.x"
 	},
 	"peerDependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
-		"@wagmi/core": "^2.6.9",
+		"@wagmi/core": "2.x",
 		"typescript": ">=5.0.4",
 		"viem": "2.x",
 		"wagmi": "2.x"
@@ -65,6 +65,7 @@
 		"@biomejs/biome": "^1.7.0",
 		"@types/node": "^18.19.31",
 		"ts-node": "^10.9.2",
+		"typedoc": "^0.25.13",
 		"typescript": "^5.4.5"
 	}
 }
