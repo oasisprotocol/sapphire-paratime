@@ -54,6 +54,7 @@ description: List of Standard Contract Addresses
 | [Celer MessageBus][message-bus] | [`0x9Bb46D5100d2Db4608112026951c9C965b233f4D`][message-bus-mainnet] | [`0x9Bb46D5100d2Db4608112026951c9C965b233f4D`][message-bus-testnet] | [Message bus][message-bus-source] |
 | [Safe Singleton Factory][singleton-factory] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-mainnet] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-testnet] | [Singleton Factory][singleton-factory] |
 | [Band Oracle][band-oracle] | [`0xDA7a001b254CD22e46d3eAB04d937489c93174C3`][band-oracle-mainnet] | [`0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A`][band-oracle-testnet] | [Oracle][band-oracle-source] |
+| [Router Gateway][router-gateway] | [`0x86dfc31d9cb3280ee1eb1096caa9fc66299af973`][router-gateway-mainnet] | [`0xfbE6D1e711CC2BC241dfa682CBbFF6D68bf62e67`][router-gateway-testnet] | [Gateway][router-gateway-source] |
 
 [message-executor]: https://im-docs.celer.network/developer/development-guide/message-executor
 [message-executor-source]: https://github.com/celer-network/im-executor
@@ -69,3 +70,7 @@ description: List of Standard Contract Addresses
 [band-oracle-source]: https://github.com/bandprotocol/band-std-reference-contracts-solidity
 [band-oracle-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0xDA7a001b254CD22e46d3eAB04d937489c93174C3
 [band-oracle-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A
+[router-gateway]: https://docs.routerprotocol.com/develop/message-transfer-via-crosstalk/key-concepts/high-level-architecture
+[router-gateway-source]: https://github.com/router-protocol/router-contracts/tree/main/gateway/evm
+[router-gateway-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x86DFc31d9cB3280eE1eB1096caa9fC66299Af973
+[router-gateway-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0xfbE6D1e711CC2BC241dfa682CBbFF6D68bf62e67
