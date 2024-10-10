@@ -4,9 +4,11 @@ pragma solidity ^0.8.0;
 
 contract Greeter {
     string public greeting;
+    address public owner;
 
     constructor() {
         greeting = 'Hello';
+        owner = msg.sender;
     }
 
     function setGreeting(string memory _greeting) public {
@@ -14,6 +16,11 @@ contract Greeter {
     }
 
     function greet() view public returns (string memory) {
+        return greeting;
+    }
+
+    function greetOnlyOwner() view public returns (string memory) {
+        require(msg.sender == owner, "Only owner can call this function");
         return greeting;
     }
 

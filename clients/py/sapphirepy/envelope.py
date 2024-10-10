@@ -97,6 +97,19 @@ class TransactionCipher:
         }
         return cbor2.dumps(envelope, canonical=True)
 
+    def make_envelope(self, plaintext: bytes):
+        ciphertext, nonce = self._encrypt_calldata(plaintext)
+        envelope = {
+            'body': {
+                'pk': self.ephemeral_pubkey,
+                'data': ciphertext,
+                'nonce': nonce,
+                'epoch': self.epoch
+            },
+            'format': FORMAT_ENCRYPTED_X25519DEOXYSII
+        }
+        return envelope
+
     def _decode_inner(self, plaintext:bytes) -> bytes:
         inner_result = cast(ResultInner, cbor2.loads(plaintext))
         if inner_result.get('ok', None) is not None:
