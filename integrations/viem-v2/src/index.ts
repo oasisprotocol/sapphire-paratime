@@ -41,7 +41,7 @@ export const SAPPHIRE_WRAPPED_VIEM_TRANSPORT = Symbol(
 // biome-ignore lint/suspicious/noExplicitAny: required for viem compatibility
 type EthereumProvider = { request(...args: unknown[]): Promise<any> };
 
-export type SapphireTransport = Transport<
+export type SapphireHttpTransport = Transport<
 	"sapphire",
 	// biome-ignore lint/complexity/noBannedTypes: required for viem compatibility
 	{},
@@ -73,7 +73,9 @@ export function sapphireHttpTransport<T extends Transport>(): T {
 	const cachedProviders: Record<string, unknown> = {};
 	return ((params) => {
 		if (!params.chain) {
-			throw new Error("sapphireTransport() not possible with no params.chain!");
+			throw new Error(
+				"sapphireHttpTransport() not possible with no params.chain!",
+			);
 		}
 		const url = params.chain.rpcUrls.default.http[0];
 		if (!(url in cachedProviders)) {
@@ -119,13 +121,23 @@ export async function createSapphireSerializer<
 		return originalSerializer;
 	}
 
-	// As the serialized is synchronous, fetching keys while running
+	// As the serializer is synchronous, fetching keys while running
 	const fetcher = new KeyFetcher();
 	const provider = client as EthereumProvider;
 	await fetcher.fetch(provider);
-	setTimeout(async () => {
+
+	// The fetcher runs in the background, routinely fetching the keys
+	// This means when the serializer requests a calldata public key one will
+	// have been retrieved pre-emptively.
+	const intervalId: NodeJS.Timeout | number = setInterval(async () => {
 		await fetcher.fetch(provider);
 	}, fetcher.timeoutMilliseconds);
+	// The interval ID is unreferenced to prevent Node from hanging at exit
+	// See discussion on https://github.com/oasisprotocol/sapphire-paratime/pull/379
+	// This is only available in NodeJS, and not in browsers
+	if (typeof intervalId.unref === "function") {
+		intervalId.unref();
+	}
 
 	const wrappedSerializer = ((tx, sig?) => {
 		if (!sig) {
@@ -157,7 +169,7 @@ export const SAPPHIRE_WRAPPED_VIEM_SERIALIZER = Symbol(
  * walletClient = await wrapWalletClient(createWalletClient({
  *   account,
  *   chain: sapphireLocalnet,
- *   transport: sapphireTransport()
+ *   transport: sapphireHttpTransport()
  * }));
  * ```
  *

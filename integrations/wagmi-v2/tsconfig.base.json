@@ -27,5 +27,11 @@
 		"lib": ["ES2022", "DOM"],
 
 		"skipLibCheck": true
+	},
+	"typedocOptions": {
+		"entryPoints": ["src/index.ts"],
+		"out": "docs/api",
+		"excludeInternal": true,
+		"excludePrivate": true
 	}
 }

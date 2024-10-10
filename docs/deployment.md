@@ -131,7 +131,25 @@ Singleton factory:
 [Testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7
 [safe-singleton-factory]: https://github.com/safe-global/safe-singleton-factory
 
-### Caution Against Using `eth_getStorageAt`
+## Clones
+
+Sapphire supports fixed address non-upgradable [clones][clones] to help
+developers replicate contract functionality and reduce contract deployment
+costs.
+
+[clones]: https://docs.openzeppelin.com/contracts/5.x/api/proxy#Clones
+
+#### [EIP-1167]: Minimal Proxy
+
+EIP-1167 introduces a way to minimize bytecode and associated contract
+deployment costs while copying contract functionality. "Clone" contracts
+delegate calls to a target or fixed address which serve as a reference for the
+behavior of the "clone." Third-party tools and users can correctly predict
+the outcome of contract calls with minimal side effects.
+
+[EIP-1167]: https://eips.ethereum.org/EIPS/eip-1167
+
+## Caution Against Using `eth_getStorageAt`
 
 Direct storage access, such as with `eth_getStorageAt`, is generally
 discouraged. It reduces contract flexibility and deviates from common practice

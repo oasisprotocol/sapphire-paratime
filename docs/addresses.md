@@ -9,11 +9,16 @@ description: List of Standard Contract Addresses
 | Name         | Mainnet Address                            | Testnet Address                            | Verify                                                           | Source                          |
 |--------------|--------------------------------------------|--------------------------------------------|------------------------------------------------------------------|---------------------------------|
 | [Multicall V3][multicall] | `0xcA11bde05977b3631167028862bE2a173976CA11` | - | [Mainnet][multicall-verify-mainnet] | [Multicall3.sol][multicall-source] |
+| [CreateX][createx] | `0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed` | `0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed` | [Sourcify][createx-sourcify] | [Createx.sol][createx-source] |
 | [Wrapped ROSE][wrose-dapp] | `0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3` | `0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94` | [Mainnet][wrose-verify-mainnet], [Testnet][wrose-verify-testnet] | [WrappedROSE.sol][wrose-source] |
 
 [multicall-source]: https://github.com/mds1/multicall/blob/main/src/Multicall3.sol
 [multicall-verify-mainnet]: https://sourcify.dev/#/lookup/0xcA11bde05977b3631167028862bE2a173976CA11
 [multicall]: https://multicall3.com/
+
+[createx]: https://github.com/pcaversaccio/createx/
+[createx-sourcify]: https://sourcify.dev/#/lookup/0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed
+[createx-source]: https://github.com/pcaversaccio/createx/blob/main/src/CreateX.sol
 
 [wrose-dapp]: https://wrose.oasis.io/
 [wrose-source]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/contracts/contracts/WrappedROSE.sol
@@ -39,9 +44,7 @@ description: List of Standard Contract Addresses
 <!-- WARNING: please don't manually update the table! -->
 | Source Chain | Token Name | Source Address | Dest. Chain | Dest Address |
 | ------------ | ---------- | -------------- | ----------- | ------------ |
-| Goerli (5) | USDT | [`0xf4B2cbc3bA04c478F0dC824f4806aC39982Dce73`](https://goerli.etherscan.io/address/0xf4B2cbc3bA04c478F0dC824f4806aC39982Dce73) | Oasis Sapphire Testnet (23295) | [`0xa55C7E1274bE5db2275a0BDd055f81e8263b7954`](https://testnet.explorer.sapphire.oasis.dev/address/0xa55C7E1274bE5db2275a0BDd055f81e8263b7954) |
 | Oasis Sapphire Testnet (23295) | wROSE | [`0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94`](https://testnet.explorer.sapphire.oasis.dev/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94) | BSC Testnet (97) | [`0x26a6f43BaEDD1767c283e2555A9E1236E5aE3A55`](https://testnet.bscscan.com/address/0x26a6f43BaEDD1767c283e2555A9E1236E5aE3A55) |
-| Oasis Sapphire Testnet (23295) | wROSE | [`0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94`](https://testnet.explorer.sapphire.oasis.dev/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94) | Polygon Mumbai (80001) | [`0xE9533976C590200E32d95C53f06AE12d292cFc47`](https://mumbai.polygonscan.com/address/0xE9533976C590200E32d95C53f06AE12d292cFc47) |
 
 ## Deployments
 

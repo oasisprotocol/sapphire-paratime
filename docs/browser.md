@@ -213,7 +213,7 @@ we recommend that you check out the official [Oasis starter] files.
 [Hardhat tutorial]: https://hardhat.org/tutorial
 [line 66]: https://github.com/NomicFoundation/hardhat-boilerplate/blob/13bd712c1285b2de572f14d20e6a750ae08565c0/contracts/Token.sol#L66
 [quickstart]: quickstart.mdx#add-the-sapphire-testnet-to-hardhat
-[sapphire-testnet]: ./README.mdx#testnet
+[sapphire-testnet]: ./network.mdx#rpc-endpoints
 [Sapphire ParaTime examples]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat-boilerplate
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
 [pnpm]: https://pnpm.io

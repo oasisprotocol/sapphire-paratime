@@ -2,44 +2,67 @@
 
 A plugin for [Viem] 2.x that encrypts transactions, gas estimations and calls to
 the Oasis Sapphire network to enable end-to-end encryption between the dApp and
-smart contracts.
+smart contracts. It provides three functions which can be used together or
+separately, see the guides below for usage instructions:
+
+ * `sapphireHttpTransport` - [Transport] that intercepts & encrypts requests.
+ * `wrapWalletClient` - Wraps a [WalletClient], to provide encryption.
+ * `createSapphireSerializer` - [Transaction serializer], that encrypts calldata.
 
 [Viem]: https://viem.sh/
+[WalletClient]: https://viem.sh/docs/clients/wallet.html
+[Transaction serializer]: https://viem.sh/docs/chains/serializers#api
+[Transport]: https://viem.sh/docs/clients/transports/http
 
 ## Usage
 
-First install the package.
+Add the package to your project:
 
 ```
 npm install @oasisprotocol/sapphire-viem-v2 viem@2.x
 ```
 
-Next you must ensure that any clients use the `sapphireTransport()` to encrypt
-any unsigned communication, for example when using [hardhat-viem] pass the
-`transport` parameter when constructing a Public Client:
+For local testing the chain configuration for `sapphireLocalnet` is available
+in the `@oasisprotocol/sapphire-viem-v2` package installed above. The Sapphire
+`mainnet` and `testnet` configurations are available in `viem/chains`:
 
-```typescript
-import { sapphireLocalnet, sapphireTransport } from '@oasisprotocol/sapphire-viem-v2';
-
-const publicClient = await hre.viem.getPublicClient({
-	chain: sapphireLocalnet,
-	transport: sapphireTransport()
-});
+```ts
+import { sapphireLocalnet } from '@oasisprotocol/sapphire-viem-v2';
+import { sapphire, sapphireTestnet } from 'viem/chains';
 ```
 
-The Sapphire transport will only encrypt transactions if connected to an
-in-browser wallet provider which accepts `eth_sendTransaction` calls. To encrypt
-transactions when using a local wallet client you must not only provide the
-`transport` parameter, but must also wrap the wallet client, as such:
+## Encryption
+
+Use the `sapphireHttpTransport()` transport to automatically intercept and
+encrypt the calldata provided to the `eth_estimateGas`, `eth_call` and
+`eth_sendTransaction` JSON-RPC calls.
+
+Transaction calldata will be encrypted while using the in-browser wallet
+provider (`window.ethereum`) because this uses the `eth_sendTransaction`
+JSON-RPC call to sign transactions.
+
+> [!IMPORTANT]
+> To encrypt transactions when using a local wallet client you must not only
+> provide the `transport` parameter, but must also wrap the wallet client.
+
+This example creates local wallet that is then wrapped with `wrapWalletClient`
+which replaces the transaction serializer with one which performs Sapphire
+encryption:
 
 ```typescript
-import { sapphireLocalnet, sapphireTransport, wrapWalletClient } from '@oasisprotocol/sapphire-viem-v2';
+import { createWalletClient } from 'viem'
+import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
+import { sapphireLocalnet, sapphireHttpTransport, wrapWalletClient } from '@oasisprotocol/sapphire-viem-v2';
+
+const account = mnemonicToAccount(generateMnemonic(english));
 
 const walletClient = await wrapWalletClient(createWalletClient({
 	account,
 	chain: sapphireLocalnet,
-	transport: sapphireTransport()
+	transport: sapphireHttpTransport()
 }));
 ```
 
-[hardhat-viem]: https://hardhat.org/hardhat-runner/docs/advanced/using-viem
+Be careful to verify that any transactions which contain sensitive information
+are encrypted by checking the Oasis block explorer and looking for the green
+lock icon.
