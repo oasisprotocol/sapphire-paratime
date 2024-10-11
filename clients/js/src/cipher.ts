@@ -258,7 +258,10 @@ export class X25519DeoxysII extends Cipher {
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }
 
-  public encrypt(plaintext: Uint8Array, nonce?: Uint8Array): {
+  public encrypt(
+    plaintext: Uint8Array,
+    nonce?: Uint8Array,
+  ): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   } {
