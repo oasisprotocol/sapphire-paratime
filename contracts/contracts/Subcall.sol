@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {StakingAddress, StakingSecretKey} from "./ConsensusUtils.sol";
+import {CBOR_parseUint, CBOR_parseKey, CBOR_parseKey, CBOR_parseUint64, CBOR_parseUint128, CBOR_parseMapStart, CBOR_Error_InvalidUintPrefix, CBOR_Error_ValueOutOfRange, CBOR_Error_InvalidMap, CBOR_Error_InvalidLength, CBOR_Error_InvalidUintSize, CBOR_Error_InvalidKey} from "./CBOR.sol";
 
 enum SubcallReceiptKind {
     Invalid,
@@ -56,29 +57,11 @@ library Subcall {
     /// Name of token cannot be CBOR encoded with current functions
     error TokenNameTooLong();
 
-    /// While parsing CBOR map, unexpected key
-    error InvalidKey();
-
-    /// While parsing CBOR map, length is invalid, or other parse error
-    error InvalidMap();
-
-    /// While parsing CBOR structure, data length was unexpected
-    error InvalidLength(uint256);
-
     /// Invalid receipt ID
     error InvalidReceiptId();
 
-    /// CBOR parsed valid is out of expected range
-    error ValueOutOfRange();
-
     /// CBOR parser expected a key, but it was not found in the map!
     error MissingKey();
-
-    /// Value cannot be parsed as a uint
-    error InvalidUintPrefix(uint8);
-
-    /// Unsigned integer of unknown size
-    error InvalidUintSize(uint8);
 
     /// Error while trying to retrieve current epoch
     error CoreCurrentEpochError(uint64);
@@ -98,7 +81,23 @@ library Subcall {
         internal
         returns (uint64 status, bytes memory data)
     {
-        (bool success, bytes memory tmp) = SUBCALL.call(
+        (bool success, bytes memory tmp) = SUBCALL.call( // solhint-disable-line
+            abi.encode(method, body)
+        );
+
+        if (!success) {
+            revert SubcallError();
+        }
+
+        (status, data) = abi.decode(tmp, (uint64, bytes));
+    }
+
+    function subcall_static(string memory method, bytes memory body)
+        internal
+        view
+        returns (uint64 status, bytes memory data)
+    {
+        (bool success, bytes memory tmp) = SUBCALL.staticcall(
             abi.encode(method, body)
         );
 
@@ -168,9 +167,10 @@ library Subcall {
     {
         if (receiptId == 0) revert InvalidReceiptId();
 
-        if (uint256(kind) == 0 || uint256(kind) > 23) revert ValueOutOfRange();
+        if (uint256(kind) == 0 || uint256(kind) > 23)
+            revert CBOR_Error_ValueOutOfRange();
 
-        (bool success, bytes memory data) = SUBCALL.call(
+        (bool success, bytes memory data) = SUBCALL.call( // solhint-disable-line
             abi.encode(
                 CONSENSUS_TAKE_RECEIPT,
                 abi.encodePacked( // CBOR encoded, {'id': x, 'kind': y}
@@ -205,101 +205,6 @@ library Subcall {
         return result;
     }
 
-    function _parseCBORUint(bytes memory result, uint256 offset)
-        public
-        pure
-        returns (uint256 newOffset, uint256 value)
-    {
-        uint8 prefix = uint8(result[offset]);
-        uint256 len;
-
-        if (prefix <= 0x17) {
-            return (offset + 1, prefix);
-        }
-        // Byte array(uint256), parsed as a big-endian integer.
-        else if (prefix == 0x58) {
-            len = uint8(result[++offset]);
-            offset++;
-        }
-        // Byte array, parsed as a big-endian integer.
-        else if (prefix & 0x40 == 0x40) {
-            len = uint8(result[offset++]) ^ 0x40;
-        }
-        // Unsigned integer, CBOR encoded.
-        else if (prefix & 0x10 == 0x10) {
-            if (prefix == 0x18) {
-                len = 1;
-            } else if (prefix == 0x19) {
-                len = 2;
-            } else if (prefix == 0x1a) {
-                len = 4;
-            } else if (prefix == 0x1b) {
-                len = 8;
-            } else {
-                revert InvalidUintSize(prefix);
-            }
-            offset += 1;
-        }
-        // Unknown...
-        else {
-            revert InvalidUintPrefix(prefix);
-        }
-
-        if (len > 0x20) revert InvalidLength(len);
-
-        assembly {
-            value := mload(add(add(0x20, result), offset))
-        }
-
-        value = value >> (256 - (len * 8));
-
-        newOffset = offset + len;
-    }
-
-    function _parseCBORUint64(bytes memory result, uint256 offset)
-        public
-        pure
-        returns (uint256 newOffset, uint64 value)
-    {
-        uint256 tmp;
-
-        (newOffset, tmp) = _parseCBORUint(result, offset);
-
-        if (tmp > type(uint64).max) revert ValueOutOfRange();
-
-        value = uint64(tmp);
-    }
-
-    function _parseCBORUint128(bytes memory result, uint256 offset)
-        public
-        pure
-        returns (uint256 newOffset, uint128 value)
-    {
-        uint256 tmp;
-
-        (newOffset, tmp) = _parseCBORUint(result, offset);
-
-        if (tmp > type(uint128).max) revert ValueOutOfRange();
-
-        value = uint128(tmp);
-    }
-
-    function _parseCBORKey(bytes memory result, uint256 offset)
-        internal
-        pure
-        returns (uint256 newOffset, bytes32 keyDigest)
-    {
-        if (result[offset] & 0x60 != 0x60) revert InvalidKey();
-
-        uint8 len = uint8(result[offset++]) ^ 0x60;
-
-        assembly {
-            keyDigest := keccak256(add(add(0x20, result), offset), len)
-        }
-
-        newOffset = offset + len;
-    }
-
     function _decodeReceiptUndelegateStart(bytes memory result)
         internal
         pure
@@ -311,19 +216,19 @@ library Subcall {
 
         bool hasReceipt = false;
 
-        if (result[0] != 0xA2) revert InvalidMap();
+        if (result[0] != 0xA2) revert CBOR_Error_InvalidMap();
 
         while (offset < result.length) {
             bytes32 keyDigest;
 
-            (offset, keyDigest) = _parseCBORKey(result, offset);
+            (offset, keyDigest) = CBOR_parseKey(result, offset);
 
             if (keyDigest == keccak256("epoch")) {
-                (offset, epoch) = _parseCBORUint64(result, offset);
+                (offset, epoch) = CBOR_parseUint64(result, offset);
 
                 hasEpoch = true;
             } else if (keyDigest == keccak256("receipt")) {
-                (offset, endReceipt) = _parseCBORUint64(result, offset);
+                (offset, endReceipt) = CBOR_parseUint64(result, offset);
 
                 hasReceipt = true;
             }
@@ -341,15 +246,15 @@ library Subcall {
 
         bool hasAmount = false;
 
-        if (result[0] != 0xA1) revert InvalidMap();
+        if (result[0] != 0xA1) revert CBOR_Error_InvalidMap();
 
         while (offset < result.length) {
             bytes32 keyDigest;
 
-            (offset, keyDigest) = _parseCBORKey(result, offset);
+            (offset, keyDigest) = CBOR_parseKey(result, offset);
 
             if (keyDigest == keccak256("amount")) {
-                (offset, amount) = _parseCBORUint128(result, offset);
+                (offset, amount) = CBOR_parseUint128(result, offset);
 
                 hasAmount = true;
             }
@@ -368,13 +273,14 @@ library Subcall {
         pure
         returns (uint128 shares)
     {
-        if (result[0] != 0xA1) revert InvalidMap();
+        if (result[0] != 0xA1) revert CBOR_Error_InvalidMap();
 
         if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s") {
             // Delegation succeeded, decode number of shares.
             uint8 sharesLen = uint8(result[8]) & 0x1f; // Assume shares field is never greater than 16 bytes.
 
-            if (9 + sharesLen != result.length) revert InvalidLength(sharesLen);
+            if (9 + sharesLen != result.length)
+                revert CBOR_Error_InvalidLength(sharesLen);
 
             for (uint256 offset = 0; offset < sharesLen; offset++) {
                 uint8 v = uint8(result[9 + offset]);
@@ -601,8 +507,8 @@ library Subcall {
      * ROFL instance for the given application.
      * @param appId ROFL app identifier
      */
-    function roflEnsureAuthorizedOrigin(bytes21 appId) internal {
-        (uint64 status, bytes memory data) = subcall(
+    function roflEnsureAuthorizedOrigin(bytes21 appId) internal view {
+        (uint64 status, bytes memory data) = subcall_static(
             ROFL_IS_AUTHORIZED_ORIGIN,
             abi.encodePacked(hex"55", appId) // CBOR byte string, 21 bytes.
         );
@@ -612,20 +518,6 @@ library Subcall {
         if (status != 0 || data.length != 1 || data[0] != 0xf5) {
             revert RoflOriginNotAuthorizedForApp();
         }
-    }
-
-    function _parseCBORMapStart(bytes memory in_data, uint256 in_offset)
-        internal
-        pure
-        returns (uint256 n_entries, uint256 out_offset)
-    {
-        uint256 b = uint256(uint8(in_data[in_offset]));
-        if (b < 0xa0 || b > 0xb7) {
-            revert InvalidMap();
-        }
-
-        n_entries = b - 0xa0;
-        out_offset = in_offset + 1;
     }
 
     struct CallDataPublicKey {
@@ -642,34 +534,38 @@ library Subcall {
     {
         uint256 mapLen;
 
-        (mapLen, offset) = _parseCBORMapStart(in_data, in_offset);
+        (mapLen, offset) = CBOR_parseMapStart(in_data, in_offset);
 
         while (mapLen > 0) {
             mapLen -= 1;
 
             bytes32 keyDigest;
 
-            (offset, keyDigest) = _parseCBORKey(in_data, offset);
+            (offset, keyDigest) = CBOR_parseKey(in_data, offset);
 
             if (keyDigest == keccak256("key")) {
                 uint256 tmp;
-                (offset, tmp) = _parseCBORUint(in_data, offset);
+                (offset, tmp) = CBOR_parseUint(in_data, offset);
                 public_key.key = bytes32(tmp);
             } else if (keyDigest == keccak256("checksum")) {
                 uint256 tmp;
-                (offset, tmp) = _parseCBORUint(in_data, offset);
+                (offset, tmp) = CBOR_parseUint(in_data, offset);
                 public_key.checksum = bytes32(tmp);
             } else if (keyDigest == keccak256("expiration")) {
-                (offset, public_key.expiration) = _parseCBORUint(
+                (offset, public_key.expiration) = CBOR_parseUint(
                     in_data,
                     offset
                 );
             } else if (keyDigest == keccak256("signature")) {
                 if (in_data[offset++] != 0x58) {
-                    revert InvalidUintPrefix(uint8(in_data[offset - 1]));
+                    revert CBOR_Error_InvalidUintPrefix(
+                        uint8(in_data[offset - 1])
+                    );
                 }
                 if (in_data[offset++] != 0x40) {
-                    revert InvalidUintSize(uint8(in_data[offset - 1]));
+                    revert CBOR_Error_InvalidUintSize(
+                        uint8(in_data[offset - 1])
+                    );
                 }
                 uint256 tmp;
                 assembly {
@@ -683,7 +579,7 @@ library Subcall {
 
                 offset += 0x40;
             } else {
-                revert InvalidKey();
+                revert CBOR_Error_InvalidKey();
             }
         }
     }
@@ -693,24 +589,24 @@ library Subcall {
         pure
         returns (uint256 epoch, CallDataPublicKey memory public_key)
     {
-        (uint256 outerMapLen, uint256 offset) = _parseCBORMapStart(in_data, 0);
+        (uint256 outerMapLen, uint256 offset) = CBOR_parseMapStart(in_data, 0);
 
         while (outerMapLen > 0) {
             bytes32 keyDigest;
 
             outerMapLen -= 1;
 
-            (offset, keyDigest) = _parseCBORKey(in_data, offset);
+            (offset, keyDigest) = CBOR_parseKey(in_data, offset);
 
             if (keyDigest == keccak256("epoch")) {
-                (offset, epoch) = _parseCBORUint(in_data, offset);
+                (offset, epoch) = CBOR_parseUint(in_data, offset);
             } else if (keyDigest == keccak256("public_key")) {
                 (offset, public_key) = _parseCBORPublicKeyInner(
                     in_data,
                     offset
                 );
             } else {
-                revert InvalidKey();
+                revert CBOR_Error_InvalidKey();
             }
         }
     }
@@ -718,9 +614,10 @@ library Subcall {
     // core.CallDataPublicKey
     function coreCallDataPublicKey()
         internal
+        view
         returns (uint256 epoch, CallDataPublicKey memory public_key)
     {
-        (uint64 status, bytes memory data) = subcall(
+        (uint64 status, bytes memory data) = subcall_static(
             CORE_CALLDATAPUBLICKEY,
             hex"f6" // null
         );
@@ -733,8 +630,8 @@ library Subcall {
     }
 
     // core.CurrentEpoch
-    function coreCurrentEpoch() internal returns (uint256) {
-        (uint64 status, bytes memory data) = subcall(
+    function coreCurrentEpoch() internal view returns (uint256) {
+        (uint64 status, bytes memory data) = subcall_static(
             CORE_CURRENT_EPOCH,
             hex"f6" // null
         );
@@ -743,7 +640,7 @@ library Subcall {
             revert CoreCurrentEpochError(status);
         }
 
-        (, uint256 result) = _parseCBORUint(data, 0);
+        (, uint256 result) = CBOR_parseUint(data, 0);
 
         return result;
     }
