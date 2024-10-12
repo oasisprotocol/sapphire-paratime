@@ -6,6 +6,19 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.3.0 (2024-10)
+
+https://github.com/oasisprotocol/sapphire-paratime/milestone/9
+
+### Added
+
+ * CalldataEncryption, for native transaction encryptions
+ * HMAC SHA512_256
+
+### Fixed
+
+ * Various lint warnings
+
 ## 0.2.11 (2024-09)
 
 ### Added
