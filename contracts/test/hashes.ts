@@ -6,10 +6,7 @@ import { BytesLike, hexlify, Overrides } from 'ethers';
 import { sha512_256 } from '@noble/hashes/sha512';
 import { hmac } from '@noble/hashes/hmac';
 
-type HasherTestT = (
-  data: BytesLike,
-  overrides?: Overrides,
-) => Promise<string>;
+type HasherTestT = (data: BytesLike, overrides?: Overrides) => Promise<string>;
 
 describe('Hashes', () => {
   let contract: HashTests;

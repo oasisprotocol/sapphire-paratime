@@ -22,8 +22,8 @@ describe('CalldataEncryption', () => {
 
     const factory = await ethers.getContractFactory('TestCalldataEncryption', {
       libraries: {
-        CalldataEncryption: await cdeLib.getAddress()
-      }
+        CalldataEncryption: await cdeLib.getAddress(),
+      },
     });
     contract = await factory.deploy();
     await contract.waitForDeployment();
@@ -61,16 +61,23 @@ describe('CalldataEncryption', () => {
 
   it('roundtrip encryption', async () => {
     const myAddr = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-    const myKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+    const myKey =
+      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 
-    for( let i = 1; i < 1024; i += 250 )
-    {
+    for (let i = 1; i < 1024; i += 250) {
       // Have the contract sign an encrypted transaction for us
       const bytes = randomBytes(i);
       const nonce = await ethers.provider.getTransactionCount(myAddr);
       const gasPrice = parseUnits('100', 'gwei');
       const gasLimit = 200000;
-      const tx = await contract.makeExampleCall(bytes, nonce, gasPrice, gasLimit, myAddr, myKey);
+      const tx = await contract.makeExampleCall(
+        bytes,
+        nonce,
+        gasPrice,
+        gasLimit,
+        myAddr,
+        myKey,
+      );
 
       // Then broadcast transaction and make sure the result is given back to us
       // Making sure the tx was encrypted, and data is passed correctly
@@ -78,7 +85,10 @@ describe('CalldataEncryption', () => {
       expect(isCalldataEnveloped(response.data)).eq(true);
       const receipt = await response.wait();
       expect(receipt?.status).eq(1);
-      const parsed = contract.interface.parseLog({topics: receipt!.logs[0].topics as string[], data: receipt!.logs[0].data});
+      const parsed = contract.interface.parseLog({
+        topics: receipt!.logs[0].topics as string[],
+        data: receipt!.logs[0].data,
+      });
       expect(parsed!.args[0]).eq(hexlify(bytes));
     }
   });

@@ -34,7 +34,7 @@ contract TestCBOR {
         bytes memory encoded = CBOR_encodeUint(value);
         (uint newOffset, uint result) = CBOR_parseUint(encoded, 0);
         require( result == value, "value wrong!" );
-        require( newOffset == encoded.length );
+        require( newOffset == encoded.length, "didn't parse everything!" );
         return true;
     }
 }
