@@ -73,10 +73,10 @@ jobs:
         run: make -C clients/js test lint
       - name: Build & Test integrations
         run: make -C integrations
-      - name: Build & Test Examples
-        run: make -C examples
       - name: Build & Test sapphire-contracts package
         run: make -C contracts
+      - name: Build & Test Examples
+        run: make -C examples
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Install forge doc deps
