@@ -2,23 +2,20 @@ import { expect } from 'chai';
 import { randomBytes, createHash } from 'crypto';
 import { ethers } from 'hardhat';
 import { HashTests } from '../typechain-types/contracts/tests/HashTests';
-import { HashTests__factory } from '../typechain-types/factories/contracts/tests';
 import { BytesLike, hexlify, Overrides } from 'ethers';
 import { sha512_256 } from '@noble/hashes/sha512';
 import { hmac } from '@noble/hashes/hmac';
 
 type HasherTestT = (
   data: BytesLike,
-  overrides?: Overrides | undefined,
+  overrides?: Overrides,
 ) => Promise<string>;
 
 describe('Hashes', () => {
   let contract: HashTests;
 
   before(async () => {
-    const factory = (await ethers.getContractFactory(
-      'HashTests',
-    )) as HashTests__factory;
+    const factory = await ethers.getContractFactory('HashTests');
     contract = await factory.deploy();
     await contract.waitForDeployment();
   });

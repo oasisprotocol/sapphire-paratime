@@ -36,6 +36,7 @@ function CBOR_encodeUint(uint256 value) pure returns (bytes memory) {
     } else if (value <= type(uint64).max) {
         return abi.encodePacked(uint8(27), uint64(value));
     }
+    // XXX: encoding beyond 64bit uints isn't 100% supported
     revert CBOR_Error_UintTooLong();
 }
 

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {ConsensusUtils, StakingAddress, StakingSecretKey} from "../ConsensusUtils.sol";
 import {Subcall, SubcallReceiptKind} from "../Subcall.sol";
-import {CBOR_parseUint} from "../CBOR.sol";
 
 contract SubcallTests {
     event SubcallResult(uint64 status, bytes data);
@@ -112,14 +111,6 @@ contract SubcallTests {
 
     function testRoflEnsureAuthorizedOrigin(bytes21 appId) external view {
         Subcall.roflEnsureAuthorizedOrigin(appId);
-    }
-
-    function testParseCBORUint(bytes memory result, uint256 offset)
-        external
-        pure
-        returns (uint256, uint256)
-    {
-        return CBOR_parseUint(result, offset);
     }
 
     event RawResult(uint64, bytes);
