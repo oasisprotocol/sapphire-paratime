@@ -321,16 +321,27 @@ library Sapphire {
      * ##### Secp256r1: 4,000 gas
      * - `7` (`Secp256r1PrehashedSha256`)
      *
-     * #### Public Key Format
+     * ##### Secp384r1: 18,000 gas
+     * - `8` (`Secp384r1PrehashedSha384`)
+     *
+     * #### Key Formats
      *
      * ##### Ed25519
      *
-     * 32 bytes
+     * Public key: 32 bytes
+     * Secret key: 32 bytes
      *
      * ##### Secp256k1 & Secp256r1
      *
-     * 33 bytes, compressed format (`0x02` or `0x03` prefix, then 32 byte X
-     * coordinate).
+     * Public key: 33 bytes, compressed format (`0x02` or `0x03` prefix, then 32
+     * byte X coordinate).
+     * Secret key: 32 bytes
+     *
+     * ##### Secp384r1
+     *
+     * Public key: 49 bytes, compressed format (`0x02` or `0x03` prefix, then 48
+     * byte X coordinate).
+     * Secret key: 48 bytes
      *
      * #### Example
      *
@@ -344,8 +355,8 @@ library Sapphire {
      * @param alg The signing alg for which to generate a keypair.
      * @param seed The seed to use for generating the key pair. You can use the
      * `randomBytes` method if you don't already have a seed.
-     * @return publicKey The public half of the keypair.
-     * @return secretKey The secret half of the keypair.
+     * @return publicKey The public part of the keypair.
+     * @return secretKey The secret part of the keypair.
      */
     function generateSigningKeyPair(SigningAlg alg, bytes memory seed)
         internal
@@ -391,6 +402,8 @@ library Sapphire {
      * - `5` (`Secp256k1PrehashedSha256`): 3,000 gas, pre-existing hash (32
      *   bytes) as context, empty message.
      * - `7` (`Secp256r1PrehashedSha256`): 9,000 gas, pre-existing hash (32
+     *   bytes) as context, empty message.
+     * - `8` (`Secp384r1PrehashedSha384`): 43,200 gas, pre-existing hash (32
      *   bytes) as context, empty message.
      *
      * #### Example
@@ -450,6 +463,7 @@ library Sapphire {
      * - `4` (`Secp256k1PrehashedKeccak256`): 3,000 gas
      * - `5` (`Secp256k1PrehashedSha256`): 3,000 gas
      * - `7` (`Secp256r1PrehashedSha256`): 7,900 gas
+     * - `8` (`Secp384r1PrehashedSha384`): 37,920 gas
      *
      * #### Example
      *
