@@ -60,9 +60,14 @@ describe('CalldataEncryption', () => {
   });
 
   it('roundtrip encryption', async () => {
+    // Tests must be submitted from an account which has a balance
+    // But can't get access to the signer private key from here
+    // So, assume the 0xf39F address is being used to run tests
     const myAddr = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
     const myKey =
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+    const [signerAddr] = await ethers.getSigners();
+    expect(signerAddr).eq(myAddr);
 
     for (let i = 1; i < 1024; i += 250) {
       // Have the contract sign an encrypted transaction for us

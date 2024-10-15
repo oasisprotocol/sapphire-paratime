@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {StakingAddress, StakingSecretKey} from "./ConsensusUtils.sol";
-import {CBOR_parseUint, CBOR_parseKey, CBOR_parseKey, CBOR_parseUint64, CBOR_parseUint128, CBOR_parseMapStart, CBOR_Error_InvalidUintPrefix, CBOR_Error_ValueOutOfRange, CBOR_Error_InvalidMap, CBOR_Error_InvalidLength, CBOR_Error_InvalidUintSize, CBOR_Error_InvalidKey} from "./CBOR.sol";
+import "./CBOR.sol" as CBOR;
 
 enum SubcallReceiptKind {
     Invalid,
@@ -168,7 +168,7 @@ library Subcall {
         if (receiptId == 0) revert InvalidReceiptId();
 
         if (uint256(kind) == 0 || uint256(kind) > 23)
-            revert CBOR_Error_ValueOutOfRange();
+            revert CBOR.CBOR_Error_ValueOutOfRange();
 
         (bool success, bytes memory data) = SUBCALL.call( // solhint-disable-line
             abi.encode(
@@ -216,19 +216,19 @@ library Subcall {
 
         bool hasReceipt = false;
 
-        if (result[0] != 0xA2) revert CBOR_Error_InvalidMap();
+        if (result[0] != 0xA2) revert CBOR.CBOR_Error_InvalidMap();
 
         while (offset < result.length) {
             bytes32 keyDigest;
 
-            (offset, keyDigest) = CBOR_parseKey(result, offset);
+            (offset, keyDigest) = CBOR.parseKey(result, offset);
 
             if (keyDigest == keccak256("epoch")) {
-                (offset, epoch) = CBOR_parseUint64(result, offset);
+                (offset, epoch) = CBOR.parseUint64(result, offset);
 
                 hasEpoch = true;
             } else if (keyDigest == keccak256("receipt")) {
-                (offset, endReceipt) = CBOR_parseUint64(result, offset);
+                (offset, endReceipt) = CBOR.parseUint64(result, offset);
 
                 hasReceipt = true;
             }
@@ -246,15 +246,15 @@ library Subcall {
 
         bool hasAmount = false;
 
-        if (result[0] != 0xA1) revert CBOR_Error_InvalidMap();
+        if (result[0] != 0xA1) revert CBOR.CBOR_Error_InvalidMap();
 
         while (offset < result.length) {
             bytes32 keyDigest;
 
-            (offset, keyDigest) = CBOR_parseKey(result, offset);
+            (offset, keyDigest) = CBOR.parseKey(result, offset);
 
             if (keyDigest == keccak256("amount")) {
-                (offset, amount) = CBOR_parseUint128(result, offset);
+                (offset, amount) = CBOR.parseUint128(result, offset);
 
                 hasAmount = true;
             }
@@ -273,14 +273,14 @@ library Subcall {
         pure
         returns (uint128 shares)
     {
-        if (result[0] != 0xA1) revert CBOR_Error_InvalidMap();
+        if (result[0] != 0xA1) revert CBOR.CBOR_Error_InvalidMap();
 
         if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s") {
             // Delegation succeeded, decode number of shares.
             uint8 sharesLen = uint8(result[8]) & 0x1f; // Assume shares field is never greater than 16 bytes.
 
             if (9 + sharesLen != result.length)
-                revert CBOR_Error_InvalidLength(sharesLen);
+                revert CBOR.CBOR_Error_InvalidLength(sharesLen);
 
             for (uint256 offset = 0; offset < sharesLen; offset++) {
                 uint8 v = uint8(result[9 + offset]);
@@ -534,36 +534,36 @@ library Subcall {
     {
         uint256 mapLen;
 
-        (mapLen, offset) = CBOR_parseMapStart(in_data, in_offset);
+        (mapLen, offset) = CBOR.parseMapStart(in_data, in_offset);
 
         while (mapLen > 0) {
             mapLen -= 1;
 
             bytes32 keyDigest;
 
-            (offset, keyDigest) = CBOR_parseKey(in_data, offset);
+            (offset, keyDigest) = CBOR.parseKey(in_data, offset);
 
             if (keyDigest == keccak256("key")) {
                 uint256 tmp;
-                (offset, tmp) = CBOR_parseUint(in_data, offset);
+                (offset, tmp) = CBOR.parseUint(in_data, offset);
                 public_key.key = bytes32(tmp);
             } else if (keyDigest == keccak256("checksum")) {
                 uint256 tmp;
-                (offset, tmp) = CBOR_parseUint(in_data, offset);
+                (offset, tmp) = CBOR.parseUint(in_data, offset);
                 public_key.checksum = bytes32(tmp);
             } else if (keyDigest == keccak256("expiration")) {
-                (offset, public_key.expiration) = CBOR_parseUint(
+                (offset, public_key.expiration) = CBOR.parseUint(
                     in_data,
                     offset
                 );
             } else if (keyDigest == keccak256("signature")) {
                 if (in_data[offset++] != 0x58) {
-                    revert CBOR_Error_InvalidUintPrefix(
+                    revert CBOR.CBOR_Error_InvalidUintPrefix(
                         uint8(in_data[offset - 1])
                     );
                 }
                 if (in_data[offset++] != 0x40) {
-                    revert CBOR_Error_InvalidUintSize(
+                    revert CBOR.CBOR_Error_InvalidUintSize(
                         uint8(in_data[offset - 1])
                     );
                 }
@@ -579,7 +579,7 @@ library Subcall {
 
                 offset += 0x40;
             } else {
-                revert CBOR_Error_InvalidKey();
+                revert CBOR.CBOR_Error_InvalidKey();
             }
         }
     }
@@ -589,24 +589,24 @@ library Subcall {
         pure
         returns (uint256 epoch, CallDataPublicKey memory public_key)
     {
-        (uint256 outerMapLen, uint256 offset) = CBOR_parseMapStart(in_data, 0);
+        (uint256 outerMapLen, uint256 offset) = CBOR.parseMapStart(in_data, 0);
 
         while (outerMapLen > 0) {
             bytes32 keyDigest;
 
             outerMapLen -= 1;
 
-            (offset, keyDigest) = CBOR_parseKey(in_data, offset);
+            (offset, keyDigest) = CBOR.parseKey(in_data, offset);
 
             if (keyDigest == keccak256("epoch")) {
-                (offset, epoch) = CBOR_parseUint(in_data, offset);
+                (offset, epoch) = CBOR.parseUint(in_data, offset);
             } else if (keyDigest == keccak256("public_key")) {
                 (offset, public_key) = _parseCBORPublicKeyInner(
                     in_data,
                     offset
                 );
             } else {
-                revert CBOR_Error_InvalidKey();
+                revert CBOR.CBOR_Error_InvalidKey();
             }
         }
     }
@@ -640,7 +640,7 @@ library Subcall {
             revert CoreCurrentEpochError(status);
         }
 
-        (, uint256 result) = CBOR_parseUint(data, 0);
+        (, uint256 result) = CBOR.parseUint(data, 0);
 
         return result;
     }

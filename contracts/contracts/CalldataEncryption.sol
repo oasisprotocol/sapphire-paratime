@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Subcall} from "./Subcall.sol";
 import {Sapphire} from "./Sapphire.sol";
-import {CBOR_encodeBytes, CBOR_encodeUint} from "./CBOR.sol";
+import "./CBOR.sol" as CBOR;
 
 library CalldataEncryption {
     function _deriveKey(
@@ -28,7 +28,7 @@ library CalldataEncryption {
             hex"a1", // map(1)
             hex"64", //     text(4) "body"
             "body",
-            CBOR_encodeBytes(in_data)
+            CBOR.encodeBytes(in_data)
         );
 
         out_encrypted = Sapphire.encrypt(
@@ -102,10 +102,10 @@ library CalldataEncryption {
                 myPublic,
                 hex"64", //              text(4) "data"
                 "data",
-                CBOR_encodeBytes(inner), //     bytes(n) inner
+                CBOR.encodeBytes(inner), //     bytes(n) inner
                 hex"65", //              text(5) "epoch"
                 "epoch",
-                CBOR_encodeUint(epoch), //      unsigned(epoch)
+                CBOR.encodeUint(epoch), //      unsigned(epoch)
                 hex"65", //              text(5) "nonce"
                 "nonce",
                 hex"4f", //                  bytes(15) nonce

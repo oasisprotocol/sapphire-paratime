@@ -24,7 +24,7 @@ error CBOR_Error_UintTooLong();
 
 error CBOR_Error_BytesTooLong();
 
-function CBOR_encodeUint(uint256 value) pure returns (bytes memory) {
+function encodeUint(uint256 value) pure returns (bytes memory) {
     if (value < 24) {
         return abi.encodePacked(uint8(value));
     } else if (value <= type(uint8).max) {
@@ -40,7 +40,7 @@ function CBOR_encodeUint(uint256 value) pure returns (bytes memory) {
     revert CBOR_Error_UintTooLong();
 }
 
-function CBOR_encodeBytes(bytes memory in_bytes)
+function encodeBytes(bytes memory in_bytes)
     pure
     returns (bytes memory out_cbor)
 {
@@ -64,7 +64,7 @@ function CBOR_encodeBytes(bytes memory in_bytes)
     revert CBOR_Error_BytesTooLong();
 }
 
-function CBOR_parseMapStart(bytes memory in_data, uint256 in_offset)
+function parseMapStart(bytes memory in_data, uint256 in_offset)
     pure
     returns (uint256 n_entries, uint256 out_offset)
 {
@@ -77,7 +77,7 @@ function CBOR_parseMapStart(bytes memory in_data, uint256 in_offset)
     out_offset = in_offset + 1;
 }
 
-function CBOR_parseUint(bytes memory result, uint256 offset)
+function parseUint(bytes memory result, uint256 offset)
     pure
     returns (uint256 newOffset, uint256 value)
 {
@@ -127,33 +127,33 @@ function CBOR_parseUint(bytes memory result, uint256 offset)
     newOffset = offset + len;
 }
 
-function CBOR_parseUint64(bytes memory result, uint256 offset)
+function parseUint64(bytes memory result, uint256 offset)
     pure
     returns (uint256 newOffset, uint64 value)
 {
     uint256 tmp;
 
-    (newOffset, tmp) = CBOR_parseUint(result, offset);
+    (newOffset, tmp) = parseUint(result, offset);
 
     if (tmp > type(uint64).max) revert CBOR_Error_ValueOutOfRange();
 
     value = uint64(tmp);
 }
 
-function CBOR_parseUint128(bytes memory result, uint256 offset)
+function parseUint128(bytes memory result, uint256 offset)
     pure
     returns (uint256 newOffset, uint128 value)
 {
     uint256 tmp;
 
-    (newOffset, tmp) = CBOR_parseUint(result, offset);
+    (newOffset, tmp) = parseUint(result, offset);
 
     if (tmp > type(uint128).max) revert CBOR_Error_ValueOutOfRange();
 
     value = uint128(tmp);
 }
 
-function CBOR_parseKey(bytes memory result, uint256 offset)
+function parseKey(bytes memory result, uint256 offset)
     pure
     returns (uint256 newOffset, bytes32 keyDigest)
 {
