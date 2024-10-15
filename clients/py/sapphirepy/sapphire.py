@@ -81,7 +81,7 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
                        params: tuple[TxParams],
                        method,
                        web3: Web3,
-                       account: Optional[LocalAccount] = None) -> TransactionCipher:
+                       account: Optional[LocalAccount]=None) -> TransactionCipher:
     c = TransactionCipher(peer_pubkey=pk['key'], peer_epoch=pk['epoch'])
     data = params[0]['data']
     if isinstance(data, bytes):
@@ -95,7 +95,6 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
     encrypted_data = c.encrypt(data_bytes)
 
     if method == 'eth_call' and params[0]['from'] and account:
-        # assert account is not None, 'Account must be provided for encrypted calls!'
         data_pack = _new_signed_call_data_pack(c.make_envelope(data_bytes),
                                                data_bytes,
                                                params,
