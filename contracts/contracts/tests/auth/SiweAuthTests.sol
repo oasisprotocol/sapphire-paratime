@@ -42,7 +42,7 @@ contract SiweAuthTests is SiweAuth {
         return revokeBearer(bearer);
     }
 
-    function doNothing() external {
+    function doNothing() external { // solhint-disable-line
         // Does nothing
     }
 }

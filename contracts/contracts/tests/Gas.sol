@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Sapphire} from "../Sapphire.sol";
 
 contract GasTests {
-    bytes32 tmp;
+    bytes32 public tmp;
 
     function testConstantTime(uint256 useGas, uint128 padGasAmount) external {
         if (useGas == 1) {
