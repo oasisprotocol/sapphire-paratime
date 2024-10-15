@@ -10,7 +10,7 @@ contract SemanticTests {
     error CustomError(uint256 value);
     uint256 private x;
 
-    uint256 constant ERROR_NUM =
+    uint256 public constant ERROR_NUM =
         0x1023456789abcdef1023456789abcdef1023456789abcdef1023456789abcdef;
 
     function testCustomRevert() external {
