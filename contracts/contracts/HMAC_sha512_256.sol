@@ -34,25 +34,33 @@ function HMAC_sha512_256(bytes memory key, bytes memory message)
     view
     returns (bytes32)
 {
+    // Declare a memory array of 4 elements, each element is a bytes32
     bytes32[4] memory buf;
 
+    // If the key length is greater than the SHA512_256_BLOCK_SIZE constant
     if (key.length > SHA512_256_BLOCK_SIZE) {
+        // Hash the key using SHA512-256 and store the result in the first element of buf
         buf[0] = sha512_256(key);
     } else {
+        // If the key is not longer than the block size, we'll copy it directly
         bool success;
 
+        // Use inline assembly for low-level operations
         assembly {
+            // Get the length of the key
             let size := mload(key)
+            // Call the identity precompile to copy memory
             success := staticcall(
-                gas(),
-                PRECOMPILE_IDENTITY_ADDRESS,
-                add(32, key), // Skip uint256 length prefix of key bytes
-                size,
-                buf,
-                size
+                gas(),           // Forward all available gas
+                PRECOMPILE_IDENTITY_ADDRESS,  // Address of the identity precompile
+                add(32, key),    // Start of the key data (skip the length prefix)
+                size,            // Length of data to copy
+                buf,             // Destination to copy to
+                size             // Amount of memory to copy
             )
         }
 
+        // Ensure the memory copy was successful
         require(success, "memcpy");
     }
 
