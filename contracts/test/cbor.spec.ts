@@ -1,4 +1,3 @@
-import * as cborg from 'cborg';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { TestCBOR } from '../typechain-types';
