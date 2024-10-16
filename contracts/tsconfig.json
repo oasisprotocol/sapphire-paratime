@@ -9,6 +9,6 @@
     "strict": true,
     "target": "es2020"
   },
-  "include": ["./src", "./scripts", "./test"],
+  "include": ["./src", "./scripts", "./test", "./typechain-types"],
   "files": ["./hardhat.config.ts"]
 }
