@@ -92,6 +92,14 @@ library Subcall {
         (status, data) = abi.decode(tmp, (uint64, bytes));
     }
 
+    /**
+     * @notice Submit a read-only native message to the Oasis runtime layer using STATICCALL.
+     * Messages which re-enter the EVM module are forbidden: `evm.*`.
+     * @param method Native message type.
+     * @param body CBOR encoded body.
+     * @return status Result of call.
+     * @return data CBOR encoded result.
+     */
     function subcall_static(string memory method, bytes memory body)
         internal
         view
