@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {sha512, sha512_256, sha384} from "../Sapphire.sol";
-import {HMAC_sha512_256} from "../HMAC_sha512_256.sol";
+import {hmac_sha512_256} from "../hmac_sha512_256.sol";
 
 contract HashTests {
     function testSHA512(bytes memory data)
@@ -31,6 +31,6 @@ contract HashTests {
         view
         returns (bytes32)
     {
-        return HMAC_sha512_256(key, data);
+        return hmac_sha512_256(key, data);
     }
 }
