@@ -72,6 +72,13 @@ ParaTime.
 [network-parameters]: https://github.com/oasisprotocol/docs/blob/main/docs/node/mainnet/README.md
 [Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/testnet/README.md
 
+## Localnet
+
+For development and testing, you can run a local [instance][localnet] of the
+entire Sapphire stack.
+
+[localnet]: https://github.com/oasisprotocol/docs/blob/main/docs/dapp/tools/localnet.mdx
+
 ## Sapphire vs Ethereum
 
 Sapphire is generally compatible with Ethereum, the EVM, and all the user and
@@ -278,114 +285,6 @@ obviously problematic if you're writing a confidential token. What you can
 do instead is fork that contract and remove the offending emissions.
 
 :::
-
-## Running a Private Oasis Network Locally
-
-For convenient development and testing of your dApps the Oasis team prepared
-the [ghcr.io/oasisprotocol/sapphire-localnet][sapphire-localnet] Docker image
-which brings you a complete Oasis network stack to your desktop. The Localnet
-Sapphire instance **mimics confidential transactions**, but it does not run in a
-trusted execution environment nor does it require Intel's SGX on your computer.
-The network is isolated from the Mainnet or Testnet and consists of a:
-
-- single Oasis validator node with 1-second block time and 30-second epoch,
-- single Oasis client node,
-- single compute node running Oasis Sapphire,
-- single key manager node,
-- PostgreSQL instance,
-- Oasis Web3 gateway with transaction indexer and enabled Oasis RPCs,
-- helper script which populates the account(s) for you.
-
-To run the image, execute:
-
-```sh
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet
-```
-
-After a while, the tool will show you something like this:
-
-```
-sapphire-localnet 2024-05-28-git37b7166 (oasis-core: 24.0-gitfb49717, sapphire-paratime: 0.7.3-testnet, oasis-web3-gateway: 5.1.0)
-
- * Starting oasis-net-runner with sapphire...
- * Waiting for Postgres to start...
- * Waiting for Oasis node to start.....
- * Starting oasis-web3-gateway...
- * Bootstrapping network (this might take a minute)...
- * Waiting for key manager......
- * Populating accounts...
-
-Available Accounts
-==================
-(0) 0x41b0C13e747F8Cb1c4E980712504437cb1792327 (10000 TEST)
-(1) 0xa521f94f8a38b1d027D526017EB229327B9D6cA0 (10000 TEST)
-(2) 0x1e0f8369215D6C5Af5E14eD6A0D6ae7372776A79 (10000 TEST)
-(3) 0xB60cA28B491747a27C057AdBF3E71F3CCC52332C (10000 TEST)
-(4) 0x88D7d924e521a6d07008a373D5b33281148ffEDc (10000 TEST)
-
-Private Keys
-==================
-(0) 0x617346c545d62b8213ea907acf1b570a7405683e2c6dcaf963fc21fd677e0c56
-(1) 0xf82d6e09208b0bd44a397f7e73b05c564e6c9f70b151ee7677e2bb8d6ce5d882
-(2) 0xeb2f21d20086f3dd6bfe7184dad1cb8b0fb802f27b1334e836a19eda0a43a1c2
-(3) 0x82b0203d6063992b1052004b90411c45d4f3afab696346f006e74c6abd8f855e
-(4) 0x7179c6e1add3a2993822653b9c98fe606f47fb6d4c0d0d81b31b067cf6bb5f83
-
-HD Wallet
-==================
-Mnemonic:       coach genre beach child crunch champion tell adult critic peace canoe stable
-Base HD Path:   m/44'/60'/0'/0/%d
-
-WARNING: The chain is running in ephemeral mode. State will be lost after restart!
-
- * Listening on http://localhost:8545 and ws://localhost:8546. Chain ID: 0x5afd
- * Container start-up took 66 seconds, node log level is set to warn.
-```
-
-Those familiar with local dApp environments will find the output above similar
-to `geth --dev` or `ganache-cli` commands or the `geth-dev-assistant` npm
-package. [sapphire-localnet] will spin up a private Oasis Network locally,
-generate and populate test accounts and make the following Web3 endpoints
-available for you to use:
-
-- `http://localhost:8545`
-- `ws://localhost:8546`
-
-:::tip
-
-If you prefer using the same mnemonics each time (e.g. for testing purposes)
-or to populate just a single account, use `-to` flag and pass the mnemonics or
-the wallet addresses. By passing the `-test-mnemonic` flag you can fund the
-standard test accounts provided by the `hardhat node` commmand and that are
-typically used for solidity unit tests.
-
-```sh
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "bench remain brave curve frozen verify dream margin alarm world repair innocent" -n3
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to "0x75eCF0d4496C2f10e4e9aF3D4d174576Ee9010E2,0xbDA5747bFD65F08deb54cb465eB87D40e51B197E"
-docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -test-mnemonic
-```
-
-:::
-
-:::note Running on Apple M chips
-
-There is currently no `arm64` build available for M Macs, so you will need to
-force the docker image to use the `linux/x86_64` platform, like this:
-
-```sh
-docker run -it -p8545:8545 -p8546:8546 --platform linux/x86_64 ghcr.io/oasisprotocol/sapphire-localnet
-```
-
-:::
-
-:::danger
-
-[sapphire-localnet] runs in ephemeral mode. Any smart contract and wallet balance
-will be lost after you quit the Docker container!
-
-:::
-
-[sapphire-localnet]: https://github.com/oasisprotocol/oasis-web3-gateway/pkgs/container/sapphire-localnet
 
 ## See also
 
