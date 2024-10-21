@@ -8,13 +8,16 @@ import {sha512_256} from "./Sapphire.sol";
 uint256 constant SHA512_256_BLOCK_SIZE = 128;
 
 // We don't (yet) have the MCOPY opcode, so use the IDENTITY precompile
-uint256 constant PRECOMPILE_IDENTITY_ADDRESS = 0x4;
+uint256 constant PRECOMPILE_IDENTITY_ADDRESS = 4;
 
 // HMAC block-sized inner padding
 bytes32 constant HMAC_IPAD = 0x3636363636363636363636363636363636363636363636363636363636363636;
 
 // OPAD ^ IPAD, (OPAD = 0x5c)
 bytes32 constant HMAC_OPAD_XOR_IPAD = 0x6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a;
+
+/// Copying key buffer failed (identity precompile error?)
+error hmac_sha512_256_memcpy();
 
 /**
  * @notice Implements HMAC using SHA512-256.
@@ -27,52 +30,49 @@ bytes32 constant HMAC_OPAD_XOR_IPAD = 0x6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a
  * ```solidity
  * bytes memory key = "arbitrary length key";
  * bytes memory message = "arbitrary length message";
- * bytes32 hmac = HMAC_sha512_256(key, message)
+ * bytes32 hmac = hmac_sha512_256(key, message)
  * ```
  */
-function HMAC_sha512_256(bytes memory key, bytes memory message)
+function hmac_sha512_256(bytes memory key, bytes memory message)
     view
     returns (bytes32)
 {
-    // Declare a memory array of 4 elements, each element is a bytes32
+    // Buffer is SHA512_256_BLOCK_SIZE bytes
     bytes32[4] memory buf;
 
-    // If the key length is greater than the SHA512_256_BLOCK_SIZE constant
+    // Key is hashed if longer than SHA512_256_BLOCK_SIZE
+    // Otherwise, copy into block buffer using the identity precompile
     if (key.length > SHA512_256_BLOCK_SIZE) {
-        // Hash the key using SHA512-256 and store the result in the first element of buf
         buf[0] = sha512_256(key);
     } else {
-        // If the key is not longer than the block size, we'll copy it directly
         bool success;
-
-        // Use inline assembly for low-level operations
         assembly {
-            // Get the length of the key
             let size := mload(key)
-            // Call the identity precompile to copy memory
             success := staticcall(
-                gas(),           // Forward all available gas
-                PRECOMPILE_IDENTITY_ADDRESS,  // Address of the identity precompile
-                add(32, key),    // Start of the key data (skip the length prefix)
-                size,            // Length of data to copy
-                buf,             // Destination to copy to
-                size             // Amount of memory to copy
+                gas(),
+                PRECOMPILE_IDENTITY_ADDRESS,
+                add(32, key), // Skip 32 bytes for the key length
+                size,
+                buf,
+                size
             )
         }
-
-        // Ensure the memory copy was successful
-        require(success, "memcpy");
+        if (!success) {
+            revert hmac_sha512_256_memcpy();
+        }
     }
 
-    for (uint256 i = 0; i < buf.length; i++) {
-        buf[i] ^= HMAC_IPAD;
-    }
+    buf[0] ^= HMAC_IPAD;
+    buf[1] ^= HMAC_IPAD;
+    buf[2] ^= HMAC_IPAD;
+    buf[3] ^= HMAC_IPAD;
 
     bytes32 ihash = sha512_256(abi.encodePacked(buf, message));
 
-    for (uint256 i = 0; i < buf.length; i++) {
-        buf[i] ^= HMAC_OPAD_XOR_IPAD;
-    }
+    buf[0] ^= HMAC_OPAD_XOR_IPAD;
+    buf[1] ^= HMAC_OPAD_XOR_IPAD;
+    buf[2] ^= HMAC_OPAD_XOR_IPAD;
+    buf[3] ^= HMAC_OPAD_XOR_IPAD;
 
     return sha512_256(abi.encodePacked(buf, ihash));
 }
