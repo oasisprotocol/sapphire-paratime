@@ -17,7 +17,7 @@ dependencies:
 full: dependencies build
 
 test:
-	@echo Please make tests for wagmi-v2 example!
+	$(NPM) run e2e:test
 
 run:
 	$(NPM) run dev
