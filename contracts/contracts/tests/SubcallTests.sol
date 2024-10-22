@@ -8,11 +8,11 @@ import {Subcall, SubcallReceiptKind} from "../Subcall.sol";
 contract SubcallTests {
     event SubcallResult(uint64 status, bytes data);
 
-    constructor() payable {
+    constructor() payable { // solhint-disable-line
         // Do nothing, but allow balances to be sent on construction.
     }
 
-    receive() external payable {
+    receive() external payable {    // solhint-disable-line
         // Do nothing, but allow contract to receive native ROSE.
     }
 
@@ -109,16 +109,8 @@ contract SubcallTests {
         Subcall.consensusWithdraw(to, value);
     }
 
-    function testRoflEnsureAuthorizedOrigin(bytes21 appId) external {
+    function testRoflEnsureAuthorizedOrigin(bytes21 appId) external view {
         Subcall.roflEnsureAuthorizedOrigin(appId);
-    }
-
-    function testParseCBORUint(bytes memory result, uint256 offset)
-        external
-        pure
-        returns (uint256, uint256)
-    {
-        return Subcall._parseCBORUint(result, offset);
     }
 
     event RawResult(uint64, bytes);
@@ -133,12 +125,13 @@ contract SubcallTests {
 
     function testCoreCallDataPublicKey()
         external
+        view
         returns (uint256 epoch, Subcall.CallDataPublicKey memory public_key)
     {
         (epoch, public_key) = Subcall.coreCallDataPublicKey();
     }
 
-    function testCoreCurrentEpoch() external returns (uint256 epoch) {
+    function testCoreCurrentEpoch() external view returns (uint256 epoch) {
         return Subcall.coreCurrentEpoch();
     }
 }
