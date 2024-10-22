@@ -101,7 +101,7 @@ function App() {
 				abi: StorageABI,
 				address: contractAddress,
 				functionName: "store",
-				args: [BigInt(Math.round((Math.random() * 100000)))],
+				args: [BigInt(40367)],
 			} as const;
 			const result = await walletClient!.writeContract({
 				...callArgs,
