@@ -1,0 +1,73 @@
+name: playwright-test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  playwright-test:
+    runs-on: ubuntu-latest
+    services:
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
+        ports:
+          - 8545:8545
+          - 8546:8546
+        env:
+          OASIS_DEPOSIT_BINARY: /oasis-deposit -test-mnemonic -n 5
+        options: >-
+          --rm
+          --health-cmd="test -f /CONTAINER_READY"
+          --health-start-period=90s
+    env:
+      SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 3001
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt install -y jq
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build JS client
+        run: make -C clients/js build
+      - name: Build & Test integrations
+        run: make -C integrations
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Start example
+        run: pnpm dev &
+        working-directory: examples/wagmi-v2
+      - run: npx wait-on http://localhost:5173/ --timeout 60000
+      - name: Run playwright tests
+        working-directory: examples/wagmi-v2
+        run: make test
+      - name: 'Upload playwright test-results'
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: playwright/test-results
+          retention-days: 5
