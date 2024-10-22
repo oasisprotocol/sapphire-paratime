@@ -10,11 +10,13 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"preview": "vite preview",
-		"start:server": "vite --port 3000"
+		"start:server": "vite --port 3000",
+		"e2e:test": "playwright test"
 	},
 	"dependencies": {
-		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
+		"@playwright/test": "^1.48.0",
 		"@tanstack/react-query": "5.0.5",
 		"abitype": "^1.0.2",
 		"react": "^18.2.0",
