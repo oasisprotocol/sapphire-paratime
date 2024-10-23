@@ -160,10 +160,15 @@ describe('Auth', function () {
       siweStr4,
       await erc191sign(siweStr4, account),
     );
-    // Wait until the next second after expiration
-    await delay(expiration.getTime() - Date.now() + 1000);
-    const tx = await siweAuthTests.doNothing();
-    await tx.wait();
+    // Wait until the block time is greater than the expiration date
+    await new Promise<void>((resolve, reject) => {
+      ethers.provider.on('block', async (blockNumber) => {
+        const ts = (await ethers.provider.getBlock(blockNumber))!.timestamp;
+        if (ts * 1000 > expiration.getTime()) {
+          resolve();
+        }
+      });
+    });
     await expect(siweAuthTests.testVerySecretMessage(bearer4)).to.be.reverted;
 
     // Revoke bearer.
