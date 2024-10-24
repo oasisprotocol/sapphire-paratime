@@ -1,5 +1,6 @@
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-SAPPHIRE_DEV_DOCKER=ghcr.io/oasisprotocol/sapphire-localnet:latest
+#SAPPHIRE_DEV_DOCKER=ghcr.io/oasisprotocol/sapphire-localnet:latest
+SAPPHIRE_DEV_DOCKER=ghcr.io/oasisprotocol/sapphire-localnet:local
 
 all:
 

@@ -10,7 +10,11 @@ import {
   verifyRuntimePublicKey,
 } from '@oasisprotocol/sapphire-paratime';
 
+import { encode as cborEncode, decode as cborDecode } from 'cborg';
 import { MockEIP1193Provider, MockNonRuntimePublicKeyProvider } from './utils';
+import { AbiCoder } from 'ethers';
+import { JsonRpcProvider } from 'ethers';
+import { SUBCALL_ADDR } from '../src/constants';
 
 describe('fetchRuntimePublicKey', () => {
   afterEach(() => {
@@ -136,4 +140,47 @@ describe('fetchRuntimePublicKey', () => {
       hexlify(upstream.calldatapublickey),
     );
   });
+
+  it('Dorp', async () => {
+    const rpc = new JsonRpcProvider('http://localhost:8545');
+    const coder = AbiCoder.defaultAbiCoder();
+    const result = await rpc.call({
+      to: SUBCALL_ADDR,
+      data: coder.encode(['string', 'bytes'], ['core.KeyManagerPublicKey', cborEncode(null)])
+    });
+    const blah = coder.decode(['uint','bytes'], result);
+    const raah = cborDecode(getBytes(blah[1]));
+    console.log('Dorp', result, blah, raah);
+  });
+
+  /*
+  it('Testnet', async () => {
+    const statuses = {
+      "id": "4000000000000000000000000000000000000000000000004a1a53dff2ae482d",
+      "checksum": "RZkXlhoVAKGy2tn27VR2DKpkJqCY1+CG/JCdr1aSa/I=",
+      "rsk": "4uh2Yw5DNr3CbLzVrfnGUTeiCpwVJb1TQSLG80yWZ9o="
+    };
+    const runtime_id = getBytes(statuses.id);
+    const checksum = decodeBase64(statuses.checksum);
+    const rsk = decodeBase64(statuses.rsk);
+
+    const upstream = new JsonRpcProvider('https://testnet.sapphire.oasis.io');
+    const cdpk = await fetchRuntimePublicKey({ upstream });
+    expect(verifyRuntimePublicKey(rsk, cdpk, runtime_id, key_pair_id)).toEqual(
+      true,
+    );
+  });
+
+  it('Mainnet', async () => {
+    const statuses = {
+      "id": "4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac", // km runtime id
+      "checksum": "Wd1+cYi5c2iXynGezp3ObZYY4/SHVT3MvGAbqEi2XZw=", // hash of the latest master secret
+      "rsk": "ItZvPdRKJFCqcd6srqv58eGD7T8n10aLZATwejKGwUA=" // signing key derived from the latest master secret
+    };
+    const upstream = new JsonRpcProvider('https://sapphire.oasis.io/');
+    const cdpk = await fetchRuntimePublicKey({ upstream });
+    const checksum = decodeBase64(statuses.checksum);
+    const rsk = decodeBase64(statuses.rsk);
+  });
+  */
 });
