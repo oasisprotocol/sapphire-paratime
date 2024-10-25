@@ -3,11 +3,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+#[cfg(not(feature = "debug-mock-sgx"))]
+use oasis_runtime_sdk::core::common::crypto::signature::PublicKey;
 #[cfg(target_env = "sgx")]
 use oasis_runtime_sdk::core::consensus::verifier::TrustRoot;
 use oasis_runtime_sdk::{
     self as sdk, config,
-    core::common::crypto::signature::PublicKey,
     keymanager::TrustedSigners,
     modules,
     types::token::{BaseUnits, Denomination},
@@ -91,6 +92,8 @@ impl modules::rofl::Config for Config {
     const GAS_COST_CALL_AUTHORIZED_ORIGIN_NODE: u64 = 2000;
     /// Gas cost of rofl.AuthorizedOriginEntity call.
     const GAS_COST_CALL_AUTHORIZED_ORIGIN_ENTITY: u64 = 2000;
+    /// Gas cost of rofl.StakeThresholds call.
+    const GAS_COST_CALL_STAKE_THRESHOLDS: u64 = 10;
 
     /// Amount of stake required for maintaining an application (10_000 ROSE/TEST).
     const STAKE_APP_CREATE: BaseUnits =
@@ -137,13 +140,13 @@ impl sdk::Runtime for Runtime {
         module_evm::Module<Config>,
     );
 
+    #[cfg(feature = "debug-mock-sgx")]
     fn trusted_signers() -> Option<TrustedSigners> {
-        #[allow(clippy::partialeq_to_none)]
-        if option_env!("OASIS_UNSAFE_SKIP_KM_POLICY") == Some("1")
-            || cfg!(feature = "debug-mock-sgx")
-        {
-            return Some(TrustedSigners::default());
-        }
+        Some(TrustedSigners::unsafe_mock())
+    }
+
+    #[cfg(not(feature = "debug-mock-sgx"))]
+    fn trusted_signers() -> Option<TrustedSigners> {
         let tps = keymanager::trusted_policy_signers();
         // The `keymanager` crate may use a different version of `oasis_core`
         // so we need to convert the `TrustedSigners` between the versions.
