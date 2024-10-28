@@ -51,6 +51,12 @@ library Subcall {
 
     error AccountsTransferError(uint64 status, string data);
 
+    /// Expected map of different size!
+    error WrongMapSizeError();
+
+    /// Unknown type of receipt!
+    error TakeReceiptKindOutOfRange(uint receiptKind);
+
     /// The origin is not authorized for the given ROFL app
     error RoflOriginNotAuthorizedForApp();
 
@@ -62,6 +68,9 @@ library Subcall {
 
     /// CBOR parser expected a key, but it was not found in the map!
     error MissingKey();
+
+    /// We expected to have parsed everything, but there are excess bytes!
+    error IncompleteParse();
 
     /// Error while trying to retrieve current epoch
     error CoreCurrentEpochError(uint64);
@@ -176,7 +185,7 @@ library Subcall {
         if (receiptId == 0) revert InvalidReceiptId();
 
         if (uint256(kind) == 0 || uint256(kind) > 23)
-            revert CBOR.CBOR_Error_ValueOutOfRange();
+            revert TakeReceiptKindOutOfRange(uint256(kind));
 
         (bool success, bytes memory data) = SUBCALL.call( // solhint-disable-line
             abi.encode(
@@ -224,7 +233,8 @@ library Subcall {
 
         bool hasReceipt = false;
 
-        if (result[0] != 0xA2) revert CBOR.CBOR_Error_InvalidMap();
+        // Expects map with 2 pairs
+        if (result[0] != 0xA2) revert WrongMapSizeError();
 
         while (offset < result.length) {
             bytes32 keyDigest;
@@ -254,7 +264,8 @@ library Subcall {
 
         bool hasAmount = false;
 
-        if (result[0] != 0xA1) revert CBOR.CBOR_Error_InvalidMap();
+        // Expects map with 1 pair
+        if (result[0] != 0xA1) revert WrongMapSizeError();
 
         while (offset < result.length) {
             bytes32 keyDigest;
@@ -281,19 +292,15 @@ library Subcall {
         pure
         returns (uint128 shares)
     {
-        if (result[0] != 0xA1) revert CBOR.CBOR_Error_InvalidMap();
+        // Expects map with 1 pair
+        if (result[0] != 0xA1) revert WrongMapSizeError();
 
         if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s") {
             // Delegation succeeded, decode number of shares.
-            uint8 sharesLen = uint8(result[8]) & 0x1f; // Assume shares field is never greater than 16 bytes.
-
-            if (9 + sharesLen != result.length)
-                revert CBOR.CBOR_Error_InvalidLength(sharesLen);
-
-            for (uint256 offset = 0; offset < sharesLen; offset++) {
-                uint8 v = uint8(result[9 + offset]);
-
-                shares += uint128(v) << (8 * uint128(sharesLen - offset - 1));
+            uint newOffset;
+            (newOffset,shares) = CBOR.parseUint128(result, 8);
+            if( newOffset != result.length ) {
+                revert IncompleteParse();
             }
         } else {
             revert ParseReceiptError(receiptId);
@@ -566,12 +573,12 @@ library Subcall {
                 );
             } else if (keyDigest == keccak256("signature")) {
                 if (in_data[offset++] != 0x58) {
-                    revert CBOR.CBOR_Error_InvalidUintPrefix(
+                    revert CBOR.CBOR_InvalidUintPrefix(
                         uint8(in_data[offset - 1])
                     );
                 }
                 if (in_data[offset++] != 0x40) {
-                    revert CBOR.CBOR_Error_InvalidUintSize(
+                    revert CBOR.CBOR_InvalidUintSize(
                         uint8(in_data[offset - 1])
                     );
                 }
@@ -587,7 +594,7 @@ library Subcall {
 
                 offset += 0x40;
             } else {
-                revert CBOR.CBOR_Error_InvalidKey();
+                revert CBOR.CBOR_InvalidKey();
             }
         }
     }
@@ -614,7 +621,7 @@ library Subcall {
                     offset
                 );
             } else {
-                revert CBOR.CBOR_Error_InvalidKey();
+                revert CBOR.CBOR_InvalidKey();
             }
         }
     }
