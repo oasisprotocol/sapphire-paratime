@@ -55,7 +55,7 @@ library Subcall {
     error WrongMapSizeError();
 
     /// Unknown type of receipt!
-    error TakeReceiptKindOutOfRange(uint receiptKind);
+    error TakeReceiptKindOutOfRange(uint256 receiptKind);
 
     /// The origin is not authorized for the given ROFL app
     error RoflOriginNotAuthorizedForApp();
@@ -297,9 +297,9 @@ library Subcall {
 
         if (result[0] == 0xA1 && result[1] == 0x66 && result[2] == "s") {
             // Delegation succeeded, decode number of shares.
-            uint newOffset;
-            (newOffset,shares) = CBOR.parseUint128(result, 8);
-            if( newOffset != result.length ) {
+            uint256 newOffset;
+            (newOffset, shares) = CBOR.parseUint128(result, 8);
+            if (newOffset != result.length) {
                 revert IncompleteParse();
             }
         } else {
