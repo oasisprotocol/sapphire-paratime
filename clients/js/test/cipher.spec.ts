@@ -2,7 +2,10 @@
 
 import nacl from 'tweetnacl';
 import { hexlify, getBytes } from 'ethers';
-import { X25519DeoxysII } from '@oasisprotocol/sapphire-paratime';
+import {
+  isCalldataEnveloped,
+  X25519DeoxysII,
+} from '@oasisprotocol/sapphire-paratime';
 
 describe('X25519DeoxysII', () => {
   it('key derivation', () => {
@@ -30,7 +33,9 @@ describe('X25519DeoxysII', () => {
     const cipher = X25519DeoxysII.ephemeral(nacl.box.keyPair().publicKey);
     for (let i = 1; i < 512; i += 30) {
       const expected = nacl.randomBytes(i);
-      const decoded = cipher.decryptCall(cipher.encryptCall(expected));
+      const encrypted = cipher.encryptCall(expected);
+      expect(isCalldataEnveloped(encrypted)).toStrictEqual(true);
+      const decoded = cipher.decryptCall(encrypted);
       expect(hexlify(decoded)).toEqual(hexlify(expected));
     }
   });
