@@ -208,7 +208,17 @@ export function makeTaggedProxyObject<T extends object>(
       if (prop === propname) return options;
       if (hooks && prop in hooks) return Reflect.get(hooks, prop);
       const value = Reflect.get(upstream, prop);
-      return typeof value === 'function' ? value.bind(upstream) : value;
+
+      // Brave wallet web3provider properties are read only and throw typeerror
+      // https://github.com/brave/brave-core/blob/74bf470a0291ea3719f1a75af066ee10b7057dbd/components/brave_wallet/resources/ethereum_provider.js#L13-L27
+      // https://github.com/wevm/wagmi/blob/86c42248c2f34260a52ee85183c607315ae63ce8/packages/core/src/connectors/injected.ts#L327-L335
+      const propWritable =
+        Object.getOwnPropertyDescriptor(upstream, prop)?.writable !== false;
+
+      if (typeof value === 'function' && propWritable) {
+        return value.bind(upstream);
+      }
+      return value;
     },
   });
 }
