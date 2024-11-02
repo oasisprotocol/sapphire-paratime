@@ -4,6 +4,7 @@
 [![ci-lint](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml)
 [![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-test.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-test.yaml)
 [![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/contracts-test.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/contracts-test.yaml)
+[![ci-test](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-playwright.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-playwright.yaml)
 
 The Sapphire ParaTime is the official confidential EVM Compatible ParaTime
 providing a smart contract development environment with EVM compatibility
