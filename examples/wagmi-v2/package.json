@@ -10,12 +10,16 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"preview": "vite preview",
+		"test": "playwright test",
+		"test:setup": "playwright install --with-deps",
 		"start:server": "vite --port 3000"
 	},
 	"dependencies": {
-		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
+		"@playwright/test": "^1.48.2",
 		"@tanstack/react-query": "5.0.5",
+		"@tenkeylabs/dappwright": "^2.8.6",
 		"abitype": "^1.0.2",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",

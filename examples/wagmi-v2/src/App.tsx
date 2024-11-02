@@ -186,7 +186,7 @@ function App() {
 										</span>
 										<br />
 										Write Tx Calldata:&nbsp;
-										<span id="isWriteEnveloped">
+										<span id="isWriteEnveloped" data-testid="is-write-enveloped">
 											{isCalldataEnveloped(writeTxInfo?.input) ? 'encrypted' : 'plaintext'}
 										</span>
 									</>
@@ -199,7 +199,7 @@ function App() {
 						</button>
 						{readResult !== undefined && (
 							<>
-								<span id="readResult">{readResult.toString()}</span>
+								<span id="readResult" data-testid="read-result">{readResult.toString()}</span>
 							</>
 						)}
 						<br />
