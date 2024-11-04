@@ -144,7 +144,7 @@ function App() {
 				<hr />
 
 				<button type="button" onClick={doDeploy}>
-					Deploy
+				  TEST
 				</button>
 				{deployHash}
 				<br />
