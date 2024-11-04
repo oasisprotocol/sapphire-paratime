@@ -40,10 +40,10 @@ library EIP1559Signer {
         b[6] = RLPWriter.writeUint(rawTx.value);
         b[7] = RLPWriter.writeBytes(rawTx.data);
         b[8] = EIPTypes.encodeAccessList(rawTx.accessList);
-        
+
         // RLP encode the transaction data
         bytes memory rlpEncodedTx = RLPWriter.writeList(b);
-        
+
         // Return the unsigned transaction with EIP-1559 type prefix
         return abi.encodePacked(hex"02", rlpEncodedTx);
     }
@@ -71,10 +71,10 @@ library EIP1559Signer {
         b[9] = RLPWriter.writeUint(uint256(rsv.v));
         b[10] = RLPWriter.writeUint(uint256(rsv.r));
         b[11] = RLPWriter.writeUint(uint256(rsv.s));
-        
+
         // RLP encode the transaction data
         bytes memory rlpEncodedTx = RLPWriter.writeList(b);
-        
+
         // Return the signed transaction with EIP-1559 type prefix
         return abi.encodePacked(hex"02", rlpEncodedTx);
     }
@@ -92,10 +92,10 @@ library EIP1559Signer {
     ) internal view returns (SignatureRSV memory ret) {
         // First encode the transaction without signature fields
         bytes memory encoded = encodeUnsignedTx(rawTx);
-        
+
         // Hash the encoded unsigned transaction
         bytes32 digest = keccak256(encoded);
-        
+
         // Sign the hash
         ret = EthereumUtils.sign(pubkeyAddr, secretKey, digest);
     }
@@ -116,10 +116,10 @@ library EIP1559Signer {
             publicAddress,
             secretKey
         );
-        
+
         // For EIP-1559, we only need to normalize v to 0/1
         rsv.v = rsv.v - 27;
-        
+
         return encodeSignedTx(transaction, rsv);
     }
 }

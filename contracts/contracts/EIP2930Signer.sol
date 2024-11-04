@@ -38,10 +38,10 @@ library EIP2930Signer {
         b[5] = RLPWriter.writeUint(rawTx.value);
         b[6] = RLPWriter.writeBytes(rawTx.data);
         b[7] = EIPTypes.encodeAccessList(rawTx.accessList);
-        
+
         // RLP encode the transaction data
         bytes memory rlpEncodedTx = RLPWriter.writeList(b);
-        
+
         // Return the unsigned transaction with EIP-2930 type prefix
         return abi.encodePacked(hex"01", rlpEncodedTx);
     }
@@ -68,10 +68,10 @@ library EIP2930Signer {
         b[8] = RLPWriter.writeUint(uint256(rsv.v));
         b[9] = RLPWriter.writeUint(uint256(rsv.r));
         b[10] = RLPWriter.writeUint(uint256(rsv.s));
-        
+
         // RLP encode the transaction data
         bytes memory rlpEncodedTx = RLPWriter.writeList(b);
-        
+
         // Return the signed transaction with EIP-2930 type prefix
         return abi.encodePacked(hex"01", rlpEncodedTx);
     }
@@ -89,10 +89,10 @@ library EIP2930Signer {
     ) internal view returns (SignatureRSV memory ret) {
         // First encode the transaction without signature fields
         bytes memory encoded = encodeUnsignedTx(rawTx);
-        
+
         // Hash the encoded unsigned transaction
         bytes32 digest = keccak256(encoded);
-        
+
         // Sign the hash
         ret = EthereumUtils.sign(pubkeyAddr, secretKey, digest);
     }
@@ -113,10 +113,10 @@ library EIP2930Signer {
             publicAddress,
             secretKey
         );
-        
+
         // For EIP-2930, we only need to normalize v to 0/1
         rsv.v = rsv.v - 27;
-        
+
         return encodeSignedTx(transaction, rsv);
     }
 }
