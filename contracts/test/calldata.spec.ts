@@ -11,14 +11,18 @@ import {
 } from '@oasisprotocol/sapphire-paratime';
 import { hexlify, parseUnits, randomBytes } from 'ethers';
 import { randomInt } from 'crypto';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('CalldataEncryption', () => {
   let contract: TestCalldataEncryption;
+  let signers: HardhatEthersSigner[];
 
   before(async () => {
     const factory = await ethers.getContractFactory('TestCalldataEncryption');
     contract = await factory.deploy();
     await contract.waitForDeployment();
+
+    signers = await ethers.getSigners();
   });
 
   // Ensures that the JS library provides the same results as Solidity
@@ -58,8 +62,7 @@ describe('CalldataEncryption', () => {
     const myAddr = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
     const myKey =
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-    const [signerAddr] = await ethers.getSigners();
-    expect(signerAddr).eq(myAddr);
+    expect(signers[0].address).eq(myAddr);
 
     for (let i = 1; i < 1024; i += 250) {
       // Have the contract sign an encrypted transaction for us

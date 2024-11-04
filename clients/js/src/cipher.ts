@@ -260,12 +260,11 @@ export class X25519DeoxysII extends Cipher {
 
   public encrypt(
     plaintext: Uint8Array,
-    nonce?: Uint8Array,
+    nonce: Uint8Array = randomBytes(deoxysii.NonceSize),
   ): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   } {
-    nonce = nonce ?? randomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
