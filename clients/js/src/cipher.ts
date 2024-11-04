@@ -82,7 +82,10 @@ export abstract class Cipher {
   public abstract publicKey: Uint8Array;
   public abstract epoch?: number;
 
-  public abstract encrypt(plaintext: Uint8Array): {
+  public abstract encrypt(
+    plaintext: Uint8Array,
+    nonce?: Uint8Array,
+  ): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   };
@@ -93,7 +96,10 @@ export abstract class Cipher {
   ): Uint8Array;
 
   /** Encrypts the plaintext and encodes it for sending. */
-  public encryptCall(calldata?: BytesLike | null): BytesLike {
+  public encryptCall(
+    calldata?: BytesLike | null,
+    nonce?: Uint8Array,
+  ): BytesLike {
     // Txs without data are just balance transfers, and all data in those is public.
     if (calldata === undefined || calldata === null || calldata.length === 0)
       return '';
@@ -104,7 +110,8 @@ export abstract class Cipher {
 
     const innerEnvelope = cborEncode({ body: getBytes(calldata) });
 
-    const { ciphertext, nonce } = this.encrypt(innerEnvelope);
+    let ciphertext: Uint8Array;
+    ({ ciphertext, nonce } = this.encrypt(innerEnvelope, nonce));
 
     const envelope: Envelope = {
       format: this.kind,
@@ -251,11 +258,13 @@ export class X25519DeoxysII extends Cipher {
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.key)); // deoxysii owns the input
   }
 
-  public encrypt(plaintext: Uint8Array): {
+  public encrypt(
+    plaintext: Uint8Array,
+    nonce: Uint8Array = randomBytes(deoxysii.NonceSize),
+  ): {
     ciphertext: Uint8Array;
     nonce: Uint8Array;
   } {
-    const nonce = randomBytes(deoxysii.NonceSize);
     const ciphertext = this.cipher.encrypt(nonce, plaintext);
     return { nonce, ciphertext };
   }
