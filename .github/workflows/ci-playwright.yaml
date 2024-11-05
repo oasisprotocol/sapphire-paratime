@@ -1,0 +1,79 @@
+name: playwright-test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  playwright-test:
+    runs-on: ubuntu-latest
+    services:
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
+        ports:
+          - 8545:8545
+          - 8546:8546
+        env:
+          OASIS_DEPOSIT_BINARY: /oasis-deposit -test-mnemonic -n 5
+        options: >-
+          --rm
+          --health-cmd="test -f /CONTAINER_READY"
+          --health-start-period=90s
+    env:
+      SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 3001
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build JS client
+        run: make -C clients/js build
+      - name: Build Integrations
+        run: make -C integrations build
+      - uses: JarvusInnovations/background-action@v1
+        name: RPC proxy will error if non-encrypted calls are made
+        with:
+          run: pnpm run proxy &
+          wait-on: http://127.0.0.1:${{ env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT }}
+          tail: true
+          log-output-resume: true
+          wait-for: 31sec
+          log-output: true
+          log-output-if: true
+          working-directory: clients/js
+      - name: Install Playwright dependencies
+        run: pnpm test:setup
+        working-directory: examples/wagmi-v2
+      - name: Run playwright tests (with xvfb-run to support headed extension test)
+        working-directory: examples/wagmi-v2
+        run: xvfb-run pnpm test
+      - name: Upload playwright test-results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: examples/wagmi-v2/test-results
+          retention-days: 5
