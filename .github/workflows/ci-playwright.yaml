@@ -65,7 +65,7 @@ jobs:
           log-output-if: true
           working-directory: clients/js
       - name: Install Playwright dependencies
-        run: pnpm install && pnpm test:setup
+        run: pnpm test:setup
         working-directory: examples/wagmi-v2
       - name: Run playwright tests (with xvfb-run to support headed extension test)
         working-directory: examples/wagmi-v2
