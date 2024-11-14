@@ -1,0 +1,1 @@
+../../../integrations/wagmi-v2/README.md
