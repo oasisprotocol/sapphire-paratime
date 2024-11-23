@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="light" dir="ltr">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
@@ -32,15 +32,17 @@
         <link rel="stylesheet" href="../../book.css">
         <link rel="stylesheet" href="../../theme/pagetoc.css">
 
-    </head>
-    <body class="sidebar-visible no-js">
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "../../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -62,19 +64,16 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            var body = document.querySelector('body');
-            body.classList.remove('no-js')
-            body.classList.add('js');
+            html.classList.add("js");
         </script>
 
         <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var body = document.querySelector('body');
             var sidebar = null;
             var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
@@ -84,45 +83,25 @@
                 sidebar = 'hidden';
             }
             sidebar_toggle.checked = sidebar === 'visible';
-            body.classList.remove('sidebar-visible');
-            body.classList.add("sidebar-" + sidebar);
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item "><a href="../../index.html">Home</a></li><li class="chapter-item affix "><li class="part-title">contracts</li><li class="chapter-item "><a href="../../contracts/auth/index.html">❱ auth</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../contracts/auth/A13e.sol/abstract.A13e.html">A13e</a></li><li class="chapter-item "><a href="../../contracts/auth/SiweAuth.sol/struct.Bearer.html">Bearer</a></li><li class="chapter-item "><a href="../../contracts/auth/SiweAuth.sol/contract.SiweAuth.html">SiweAuth</a></li></ol></li><li class="chapter-item "><a href="../../contracts/opl/index.html">❱ opl</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../contracts/opl/Enclave.sol/contract.Enclave.html">Enclave</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/error.AutoConfigUnavailable.html">AutoConfigUnavailable</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/error.MissingRemoteAddr.html">MissingRemoteAddr</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/error.MissingRemoteChainId.html">MissingRemoteChainId</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/error.SelfCallDisallowed.html">SelfCallDisallowed</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/error.UnknownEndpoint.html">UnknownEndpoint</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/enum.Result.html">Result</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/interface.ICelerMessageBus.html">ICelerMessageBus</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/contract.BaseEndpoint.html">BaseEndpoint</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/contract.Endpoint.html">Endpoint</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/function._getChainConfig.html">_getChainConfig</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/function._chainName2ChainId.html">_chainName2ChainId</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/function._getRemoteChainId.html">_getRemoteChainId</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/function._getBus.html">_getBus</a></li><li class="chapter-item "><a href="../../contracts/opl/Endpoint.sol/function.autoswitch.html">autoswitch</a></li><li class="chapter-item "><a href="../../contracts/opl/Host.sol/contract.Host.html">Host</a></li></ol></li><li class="chapter-item "><a href="../../contracts/tests/index.html">❱ tests</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../contracts/tests/auth/index.html">❱ auth</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../contracts/tests/auth/SiweAuthTests.sol/contract.SiweAuthTests.html">SiweAuthTests</a></li></ol></li></ol></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_InvalidKey.html">CBOR_InvalidKey</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_InvalidMap.html">CBOR_InvalidMap</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_InvalidLength.html">CBOR_InvalidLength</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_InvalidUintPrefix.html">CBOR_InvalidUintPrefix</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_InvalidUintSize.html">CBOR_InvalidUintSize</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_Error_ValueOutOfRange.html">CBOR_Error_ValueOutOfRange</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_Error_BufferOverrun.html">CBOR_Error_BufferOverrun</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/error.CBOR_Error_BytesTooLong.html">CBOR_Error_BytesTooLong</a></li><li class="chapter-item expanded "><a href="../../contracts/CBOR.sol/function.encodeBytes.html" class="active">encodeBytes</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/function.encodeUint.html">encodeUint</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/function.parseUint.html">parseUint</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/function.parseUint64.html">parseUint64</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/function.parseMapStart.html">parseMapStart</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/function.parseUint128.html">parseUint128</a></li><li class="chapter-item "><a href="../../contracts/CBOR.sol/function.parseKey.html">parseKey</a></li><li class="chapter-item "><a href="../../contracts/CalldataEncryption.sol/function._encryptInner.html">_encryptInner</a></li><li class="chapter-item "><a href="../../contracts/CalldataEncryption.sol/function._deriveKey.html">_deriveKey</a></li><li class="chapter-item "><a href="../../contracts/CalldataEncryption.sol/function.encryptCallData.html">encryptCallData</a></li><li class="chapter-item "><a href="../../contracts/ConsensusUtils.sol/type.StakingAddress.html">StakingAddress</a></li><li class="chapter-item "><a href="../../contracts/ConsensusUtils.sol/type.StakingSecretKey.html">StakingSecretKey</a></li><li class="chapter-item "><a href="../../contracts/ConsensusUtils.sol/library.ConsensusUtils.html">ConsensusUtils</a></li><li class="chapter-item "><a href="../../contracts/DateTime.sol/library.DateTime.html">DateTime</a></li><li class="chapter-item "><a href="../../contracts/EIP155Signer.sol/library.EIP155Signer.html">EIP155Signer</a></li><li class="chapter-item "><a href="../../contracts/EthereumUtils.sol/struct.SignatureRSV.html">SignatureRSV</a></li><li class="chapter-item "><a href="../../contracts/EthereumUtils.sol/library.EthereumUtils.html">EthereumUtils</a></li><li class="chapter-item "><a href="../../contracts/RLPWriter.sol/library.RLPWriter.html">RLPWriter</a></li><li class="chapter-item "><a href="../../contracts/Sapphire.sol/library.Sapphire.html">Sapphire</a></li><li class="chapter-item "><a href="../../contracts/Sapphire.sol/function.sha384.html">sha384</a></li><li class="chapter-item "><a href="../../contracts/Sapphire.sol/function.sha512_256.html">sha512_256</a></li><li class="chapter-item "><a href="../../contracts/Sapphire.sol/function.sha512.html">sha512</a></li><li class="chapter-item "><a href="../../contracts/SiweParser.sol/struct.ParsedSiweMessage.html">ParsedSiweMessage</a></li><li class="chapter-item "><a href="../../contracts/SiweParser.sol/library.SiweParser.html">SiweParser</a></li><li class="chapter-item "><a href="../../contracts/Subcall.sol/enum.SubcallReceiptKind.html">SubcallReceiptKind</a></li><li class="chapter-item "><a href="../../contracts/Subcall.sol/library.Subcall.html">Subcall</a></li><li class="chapter-item "><a href="../../contracts/WrappedROSE.sol/contract.WrappedROSE.html">WrappedROSE</a></li><li class="chapter-item "><a href="../../contracts/hmac_sha512_256.sol/error.hmac_sha512_256_memcpy.html">hmac_sha512_256_memcpy</a></li><li class="chapter-item "><a href="../../contracts/hmac_sha512_256.sol/function.hmac_sha512_256.html">hmac_sha512_256</a></li><li class="chapter-item "><a href="../../contracts/hmac_sha512_256.sol/constants.hmac_sha512_256.html">hmac_sha512_256 constants</a></li></ol>
-            </div>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <!-- Track and set sidebar scroll position -->
-        <script>
-            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
-            sidebarScrollbox.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
-                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
-                }
-            }, { passive: true });
-            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
-            sessionStorage.removeItem('sidebar-scroll');
-            if (sidebarScrollTop) {
-                // preserve sidebar scroll position when navigating via links within sidebar
-                sidebarScrollbox.scrollTop = sidebarScrollTop;
-            } else {
-                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
-                var activeSection = document.querySelector('#sidebar .active');
-                if (activeSection) {
-                    activeSection.scrollIntoView({ block: 'center' });
-                }
-            }
-        </script>
-
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
@@ -179,7 +158,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="encodebytes"><a class="header" href="#encodebytes">encodeBytes</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/ef8c480ddaeafc7a12b4d665602a7384a82afe95/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/a4069ee1500873ee4becbfbbce23feb6f3c97702/contracts/contracts/CBOR.sol">Git Source</a></p>
 <pre><code class="language-solidity">function encodeBytes(bytes memory in_bytes) pure returns (bytes memory out_cbor);
 </code></pre>
 
@@ -187,11 +166,11 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../contracts/CBOR.sol/error.CBOR_Error_BytesTooLong.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../contracts/CBOR.sol/function.parseUint64.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../../contracts/CBOR.sol/function.encodeUint.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../contracts/CBOR.sol/function.parseUint.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -201,11 +180,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../contracts/CBOR.sol/error.CBOR_Error_BytesTooLong.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../contracts/CBOR.sol/function.parseUint64.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../../contracts/CBOR.sol/function.encodeUint.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../contracts/CBOR.sol/function.parseUint.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
