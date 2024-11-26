@@ -5,6 +5,8 @@ import { fromQuantity, getBytes } from './ethersutils.js';
 import type { EIP2696_EthereumProvider } from './provider.js';
 import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
 import { Cipher, X25519DeoxysII } from './cipher.js';
+import { ed25519_verify_raw_cofactorless } from './munacl.js';
+import { sha512_256 } from '@noble/hashes/sha512';
 
 /**
  * calldata public keys are cached for this amount of time
@@ -13,21 +15,14 @@ import { Cipher, X25519DeoxysII } from './cipher.js';
  */
 const DEFAULT_PUBKEY_CACHE_EXPIRATION_MS = 60 * 5 * 1000;
 
+const BIGINT_ZERO = BigInt(0);
+const UINT64_MAX = BigInt(1) << BigInt(64);
+const BIGINT_EIGHT = BigInt(8);
+
 // -----------------------------------------------------------------------------
 // Fetch calldata public key
 // Well use provider when possible, and fallback to HTTP(S)? requests
 // e.g. MetaMask doesn't allow the oasis_callDataPublicKey JSON-RPC method
-
-export type RawCallDataPublicKeyResponseResult = {
-  key: string;
-  checksum: string;
-  signature: string;
-  epoch: number;
-};
-
-export type RawCallDataPublicKeyResponse = {
-  result: RawCallDataPublicKeyResponseResult;
-};
 
 export class FetchError extends Error {
   public constructor(message: string, public readonly response?: unknown) {
@@ -35,29 +30,43 @@ export class FetchError extends Error {
   }
 }
 
-export interface CallDataPublicKey {
-  // PublicKey is the requested public key.
+export interface SignedPubicKey {
+  /// PublicKey is the requested public key.
   key: Uint8Array;
 
-  // Checksum is the checksum of the key manager state.
+  /// Checksum is the checksum of the key manager state.
   checksum: Uint8Array;
 
-  // Signature is the Sign(sk, (key || checksum)) from the key manager.
+  /// Sign(sk, (key || checksum || runtime id || key pair id || epoch || expiration epoch)) from the key manager.
   signature: Uint8Array;
 
-  // Epoch is the epoch of the ephemeral runtime key.
-  epoch: number;
+  /// At which epoch does this key become invalid
+  expiration?: bigint;
+}
 
-  // Which chain ID is this key for?
+export interface CallDataPublicKey {
+  /// Signed public key
+  public_key: SignedPubicKey;
+
+  /// Epoch is the epoch of the ephemeral runtime key.
+  epoch?: bigint;
+
+  /// Which runtime is the ephemeral public key for
+  runtime_id: Uint8Array;
+
+  key_pair_id: Uint8Array;
+}
+
+export interface CachedCallDataPublicKey extends CallDataPublicKey {
+  /// Which chain ID is this key for?
   chainId: number;
 
-  // When was the key fetched
+  /// When was the key fetched
   fetched: Date;
 }
 
 function parseBigIntFromByteArray(bytes: Uint8Array): bigint {
-  const eight = BigInt(8);
-  return bytes.reduce((acc, byte) => (acc << eight) | BigInt(byte), BigInt(0));
+  return bytes.reduce((acc, byte) => (acc << BIGINT_EIGHT) | BigInt(byte), BIGINT_ZERO);
 }
 
 class AbiDecodeError extends Error {}
@@ -78,8 +87,49 @@ function parseAbiEncodedUintBytes(bytes: Uint8Array): [bigint, Uint8Array] {
   if (bytes.length < offset + 32 + data_length) {
     throw new AbiDecodeError('too short, data');
   }
-  const data = bytes.slice(offset + 32, offset + 32 + data_length);
-  return [status, data];
+  return [status, bytes.slice(offset + 32, offset + 32 + data_length)];
+}
+
+function u64tobytes(x: bigint|number): Uint8Array {
+  const y = BigInt(x);
+  if (y < BIGINT_ZERO || y > UINT64_MAX) {
+    throw new Error('Value out of range for uint64');
+  }
+  const buffer = new ArrayBuffer(8);
+  new DataView(buffer).setBigUint64(0, y, false); // false for big-endian
+  return new Uint8Array(buffer);
+}
+
+const PUBLIC_KEY_SIGNATURE_CONTEXT = new TextEncoder().encode(
+  'oasis-core/keymanager: pk signature',
+);
+
+export function verifyRuntimePublicKey(
+  signerPk: Uint8Array,
+  cdpk: CallDataPublicKey,
+): boolean {
+  let body = new Uint8Array([
+    ...cdpk.public_key.key,
+    ...cdpk.public_key.checksum,
+    ...cdpk.runtime_id,
+    ...cdpk.key_pair_id,
+  ]);
+
+  if (cdpk.epoch !== undefined) {
+    body = new Uint8Array([...body, ...u64tobytes(cdpk.epoch)]);
+  }
+
+  const expiration = cdpk.public_key.expiration;
+  if (expiration !== undefined) {
+    body = new Uint8Array([...body, ...u64tobytes(expiration)]);
+  }
+
+  const digest = sha512_256.create()
+                           .update(PUBLIC_KEY_SIGNATURE_CONTEXT)
+                           .update(body)
+                           .digest();
+
+  return ed25519_verify_raw_cofactorless(cdpk.public_key.signature, signerPk, digest);
 }
 
 /**
@@ -91,7 +141,7 @@ function parseAbiEncodedUintBytes(bytes: Uint8Array): [bigint, Uint8Array] {
  */
 export async function fetchRuntimePublicKey(args: {
   upstream: EIP2696_EthereumProvider;
-}) {
+}): Promise<CachedCallDataPublicKey> {
   let chainId: number | undefined = undefined;
 
   const { upstream } = args;
@@ -117,27 +167,24 @@ export async function fetchRuntimePublicKey(args: {
 
   // NOTE: to avoid pulling-in a full ABI decoder dependency, slice it manually
   const [resp_status, resp_cbor] = parseAbiEncodedUintBytes(resp_bytes);
-  if (resp_status !== BigInt(0)) {
+  if (resp_status !== BIGINT_ZERO) {
     throw new Error(`fetchRuntimePublicKey - invalid status: ${resp_status}`);
   }
 
-  const response = cborDecode(resp_cbor);
+  // TODO: validate resp_cbor?
 
   return {
-    key: response.public_key.key,
-    checksum: response.public_key.checksum,
-    signature: response.public_key.signature,
-    epoch: response.epoch,
+    ...cborDecode(resp_cbor) as CallDataPublicKey,
     chainId,
     fetched: new Date(),
-  } as CallDataPublicKey;
+  };
 }
 
 /**
  * Retrieves calldata public keys from RPC provider
  */
 export class KeyFetcher {
-  public pubkey?: CallDataPublicKey;
+  public pubkey?: CachedCallDataPublicKey;
 
   constructor(
     readonly timeoutMilliseconds: number = DEFAULT_PUBKEY_CACHE_EXPIRATION_MS,
@@ -167,15 +214,15 @@ export class KeyFetcher {
   }
 
   public async cipher(upstream: EIP2696_EthereumProvider): Promise<Cipher> {
-    const { key, epoch } = await this.fetch(upstream);
-    return X25519DeoxysII.ephemeral(key, epoch);
+    const { public_key, epoch } = await this.fetch(upstream);
+    return X25519DeoxysII.ephemeral(public_key.key, epoch);
   }
 
-  public cipherSync() {
+  public cipherSync(): X25519DeoxysII {
     if (!this.pubkey) {
       throw new Error('No cached pubkey!');
     }
-    const { key, epoch } = this.pubkey;
-    return X25519DeoxysII.ephemeral(key, epoch);
+    const { public_key, epoch } = this.pubkey;
+    return X25519DeoxysII.ephemeral(public_key.key, epoch);
   }
 }

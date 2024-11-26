@@ -58,7 +58,7 @@ export type Envelope = {
     pk: Uint8Array;
     nonce: Uint8Array;
     data: Uint8Array;
-    epoch?: number;
+    epoch?: bigint;
   };
 };
 
@@ -80,7 +80,7 @@ function formatFailure(fail: CallFailure): string {
 export abstract class Cipher {
   public abstract kind: CipherKind;
   public abstract publicKey: Uint8Array;
-  public abstract epoch?: number;
+  public abstract epoch?: bigint;
 
   public abstract encrypt(
     plaintext: Uint8Array,
@@ -213,13 +213,13 @@ export abstract class Cipher {
 export class X25519DeoxysII extends Cipher {
   public override readonly kind = CipherKind.X25519DeoxysII;
   public override readonly publicKey: Uint8Array;
-  public override readonly epoch: number | undefined;
+  public override readonly epoch: bigint | undefined;
 
   private cipher: deoxysii.AEAD;
   private key: Uint8Array; // Stored for curious users.
 
   /** Creates a new cipher using an ephemeral keypair stored in memory. */
-  static ephemeral(peerPublicKey: BytesLike, epoch?: number): X25519DeoxysII {
+  static ephemeral(peerPublicKey: BytesLike, epoch?: bigint): X25519DeoxysII {
     const keypair = boxKeyPairFromSecretKey(
       randomBytes(crypto_box_SECRETKEYBYTES),
     );
@@ -229,7 +229,7 @@ export class X25519DeoxysII extends Cipher {
   static fromSecretKey(
     secretKey: BytesLike,
     peerPublicKey: BytesLike,
-    epoch?: number,
+    epoch?: bigint,
   ): X25519DeoxysII {
     const keypair = boxKeyPairFromSecretKey(getBytes(secretKey));
     return new X25519DeoxysII(keypair, getBytes(peerPublicKey), epoch);
@@ -238,7 +238,7 @@ export class X25519DeoxysII extends Cipher {
   public constructor(
     keypair: BoxKeyPair,
     peerPublicKey: Uint8Array,
-    epoch?: number,
+    epoch?: bigint,
   ) {
     super();
 

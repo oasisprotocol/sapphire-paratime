@@ -1526,15 +1526,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2149,7 +2140,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.10.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.10.0#8444b42637892c14052e53124363362adc297bda"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=CedarMist/GetPublicKey#50658ab2990383e20c70068964115143ab729468"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2190,7 +2181,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.6.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.10.0#8444b42637892c14052e53124363362adc297bda"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=CedarMist/GetPublicKey#50658ab2990383e20c70068964115143ab729468"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2222,7 +2213,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.10.0#8444b42637892c14052e53124363362adc297bda"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=CedarMist/GetPublicKey#50658ab2990383e20c70068964115143ab729468"
 dependencies = [
  "darling 0.20.10",
  "proc-macro2 1.0.89",
@@ -2575,7 +2566,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools",
  "proc-macro2 1.0.89",
  "quote 1.0.37",
  "syn 2.0.85",
@@ -2588,7 +2579,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9552f850d5f0964a4e4d0bf306459ac29323ddfbae05e35a7c0d35cb0803cc5"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools",
  "proc-macro2 1.0.89",
  "quote 1.0.37",
  "syn 2.0.85",
