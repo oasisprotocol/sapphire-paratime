@@ -5,6 +5,7 @@ on:
     paths:
       - clients/js/**
       - contracts/**
+      - clients/py/**
     branches:
       - main
 
@@ -125,5 +126,44 @@ jobs:
           publish_branch: api-reference
           destination_dir: sol/sapphire-contracts
           commit_message: Deploy sol API reference ${{ github.event.head_commit.message }}
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+  py-docs:
+    name: py-docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/py
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements.dev.txt
+          pip install sphinx myst-parser
+          make wheel
+          pip install dist/sapphire.py-*.whl
+
+      - name: Build docs
+        run: |
+          make docs
+
+      - name: Deploy to api-reference branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: clients/py/docs/build/html
+          publish_branch: api-reference
+          destination_dir: py/sapphirepy
+          commit_message: Deploy Python API reference ${{ github.event.head_commit.message }}
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
