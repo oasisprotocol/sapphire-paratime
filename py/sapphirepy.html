@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>sapphirepy package &#8212; sapphirepy  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="sapphirepy" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="sapphirepy-package">
+<h1>sapphirepy package<a class="headerlink" href="#sapphirepy-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-sapphirepy.deoxysii">
+<span id="sapphirepy-deoxysii-module"></span><h2>sapphirepy.deoxysii module<a class="headerlink" href="#module-sapphirepy.deoxysii" title="Link to this heading">¶</a></h2>
+<p>This work is derived from: <a class="reference external" href="https://github.com/oasisprotocol/deoxysii">https://github.com/oasisprotocol/deoxysii</a></p>
+<p>Copyright (c) 2019 Oasis Labs Inc. &lt;<a class="reference external" href="mailto:info&#37;&#52;&#48;oasislabs&#46;com">info<span>&#64;</span>oasislabs<span>&#46;</span>com</a>&gt;</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+“Software”), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.DeoxysII">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">DeoxysII</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#DeoxysII"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.DeoxysII" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.DeoxysII.decrypt">
+<span class="sig-name descname"><span class="pre">decrypt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nonce</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ciphertext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#DeoxysII.decrypt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.DeoxysII.decrypt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.DeoxysII.derived_k">
+<span class="sig-name descname"><span class="pre">derived_k</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bytearray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sapphirepy.deoxysii.DeoxysII.derived_k" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.DeoxysII.encrypt">
+<span class="sig-name descname"><span class="pre">encrypt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nonce</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#DeoxysII.encrypt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.DeoxysII.encrypt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.DeoxysII.implementation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">implementation</span></span><a class="headerlink" href="#sapphirepy.deoxysii.DeoxysII.implementation" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.bc_encrypt">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">bc_encrypt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ciphertext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derived_k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bytearray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tweak</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plaintext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#bc_encrypt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.bc_encrypt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.derive_sub_tweak_keys">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">derive_sub_tweak_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derived_k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bytearray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#derive_sub_tweak_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.derive_sub_tweak_keys" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.encode_enc_tweak">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">encode_enc_tweak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_nr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#encode_enc_tweak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.encode_enc_tweak" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.encode_tag_tweak">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">encode_tag_tweak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_nr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#encode_tag_tweak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.encode_tag_tweak" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.lfsr2">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">lfsr2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#lfsr2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.lfsr2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.lfsr3">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">lfsr3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#lfsr3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.lfsr3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.stk_derive_k">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">stk_derive_k</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#stk_derive_k"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.stk_derive_k" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.stk_shuffle">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">stk_shuffle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#stk_shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.stk_shuffle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.uint8">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">uint8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#uint8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.uint8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.xor_bytes">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">xor_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#xor_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.xor_bytes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.deoxysii.xor_rc">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.deoxysii.</span></span><span class="sig-name descname"><span class="pre">xor_rc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/deoxysii.html#xor_rc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.deoxysii.xor_rc" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-sapphirepy.envelope">
+<span id="sapphirepy-envelope-module"></span><h2>sapphirepy.envelope module<a class="headerlink" href="#module-sapphirepy.envelope" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.AeadEnvelope">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">AeadEnvelope</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#AeadEnvelope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.AeadEnvelope" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.AeadEnvelope.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.AeadEnvelope.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.AeadEnvelope.nonce">
+<span class="sig-name descname"><span class="pre">nonce</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.AeadEnvelope.nonce" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="sapphirepy.envelope.CallError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">CallError</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#CallError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.CallError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sapphirepy.error.SapphireError" title="sapphirepy.error.SapphireError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SapphireError</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="sapphirepy.envelope.DecryptError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">DecryptError</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#DecryptError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.DecryptError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sapphirepy.error.SapphireError" title="sapphirepy.error.SapphireError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SapphireError</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="sapphirepy.envelope.EnvelopeError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">EnvelopeError</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#EnvelopeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.EnvelopeError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sapphirepy.error.SapphireError" title="sapphirepy.error.SapphireError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SapphireError</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.Failure">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">Failure</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#Failure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.Failure" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.Failure.code">
+<span class="sig-name descname"><span class="pre">code</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sapphirepy.envelope.Failure.code" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.Failure.message">
+<span class="sig-name descname"><span class="pre">message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#sapphirepy.envelope.Failure.message" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.Failure.module">
+<span class="sig-name descname"><span class="pre">module</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sapphirepy.envelope.Failure.module" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestBody">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">RequestBody</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#RequestBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.RequestBody" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestBody.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.RequestBody.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestBody.epoch">
+<span class="sig-name descname"><span class="pre">epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sapphirepy.envelope.RequestBody.epoch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestBody.nonce">
+<span class="sig-name descname"><span class="pre">nonce</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.RequestBody.nonce" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestBody.pk">
+<span class="sig-name descname"><span class="pre">pk</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.RequestBody.pk" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestEnvelope">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">RequestEnvelope</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#RequestEnvelope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.RequestEnvelope" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestEnvelope.body">
+<span class="sig-name descname"><span class="pre">body</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#sapphirepy.envelope.RequestEnvelope.body" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.RequestEnvelope.format">
+<span class="sig-name descname"><span class="pre">format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sapphirepy.envelope.RequestEnvelope.format" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultInner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">ResultInner</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#ResultInner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.ResultInner" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultInner.fail">
+<span class="sig-name descname"><span class="pre">fail</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sapphirepy.envelope.Failure" title="sapphirepy.envelope.Failure"><span class="pre">Failure</span></a></em><a class="headerlink" href="#sapphirepy.envelope.ResultInner.fail" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultInner.ok">
+<span class="sig-name descname"><span class="pre">ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.ResultInner.ok" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultOuter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">ResultOuter</span></span><a class="reference internal" href="_modules/sapphirepy/envelope.html#ResultOuter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.ResultOuter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultOuter.failure">
+<span class="sig-name descname"><span class="pre">failure</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sapphirepy.envelope.Failure" title="sapphirepy.envelope.Failure"><span class="pre">Failure</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#sapphirepy.envelope.ResultOuter.failure" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultOuter.ok">
+<span class="sig-name descname"><span class="pre">ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sapphirepy.envelope.AeadEnvelope" title="sapphirepy.envelope.AeadEnvelope"><span class="pre">AeadEnvelope</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#sapphirepy.envelope.ResultOuter.ok" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.ResultOuter.unknown">
+<span class="sig-name descname"><span class="pre">unknown</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sapphirepy.envelope.AeadEnvelope" title="sapphirepy.envelope.AeadEnvelope"><span class="pre">AeadEnvelope</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#sapphirepy.envelope.ResultOuter.unknown" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.envelope.</span></span><span class="sig-name descname"><span class="pre">TransactionCipher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_pubkey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PublicKey</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peer_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/envelope.html#TransactionCipher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher.cipher">
+<span class="sig-name descname"><span class="pre">cipher</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sapphirepy.deoxysii.DeoxysII" title="sapphirepy.deoxysii.DeoxysII"><span class="pre">DeoxysII</span></a></em><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher.cipher" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher.decrypt">
+<span class="sig-name descname"><span class="pre">decrypt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/envelope.html#TransactionCipher.decrypt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher.decrypt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher.encrypt">
+<span class="sig-name descname"><span class="pre">encrypt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaintext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/envelope.html#TransactionCipher.encrypt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher.encrypt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher.ephemeral_pubkey">
+<span class="sig-name descname"><span class="pre">ephemeral_pubkey</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher.ephemeral_pubkey" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher.epoch">
+<span class="sig-name descname"><span class="pre">epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher.epoch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.envelope.TransactionCipher.make_envelope">
+<span class="sig-name descname"><span class="pre">make_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plaintext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/envelope.html#TransactionCipher.make_envelope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.envelope.TransactionCipher.make_envelope" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sapphirepy.error">
+<span id="sapphirepy-error-module"></span><h2>sapphirepy.error module<a class="headerlink" href="#module-sapphirepy.error" title="Link to this heading">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="sapphirepy.error.SapphireError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.error.</span></span><span class="sig-name descname"><span class="pre">SapphireError</span></span><a class="reference internal" href="_modules/sapphirepy/error.html#SapphireError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.error.SapphireError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-sapphirepy.sapphire">
+<span id="sapphirepy-sapphire-module"></span><h2>sapphirepy.sapphire module<a class="headerlink" href="#module-sapphirepy.sapphire" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKey">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">CalldataPublicKey</span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#CalldataPublicKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKey" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKey.checksum">
+<span class="sig-name descname"><span class="pre">checksum</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">HexStr</span></em><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKey.checksum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKey.epoch">
+<span class="sig-name descname"><span class="pre">epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKey.epoch" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKey.key">
+<span class="sig-name descname"><span class="pre">key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">HexStr</span></em><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKey.key" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKey.signature">
+<span class="sig-name descname"><span class="pre">signature</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">HexStr</span></em><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKey.signature" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKeyManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">CalldataPublicKeyManager</span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#CalldataPublicKeyManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKeyManager" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKeyManager.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sapphirepy.sapphire.CalldataPublicKey" title="sapphirepy.sapphire.CalldataPublicKey"><span class="pre">CalldataPublicKey</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#CalldataPublicKeyManager.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKeyManager.add" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.CalldataPublicKeyManager.newest">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">newest</span></span><a class="headerlink" href="#sapphirepy.sapphire.CalldataPublicKeyManager.newest" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.construct_sapphire_middleware">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">construct_sapphire_middleware</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LocalAccount</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">RPCEndpoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">RPCResponse</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Web3</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#construct_sapphire_middleware"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.construct_sapphire_middleware" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a Sapphire middleware for Web3.py.
+:param account: Used to encrypt signed queries.
+:return: A Sapphire middleware function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.wrap">
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Web3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LocalAccount</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#wrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.wrap" title="Link to this definition">¶</a></dt>
+<dd><p>Adds the Sapphire transaction encryption middleware to a Web3.py provider.</p>
+<dl class="simple">
+<dt>Note: the provider must be wrapped <em>after</em> any signing middleware has been</dt><dd><p>added, otherwise pre-signed transactions will not be encrypted.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-sapphirepy">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sapphirepy" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">sapphirepy</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sapphirepy</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">sapphirepy package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">sapphirepy</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">sapphirepy</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Oasis Protocol.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/sapphirepy.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sapphirepy.deoxysii &#8212; sapphirepy  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for sapphirepy.deoxysii</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This work is derived from: https://github.com/oasisprotocol/deoxysii</span>
+
+<span class="sd">Copyright (c) 2019 Oasis Labs Inc. &lt;info@oasislabs.com&gt;</span>
+
+<span class="sd">Permission is hereby granted, free of charge, to any person obtaining</span>
+<span class="sd">a copy of this software and associated documentation files (the</span>
+<span class="sd">&quot;Software&quot;), to deal in the Software without restriction, including</span>
+<span class="sd">without limitation the rights to use, copy, modify, merge, publish,</span>
+<span class="sd">distribute, sublicense, and/or sell copies of the Software, and to</span>
+<span class="sd">permit persons to whom the Software is furnished to do so, subject to</span>
+<span class="sd">the following conditions:</span>
+
+<span class="sd">The above copyright notice and this permission notice shall be</span>
+<span class="sd">included in all copies or substantial portions of the Software.</span>
+
+<span class="sd">THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,</span>
+<span class="sd">EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF</span>
+<span class="sd">MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND</span>
+<span class="sd">NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS</span>
+<span class="sd">BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN</span>
+<span class="sd">ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN</span>
+<span class="sd">CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
+<span class="sd">SOFTWARE.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">array</span>
+<span class="kn">import</span> <span class="nn">hmac</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="n">BLOCK_SIZE</span> <span class="o">=</span> <span class="mi">16</span>
+
+<span class="n">KEY_SIZE</span>   <span class="o">=</span> <span class="mi">32</span>
+<span class="n">ROUNDS</span>    <span class="o">=</span> <span class="mi">16</span>
+<span class="n">TWEAK_SIZE</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">TAG_SIZE</span>   <span class="o">=</span> <span class="mi">16</span>
+<span class="n">NONCE_SIZE</span> <span class="o">=</span> <span class="mi">15</span>
+
+<span class="n">STK_SIZE</span>  <span class="o">=</span> <span class="mi">16</span>
+<span class="n">STK_COUNT</span> <span class="o">=</span> <span class="n">ROUNDS</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="n">PREFIX_AD_BLOCK</span>  <span class="o">=</span> <span class="mh">0x2</span> <span class="c1"># 0010</span>
+<span class="n">PREFIX_AD_FINAL</span>  <span class="o">=</span> <span class="mh">0x6</span> <span class="c1"># 0110</span>
+<span class="n">PREFIX_MSG_BLOCK</span> <span class="o">=</span> <span class="mh">0x0</span> <span class="c1"># 0000</span>
+<span class="n">PREFIX_MSG_FINAL</span> <span class="o">=</span> <span class="mh">0x4</span> <span class="c1"># 0100</span>
+<span class="n">PREFIX_TAG</span>      <span class="o">=</span> <span class="mh">0x1</span> <span class="c1"># 0001</span>
+
+<span class="n">PREFIX_SHIFT</span> <span class="o">=</span> <span class="mi">4</span>
+
+<div class="viewcode-block" id="xor_bytes">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.xor_bytes">[docs]</a>
+<span class="k">def</span> <span class="nf">xor_bytes</span><span class="p">(</span><span class="n">out</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">,</span><span class="nb">bytes</span><span class="p">],</span> <span class="n">b</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">,</span><span class="nb">bytes</span><span class="p">],</span> <span class="n">n</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="encode_tag_tweak">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.encode_tag_tweak">[docs]</a>
+<span class="k">def</span> <span class="nf">encode_tag_tweak</span><span class="p">(</span><span class="n">out</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">prefix</span> <span class="o">&lt;=</span> <span class="mh">0xFF</span>
+    <span class="k">assert</span> <span class="n">block_nr</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">64</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">TWEAK_SIZE</span>
+    <span class="n">out</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;Q&#39;</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">&lt;&lt;</span> <span class="n">PREFIX_SHIFT</span></div>
+
+
+<div class="viewcode-block" id="encode_enc_tweak">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.encode_enc_tweak">[docs]</a>
+<span class="k">def</span> <span class="nf">encode_enc_tweak</span><span class="p">(</span><span class="n">out</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">tag</span><span class="p">:</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">==</span> <span class="n">TWEAK_SIZE</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;Q&#39;</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">))</span>
+    <span class="n">out</span><span class="p">[:</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">),</span><span class="n">TWEAK_SIZE</span><span class="p">)]</span> <span class="o">=</span> <span class="n">tag</span>
+    <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">|=</span> <span class="mh">0x80</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="mi">8</span><span class="o">+</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="mi">8</span><span class="o">+</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="n">tmp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
+
+
+<span class="n">RCONS</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">([</span>
+    <span class="mh">0x2f</span><span class="p">,</span> <span class="mh">0x5e</span><span class="p">,</span> <span class="mh">0xbc</span><span class="p">,</span> <span class="mh">0x63</span><span class="p">,</span> <span class="mh">0xc6</span><span class="p">,</span> <span class="mh">0x97</span><span class="p">,</span> <span class="mh">0x35</span><span class="p">,</span> <span class="mh">0x6a</span><span class="p">,</span>
+    <span class="mh">0xd4</span><span class="p">,</span> <span class="mh">0xb3</span><span class="p">,</span> <span class="mh">0x7d</span><span class="p">,</span> <span class="mh">0xfa</span><span class="p">,</span> <span class="mh">0xef</span><span class="p">,</span> <span class="mh">0xc5</span><span class="p">,</span> <span class="mh">0x91</span><span class="p">,</span> <span class="mh">0x39</span><span class="p">,</span>
+    <span class="mh">0x72</span>
+<span class="p">])</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">RCONS</span><span class="p">)</span> <span class="o">==</span> <span class="n">STK_COUNT</span>
+
+<div class="viewcode-block" id="stk_shuffle">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.stk_shuffle">[docs]</a>
+<span class="k">def</span> <span class="nf">stk_shuffle</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="n">STK_SIZE</span>
+    <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="lfsr2">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.lfsr2">[docs]</a>
+<span class="k">def</span> <span class="nf">lfsr2</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="n">STK_SIZE</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="n">x7</span><span class="p">,</span> <span class="n">x5</span> <span class="o">=</span> <span class="n">x</span><span class="o">&gt;&gt;</span><span class="mi">7</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">&gt;&gt;</span><span class="mi">5</span><span class="p">)</span><span class="o">&amp;</span><span class="mi">1</span>
+        <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">x7</span> <span class="o">^</span> <span class="n">x5</span><span class="p">))</span> <span class="o">%</span> <span class="mi">256</span></div>
+
+
+<div class="viewcode-block" id="lfsr3">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.lfsr3">[docs]</a>
+<span class="k">def</span> <span class="nf">lfsr3</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">x6</span> <span class="o">=</span> <span class="n">x</span><span class="o">&amp;</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">&gt;&gt;</span><span class="mi">6</span><span class="p">)</span><span class="o">&amp;</span><span class="mi">1</span>
+        <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">((</span><span class="n">x0</span> <span class="o">^</span> <span class="n">x6</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="xor_rc">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.xor_rc">[docs]</a>
+<span class="k">def</span> <span class="nf">xor_rc</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="n">STK_SIZE</span>
+    <span class="k">assert</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">STK_COUNT</span>
+    <span class="n">rcon</span> <span class="o">=</span> <span class="n">RCONS</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">rc</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">([</span>
+        <span class="mi">1</span><span class="p">,</span>    <span class="mi">2</span><span class="p">,</span>    <span class="mi">4</span><span class="p">,</span>    <span class="mi">8</span><span class="p">,</span>
+        <span class="n">rcon</span><span class="p">,</span> <span class="n">rcon</span><span class="p">,</span> <span class="n">rcon</span><span class="p">,</span> <span class="n">rcon</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>
+    <span class="p">])</span>
+    <span class="n">xor_bytes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">rc</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="stk_derive_k">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.stk_derive_k">[docs]</a>
+<span class="k">def</span> <span class="nf">stk_derive_k</span><span class="p">(</span><span class="n">key</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]):</span>
+    <span class="n">derived_k</span> <span class="o">=</span> <span class="p">[</span><span class="nb">bytearray</span><span class="p">(</span><span class="n">STK_SIZE</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">STK_COUNT</span><span class="p">)]</span>
+
+    <span class="n">tk2</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">32</span><span class="p">])</span>  <span class="c1"># Tk2 = W2</span>
+    <span class="n">tk3</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">key</span><span class="p">[:</span><span class="mi">16</span><span class="p">])</span>    <span class="c1"># Tk3 = W3</span>
+
+    <span class="c1"># i == 0</span>
+    <span class="n">xor_bytes</span><span class="p">(</span><span class="n">derived_k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tk2</span><span class="p">,</span> <span class="n">tk3</span><span class="p">,</span> <span class="n">STK_SIZE</span><span class="p">)</span>
+    <span class="n">xor_rc</span><span class="p">(</span><span class="n">derived_k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># i == 0 ... i == 16</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">ROUNDS</span><span class="p">:</span>
+        <span class="c1"># Tk2(i+1) = h(LFSR2(Tk2(i)))</span>
+        <span class="n">lfsr2</span><span class="p">(</span><span class="n">tk2</span><span class="p">)</span>
+        <span class="n">stk_shuffle</span><span class="p">(</span><span class="n">tk2</span><span class="p">)</span>
+
+        <span class="c1"># Tk3(i+1) = h(LFSR3(Tk3(i)))</span>
+        <span class="n">lfsr3</span><span class="p">(</span><span class="n">tk3</span><span class="p">)</span>
+        <span class="n">stk_shuffle</span><span class="p">(</span><span class="n">tk3</span><span class="p">)</span>
+
+        <span class="n">xor_bytes</span><span class="p">(</span><span class="n">derived_k</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tk2</span><span class="p">,</span> <span class="n">tk3</span><span class="p">,</span> <span class="n">STK_SIZE</span><span class="p">)</span>
+        <span class="n">xor_rc</span><span class="p">(</span><span class="n">derived_k</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">derived_k</span></div>
+
+
+<span class="c1"># Errytime make Te/Td table AES, angel lose wing ;_;</span>
+
+<span class="n">TE0</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="mh">0xc66363a5</span><span class="p">,</span> <span class="mh">0xf87c7c84</span><span class="p">,</span> <span class="mh">0xee777799</span><span class="p">,</span> <span class="mh">0xf67b7b8d</span><span class="p">,</span> <span class="mh">0xfff2f20d</span><span class="p">,</span> <span class="mh">0xd66b6bbd</span><span class="p">,</span>
+    <span class="mh">0xde6f6fb1</span><span class="p">,</span> <span class="mh">0x91c5c554</span><span class="p">,</span> <span class="mh">0x60303050</span><span class="p">,</span> <span class="mh">0x02010103</span><span class="p">,</span> <span class="mh">0xce6767a9</span><span class="p">,</span> <span class="mh">0x562b2b7d</span><span class="p">,</span>
+    <span class="mh">0xe7fefe19</span><span class="p">,</span> <span class="mh">0xb5d7d762</span><span class="p">,</span> <span class="mh">0x4dababe6</span><span class="p">,</span> <span class="mh">0xec76769a</span><span class="p">,</span> <span class="mh">0x8fcaca45</span><span class="p">,</span> <span class="mh">0x1f82829d</span><span class="p">,</span>
+    <span class="mh">0x89c9c940</span><span class="p">,</span> <span class="mh">0xfa7d7d87</span><span class="p">,</span> <span class="mh">0xeffafa15</span><span class="p">,</span> <span class="mh">0xb25959eb</span><span class="p">,</span> <span class="mh">0x8e4747c9</span><span class="p">,</span> <span class="mh">0xfbf0f00b</span><span class="p">,</span>
+    <span class="mh">0x41adadec</span><span class="p">,</span> <span class="mh">0xb3d4d467</span><span class="p">,</span> <span class="mh">0x5fa2a2fd</span><span class="p">,</span> <span class="mh">0x45afafea</span><span class="p">,</span> <span class="mh">0x239c9cbf</span><span class="p">,</span> <span class="mh">0x53a4a4f7</span><span class="p">,</span>
+    <span class="mh">0xe4727296</span><span class="p">,</span> <span class="mh">0x9bc0c05b</span><span class="p">,</span> <span class="mh">0x75b7b7c2</span><span class="p">,</span> <span class="mh">0xe1fdfd1c</span><span class="p">,</span> <span class="mh">0x3d9393ae</span><span class="p">,</span> <span class="mh">0x4c26266a</span><span class="p">,</span>
+    <span class="mh">0x6c36365a</span><span class="p">,</span> <span class="mh">0x7e3f3f41</span><span class="p">,</span> <span class="mh">0xf5f7f702</span><span class="p">,</span> <span class="mh">0x83cccc4f</span><span class="p">,</span> <span class="mh">0x6834345c</span><span class="p">,</span> <span class="mh">0x51a5a5f4</span><span class="p">,</span>
+    <span class="mh">0xd1e5e534</span><span class="p">,</span> <span class="mh">0xf9f1f108</span><span class="p">,</span> <span class="mh">0xe2717193</span><span class="p">,</span> <span class="mh">0xabd8d873</span><span class="p">,</span> <span class="mh">0x62313153</span><span class="p">,</span> <span class="mh">0x2a15153f</span><span class="p">,</span>
+    <span class="mh">0x0804040c</span><span class="p">,</span> <span class="mh">0x95c7c752</span><span class="p">,</span> <span class="mh">0x46232365</span><span class="p">,</span> <span class="mh">0x9dc3c35e</span><span class="p">,</span> <span class="mh">0x30181828</span><span class="p">,</span> <span class="mh">0x379696a1</span><span class="p">,</span>
+    <span class="mh">0x0a05050f</span><span class="p">,</span> <span class="mh">0x2f9a9ab5</span><span class="p">,</span> <span class="mh">0x0e070709</span><span class="p">,</span> <span class="mh">0x24121236</span><span class="p">,</span> <span class="mh">0x1b80809b</span><span class="p">,</span> <span class="mh">0xdfe2e23d</span><span class="p">,</span>
+    <span class="mh">0xcdebeb26</span><span class="p">,</span> <span class="mh">0x4e272769</span><span class="p">,</span> <span class="mh">0x7fb2b2cd</span><span class="p">,</span> <span class="mh">0xea75759f</span><span class="p">,</span> <span class="mh">0x1209091b</span><span class="p">,</span> <span class="mh">0x1d83839e</span><span class="p">,</span>
+    <span class="mh">0x582c2c74</span><span class="p">,</span> <span class="mh">0x341a1a2e</span><span class="p">,</span> <span class="mh">0x361b1b2d</span><span class="p">,</span> <span class="mh">0xdc6e6eb2</span><span class="p">,</span> <span class="mh">0xb45a5aee</span><span class="p">,</span> <span class="mh">0x5ba0a0fb</span><span class="p">,</span>
+    <span class="mh">0xa45252f6</span><span class="p">,</span> <span class="mh">0x763b3b4d</span><span class="p">,</span> <span class="mh">0xb7d6d661</span><span class="p">,</span> <span class="mh">0x7db3b3ce</span><span class="p">,</span> <span class="mh">0x5229297b</span><span class="p">,</span> <span class="mh">0xdde3e33e</span><span class="p">,</span>
+    <span class="mh">0x5e2f2f71</span><span class="p">,</span> <span class="mh">0x13848497</span><span class="p">,</span> <span class="mh">0xa65353f5</span><span class="p">,</span> <span class="mh">0xb9d1d168</span><span class="p">,</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="mh">0xc1eded2c</span><span class="p">,</span>
+    <span class="mh">0x40202060</span><span class="p">,</span> <span class="mh">0xe3fcfc1f</span><span class="p">,</span> <span class="mh">0x79b1b1c8</span><span class="p">,</span> <span class="mh">0xb65b5bed</span><span class="p">,</span> <span class="mh">0xd46a6abe</span><span class="p">,</span> <span class="mh">0x8dcbcb46</span><span class="p">,</span>
+    <span class="mh">0x67bebed9</span><span class="p">,</span> <span class="mh">0x7239394b</span><span class="p">,</span> <span class="mh">0x944a4ade</span><span class="p">,</span> <span class="mh">0x984c4cd4</span><span class="p">,</span> <span class="mh">0xb05858e8</span><span class="p">,</span> <span class="mh">0x85cfcf4a</span><span class="p">,</span>
+    <span class="mh">0xbbd0d06b</span><span class="p">,</span> <span class="mh">0xc5efef2a</span><span class="p">,</span> <span class="mh">0x4faaaae5</span><span class="p">,</span> <span class="mh">0xedfbfb16</span><span class="p">,</span> <span class="mh">0x864343c5</span><span class="p">,</span> <span class="mh">0x9a4d4dd7</span><span class="p">,</span>
+    <span class="mh">0x66333355</span><span class="p">,</span> <span class="mh">0x11858594</span><span class="p">,</span> <span class="mh">0x8a4545cf</span><span class="p">,</span> <span class="mh">0xe9f9f910</span><span class="p">,</span> <span class="mh">0x04020206</span><span class="p">,</span> <span class="mh">0xfe7f7f81</span><span class="p">,</span>
+    <span class="mh">0xa05050f0</span><span class="p">,</span> <span class="mh">0x783c3c44</span><span class="p">,</span> <span class="mh">0x259f9fba</span><span class="p">,</span> <span class="mh">0x4ba8a8e3</span><span class="p">,</span> <span class="mh">0xa25151f3</span><span class="p">,</span> <span class="mh">0x5da3a3fe</span><span class="p">,</span>
+    <span class="mh">0x804040c0</span><span class="p">,</span> <span class="mh">0x058f8f8a</span><span class="p">,</span> <span class="mh">0x3f9292ad</span><span class="p">,</span> <span class="mh">0x219d9dbc</span><span class="p">,</span> <span class="mh">0x70383848</span><span class="p">,</span> <span class="mh">0xf1f5f504</span><span class="p">,</span>
+    <span class="mh">0x63bcbcdf</span><span class="p">,</span> <span class="mh">0x77b6b6c1</span><span class="p">,</span> <span class="mh">0xafdada75</span><span class="p">,</span> <span class="mh">0x42212163</span><span class="p">,</span> <span class="mh">0x20101030</span><span class="p">,</span> <span class="mh">0xe5ffff1a</span><span class="p">,</span>
+    <span class="mh">0xfdf3f30e</span><span class="p">,</span> <span class="mh">0xbfd2d26d</span><span class="p">,</span> <span class="mh">0x81cdcd4c</span><span class="p">,</span> <span class="mh">0x180c0c14</span><span class="p">,</span> <span class="mh">0x26131335</span><span class="p">,</span> <span class="mh">0xc3ecec2f</span><span class="p">,</span>
+    <span class="mh">0xbe5f5fe1</span><span class="p">,</span> <span class="mh">0x359797a2</span><span class="p">,</span> <span class="mh">0x884444cc</span><span class="p">,</span> <span class="mh">0x2e171739</span><span class="p">,</span> <span class="mh">0x93c4c457</span><span class="p">,</span> <span class="mh">0x55a7a7f2</span><span class="p">,</span>
+    <span class="mh">0xfc7e7e82</span><span class="p">,</span> <span class="mh">0x7a3d3d47</span><span class="p">,</span> <span class="mh">0xc86464ac</span><span class="p">,</span> <span class="mh">0xba5d5de7</span><span class="p">,</span> <span class="mh">0x3219192b</span><span class="p">,</span> <span class="mh">0xe6737395</span><span class="p">,</span>
+    <span class="mh">0xc06060a0</span><span class="p">,</span> <span class="mh">0x19818198</span><span class="p">,</span> <span class="mh">0x9e4f4fd1</span><span class="p">,</span> <span class="mh">0xa3dcdc7f</span><span class="p">,</span> <span class="mh">0x44222266</span><span class="p">,</span> <span class="mh">0x542a2a7e</span><span class="p">,</span>
+    <span class="mh">0x3b9090ab</span><span class="p">,</span> <span class="mh">0x0b888883</span><span class="p">,</span> <span class="mh">0x8c4646ca</span><span class="p">,</span> <span class="mh">0xc7eeee29</span><span class="p">,</span> <span class="mh">0x6bb8b8d3</span><span class="p">,</span> <span class="mh">0x2814143c</span><span class="p">,</span>
+    <span class="mh">0xa7dede79</span><span class="p">,</span> <span class="mh">0xbc5e5ee2</span><span class="p">,</span> <span class="mh">0x160b0b1d</span><span class="p">,</span> <span class="mh">0xaddbdb76</span><span class="p">,</span> <span class="mh">0xdbe0e03b</span><span class="p">,</span> <span class="mh">0x64323256</span><span class="p">,</span>
+    <span class="mh">0x743a3a4e</span><span class="p">,</span> <span class="mh">0x140a0a1e</span><span class="p">,</span> <span class="mh">0x924949db</span><span class="p">,</span> <span class="mh">0x0c06060a</span><span class="p">,</span> <span class="mh">0x4824246c</span><span class="p">,</span> <span class="mh">0xb85c5ce4</span><span class="p">,</span>
+    <span class="mh">0x9fc2c25d</span><span class="p">,</span> <span class="mh">0xbdd3d36e</span><span class="p">,</span> <span class="mh">0x43acacef</span><span class="p">,</span> <span class="mh">0xc46262a6</span><span class="p">,</span> <span class="mh">0x399191a8</span><span class="p">,</span> <span class="mh">0x319595a4</span><span class="p">,</span>
+    <span class="mh">0xd3e4e437</span><span class="p">,</span> <span class="mh">0xf279798b</span><span class="p">,</span> <span class="mh">0xd5e7e732</span><span class="p">,</span> <span class="mh">0x8bc8c843</span><span class="p">,</span> <span class="mh">0x6e373759</span><span class="p">,</span> <span class="mh">0xda6d6db7</span><span class="p">,</span>
+    <span class="mh">0x018d8d8c</span><span class="p">,</span> <span class="mh">0xb1d5d564</span><span class="p">,</span> <span class="mh">0x9c4e4ed2</span><span class="p">,</span> <span class="mh">0x49a9a9e0</span><span class="p">,</span> <span class="mh">0xd86c6cb4</span><span class="p">,</span> <span class="mh">0xac5656fa</span><span class="p">,</span>
+    <span class="mh">0xf3f4f407</span><span class="p">,</span> <span class="mh">0xcfeaea25</span><span class="p">,</span> <span class="mh">0xca6565af</span><span class="p">,</span> <span class="mh">0xf47a7a8e</span><span class="p">,</span> <span class="mh">0x47aeaee9</span><span class="p">,</span> <span class="mh">0x10080818</span><span class="p">,</span>
+    <span class="mh">0x6fbabad5</span><span class="p">,</span> <span class="mh">0xf0787888</span><span class="p">,</span> <span class="mh">0x4a25256f</span><span class="p">,</span> <span class="mh">0x5c2e2e72</span><span class="p">,</span> <span class="mh">0x381c1c24</span><span class="p">,</span> <span class="mh">0x57a6a6f1</span><span class="p">,</span>
+    <span class="mh">0x73b4b4c7</span><span class="p">,</span> <span class="mh">0x97c6c651</span><span class="p">,</span> <span class="mh">0xcbe8e823</span><span class="p">,</span> <span class="mh">0xa1dddd7c</span><span class="p">,</span> <span class="mh">0xe874749c</span><span class="p">,</span> <span class="mh">0x3e1f1f21</span><span class="p">,</span>
+    <span class="mh">0x964b4bdd</span><span class="p">,</span> <span class="mh">0x61bdbddc</span><span class="p">,</span> <span class="mh">0x0d8b8b86</span><span class="p">,</span> <span class="mh">0x0f8a8a85</span><span class="p">,</span> <span class="mh">0xe0707090</span><span class="p">,</span> <span class="mh">0x7c3e3e42</span><span class="p">,</span>
+    <span class="mh">0x71b5b5c4</span><span class="p">,</span> <span class="mh">0xcc6666aa</span><span class="p">,</span> <span class="mh">0x904848d8</span><span class="p">,</span> <span class="mh">0x06030305</span><span class="p">,</span> <span class="mh">0xf7f6f601</span><span class="p">,</span> <span class="mh">0x1c0e0e12</span><span class="p">,</span>
+    <span class="mh">0xc26161a3</span><span class="p">,</span> <span class="mh">0x6a35355f</span><span class="p">,</span> <span class="mh">0xae5757f9</span><span class="p">,</span> <span class="mh">0x69b9b9d0</span><span class="p">,</span> <span class="mh">0x17868691</span><span class="p">,</span> <span class="mh">0x99c1c158</span><span class="p">,</span>
+    <span class="mh">0x3a1d1d27</span><span class="p">,</span> <span class="mh">0x279e9eb9</span><span class="p">,</span> <span class="mh">0xd9e1e138</span><span class="p">,</span> <span class="mh">0xebf8f813</span><span class="p">,</span> <span class="mh">0x2b9898b3</span><span class="p">,</span> <span class="mh">0x22111133</span><span class="p">,</span>
+    <span class="mh">0xd26969bb</span><span class="p">,</span> <span class="mh">0xa9d9d970</span><span class="p">,</span> <span class="mh">0x078e8e89</span><span class="p">,</span> <span class="mh">0x339494a7</span><span class="p">,</span> <span class="mh">0x2d9b9bb6</span><span class="p">,</span> <span class="mh">0x3c1e1e22</span><span class="p">,</span>
+    <span class="mh">0x15878792</span><span class="p">,</span> <span class="mh">0xc9e9e920</span><span class="p">,</span> <span class="mh">0x87cece49</span><span class="p">,</span> <span class="mh">0xaa5555ff</span><span class="p">,</span> <span class="mh">0x50282878</span><span class="p">,</span> <span class="mh">0xa5dfdf7a</span><span class="p">,</span>
+    <span class="mh">0x038c8c8f</span><span class="p">,</span> <span class="mh">0x59a1a1f8</span><span class="p">,</span> <span class="mh">0x09898980</span><span class="p">,</span> <span class="mh">0x1a0d0d17</span><span class="p">,</span> <span class="mh">0x65bfbfda</span><span class="p">,</span> <span class="mh">0xd7e6e631</span><span class="p">,</span>
+    <span class="mh">0x844242c6</span><span class="p">,</span> <span class="mh">0xd06868b8</span><span class="p">,</span> <span class="mh">0x824141c3</span><span class="p">,</span> <span class="mh">0x299999b0</span><span class="p">,</span> <span class="mh">0x5a2d2d77</span><span class="p">,</span> <span class="mh">0x1e0f0f11</span><span class="p">,</span>
+    <span class="mh">0x7bb0b0cb</span><span class="p">,</span> <span class="mh">0xa85454fc</span><span class="p">,</span> <span class="mh">0x6dbbbbd6</span><span class="p">,</span> <span class="mh">0x2c16163a</span><span class="p">,</span>
+<span class="p">])</span>
+
+<span class="n">TE1</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="mh">0xa5c66363</span><span class="p">,</span> <span class="mh">0x84f87c7c</span><span class="p">,</span> <span class="mh">0x99ee7777</span><span class="p">,</span> <span class="mh">0x8df67b7b</span><span class="p">,</span> <span class="mh">0x0dfff2f2</span><span class="p">,</span> <span class="mh">0xbdd66b6b</span><span class="p">,</span>
+    <span class="mh">0xb1de6f6f</span><span class="p">,</span> <span class="mh">0x5491c5c5</span><span class="p">,</span> <span class="mh">0x50603030</span><span class="p">,</span> <span class="mh">0x03020101</span><span class="p">,</span> <span class="mh">0xa9ce6767</span><span class="p">,</span> <span class="mh">0x7d562b2b</span><span class="p">,</span>
+    <span class="mh">0x19e7fefe</span><span class="p">,</span> <span class="mh">0x62b5d7d7</span><span class="p">,</span> <span class="mh">0xe64dabab</span><span class="p">,</span> <span class="mh">0x9aec7676</span><span class="p">,</span> <span class="mh">0x458fcaca</span><span class="p">,</span> <span class="mh">0x9d1f8282</span><span class="p">,</span>
+    <span class="mh">0x4089c9c9</span><span class="p">,</span> <span class="mh">0x87fa7d7d</span><span class="p">,</span> <span class="mh">0x15effafa</span><span class="p">,</span> <span class="mh">0xebb25959</span><span class="p">,</span> <span class="mh">0xc98e4747</span><span class="p">,</span> <span class="mh">0x0bfbf0f0</span><span class="p">,</span>
+    <span class="mh">0xec41adad</span><span class="p">,</span> <span class="mh">0x67b3d4d4</span><span class="p">,</span> <span class="mh">0xfd5fa2a2</span><span class="p">,</span> <span class="mh">0xea45afaf</span><span class="p">,</span> <span class="mh">0xbf239c9c</span><span class="p">,</span> <span class="mh">0xf753a4a4</span><span class="p">,</span>
+    <span class="mh">0x96e47272</span><span class="p">,</span> <span class="mh">0x5b9bc0c0</span><span class="p">,</span> <span class="mh">0xc275b7b7</span><span class="p">,</span> <span class="mh">0x1ce1fdfd</span><span class="p">,</span> <span class="mh">0xae3d9393</span><span class="p">,</span> <span class="mh">0x6a4c2626</span><span class="p">,</span>
+    <span class="mh">0x5a6c3636</span><span class="p">,</span> <span class="mh">0x417e3f3f</span><span class="p">,</span> <span class="mh">0x02f5f7f7</span><span class="p">,</span> <span class="mh">0x4f83cccc</span><span class="p">,</span> <span class="mh">0x5c683434</span><span class="p">,</span> <span class="mh">0xf451a5a5</span><span class="p">,</span>
+    <span class="mh">0x34d1e5e5</span><span class="p">,</span> <span class="mh">0x08f9f1f1</span><span class="p">,</span> <span class="mh">0x93e27171</span><span class="p">,</span> <span class="mh">0x73abd8d8</span><span class="p">,</span> <span class="mh">0x53623131</span><span class="p">,</span> <span class="mh">0x3f2a1515</span><span class="p">,</span>
+    <span class="mh">0x0c080404</span><span class="p">,</span> <span class="mh">0x5295c7c7</span><span class="p">,</span> <span class="mh">0x65462323</span><span class="p">,</span> <span class="mh">0x5e9dc3c3</span><span class="p">,</span> <span class="mh">0x28301818</span><span class="p">,</span> <span class="mh">0xa1379696</span><span class="p">,</span>
+    <span class="mh">0x0f0a0505</span><span class="p">,</span> <span class="mh">0xb52f9a9a</span><span class="p">,</span> <span class="mh">0x090e0707</span><span class="p">,</span> <span class="mh">0x36241212</span><span class="p">,</span> <span class="mh">0x9b1b8080</span><span class="p">,</span> <span class="mh">0x3ddfe2e2</span><span class="p">,</span>
+    <span class="mh">0x26cdebeb</span><span class="p">,</span> <span class="mh">0x694e2727</span><span class="p">,</span> <span class="mh">0xcd7fb2b2</span><span class="p">,</span> <span class="mh">0x9fea7575</span><span class="p">,</span> <span class="mh">0x1b120909</span><span class="p">,</span> <span class="mh">0x9e1d8383</span><span class="p">,</span>
+    <span class="mh">0x74582c2c</span><span class="p">,</span> <span class="mh">0x2e341a1a</span><span class="p">,</span> <span class="mh">0x2d361b1b</span><span class="p">,</span> <span class="mh">0xb2dc6e6e</span><span class="p">,</span> <span class="mh">0xeeb45a5a</span><span class="p">,</span> <span class="mh">0xfb5ba0a0</span><span class="p">,</span>
+    <span class="mh">0xf6a45252</span><span class="p">,</span> <span class="mh">0x4d763b3b</span><span class="p">,</span> <span class="mh">0x61b7d6d6</span><span class="p">,</span> <span class="mh">0xce7db3b3</span><span class="p">,</span> <span class="mh">0x7b522929</span><span class="p">,</span> <span class="mh">0x3edde3e3</span><span class="p">,</span>
+    <span class="mh">0x715e2f2f</span><span class="p">,</span> <span class="mh">0x97138484</span><span class="p">,</span> <span class="mh">0xf5a65353</span><span class="p">,</span> <span class="mh">0x68b9d1d1</span><span class="p">,</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="mh">0x2cc1eded</span><span class="p">,</span>
+    <span class="mh">0x60402020</span><span class="p">,</span> <span class="mh">0x1fe3fcfc</span><span class="p">,</span> <span class="mh">0xc879b1b1</span><span class="p">,</span> <span class="mh">0xedb65b5b</span><span class="p">,</span> <span class="mh">0xbed46a6a</span><span class="p">,</span> <span class="mh">0x468dcbcb</span><span class="p">,</span>
+    <span class="mh">0xd967bebe</span><span class="p">,</span> <span class="mh">0x4b723939</span><span class="p">,</span> <span class="mh">0xde944a4a</span><span class="p">,</span> <span class="mh">0xd4984c4c</span><span class="p">,</span> <span class="mh">0xe8b05858</span><span class="p">,</span> <span class="mh">0x4a85cfcf</span><span class="p">,</span>
+    <span class="mh">0x6bbbd0d0</span><span class="p">,</span> <span class="mh">0x2ac5efef</span><span class="p">,</span> <span class="mh">0xe54faaaa</span><span class="p">,</span> <span class="mh">0x16edfbfb</span><span class="p">,</span> <span class="mh">0xc5864343</span><span class="p">,</span> <span class="mh">0xd79a4d4d</span><span class="p">,</span>
+    <span class="mh">0x55663333</span><span class="p">,</span> <span class="mh">0x94118585</span><span class="p">,</span> <span class="mh">0xcf8a4545</span><span class="p">,</span> <span class="mh">0x10e9f9f9</span><span class="p">,</span> <span class="mh">0x06040202</span><span class="p">,</span> <span class="mh">0x81fe7f7f</span><span class="p">,</span>
+    <span class="mh">0xf0a05050</span><span class="p">,</span> <span class="mh">0x44783c3c</span><span class="p">,</span> <span class="mh">0xba259f9f</span><span class="p">,</span> <span class="mh">0xe34ba8a8</span><span class="p">,</span> <span class="mh">0xf3a25151</span><span class="p">,</span> <span class="mh">0xfe5da3a3</span><span class="p">,</span>
+    <span class="mh">0xc0804040</span><span class="p">,</span> <span class="mh">0x8a058f8f</span><span class="p">,</span> <span class="mh">0xad3f9292</span><span class="p">,</span> <span class="mh">0xbc219d9d</span><span class="p">,</span> <span class="mh">0x48703838</span><span class="p">,</span> <span class="mh">0x04f1f5f5</span><span class="p">,</span>
+    <span class="mh">0xdf63bcbc</span><span class="p">,</span> <span class="mh">0xc177b6b6</span><span class="p">,</span> <span class="mh">0x75afdada</span><span class="p">,</span> <span class="mh">0x63422121</span><span class="p">,</span> <span class="mh">0x30201010</span><span class="p">,</span> <span class="mh">0x1ae5ffff</span><span class="p">,</span>
+    <span class="mh">0x0efdf3f3</span><span class="p">,</span> <span class="mh">0x6dbfd2d2</span><span class="p">,</span> <span class="mh">0x4c81cdcd</span><span class="p">,</span> <span class="mh">0x14180c0c</span><span class="p">,</span> <span class="mh">0x35261313</span><span class="p">,</span> <span class="mh">0x2fc3ecec</span><span class="p">,</span>
+    <span class="mh">0xe1be5f5f</span><span class="p">,</span> <span class="mh">0xa2359797</span><span class="p">,</span> <span class="mh">0xcc884444</span><span class="p">,</span> <span class="mh">0x392e1717</span><span class="p">,</span> <span class="mh">0x5793c4c4</span><span class="p">,</span> <span class="mh">0xf255a7a7</span><span class="p">,</span>
+    <span class="mh">0x82fc7e7e</span><span class="p">,</span> <span class="mh">0x477a3d3d</span><span class="p">,</span> <span class="mh">0xacc86464</span><span class="p">,</span> <span class="mh">0xe7ba5d5d</span><span class="p">,</span> <span class="mh">0x2b321919</span><span class="p">,</span> <span class="mh">0x95e67373</span><span class="p">,</span>
+    <span class="mh">0xa0c06060</span><span class="p">,</span> <span class="mh">0x98198181</span><span class="p">,</span> <span class="mh">0xd19e4f4f</span><span class="p">,</span> <span class="mh">0x7fa3dcdc</span><span class="p">,</span> <span class="mh">0x66442222</span><span class="p">,</span> <span class="mh">0x7e542a2a</span><span class="p">,</span>
+    <span class="mh">0xab3b9090</span><span class="p">,</span> <span class="mh">0x830b8888</span><span class="p">,</span> <span class="mh">0xca8c4646</span><span class="p">,</span> <span class="mh">0x29c7eeee</span><span class="p">,</span> <span class="mh">0xd36bb8b8</span><span class="p">,</span> <span class="mh">0x3c281414</span><span class="p">,</span>
+    <span class="mh">0x79a7dede</span><span class="p">,</span> <span class="mh">0xe2bc5e5e</span><span class="p">,</span> <span class="mh">0x1d160b0b</span><span class="p">,</span> <span class="mh">0x76addbdb</span><span class="p">,</span> <span class="mh">0x3bdbe0e0</span><span class="p">,</span> <span class="mh">0x56643232</span><span class="p">,</span>
+    <span class="mh">0x4e743a3a</span><span class="p">,</span> <span class="mh">0x1e140a0a</span><span class="p">,</span> <span class="mh">0xdb924949</span><span class="p">,</span> <span class="mh">0x0a0c0606</span><span class="p">,</span> <span class="mh">0x6c482424</span><span class="p">,</span> <span class="mh">0xe4b85c5c</span><span class="p">,</span>
+    <span class="mh">0x5d9fc2c2</span><span class="p">,</span> <span class="mh">0x6ebdd3d3</span><span class="p">,</span> <span class="mh">0xef43acac</span><span class="p">,</span> <span class="mh">0xa6c46262</span><span class="p">,</span> <span class="mh">0xa8399191</span><span class="p">,</span> <span class="mh">0xa4319595</span><span class="p">,</span>
+    <span class="mh">0x37d3e4e4</span><span class="p">,</span> <span class="mh">0x8bf27979</span><span class="p">,</span> <span class="mh">0x32d5e7e7</span><span class="p">,</span> <span class="mh">0x438bc8c8</span><span class="p">,</span> <span class="mh">0x596e3737</span><span class="p">,</span> <span class="mh">0xb7da6d6d</span><span class="p">,</span>
+    <span class="mh">0x8c018d8d</span><span class="p">,</span> <span class="mh">0x64b1d5d5</span><span class="p">,</span> <span class="mh">0xd29c4e4e</span><span class="p">,</span> <span class="mh">0xe049a9a9</span><span class="p">,</span> <span class="mh">0xb4d86c6c</span><span class="p">,</span> <span class="mh">0xfaac5656</span><span class="p">,</span>
+    <span class="mh">0x07f3f4f4</span><span class="p">,</span> <span class="mh">0x25cfeaea</span><span class="p">,</span> <span class="mh">0xafca6565</span><span class="p">,</span> <span class="mh">0x8ef47a7a</span><span class="p">,</span> <span class="mh">0xe947aeae</span><span class="p">,</span> <span class="mh">0x18100808</span><span class="p">,</span>
+    <span class="mh">0xd56fbaba</span><span class="p">,</span> <span class="mh">0x88f07878</span><span class="p">,</span> <span class="mh">0x6f4a2525</span><span class="p">,</span> <span class="mh">0x725c2e2e</span><span class="p">,</span> <span class="mh">0x24381c1c</span><span class="p">,</span> <span class="mh">0xf157a6a6</span><span class="p">,</span>
+    <span class="mh">0xc773b4b4</span><span class="p">,</span> <span class="mh">0x5197c6c6</span><span class="p">,</span> <span class="mh">0x23cbe8e8</span><span class="p">,</span> <span class="mh">0x7ca1dddd</span><span class="p">,</span> <span class="mh">0x9ce87474</span><span class="p">,</span> <span class="mh">0x213e1f1f</span><span class="p">,</span>
+    <span class="mh">0xdd964b4b</span><span class="p">,</span> <span class="mh">0xdc61bdbd</span><span class="p">,</span> <span class="mh">0x860d8b8b</span><span class="p">,</span> <span class="mh">0x850f8a8a</span><span class="p">,</span> <span class="mh">0x90e07070</span><span class="p">,</span> <span class="mh">0x427c3e3e</span><span class="p">,</span>
+    <span class="mh">0xc471b5b5</span><span class="p">,</span> <span class="mh">0xaacc6666</span><span class="p">,</span> <span class="mh">0xd8904848</span><span class="p">,</span> <span class="mh">0x05060303</span><span class="p">,</span> <span class="mh">0x01f7f6f6</span><span class="p">,</span> <span class="mh">0x121c0e0e</span><span class="p">,</span>
+    <span class="mh">0xa3c26161</span><span class="p">,</span> <span class="mh">0x5f6a3535</span><span class="p">,</span> <span class="mh">0xf9ae5757</span><span class="p">,</span> <span class="mh">0xd069b9b9</span><span class="p">,</span> <span class="mh">0x91178686</span><span class="p">,</span> <span class="mh">0x5899c1c1</span><span class="p">,</span>
+    <span class="mh">0x273a1d1d</span><span class="p">,</span> <span class="mh">0xb9279e9e</span><span class="p">,</span> <span class="mh">0x38d9e1e1</span><span class="p">,</span> <span class="mh">0x13ebf8f8</span><span class="p">,</span> <span class="mh">0xb32b9898</span><span class="p">,</span> <span class="mh">0x33221111</span><span class="p">,</span>
+    <span class="mh">0xbbd26969</span><span class="p">,</span> <span class="mh">0x70a9d9d9</span><span class="p">,</span> <span class="mh">0x89078e8e</span><span class="p">,</span> <span class="mh">0xa7339494</span><span class="p">,</span> <span class="mh">0xb62d9b9b</span><span class="p">,</span> <span class="mh">0x223c1e1e</span><span class="p">,</span>
+    <span class="mh">0x92158787</span><span class="p">,</span> <span class="mh">0x20c9e9e9</span><span class="p">,</span> <span class="mh">0x4987cece</span><span class="p">,</span> <span class="mh">0xffaa5555</span><span class="p">,</span> <span class="mh">0x78502828</span><span class="p">,</span> <span class="mh">0x7aa5dfdf</span><span class="p">,</span>
+    <span class="mh">0x8f038c8c</span><span class="p">,</span> <span class="mh">0xf859a1a1</span><span class="p">,</span> <span class="mh">0x80098989</span><span class="p">,</span> <span class="mh">0x171a0d0d</span><span class="p">,</span> <span class="mh">0xda65bfbf</span><span class="p">,</span> <span class="mh">0x31d7e6e6</span><span class="p">,</span>
+    <span class="mh">0xc6844242</span><span class="p">,</span> <span class="mh">0xb8d06868</span><span class="p">,</span> <span class="mh">0xc3824141</span><span class="p">,</span> <span class="mh">0xb0299999</span><span class="p">,</span> <span class="mh">0x775a2d2d</span><span class="p">,</span> <span class="mh">0x111e0f0f</span><span class="p">,</span>
+    <span class="mh">0xcb7bb0b0</span><span class="p">,</span> <span class="mh">0xfca85454</span><span class="p">,</span> <span class="mh">0xd66dbbbb</span><span class="p">,</span> <span class="mh">0x3a2c1616</span><span class="p">,</span>
+<span class="p">])</span>
+
+<span class="n">TE2</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="mh">0x63a5c663</span><span class="p">,</span> <span class="mh">0x7c84f87c</span><span class="p">,</span> <span class="mh">0x7799ee77</span><span class="p">,</span> <span class="mh">0x7b8df67b</span><span class="p">,</span> <span class="mh">0xf20dfff2</span><span class="p">,</span> <span class="mh">0x6bbdd66b</span><span class="p">,</span>
+    <span class="mh">0x6fb1de6f</span><span class="p">,</span> <span class="mh">0xc55491c5</span><span class="p">,</span> <span class="mh">0x30506030</span><span class="p">,</span> <span class="mh">0x01030201</span><span class="p">,</span> <span class="mh">0x67a9ce67</span><span class="p">,</span> <span class="mh">0x2b7d562b</span><span class="p">,</span>
+    <span class="mh">0xfe19e7fe</span><span class="p">,</span> <span class="mh">0xd762b5d7</span><span class="p">,</span> <span class="mh">0xabe64dab</span><span class="p">,</span> <span class="mh">0x769aec76</span><span class="p">,</span> <span class="mh">0xca458fca</span><span class="p">,</span> <span class="mh">0x829d1f82</span><span class="p">,</span>
+    <span class="mh">0xc94089c9</span><span class="p">,</span> <span class="mh">0x7d87fa7d</span><span class="p">,</span> <span class="mh">0xfa15effa</span><span class="p">,</span> <span class="mh">0x59ebb259</span><span class="p">,</span> <span class="mh">0x47c98e47</span><span class="p">,</span> <span class="mh">0xf00bfbf0</span><span class="p">,</span>
+    <span class="mh">0xadec41ad</span><span class="p">,</span> <span class="mh">0xd467b3d4</span><span class="p">,</span> <span class="mh">0xa2fd5fa2</span><span class="p">,</span> <span class="mh">0xafea45af</span><span class="p">,</span> <span class="mh">0x9cbf239c</span><span class="p">,</span> <span class="mh">0xa4f753a4</span><span class="p">,</span>
+    <span class="mh">0x7296e472</span><span class="p">,</span> <span class="mh">0xc05b9bc0</span><span class="p">,</span> <span class="mh">0xb7c275b7</span><span class="p">,</span> <span class="mh">0xfd1ce1fd</span><span class="p">,</span> <span class="mh">0x93ae3d93</span><span class="p">,</span> <span class="mh">0x266a4c26</span><span class="p">,</span>
+    <span class="mh">0x365a6c36</span><span class="p">,</span> <span class="mh">0x3f417e3f</span><span class="p">,</span> <span class="mh">0xf702f5f7</span><span class="p">,</span> <span class="mh">0xcc4f83cc</span><span class="p">,</span> <span class="mh">0x345c6834</span><span class="p">,</span> <span class="mh">0xa5f451a5</span><span class="p">,</span>
+    <span class="mh">0xe534d1e5</span><span class="p">,</span> <span class="mh">0xf108f9f1</span><span class="p">,</span> <span class="mh">0x7193e271</span><span class="p">,</span> <span class="mh">0xd873abd8</span><span class="p">,</span> <span class="mh">0x31536231</span><span class="p">,</span> <span class="mh">0x153f2a15</span><span class="p">,</span>
+    <span class="mh">0x040c0804</span><span class="p">,</span> <span class="mh">0xc75295c7</span><span class="p">,</span> <span class="mh">0x23654623</span><span class="p">,</span> <span class="mh">0xc35e9dc3</span><span class="p">,</span> <span class="mh">0x18283018</span><span class="p">,</span> <span class="mh">0x96a13796</span><span class="p">,</span>
+    <span class="mh">0x050f0a05</span><span class="p">,</span> <span class="mh">0x9ab52f9a</span><span class="p">,</span> <span class="mh">0x07090e07</span><span class="p">,</span> <span class="mh">0x12362412</span><span class="p">,</span> <span class="mh">0x809b1b80</span><span class="p">,</span> <span class="mh">0xe23ddfe2</span><span class="p">,</span>
+    <span class="mh">0xeb26cdeb</span><span class="p">,</span> <span class="mh">0x27694e27</span><span class="p">,</span> <span class="mh">0xb2cd7fb2</span><span class="p">,</span> <span class="mh">0x759fea75</span><span class="p">,</span> <span class="mh">0x091b1209</span><span class="p">,</span> <span class="mh">0x839e1d83</span><span class="p">,</span>
+    <span class="mh">0x2c74582c</span><span class="p">,</span> <span class="mh">0x1a2e341a</span><span class="p">,</span> <span class="mh">0x1b2d361b</span><span class="p">,</span> <span class="mh">0x6eb2dc6e</span><span class="p">,</span> <span class="mh">0x5aeeb45a</span><span class="p">,</span> <span class="mh">0xa0fb5ba0</span><span class="p">,</span>
+    <span class="mh">0x52f6a452</span><span class="p">,</span> <span class="mh">0x3b4d763b</span><span class="p">,</span> <span class="mh">0xd661b7d6</span><span class="p">,</span> <span class="mh">0xb3ce7db3</span><span class="p">,</span> <span class="mh">0x297b5229</span><span class="p">,</span> <span class="mh">0xe33edde3</span><span class="p">,</span>
+    <span class="mh">0x2f715e2f</span><span class="p">,</span> <span class="mh">0x84971384</span><span class="p">,</span> <span class="mh">0x53f5a653</span><span class="p">,</span> <span class="mh">0xd168b9d1</span><span class="p">,</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="mh">0xed2cc1ed</span><span class="p">,</span>
+    <span class="mh">0x20604020</span><span class="p">,</span> <span class="mh">0xfc1fe3fc</span><span class="p">,</span> <span class="mh">0xb1c879b1</span><span class="p">,</span> <span class="mh">0x5bedb65b</span><span class="p">,</span> <span class="mh">0x6abed46a</span><span class="p">,</span> <span class="mh">0xcb468dcb</span><span class="p">,</span>
+    <span class="mh">0xbed967be</span><span class="p">,</span> <span class="mh">0x394b7239</span><span class="p">,</span> <span class="mh">0x4ade944a</span><span class="p">,</span> <span class="mh">0x4cd4984c</span><span class="p">,</span> <span class="mh">0x58e8b058</span><span class="p">,</span> <span class="mh">0xcf4a85cf</span><span class="p">,</span>
+    <span class="mh">0xd06bbbd0</span><span class="p">,</span> <span class="mh">0xef2ac5ef</span><span class="p">,</span> <span class="mh">0xaae54faa</span><span class="p">,</span> <span class="mh">0xfb16edfb</span><span class="p">,</span> <span class="mh">0x43c58643</span><span class="p">,</span> <span class="mh">0x4dd79a4d</span><span class="p">,</span>
+    <span class="mh">0x33556633</span><span class="p">,</span> <span class="mh">0x85941185</span><span class="p">,</span> <span class="mh">0x45cf8a45</span><span class="p">,</span> <span class="mh">0xf910e9f9</span><span class="p">,</span> <span class="mh">0x02060402</span><span class="p">,</span> <span class="mh">0x7f81fe7f</span><span class="p">,</span>
+    <span class="mh">0x50f0a050</span><span class="p">,</span> <span class="mh">0x3c44783c</span><span class="p">,</span> <span class="mh">0x9fba259f</span><span class="p">,</span> <span class="mh">0xa8e34ba8</span><span class="p">,</span> <span class="mh">0x51f3a251</span><span class="p">,</span> <span class="mh">0xa3fe5da3</span><span class="p">,</span>
+    <span class="mh">0x40c08040</span><span class="p">,</span> <span class="mh">0x8f8a058f</span><span class="p">,</span> <span class="mh">0x92ad3f92</span><span class="p">,</span> <span class="mh">0x9dbc219d</span><span class="p">,</span> <span class="mh">0x38487038</span><span class="p">,</span> <span class="mh">0xf504f1f5</span><span class="p">,</span>
+    <span class="mh">0xbcdf63bc</span><span class="p">,</span> <span class="mh">0xb6c177b6</span><span class="p">,</span> <span class="mh">0xda75afda</span><span class="p">,</span> <span class="mh">0x21634221</span><span class="p">,</span> <span class="mh">0x10302010</span><span class="p">,</span> <span class="mh">0xff1ae5ff</span><span class="p">,</span>
+    <span class="mh">0xf30efdf3</span><span class="p">,</span> <span class="mh">0xd26dbfd2</span><span class="p">,</span> <span class="mh">0xcd4c81cd</span><span class="p">,</span> <span class="mh">0x0c14180c</span><span class="p">,</span> <span class="mh">0x13352613</span><span class="p">,</span> <span class="mh">0xec2fc3ec</span><span class="p">,</span>
+    <span class="mh">0x5fe1be5f</span><span class="p">,</span> <span class="mh">0x97a23597</span><span class="p">,</span> <span class="mh">0x44cc8844</span><span class="p">,</span> <span class="mh">0x17392e17</span><span class="p">,</span> <span class="mh">0xc45793c4</span><span class="p">,</span> <span class="mh">0xa7f255a7</span><span class="p">,</span>
+    <span class="mh">0x7e82fc7e</span><span class="p">,</span> <span class="mh">0x3d477a3d</span><span class="p">,</span> <span class="mh">0x64acc864</span><span class="p">,</span> <span class="mh">0x5de7ba5d</span><span class="p">,</span> <span class="mh">0x192b3219</span><span class="p">,</span> <span class="mh">0x7395e673</span><span class="p">,</span>
+    <span class="mh">0x60a0c060</span><span class="p">,</span> <span class="mh">0x81981981</span><span class="p">,</span> <span class="mh">0x4fd19e4f</span><span class="p">,</span> <span class="mh">0xdc7fa3dc</span><span class="p">,</span> <span class="mh">0x22664422</span><span class="p">,</span> <span class="mh">0x2a7e542a</span><span class="p">,</span>
+    <span class="mh">0x90ab3b90</span><span class="p">,</span> <span class="mh">0x88830b88</span><span class="p">,</span> <span class="mh">0x46ca8c46</span><span class="p">,</span> <span class="mh">0xee29c7ee</span><span class="p">,</span> <span class="mh">0xb8d36bb8</span><span class="p">,</span> <span class="mh">0x143c2814</span><span class="p">,</span>
+    <span class="mh">0xde79a7de</span><span class="p">,</span> <span class="mh">0x5ee2bc5e</span><span class="p">,</span> <span class="mh">0x0b1d160b</span><span class="p">,</span> <span class="mh">0xdb76addb</span><span class="p">,</span> <span class="mh">0xe03bdbe0</span><span class="p">,</span> <span class="mh">0x32566432</span><span class="p">,</span>
+    <span class="mh">0x3a4e743a</span><span class="p">,</span> <span class="mh">0x0a1e140a</span><span class="p">,</span> <span class="mh">0x49db9249</span><span class="p">,</span> <span class="mh">0x060a0c06</span><span class="p">,</span> <span class="mh">0x246c4824</span><span class="p">,</span> <span class="mh">0x5ce4b85c</span><span class="p">,</span>
+    <span class="mh">0xc25d9fc2</span><span class="p">,</span> <span class="mh">0xd36ebdd3</span><span class="p">,</span> <span class="mh">0xacef43ac</span><span class="p">,</span> <span class="mh">0x62a6c462</span><span class="p">,</span> <span class="mh">0x91a83991</span><span class="p">,</span> <span class="mh">0x95a43195</span><span class="p">,</span>
+    <span class="mh">0xe437d3e4</span><span class="p">,</span> <span class="mh">0x798bf279</span><span class="p">,</span> <span class="mh">0xe732d5e7</span><span class="p">,</span> <span class="mh">0xc8438bc8</span><span class="p">,</span> <span class="mh">0x37596e37</span><span class="p">,</span> <span class="mh">0x6db7da6d</span><span class="p">,</span>
+    <span class="mh">0x8d8c018d</span><span class="p">,</span> <span class="mh">0xd564b1d5</span><span class="p">,</span> <span class="mh">0x4ed29c4e</span><span class="p">,</span> <span class="mh">0xa9e049a9</span><span class="p">,</span> <span class="mh">0x6cb4d86c</span><span class="p">,</span> <span class="mh">0x56faac56</span><span class="p">,</span>
+    <span class="mh">0xf407f3f4</span><span class="p">,</span> <span class="mh">0xea25cfea</span><span class="p">,</span> <span class="mh">0x65afca65</span><span class="p">,</span> <span class="mh">0x7a8ef47a</span><span class="p">,</span> <span class="mh">0xaee947ae</span><span class="p">,</span> <span class="mh">0x08181008</span><span class="p">,</span>
+    <span class="mh">0xbad56fba</span><span class="p">,</span> <span class="mh">0x7888f078</span><span class="p">,</span> <span class="mh">0x256f4a25</span><span class="p">,</span> <span class="mh">0x2e725c2e</span><span class="p">,</span> <span class="mh">0x1c24381c</span><span class="p">,</span> <span class="mh">0xa6f157a6</span><span class="p">,</span>
+    <span class="mh">0xb4c773b4</span><span class="p">,</span> <span class="mh">0xc65197c6</span><span class="p">,</span> <span class="mh">0xe823cbe8</span><span class="p">,</span> <span class="mh">0xdd7ca1dd</span><span class="p">,</span> <span class="mh">0x749ce874</span><span class="p">,</span> <span class="mh">0x1f213e1f</span><span class="p">,</span>
+    <span class="mh">0x4bdd964b</span><span class="p">,</span> <span class="mh">0xbddc61bd</span><span class="p">,</span> <span class="mh">0x8b860d8b</span><span class="p">,</span> <span class="mh">0x8a850f8a</span><span class="p">,</span> <span class="mh">0x7090e070</span><span class="p">,</span> <span class="mh">0x3e427c3e</span><span class="p">,</span>
+    <span class="mh">0xb5c471b5</span><span class="p">,</span> <span class="mh">0x66aacc66</span><span class="p">,</span> <span class="mh">0x48d89048</span><span class="p">,</span> <span class="mh">0x03050603</span><span class="p">,</span> <span class="mh">0xf601f7f6</span><span class="p">,</span> <span class="mh">0x0e121c0e</span><span class="p">,</span>
+    <span class="mh">0x61a3c261</span><span class="p">,</span> <span class="mh">0x355f6a35</span><span class="p">,</span> <span class="mh">0x57f9ae57</span><span class="p">,</span> <span class="mh">0xb9d069b9</span><span class="p">,</span> <span class="mh">0x86911786</span><span class="p">,</span> <span class="mh">0xc15899c1</span><span class="p">,</span>
+    <span class="mh">0x1d273a1d</span><span class="p">,</span> <span class="mh">0x9eb9279e</span><span class="p">,</span> <span class="mh">0xe138d9e1</span><span class="p">,</span> <span class="mh">0xf813ebf8</span><span class="p">,</span> <span class="mh">0x98b32b98</span><span class="p">,</span> <span class="mh">0x11332211</span><span class="p">,</span>
+    <span class="mh">0x69bbd269</span><span class="p">,</span> <span class="mh">0xd970a9d9</span><span class="p">,</span> <span class="mh">0x8e89078e</span><span class="p">,</span> <span class="mh">0x94a73394</span><span class="p">,</span> <span class="mh">0x9bb62d9b</span><span class="p">,</span> <span class="mh">0x1e223c1e</span><span class="p">,</span>
+    <span class="mh">0x87921587</span><span class="p">,</span> <span class="mh">0xe920c9e9</span><span class="p">,</span> <span class="mh">0xce4987ce</span><span class="p">,</span> <span class="mh">0x55ffaa55</span><span class="p">,</span> <span class="mh">0x28785028</span><span class="p">,</span> <span class="mh">0xdf7aa5df</span><span class="p">,</span>
+    <span class="mh">0x8c8f038c</span><span class="p">,</span> <span class="mh">0xa1f859a1</span><span class="p">,</span> <span class="mh">0x89800989</span><span class="p">,</span> <span class="mh">0x0d171a0d</span><span class="p">,</span> <span class="mh">0xbfda65bf</span><span class="p">,</span> <span class="mh">0xe631d7e6</span><span class="p">,</span>
+    <span class="mh">0x42c68442</span><span class="p">,</span> <span class="mh">0x68b8d068</span><span class="p">,</span> <span class="mh">0x41c38241</span><span class="p">,</span> <span class="mh">0x99b02999</span><span class="p">,</span> <span class="mh">0x2d775a2d</span><span class="p">,</span> <span class="mh">0x0f111e0f</span><span class="p">,</span>
+    <span class="mh">0xb0cb7bb0</span><span class="p">,</span> <span class="mh">0x54fca854</span><span class="p">,</span> <span class="mh">0xbbd66dbb</span><span class="p">,</span> <span class="mh">0x163a2c16</span><span class="p">,</span>
+<span class="p">])</span>
+
+<span class="n">TE3</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="mh">0x6363a5c6</span><span class="p">,</span> <span class="mh">0x7c7c84f8</span><span class="p">,</span> <span class="mh">0x777799ee</span><span class="p">,</span> <span class="mh">0x7b7b8df6</span><span class="p">,</span> <span class="mh">0xf2f20dff</span><span class="p">,</span> <span class="mh">0x6b6bbdd6</span><span class="p">,</span>
+    <span class="mh">0x6f6fb1de</span><span class="p">,</span> <span class="mh">0xc5c55491</span><span class="p">,</span> <span class="mh">0x30305060</span><span class="p">,</span> <span class="mh">0x01010302</span><span class="p">,</span> <span class="mh">0x6767a9ce</span><span class="p">,</span> <span class="mh">0x2b2b7d56</span><span class="p">,</span>
+    <span class="mh">0xfefe19e7</span><span class="p">,</span> <span class="mh">0xd7d762b5</span><span class="p">,</span> <span class="mh">0xababe64d</span><span class="p">,</span> <span class="mh">0x76769aec</span><span class="p">,</span> <span class="mh">0xcaca458f</span><span class="p">,</span> <span class="mh">0x82829d1f</span><span class="p">,</span>
+    <span class="mh">0xc9c94089</span><span class="p">,</span> <span class="mh">0x7d7d87fa</span><span class="p">,</span> <span class="mh">0xfafa15ef</span><span class="p">,</span> <span class="mh">0x5959ebb2</span><span class="p">,</span> <span class="mh">0x4747c98e</span><span class="p">,</span> <span class="mh">0xf0f00bfb</span><span class="p">,</span>
+    <span class="mh">0xadadec41</span><span class="p">,</span> <span class="mh">0xd4d467b3</span><span class="p">,</span> <span class="mh">0xa2a2fd5f</span><span class="p">,</span> <span class="mh">0xafafea45</span><span class="p">,</span> <span class="mh">0x9c9cbf23</span><span class="p">,</span> <span class="mh">0xa4a4f753</span><span class="p">,</span>
+    <span class="mh">0x727296e4</span><span class="p">,</span> <span class="mh">0xc0c05b9b</span><span class="p">,</span> <span class="mh">0xb7b7c275</span><span class="p">,</span> <span class="mh">0xfdfd1ce1</span><span class="p">,</span> <span class="mh">0x9393ae3d</span><span class="p">,</span> <span class="mh">0x26266a4c</span><span class="p">,</span>
+    <span class="mh">0x36365a6c</span><span class="p">,</span> <span class="mh">0x3f3f417e</span><span class="p">,</span> <span class="mh">0xf7f702f5</span><span class="p">,</span> <span class="mh">0xcccc4f83</span><span class="p">,</span> <span class="mh">0x34345c68</span><span class="p">,</span> <span class="mh">0xa5a5f451</span><span class="p">,</span>
+    <span class="mh">0xe5e534d1</span><span class="p">,</span> <span class="mh">0xf1f108f9</span><span class="p">,</span> <span class="mh">0x717193e2</span><span class="p">,</span> <span class="mh">0xd8d873ab</span><span class="p">,</span> <span class="mh">0x31315362</span><span class="p">,</span> <span class="mh">0x15153f2a</span><span class="p">,</span>
+    <span class="mh">0x04040c08</span><span class="p">,</span> <span class="mh">0xc7c75295</span><span class="p">,</span> <span class="mh">0x23236546</span><span class="p">,</span> <span class="mh">0xc3c35e9d</span><span class="p">,</span> <span class="mh">0x18182830</span><span class="p">,</span> <span class="mh">0x9696a137</span><span class="p">,</span>
+    <span class="mh">0x05050f0a</span><span class="p">,</span> <span class="mh">0x9a9ab52f</span><span class="p">,</span> <span class="mh">0x0707090e</span><span class="p">,</span> <span class="mh">0x12123624</span><span class="p">,</span> <span class="mh">0x80809b1b</span><span class="p">,</span> <span class="mh">0xe2e23ddf</span><span class="p">,</span>
+    <span class="mh">0xebeb26cd</span><span class="p">,</span> <span class="mh">0x2727694e</span><span class="p">,</span> <span class="mh">0xb2b2cd7f</span><span class="p">,</span> <span class="mh">0x75759fea</span><span class="p">,</span> <span class="mh">0x09091b12</span><span class="p">,</span> <span class="mh">0x83839e1d</span><span class="p">,</span>
+    <span class="mh">0x2c2c7458</span><span class="p">,</span> <span class="mh">0x1a1a2e34</span><span class="p">,</span> <span class="mh">0x1b1b2d36</span><span class="p">,</span> <span class="mh">0x6e6eb2dc</span><span class="p">,</span> <span class="mh">0x5a5aeeb4</span><span class="p">,</span> <span class="mh">0xa0a0fb5b</span><span class="p">,</span>
+    <span class="mh">0x5252f6a4</span><span class="p">,</span> <span class="mh">0x3b3b4d76</span><span class="p">,</span> <span class="mh">0xd6d661b7</span><span class="p">,</span> <span class="mh">0xb3b3ce7d</span><span class="p">,</span> <span class="mh">0x29297b52</span><span class="p">,</span> <span class="mh">0xe3e33edd</span><span class="p">,</span>
+    <span class="mh">0x2f2f715e</span><span class="p">,</span> <span class="mh">0x84849713</span><span class="p">,</span> <span class="mh">0x5353f5a6</span><span class="p">,</span> <span class="mh">0xd1d168b9</span><span class="p">,</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="mh">0xeded2cc1</span><span class="p">,</span>
+    <span class="mh">0x20206040</span><span class="p">,</span> <span class="mh">0xfcfc1fe3</span><span class="p">,</span> <span class="mh">0xb1b1c879</span><span class="p">,</span> <span class="mh">0x5b5bedb6</span><span class="p">,</span> <span class="mh">0x6a6abed4</span><span class="p">,</span> <span class="mh">0xcbcb468d</span><span class="p">,</span>
+    <span class="mh">0xbebed967</span><span class="p">,</span> <span class="mh">0x39394b72</span><span class="p">,</span> <span class="mh">0x4a4ade94</span><span class="p">,</span> <span class="mh">0x4c4cd498</span><span class="p">,</span> <span class="mh">0x5858e8b0</span><span class="p">,</span> <span class="mh">0xcfcf4a85</span><span class="p">,</span>
+    <span class="mh">0xd0d06bbb</span><span class="p">,</span> <span class="mh">0xefef2ac5</span><span class="p">,</span> <span class="mh">0xaaaae54f</span><span class="p">,</span> <span class="mh">0xfbfb16ed</span><span class="p">,</span> <span class="mh">0x4343c586</span><span class="p">,</span> <span class="mh">0x4d4dd79a</span><span class="p">,</span>
+    <span class="mh">0x33335566</span><span class="p">,</span> <span class="mh">0x85859411</span><span class="p">,</span> <span class="mh">0x4545cf8a</span><span class="p">,</span> <span class="mh">0xf9f910e9</span><span class="p">,</span> <span class="mh">0x02020604</span><span class="p">,</span> <span class="mh">0x7f7f81fe</span><span class="p">,</span>
+    <span class="mh">0x5050f0a0</span><span class="p">,</span> <span class="mh">0x3c3c4478</span><span class="p">,</span> <span class="mh">0x9f9fba25</span><span class="p">,</span> <span class="mh">0xa8a8e34b</span><span class="p">,</span> <span class="mh">0x5151f3a2</span><span class="p">,</span> <span class="mh">0xa3a3fe5d</span><span class="p">,</span>
+    <span class="mh">0x4040c080</span><span class="p">,</span> <span class="mh">0x8f8f8a05</span><span class="p">,</span> <span class="mh">0x9292ad3f</span><span class="p">,</span> <span class="mh">0x9d9dbc21</span><span class="p">,</span> <span class="mh">0x38384870</span><span class="p">,</span> <span class="mh">0xf5f504f1</span><span class="p">,</span>
+    <span class="mh">0xbcbcdf63</span><span class="p">,</span> <span class="mh">0xb6b6c177</span><span class="p">,</span> <span class="mh">0xdada75af</span><span class="p">,</span> <span class="mh">0x21216342</span><span class="p">,</span> <span class="mh">0x10103020</span><span class="p">,</span> <span class="mh">0xffff1ae5</span><span class="p">,</span>
+    <span class="mh">0xf3f30efd</span><span class="p">,</span> <span class="mh">0xd2d26dbf</span><span class="p">,</span> <span class="mh">0xcdcd4c81</span><span class="p">,</span> <span class="mh">0x0c0c1418</span><span class="p">,</span> <span class="mh">0x13133526</span><span class="p">,</span> <span class="mh">0xecec2fc3</span><span class="p">,</span>
+    <span class="mh">0x5f5fe1be</span><span class="p">,</span> <span class="mh">0x9797a235</span><span class="p">,</span> <span class="mh">0x4444cc88</span><span class="p">,</span> <span class="mh">0x1717392e</span><span class="p">,</span> <span class="mh">0xc4c45793</span><span class="p">,</span> <span class="mh">0xa7a7f255</span><span class="p">,</span>
+    <span class="mh">0x7e7e82fc</span><span class="p">,</span> <span class="mh">0x3d3d477a</span><span class="p">,</span> <span class="mh">0x6464acc8</span><span class="p">,</span> <span class="mh">0x5d5de7ba</span><span class="p">,</span> <span class="mh">0x19192b32</span><span class="p">,</span> <span class="mh">0x737395e6</span><span class="p">,</span>
+    <span class="mh">0x6060a0c0</span><span class="p">,</span> <span class="mh">0x81819819</span><span class="p">,</span> <span class="mh">0x4f4fd19e</span><span class="p">,</span> <span class="mh">0xdcdc7fa3</span><span class="p">,</span> <span class="mh">0x22226644</span><span class="p">,</span> <span class="mh">0x2a2a7e54</span><span class="p">,</span>
+    <span class="mh">0x9090ab3b</span><span class="p">,</span> <span class="mh">0x8888830b</span><span class="p">,</span> <span class="mh">0x4646ca8c</span><span class="p">,</span> <span class="mh">0xeeee29c7</span><span class="p">,</span> <span class="mh">0xb8b8d36b</span><span class="p">,</span> <span class="mh">0x14143c28</span><span class="p">,</span>
+    <span class="mh">0xdede79a7</span><span class="p">,</span> <span class="mh">0x5e5ee2bc</span><span class="p">,</span> <span class="mh">0x0b0b1d16</span><span class="p">,</span> <span class="mh">0xdbdb76ad</span><span class="p">,</span> <span class="mh">0xe0e03bdb</span><span class="p">,</span> <span class="mh">0x32325664</span><span class="p">,</span>
+    <span class="mh">0x3a3a4e74</span><span class="p">,</span> <span class="mh">0x0a0a1e14</span><span class="p">,</span> <span class="mh">0x4949db92</span><span class="p">,</span> <span class="mh">0x06060a0c</span><span class="p">,</span> <span class="mh">0x24246c48</span><span class="p">,</span> <span class="mh">0x5c5ce4b8</span><span class="p">,</span>
+    <span class="mh">0xc2c25d9f</span><span class="p">,</span> <span class="mh">0xd3d36ebd</span><span class="p">,</span> <span class="mh">0xacacef43</span><span class="p">,</span> <span class="mh">0x6262a6c4</span><span class="p">,</span> <span class="mh">0x9191a839</span><span class="p">,</span> <span class="mh">0x9595a431</span><span class="p">,</span>
+    <span class="mh">0xe4e437d3</span><span class="p">,</span> <span class="mh">0x79798bf2</span><span class="p">,</span> <span class="mh">0xe7e732d5</span><span class="p">,</span> <span class="mh">0xc8c8438b</span><span class="p">,</span> <span class="mh">0x3737596e</span><span class="p">,</span> <span class="mh">0x6d6db7da</span><span class="p">,</span>
+    <span class="mh">0x8d8d8c01</span><span class="p">,</span> <span class="mh">0xd5d564b1</span><span class="p">,</span> <span class="mh">0x4e4ed29c</span><span class="p">,</span> <span class="mh">0xa9a9e049</span><span class="p">,</span> <span class="mh">0x6c6cb4d8</span><span class="p">,</span> <span class="mh">0x5656faac</span><span class="p">,</span>
+    <span class="mh">0xf4f407f3</span><span class="p">,</span> <span class="mh">0xeaea25cf</span><span class="p">,</span> <span class="mh">0x6565afca</span><span class="p">,</span> <span class="mh">0x7a7a8ef4</span><span class="p">,</span> <span class="mh">0xaeaee947</span><span class="p">,</span> <span class="mh">0x08081810</span><span class="p">,</span>
+    <span class="mh">0xbabad56f</span><span class="p">,</span> <span class="mh">0x787888f0</span><span class="p">,</span> <span class="mh">0x25256f4a</span><span class="p">,</span> <span class="mh">0x2e2e725c</span><span class="p">,</span> <span class="mh">0x1c1c2438</span><span class="p">,</span> <span class="mh">0xa6a6f157</span><span class="p">,</span>
+    <span class="mh">0xb4b4c773</span><span class="p">,</span> <span class="mh">0xc6c65197</span><span class="p">,</span> <span class="mh">0xe8e823cb</span><span class="p">,</span> <span class="mh">0xdddd7ca1</span><span class="p">,</span> <span class="mh">0x74749ce8</span><span class="p">,</span> <span class="mh">0x1f1f213e</span><span class="p">,</span>
+    <span class="mh">0x4b4bdd96</span><span class="p">,</span> <span class="mh">0xbdbddc61</span><span class="p">,</span> <span class="mh">0x8b8b860d</span><span class="p">,</span> <span class="mh">0x8a8a850f</span><span class="p">,</span> <span class="mh">0x707090e0</span><span class="p">,</span> <span class="mh">0x3e3e427c</span><span class="p">,</span>
+    <span class="mh">0xb5b5c471</span><span class="p">,</span> <span class="mh">0x6666aacc</span><span class="p">,</span> <span class="mh">0x4848d890</span><span class="p">,</span> <span class="mh">0x03030506</span><span class="p">,</span> <span class="mh">0xf6f601f7</span><span class="p">,</span> <span class="mh">0x0e0e121c</span><span class="p">,</span>
+    <span class="mh">0x6161a3c2</span><span class="p">,</span> <span class="mh">0x35355f6a</span><span class="p">,</span> <span class="mh">0x5757f9ae</span><span class="p">,</span> <span class="mh">0xb9b9d069</span><span class="p">,</span> <span class="mh">0x86869117</span><span class="p">,</span> <span class="mh">0xc1c15899</span><span class="p">,</span>
+    <span class="mh">0x1d1d273a</span><span class="p">,</span> <span class="mh">0x9e9eb927</span><span class="p">,</span> <span class="mh">0xe1e138d9</span><span class="p">,</span> <span class="mh">0xf8f813eb</span><span class="p">,</span> <span class="mh">0x9898b32b</span><span class="p">,</span> <span class="mh">0x11113322</span><span class="p">,</span>
+    <span class="mh">0x6969bbd2</span><span class="p">,</span> <span class="mh">0xd9d970a9</span><span class="p">,</span> <span class="mh">0x8e8e8907</span><span class="p">,</span> <span class="mh">0x9494a733</span><span class="p">,</span> <span class="mh">0x9b9bb62d</span><span class="p">,</span> <span class="mh">0x1e1e223c</span><span class="p">,</span>
+    <span class="mh">0x87879215</span><span class="p">,</span> <span class="mh">0xe9e920c9</span><span class="p">,</span> <span class="mh">0xcece4987</span><span class="p">,</span> <span class="mh">0x5555ffaa</span><span class="p">,</span> <span class="mh">0x28287850</span><span class="p">,</span> <span class="mh">0xdfdf7aa5</span><span class="p">,</span>
+    <span class="mh">0x8c8c8f03</span><span class="p">,</span> <span class="mh">0xa1a1f859</span><span class="p">,</span> <span class="mh">0x89898009</span><span class="p">,</span> <span class="mh">0x0d0d171a</span><span class="p">,</span> <span class="mh">0xbfbfda65</span><span class="p">,</span> <span class="mh">0xe6e631d7</span><span class="p">,</span>
+    <span class="mh">0x4242c684</span><span class="p">,</span> <span class="mh">0x6868b8d0</span><span class="p">,</span> <span class="mh">0x4141c382</span><span class="p">,</span> <span class="mh">0x9999b029</span><span class="p">,</span> <span class="mh">0x2d2d775a</span><span class="p">,</span> <span class="mh">0x0f0f111e</span><span class="p">,</span>
+    <span class="mh">0xb0b0cb7b</span><span class="p">,</span> <span class="mh">0x5454fca8</span><span class="p">,</span> <span class="mh">0xbbbbd66d</span><span class="p">,</span> <span class="mh">0x16163a2c</span><span class="p">,</span>
+<span class="p">])</span>
+
+<div class="viewcode-block" id="uint8">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.uint8">[docs]</a>
+<span class="k">def</span> <span class="nf">uint8</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">&amp;</span> <span class="mh">0xFF</span></div>
+
+
+<div class="viewcode-block" id="bc_encrypt">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.bc_encrypt">[docs]</a>
+<span class="k">def</span> <span class="nf">bc_encrypt</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">derived_k</span><span class="p">:</span><span class="nb">list</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">],</span> <span class="n">tweak</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">16</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">derived_k</span><span class="p">)</span> <span class="o">==</span> <span class="n">STK_COUNT</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">derived_k</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">STK_SIZE</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">tweak</span><span class="p">)</span> <span class="o">==</span> <span class="n">TWEAK_SIZE</span>
+
+    <span class="c1"># Derive all the Sub-Tweak Keys.</span>
+    <span class="n">stks</span> <span class="o">=</span> <span class="n">derive_sub_tweak_keys</span><span class="p">(</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">)</span>
+
+    <span class="c1"># AddRoundTweakKey (AES -&gt; AddRoundKey)</span>
+    <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;LLLL&#39;</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">[:</span><span class="mi">16</span><span class="p">])</span>
+    <span class="n">s0</span> <span class="o">=</span> <span class="n">s0</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">s1</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">s2</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">s3</span> <span class="o">=</span> <span class="n">s3</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">ROUNDS</span><span class="p">:</span>
+        <span class="c1"># SubBytes, ShiftRows, MixBytes (AES -&gt; MixColumns),</span>
+        <span class="c1"># AddRoundTweakKey (AES -&gt; AddRoundKey).</span>
+        <span class="c1">#</span>
+        <span class="c1"># In AES-NI terms, this is *exactly* equivalent to AESENC (though</span>
+        <span class="c1"># Intel&#39;s notation transposes ShiftRows, and SubBytes).</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">TE0</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s0</span><span class="o">&gt;&gt;</span><span class="mi">24</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE1</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s1</span><span class="o">&gt;&gt;</span><span class="mi">16</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE2</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s2</span><span class="o">&gt;&gt;</span><span class="mi">8</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE3</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s3</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">stks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">TE0</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s1</span><span class="o">&gt;&gt;</span><span class="mi">24</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE1</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s2</span><span class="o">&gt;&gt;</span><span class="mi">16</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE2</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s3</span><span class="o">&gt;&gt;</span><span class="mi">8</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE3</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s0</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">stks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">t2</span> <span class="o">=</span> <span class="p">(</span><span class="n">TE0</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s2</span><span class="o">&gt;&gt;</span><span class="mi">24</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE1</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s3</span><span class="o">&gt;&gt;</span><span class="mi">16</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE2</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s0</span><span class="o">&gt;&gt;</span><span class="mi">8</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE3</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s1</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">stks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">t3</span> <span class="o">=</span> <span class="p">(</span><span class="n">TE0</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s3</span><span class="o">&gt;&gt;</span><span class="mi">24</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE1</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s0</span><span class="o">&gt;&gt;</span><span class="mi">16</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE2</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s1</span><span class="o">&gt;&gt;</span><span class="mi">8</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">TE3</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s2</span><span class="p">)]</span> <span class="o">^</span>
+              <span class="n">stks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="n">s0</span> <span class="o">=</span> <span class="n">t0</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="n">t1</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="n">t2</span>
+        <span class="n">s3</span> <span class="o">=</span> <span class="n">t3</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">ciphertext</span><span class="p">[:</span><span class="mi">16</span><span class="p">]</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;LLLL&#39;</span><span class="p">,</span> <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DeoxysII">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.DeoxysII">[docs]</a>
+<span class="k">class</span> <span class="nc">DeoxysII</span><span class="p">:</span>
+    <span class="n">derived_k</span><span class="p">:</span><span class="nb">list</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">]</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span> <span class="o">=</span> <span class="n">stk_derive_k</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">implementation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;vartime&quot;</span>
+
+    <span class="c1"># pylint: disable=too-many-locals,too-many-branches,too-many-statements</span>
+<div class="viewcode-block" id="DeoxysII.encrypt">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.DeoxysII.encrypt">[docs]</a>
+    <span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nonce</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">],</span> <span class="n">dst</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">ad</span><span class="p">:</span><span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]],</span> <span class="n">msg</span><span class="p">:</span><span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]]):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">tweak</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">TWEAK_SIZE</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+
+        <span class="c1"># Associated data.</span>
+        <span class="n">auth</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">TAG_SIZE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ad_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">ad_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
+                <span class="c1"># 5. Auth &lt;- Auth ^ Ek(0010||i, Ai+1)</span>
+                <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_AD_BLOCK</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">ad</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="mi">16</span><span class="p">:])</span>
+                <span class="n">xor_bytes</span><span class="p">(</span><span class="n">auth</span><span class="p">,</span> <span class="n">auth</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+                <span class="n">ad_len</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">ad_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># 8. Auth &lt;- Auth ^ Ek(0110||la, pad10*(A*))</span>
+                <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_AD_FINAL</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">a_star</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ad</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span><span class="o">-</span><span class="n">ad_len</span><span class="p">:]):</span>
+                    <span class="n">a_star</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+                <span class="n">a_star</span><span class="p">[</span><span class="n">ad_len</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x80</span>
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">a_star</span><span class="p">)</span>
+                <span class="n">xor_bytes</span><span class="p">(</span><span class="n">auth</span><span class="p">,</span> <span class="n">auth</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+        <span class="c1"># Message authentication and tag generation.</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="n">auth</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">msg_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
+                <span class="c1"># 15. tag &lt;- tag ^ Ek(0000||j, Mj+1)</span>
+                <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_MSG_BLOCK</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">msg</span><span class="p">[</span><span class="n">j</span><span class="o">*</span><span class="n">BLOCK_SIZE</span><span class="p">:])</span>
+                <span class="n">xor_bytes</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
+                <span class="n">msg_len</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">msg_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># 18. tag &lt;- tag &amp; Ek(0100||l, pad10*(M*))</span>
+                <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_MSG_FINAL</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+                <span class="n">m_star</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="o">-</span><span class="n">msg_len</span><span class="p">:]):</span>
+                    <span class="n">m_star</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+                <span class="n">m_star</span><span class="p">[</span><span class="n">msg_len</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x80</span>
+
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">m_star</span><span class="p">)</span>
+                <span class="n">xor_bytes</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
+
+        <span class="c1"># 20. tag &lt;- Ek(0001||0000||N, tag)</span>
+        <span class="n">enc_nonce</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">enc_nonce</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">nonce</span><span class="p">[:</span><span class="n">BLOCK_SIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">enc_nonce</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">PREFIX_TAG</span> <span class="o">&lt;&lt;</span> <span class="n">PREFIX_SHIFT</span>
+        <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">enc_nonce</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span>
+
+        <span class="c1"># Message encryption.</span>
+        <span class="n">enc_blk</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">enc_nonce</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># 0x00 || nonce</span>
+        <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">msg_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
+                <span class="c1"># 24. Cj &lt;- Mj ^ Ek(1||tag^j, 00000000||N)</span>
+                <span class="n">encode_enc_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">enc_blk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">enc_nonce</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
+                    <span class="n">dst</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">^</span> <span class="n">enc_blk</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">msg_len</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">msg_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># 24. C* &lt;- M* ^ Ek(1||tag^l, 00000000||N)</span>
+                <span class="n">encode_enc_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">enc_blk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">enc_nonce</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">msg_len</span><span class="p">):</span>
+                    <span class="n">dst</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">^</span> <span class="n">enc_blk</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="n">dst</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span><span class="o">-</span><span class="n">TAG_SIZE</span><span class="p">:]</span> <span class="o">=</span> <span class="n">tag</span></div>
+
+
+<div class="viewcode-block" id="DeoxysII.decrypt">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.DeoxysII.decrypt">[docs]</a>
+    <span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nonce</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">],</span> <span class="n">dst</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">ad</span><span class="p">:</span><span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]],</span> <span class="n">ciphertext</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span><span class="nb">bytearray</span><span class="p">]):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonce</span><span class="p">)</span> <span class="o">==</span> <span class="n">TAG_SIZE</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span> <span class="o">-</span> <span class="n">TAG_SIZE</span>
+
+        <span class="c1"># Split out ct into ciphertext and tag.</span>
+        <span class="n">ct_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span> <span class="o">-</span> <span class="n">TAG_SIZE</span>
+        <span class="n">ciphertext</span><span class="p">,</span> <span class="n">tag</span> <span class="o">=</span> <span class="n">ciphertext</span><span class="p">[:</span><span class="n">ct_len</span><span class="p">],</span> <span class="n">ciphertext</span><span class="p">[</span><span class="n">ct_len</span><span class="p">:]</span>
+
+        <span class="n">dec_tweak</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">TWEAK_SIZE</span><span class="p">)</span>
+        <span class="n">dec_blk</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">dec_nonce</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+        <span class="n">dec_nonce</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">nonce</span>  <span class="c1"># 0x00 || nonce</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">ct_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
+            <span class="c1"># 4. Mj &lt;- Cj ^ Ek(1||tag^j, 00000000||N)</span>
+            <span class="n">encode_enc_tweak</span><span class="p">(</span><span class="n">dec_tweak</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">dec_blk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">dec_tweak</span><span class="p">,</span> <span class="n">dec_nonce</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
+                <span class="n">dst</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">ciphertext</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">^</span> <span class="n">dec_blk</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">ct_len</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">ct_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># 7. M* &lt;- C* ^ Ek(1||tag^l, 00000000||N)</span>
+            <span class="n">encode_enc_tweak</span><span class="p">(</span><span class="n">dec_tweak</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">dec_blk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">dec_tweak</span><span class="p">,</span> <span class="n">dec_nonce</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ct_len</span><span class="p">):</span>
+                <span class="n">dst</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">ciphertext</span><span class="p">[(</span><span class="n">j</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">^</span> <span class="n">dec_blk</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="c1"># Associated data.</span>
+        <span class="n">auth</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">TAG_SIZE</span><span class="p">)</span>
+        <span class="n">tweak</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">TWEAK_SIZE</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ad_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">ad_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
+                <span class="c1"># 14. Auth &lt;- Auth ^ Ek(0010||i, Ai+1)</span>
+                <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_AD_BLOCK</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">ad</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">BLOCK_SIZE</span><span class="p">:])</span>
+                <span class="n">xor_bytes</span><span class="p">(</span><span class="n">auth</span><span class="p">,</span> <span class="n">auth</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
+                <span class="n">ad_len</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">ad_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># 17. Auth &lt;- Auth ^ Ek(0110||la, pad10*(A*))</span>
+                <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_AD_FINAL</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+                <span class="n">a_star</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ad</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span><span class="o">-</span><span class="n">ad_len</span><span class="p">:]):</span>
+                    <span class="n">a_star</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+                <span class="n">a_star</span><span class="p">[</span><span class="n">ad_len</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x80</span>
+
+                <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">a_star</span><span class="p">)</span>
+                <span class="n">xor_bytes</span><span class="p">(</span><span class="n">auth</span><span class="p">,</span> <span class="n">auth</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
+
+        <span class="c1"># Message authentication and tag generation.</span>
+        <span class="n">msg_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+        <span class="n">tag_p</span> <span class="o">=</span> <span class="n">auth</span><span class="p">[:]</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">msg_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
+            <span class="c1"># 24. tag&#39; &lt;- tag&#39; ^ Ek(0000||j, Mj+1)</span>
+            <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_MSG_BLOCK</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">dst</span><span class="p">[</span><span class="n">j</span><span class="o">*</span><span class="n">BLOCK_SIZE</span><span class="p">:])</span>
+            <span class="n">xor_bytes</span><span class="p">(</span><span class="n">tag_p</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
+            <span class="n">msg_len</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">msg_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># 27. tag &lt;- tag &amp; Ek(0100||l, pad10*(M*))</span>
+            <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_MSG_FINAL</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+            <span class="n">m_star</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BLOCK_SIZE</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dst</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span><span class="o">-</span><span class="n">msg_len</span><span class="p">:]):</span>
+                <span class="n">m_star</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+            <span class="n">m_star</span><span class="p">[</span><span class="n">msg_len</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x80</span>
+
+            <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">m_star</span><span class="p">)</span>
+            <span class="n">xor_bytes</span><span class="p">(</span><span class="n">tag_p</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">TAG_SIZE</span><span class="p">)</span>
+
+        <span class="c1"># 29. tag&#39; &lt;- Ek(0001||0000||N, tag&#39;)</span>
+        <span class="n">dec_nonce</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">PREFIX_TAG</span> <span class="o">&lt;&lt;</span> <span class="n">PREFIX_SHIFT</span>
+        <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tag_p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">dec_nonce</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">)</span>
+
+        <span class="c1"># Tag verification</span>
+        <span class="k">return</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="derive_sub_tweak_keys">
+<a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.derive_sub_tweak_keys">[docs]</a>
+<span class="k">def</span> <span class="nf">derive_sub_tweak_keys</span><span class="p">(</span><span class="n">derived_k</span><span class="p">:</span><span class="nb">list</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">],</span> <span class="n">t</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">derived_k</span><span class="p">)</span> <span class="o">==</span> <span class="n">STK_COUNT</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">TWEAK_SIZE</span>
+
+    <span class="n">stks</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">STK_COUNT</span><span class="p">)]</span>
+
+    <span class="n">stk</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">STK_SIZE</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">write_stk</span><span class="p">(</span><span class="n">idx</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
+        <span class="c1"># Convert stk to a format that is easier to use with the</span>
+        <span class="c1"># table driven AES round function.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Note: Other implementations can just return each</span>
+        <span class="c1"># Sub-Tweak Key as a 16 byte value.</span>
+        <span class="n">stks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;LLLL&#39;</span><span class="p">,</span> <span class="n">stk</span><span class="p">[:</span><span class="mi">16</span><span class="p">]))</span>
+
+    <span class="n">tk1</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:</span><span class="n">TWEAK_SIZE</span><span class="p">]</span> <span class="c1"># Tk1 = W1</span>
+
+    <span class="c1"># i == 0</span>
+    <span class="n">xor_bytes</span><span class="p">(</span><span class="n">stk</span><span class="p">,</span> <span class="n">derived_k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tk1</span><span class="p">,</span> <span class="n">STK_SIZE</span><span class="p">)</span>
+    <span class="n">write_stk</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># i == 1 ... i == 16</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">ROUNDS</span><span class="p">:</span>
+        <span class="c1"># Tk1(i+1) = h(Tk1(i))</span>
+        <span class="n">stk_shuffle</span><span class="p">(</span><span class="n">tk1</span><span class="p">)</span>
+        <span class="n">xor_bytes</span><span class="p">(</span><span class="n">stk</span><span class="p">,</span> <span class="n">derived_k</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tk1</span><span class="p">,</span> <span class="n">STK_SIZE</span><span class="p">)</span>
+        <span class="n">write_stk</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">stks</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">sapphirepy</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">sapphirepy</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Oasis Protocol.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
