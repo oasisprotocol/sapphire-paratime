@@ -6,6 +6,8 @@ import { ethers } from 'hardhat';
 
 import { SigningTests__factory } from '../typechain-types/factories/contracts/tests';
 import { SigningTests } from '../typechain-types/contracts/tests/SigningTests';
+import * as sr25519 from 'micro-sr25519';
+import { getBytes, hexlify, keccak256 } from 'ethers';
 
 function randomBytesUnlike(len: number, orig: Buffer): Buffer {
   do {
@@ -205,7 +207,107 @@ describe('Signing', function () {
     );
   });
 
-  // TODO: implement Sr25519
+  it('sr25519', async () => {
+    // Try sr25519 (alg=6)
+    // 32 byte context, empty message
+    const sha256_kp = await se.testKeygen(6, randomBytes(32));
+    await testSignThenVerify(
+      se,
+      6,
+      sha256_kp,
+      randomBytes(32),
+      EMPTY_BUFFER,
+      32,
+      0,
+    );
+
+    // Key derivation from polkadot test cases
+    // See: https://github.com/polkadot-js/wasm/blob/10010830094e7d033bd11b16c5e3bc01a7045309/packages/wasm-crypto/src/rs/sr25519.rs#L176
+    const secretSeed = getBytes(
+      '0xfac7959dbfe72f052e5a0c3c8d6530f202b02fd8f9f5ca3580ec8deb7797479e',
+    );
+    const secretKey = sr25519.secretFromSeed(secretSeed);
+    const publicKey = sr25519.getPublicKey(secretKey);
+    expect(hexlify(publicKey)).eq(
+      '0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a',
+    );
+
+    // Known valid signature
+    const msg = new TextEncoder().encode('<Bytes>message to sign</Bytes>');
+    const sig = getBytes(
+      '0x48ce2c90e08651adfc8ecef84e916f6d1bb51ebebd16150ee12df247841a5437951ea0f9d632ca165e6ab391532e75e701be6a1caa88c8a6bcca3511f55b4183',
+    );
+    const sigSigner = getBytes(
+      '0xf84d048da2ddae2d9d8fd6763f469566e8817a26114f39408de15547f6d47805',
+    );
+
+    // Verify JS implementation matches polkadot test case signature
+    const isValid = sr25519.verify(msg, sig, sigSigner);
+    expect(isValid).eq(true);
+
+    const CONTEXT = new TextEncoder().encode('substrate');
+
+    // Verify on-chain implementation also works
+    const result = await se.testVerify(6, sigSigner, CONTEXT, msg, sig);
+    expect(result).eq(true);
+
+    // Test key generation on-chian matches JS implementation
+    const generatedKey = await se.testKeygen(6, secretSeed);
+    expect(hexlify(getBytes(generatedKey.secretKey).slice(0, 64))).eq(
+      hexlify(secretKey),
+    );
+    expect(generatedKey.publicKey).eq(hexlify(publicKey));
+
+    // 64 byte secret, appended with 32 byte public key
+    expect(getBytes(generatedKey.publicKey).length).eq(32);
+    expect(getBytes(generatedKey.secretKey).length).eq(96);
+    expect(hexlify(getBytes(generatedKey.secretKey).slice(64))).eq(
+      generatedKey.publicKey,
+    );
+
+    // JS can verify on-chain signed message
+    const onchainSigned = await se.testSign(
+      6,
+      generatedKey.secretKey,
+      CONTEXT,
+      msg,
+    );
+    const jsVerify = sr25519.verify(
+      msg,
+      getBytes(onchainSigned),
+      getBytes(generatedKey.publicKey),
+    );
+    expect(jsVerify).eq(true);
+    // And on-chain can verify on-chain signed message
+    expect(
+      await se.testVerify(
+        6,
+        generatedKey.publicKey,
+        CONTEXT,
+        msg,
+        onchainSigned,
+      ),
+    ).eq(true);
+
+    // JS roundtrip with on-chain generated keypair
+    const jsSigned = sr25519.sign(
+      getBytes(generatedKey.secretKey).slice(0, 64),
+      msg,
+    );
+    expect(sr25519.verify(msg, jsSigned, getBytes(generatedKey.publicKey))).eq(
+      true,
+    );
+
+    // on-chain verify JS signed message
+    const onchainVerify = await se.testVerify(
+      6,
+      generatedKey.publicKey,
+      CONTEXT,
+      msg,
+      jsSigned,
+    );
+    expect(onchainVerify).eq(true);
+  });
 
   it('Secp256r1 (Prehashed SHA256)', async () => {
     // Try Secp256r1 (alg=7)

@@ -10,7 +10,7 @@ pull:
 	docker pull $(SAPPHIRE_DEV_DOCKER)
 
 debug: build-debug
-	docker run --rm -ti -p8545:8545 -p8546:8546 -v $(ROOT_DIR)/target/debug/sapphire-paratime:/runtime.elf $(SAPPHIRE_DEV_DOCKER) -test-mnemonic -n 4
+	docker run --rm -ti -p8545:8545 -p8546:8546 -v $(ROOT_DIR)/target/debug/sapphire-paratime:/ronl.elf $(DOCKER_EXTRA_ARGS) $(SAPPHIRE_DEV_DOCKER) -test-mnemonic -n 4
 
 clean:
 	cargo clean

@@ -318,6 +318,9 @@ library Sapphire {
      * - `4` (`Secp256k1PrehashedKeccak256`)
      * - `5` (`Secp256k1PrehashedSha256`)
      *
+     * ##### sr25519: 1,000 gas
+     * - `6` (`sr25519`)
+     *
      * ##### Secp256r1: 4,000 gas
      * - `7` (`Secp256r1PrehashedSha256`)
      *
@@ -342,6 +345,11 @@ library Sapphire {
      * Public key: 49 bytes, compressed format (`0x02` or `0x03` prefix, then 48
      * byte X coordinate).
      * Secret key: 48 bytes
+     *
+     * ##### sr25519
+     *
+     * Public key: 32 bytes
+     * Secret key: 96 bytes (64 byte secret key, 32 byte public key)
      *
      * #### Example
      *
@@ -401,6 +409,7 @@ library Sapphire {
      *   (32 bytes) as context, empty message.
      * - `5` (`Secp256k1PrehashedSha256`): 3,000 gas, pre-existing hash (32
      *   bytes) as context, empty message.
+     * - `6` (`sr25519`): 1,500 gas, bytes (e.g. 'substrate) as context, arbitrary length message
      * - `7` (`Secp256r1PrehashedSha256`): 9,000 gas, pre-existing hash (32
      *   bytes) as context, empty message.
      * - `8` (`Secp384r1PrehashedSha384`): 43,200 gas, pre-existing hash (32
@@ -462,6 +471,7 @@ library Sapphire {
      * - `3` (`Secp256k1Oasis`): 3,000 gas
      * - `4` (`Secp256k1PrehashedKeccak256`): 3,000 gas
      * - `5` (`Secp256k1PrehashedSha256`): 3,000 gas
+     * - `6` (`sr25519`): 2,000 gas
      * - `7` (`Secp256r1PrehashedSha256`): 7,900 gas
      * - `8` (`Secp384r1PrehashedSha384`): 37,920 gas
      *
