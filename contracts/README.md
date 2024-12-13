@@ -34,8 +34,8 @@ contract RandomNumber {
 
 ## Documentation
 
-See the user's guide for [Sapphire](https://docs.oasis.io/dapp/sapphire/) and
-[OPL](https://docs.oasis.io/dapp/opl/).
+See the user's guide for [Sapphire](https://docs.oasis.io/build/sapphire/) and
+[OPL](https://docs.oasis.io/build/opl/).
 
 The generated API reference is hosted at
 [api.docs.oasis.io](https://api.docs.oasis.io/sol/sapphire-contracts).

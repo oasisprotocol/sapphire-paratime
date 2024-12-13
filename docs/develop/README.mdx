@@ -1,0 +1,116 @@
+---
+description: Develop new dApps on Sapphire
+---
+import DocCardList from '@theme/DocCardList';
+import {findSidebarItem} from '@site/src/sidebarUtils';
+
+# Develop on Sapphire
+
+As Sapphire is EVM-compatible, you can use the same dev tooling as you would
+when building on Ethereum. Additionally, we build tools to support you in
+creating secure and confidential dApps.
+
+Feel free to check out the [Concepts] page to get a better understanding of the
+transaction flow and the contract state.
+
+[Concepts]: ./concept.mdx
+
+## Contract Development
+
+Sapphire is programmable using any language that targets the EVM, such as Solidity,
+Fe or Vyper. If you prefer to use an Ethereum framework like Hardhat or Foundry,
+you can also use those with Sapphire; all you need to do is set your Web3 gateway URL.
+You can find the details of the Oasis Sapphire Web3 endpoints
+on the [Network information] page.
+
+[Network information]: ../network.mdx#rpc-endpoints
+
+### Features
+
+<DocCardList items={[
+    findSidebarItem('/build/sapphire/develop/deployment'),
+    findSidebarItem('/build/sapphire/develop/gasless'),
+    findSidebarItem('/build/sapphire/develop/security'),
+    findSidebarItem('/build/sapphire/develop/authentication'),
+]} />
+
+[Randomness, Subcalls and More Precompiles][sapphire-contracts] in the contracts API reference
+
+[sapphire-contracts]: https://api.docs.oasis.io/sol/sapphire-contracts
+
+## Frontend Development
+
+To connect your frontend to your smart contracts, see the [Browser] chapter.
+
+[Browser]: ./browser.md
+
+### More Frontend Frameworks
+
+We support the common frontend libraries with the v2 client:
+
+| Framework               | Package                                           | API Reference     | GitHub                  |
+| ----------------------- | ------------------------------------------------- | ----------------- | ----------------------- |
+| **[Ethers v6][ethers]** | [@oasisprotocol/sapphire-ethers-v6][ethers-npmjs] | [API][ethers-api] | [GitHub][ethers-github] |
+| **[Viem][viem]**        | [@oasisprotocol/sapphire-viem-v2][viem-npmjs]     | [API][viem-api]   | [GitHub][viem-github]   |
+| **[Wagmi][wagmi]**      | [@oasisprotocol/sapphire-wagmi-v2][wagmi-npmjs]   | [API][wagmi-api]  | [GitHub][wagmi-github]  |
+
+[ethers]: https://docs.ethers.org/v6/
+[ethers-npmjs]: https://www.npmjs.com/package/@oasisprotocol/sapphire-ethers-v6
+[ethers-api]: https://api.docs.oasis.io/js/sapphire-ethers-v6
+[ethers-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/ethers-v6
+[viem]: https://viem.sh/
+[viem-npmjs]: https://www.npmjs.com/package/@oasisprotocol/sapphire-viem-v2
+[viem-api]: https://api.docs.oasis.io/js/sapphire-viem-v2
+[viem-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/viem-v2
+[wagmi]: https://wagmi.sh/
+[wagmi-npmjs]: https://www.npmjs.com/package/@oasisprotocol/sapphire-wagmi-v2
+[wagmi-api]: https://api.docs.oasis.io/js/sapphire-wagmi-v2
+[wagmi-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2
+
+## Backend Development
+
+If you want to connect and execute transactions from your backend.
+Sapphire has three clients in different programming languages:
+
+| Language        | Package                                            | API Reference | GitHub              |
+| --------------- | -------------------------------------------------- | ------------- | ------------------- |
+| **Javascript**  | [@oasisprotocol/sapphire-paratime][sapphire-npmjs] | [API][js-api] | [GitHub][js-github] |
+| **Go**          | [@oasisprotocol/sapphire-paratime][go-pkg]         | [API][go-api] | [GitHub][go-github] |
+| **Python**      |                                                    | [API][py-api] | [GitHub][py-github] |
+
+[sapphire-npmjs]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
+[go-pkg]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/clients/go
+[js-api]: https://api.docs.oasis.io/js/sapphire-paratime
+[go-api]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/clients/go
+[py-api]: https://api.docs.oasis.io/py/sapphirepy/
+[js-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/js/README.md
+[go-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/go/README.md
+[Py-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/py/README.md
+
+## Testing 
+
+[Test][testing] confidential contracts with Hardhat or Ethers.
+
+[testing]: ./testing.md
+
+## Examples
+
+See our [Examples] page for demo dApps that bring all the above together.
+
+[examples]: ../examples.mdx
+
+## Tools and Services
+
+<DocCardList items={[
+    findSidebarItem('/build/tools/abi-playground'),
+    findSidebarItem('/build/tools/localnet'),
+    findSidebarItem('/build/tools/remix'),
+    findSidebarItem('/build/tools/verification'),
+    findSidebarItem('/build/tools/band'),
+]} />
+
+Should you have any questions or ideas to share, feel free to reach out to us
+on [discord and other social media channels][social-media].
+
+[social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
+

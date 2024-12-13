@@ -65,7 +65,7 @@ This repository includes all relevant Sapphire and dependencies organized into
 the following directories:
 
 - [`clients`](./clients): the Go, Python and JavaScript/TypeScript clients
-- [`contracts`](./contracts): Sapphire and [OPL](https://docs.oasis.io/dapp/opl/) smart contracts
+- [`contracts`](./contracts): Sapphire and [OPL](https://docs.oasis.io/build/opl/) smart contracts
 - [`docs`](./docs): topic-oriented Sapphire documentation
 - [`examples`](./examples/): sample code snippets in popular Ethereum
 development environments
@@ -76,7 +76,7 @@ development environments
 ## Documentation
 
 The Sapphire documentation is deployed as part of the official
-[Oasis documentation](https://docs.oasis.io/dapp/sapphire/). To make changes
+[Oasis documentation](https://docs.oasis.io/build/sapphire/). To make changes
 visible on the docs website:
 
 1. Merge any changes in the `docs` folder to the `main` branch.

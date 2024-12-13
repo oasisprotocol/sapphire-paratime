@@ -44,12 +44,11 @@ access them!**
 
 The contract in the Hardhat boilerplate is ERC-20-compatible and emits the
 `transfer` event. If your wish to preserve confidentiality, you can comment
-out [line 66]. Read [the guide](guide.mdx#contract-logs) to learn more.
+out [line 66]. Read the [concept] chapter to learn more.
 
 :::
 
-[`wagmi`]: https://wagmi.sh/
-[`viem`]: https://viem.sh/
+[concept]: ./concept.mdx#contract-logs
 
 ## Signing Sapphire Calls and Transactions in Browser
 
@@ -155,7 +154,7 @@ npm run start
 If all goes well the web server will spin up and your browser should
 automatically open `http://localhost:3000`.
 
-![Hardhat boilerplate frontend](images/hardhat-boilerplate-frontend1.png)
+![Hardhat boilerplate frontend](../images/hardhat-boilerplate-frontend1.png)
 
 Go ahead and connect the wallet. If you haven't done it yet, you will have
 to add the [Sapphire ParaTime Testnet network to your
@@ -163,13 +162,13 @@ Metamask][sapphire-testnet]. Once connected, the frontend will make an unsigned
 call to the `balanceOf` view and show you the amount of `MHT`s in your selected
 Metamask account.
 
-![MHT balance of your account](images/hardhat-boilerplate-frontend2.png)
+![MHT balance of your account](../images/hardhat-boilerplate-frontend2.png)
 
 Next, let's transfer some `MHT`s. Fill in the amount, the address and hit the
 *Transfer* button. Metamask will show you the popup to sign and submit the
 transfer transaction. Once confirmed, Metamask will both **sign and encrypt** the transaction.
 
-![Sign and encrypt the transfer transaction](images/hardhat-boilerplate-frontend3.png)
+![Sign and encrypt the transfer transaction](../images/hardhat-boilerplate-frontend3.png)
 
 Once the transaction is processed, you will get a notification from Metamask
 and the balance in the dApp will be updated.
@@ -207,14 +206,13 @@ we recommend that you check out the official [Oasis starter] files.
 :::
 
 [block explorer]: https://explorer.oasis.io/testnet/sapphire/tx/0x3303dea5d48291d1564cad573f21fc71fcbdc2b862e17e056287fd9207e3bc53
-[guide-transaction-calls]: guide.mdx#transactions--calls
+[guide-transaction-calls]: ./concept.mdx#transactions--calls
 [Hardhat boilerplate repo]: https://github.com/NomicFoundation/hardhat-boilerplate
 [Hardhat boilerplate]: https://hardhat.org/tutorial/boilerplate-project
-[Hardhat tutorial]: https://hardhat.org/tutorial
 [line 66]: https://github.com/NomicFoundation/hardhat-boilerplate/blob/13bd712c1285b2de572f14d20e6a750ae08565c0/contracts/Token.sol#L66
-[quickstart]: quickstart.mdx#add-the-sapphire-testnet-to-hardhat
-[sapphire-testnet]: ./network.mdx#rpc-endpoints
+[quickstart]: ../quickstart.mdx#add-the-sapphire-testnet-to-hardhat
+[sapphire-testnet]: ../network.mdx#rpc-endpoints
 [Sapphire ParaTime examples]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat-boilerplate
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
 [pnpm]: https://pnpm.io
-[TEST tokens]: quickstart.mdx#get-some-sapphire-testnet-tokens
+[TEST tokens]: ../quickstart.mdx#get-some-sapphire-testnet-tokens

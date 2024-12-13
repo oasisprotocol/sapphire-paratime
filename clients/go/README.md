@@ -6,7 +6,7 @@
 style.
 
 [@oasisprotocol/sapphire-paratime]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/go/
-[Sapphire ParaTime]: https://docs.oasis.io/dapp/sapphire
+[Sapphire ParaTime]: https://docs.oasis.io/build/sapphire
 
 ## Building
 
@@ -96,5 +96,5 @@ _ = c.SendTransaction(ctx, signedTx)
 ## See Also
 
 - [Oasis Testnet Faucet](https://faucet.testnet.oasis.io/)
-- [Creating dapps for Sapphire](https://docs.oasis.io/dapp/sapphire/quickstart)
+- [Creating dapps for Sapphire](https://docs.oasis.io/build/sapphire/quickstart)
 - [How to Transfer ROSE into an EVM ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime/)
