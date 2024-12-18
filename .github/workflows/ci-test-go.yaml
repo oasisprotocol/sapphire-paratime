@@ -26,7 +26,7 @@ jobs:
           - 8545:8545
           - 8546:8546
         env:
-          OASIS_DEPOSIT_BINARY: /oasis-deposit -test-mnemonic -n 2
+          OASIS_DOCKER_START_EXPLORER: no
         options: >-
           --rm
           --health-cmd="test -f /CONTAINER_READY"
