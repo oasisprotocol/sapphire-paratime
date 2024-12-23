@@ -19,9 +19,9 @@ recipient contract decodes the meta-transaction, verifies both signatures and
 executes the original transaction.
 
 Oasis Sapphire supports two transaction relaying methods: The **on-chain
-signer** exposes the Oasis-specific contract state encryption functionality
-while the **gas station network** method is a standardized approach known in
-other blockchains as well.
+signer** is trustless and utilizes the Oasis-specific contract state encryption
+while the **gas station network** service is known from other blockchains as
+well.
 
 :::caution
 
@@ -34,11 +34,15 @@ features such as the browser support are not fully implemented yet.
 
 ## On-Chain Signer
 
-The on-chain signer is a smart contract which receives the user's transaction,
-checks whether the transaction is valid, wraps it into a meta-transaction
-(which includes paying for the transaction fee) and returns it back to the user
-in [EIP-155] format. These steps are executed as a confidential call. Finally,
-the user submits the generated transaction to the network.
+The on-chain signer is a smart contract which:
+1. receives the user's transaction,
+2. checks whether the transaction is valid,
+3. wraps it into a meta-transaction (which includes paying for the transaction
+   fee) and
+4. returns it back to the user in the [EIP-155] format.
+
+The steps above are executed as a confidential read-only call. Finally, the user
+then submits the obtained transaction to the network.
 
 ![Diagram of the On-Chain Signing](images/gasless-on-chain-signer.svg)
 
@@ -77,7 +81,8 @@ private key containing enough balance to cover transaction fees should be
 provided in the constructor.
 
 ```solidity
-import {EIP155Signer} from "@oasisprotocol/sapphire-contracts/contracts/EIP155Signer.sol";
+import { encryptCallData } from "@oasisprotocol/sapphire-contracts/contracts/CalldataEncryption.sol";
+import { EIP155Signer } from "@oasisprotocol/sapphire-contracts/contracts/EIP155Signer.sol";
 
 struct EthereumKeypair {
   address addr;
@@ -121,7 +126,7 @@ contract Gasless {
           gasLimit: 250000,
           to: address(this),
           value: 0,
-          data: abi.encodeCall(this.proxy, data),
+          data: encryptCallData(abi.encodeCall(this.proxy, data)),
           chainId: block.chainid
         })
       );
@@ -149,9 +154,11 @@ contract Gasless {
 :::tip
 
 The snippet above only runs on Sapphire Mainnet, Testnet or Localnet.
-`EIP155Signer.sign()` is not supported on other EVM chains.
+[`EIP155Signer.sign()`] is not supported on other EVM chains.
 
 :::
+
+[`EIP155Signer.sign()`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/EIP155Signer.sol/library.EIP155Signer.html#sign
 
 ### Simple Gasless Commenting dApp
 
@@ -214,9 +221,15 @@ you must consider the following:
 
 #### Confidentiality
 
-Both the inner- and the meta-transaction are stored on-chain unencrypted. Use
-`Sapphire.encrypt()` and `Sapphire.decrypt()` call on the inner-transaction with
-an encryption key generated and stored inside a confidential contract state.
+The [`encryptCallData()`] helper above will generate an ephemeral key and encrypt
+the transaction's calldata. Omit this call to generate a plain transaction. You
+can also explicitly encrypt specific function arguments of the inner-transaction
+by calling [`Sapphire.encrypt()`] using a private key stored somewhere in your
+smart contract and then [`Sapphire.decrypt()`] when executing the transaction.
+
+[`encryptCallData()`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/CalldataEncryption.sol/function.encryptCallData.html#encryptcalldatabytes
+[`Sapphire.encrypt()`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/Sapphire.sol/library.Sapphire.html#encrypt-1
+[`Sapphire.decrypt()`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/Sapphire.sol/library.Sapphire.html#decrypt-1
 
 #### Gas Cost and Gas Limit
 
