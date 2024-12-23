@@ -25,6 +25,7 @@
     "@nomicfoundation/hardhat-verify": "^2.0.2",
     "@oasisprotocol/sapphire-contracts": "workspace:^",
     "@oasisprotocol/sapphire-hardhat": "workspace:^",
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/mocha": "^9.1.1",

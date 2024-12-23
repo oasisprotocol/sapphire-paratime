@@ -3,6 +3,10 @@ import { ethers } from 'hardhat';
 import { parseEther, Wallet } from 'ethers';
 import { CommentBox, Gasless } from '../typechain-types';
 import { EthereumKeypairStruct } from '../typechain-types/contracts/Gasless';
+import {
+  isCalldataEnveloped,
+  wrapEthereumProvider,
+} from '@oasisprotocol/sapphire-paratime';
 
 describe('CommentBox', function () {
   let commentBox: CommentBox;
@@ -33,55 +37,85 @@ describe('CommentBox', function () {
     console.log('    . gasless pubkey', wallet.address);
   });
 
-  it('Should comment', async function () {
-    this.timeout(10000);
+  // Request and send a gasless transaction. Set up sapphire-localnet image to
+  // run this test:
+  // docker run -it -p8544-8548:8544-8548 ghcr.io/oasisprotocol/sapphire-localnet
+  async function commentGasless(
+    comment: string,
+    plainProxy: boolean,
+    unwrappedProvider: boolean,
+  ) {
+    const provider = unwrappedProvider
+      ? ethers.provider
+      : wrapEthereumProvider(ethers.provider);
 
+    const innercall = commentBox.interface.encodeFunctionData('comment', [
+      comment,
+    ]);
+
+    const prevCommentCount = await commentBox.commentCount();
+    let tx: string;
+    if (plainProxy) {
+      tx = await gasless.makeProxyTxPlain(
+        await commentBox.getAddress(),
+        innercall,
+      );
+    } else {
+      tx = await gasless.makeProxyTx(await commentBox.getAddress(), innercall);
+    }
+
+    const response = await provider.broadcastTransaction(tx);
+    expect(isCalldataEnveloped(response.data)).eq(!plainProxy);
+    await response.wait();
+
+    const receipt = await provider.getTransactionReceipt(response.hash);
+    if (!receipt || receipt.status != 1) throw new Error('tx failed');
+
+    expect(await commentBox.commentCount()).eq(prevCommentCount + BigInt(1));
+  }
+
+  it('Should comment', async function () {
     const prevCommentCount = await commentBox.commentCount();
 
     const tx = await commentBox.comment('Hello, world!');
     await tx.wait();
 
-    // Sapphire Mainnet/Testnet: Wait a few moments for nodes to catch up.
-    const chainId = (await ethers.provider.getNetwork()).chainId;
-    if (chainId == BigInt(23294) || chainId == BigInt(23295)) {
-      await new Promise((r) => setTimeout(r, 6_000));
-    }
-
     expect(await commentBox.commentCount()).eq(prevCommentCount + BigInt(1));
   });
 
-  it('Should comment gasless', async function () {
-    this.timeout(10000);
-
-    const provider = ethers.provider;
-
-    // You can set up sapphire-localnet image and run the test like this:
-    // docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    // npx hardhat test --grep proxy --network sapphire-localnet
-    const chainId = (await provider.getNetwork()).chainId;
-    if (chainId == BigInt(1337)) {
+  it('Should comment gasless (encrypted tx, wrapped client)', async function () {
+    if ((await ethers.provider.getNetwork()).chainId == BigInt(1337)) {
       this.skip();
     }
 
-    const innercall = commentBox.interface.encodeFunctionData('comment', [
-      'Hello, free world!',
-    ]);
+    await commentGasless('Hello, c10l world', false, false);
+  });
 
-    // Sapphire Mainnet/Testnet: Wait a few moments for nodes to catch up.
-    if (chainId == BigInt(23294) || chainId == BigInt(23295)) {
-      await new Promise((r) => setTimeout(r, 6_000));
+  it('Should comment gasless (encrypted tx, unwrapped client)', async function () {
+    if ((await ethers.provider.getNetwork()).chainId == BigInt(1337)) {
+      this.skip();
     }
 
-    const tx = await gasless.makeProxyTx(
-      await commentBox.getAddress(),
-      innercall,
-    );
+    await commentGasless('Hello, c10l world', false, true);
+  });
 
-    // TODO: https://github.com/oasisprotocol/sapphire-paratime/issues/179
-    const response = await provider.broadcastTransaction(tx);
-    await response.wait();
+  it('Should comment gasless (plain tx, wrapped client)', async function () {
+    // Set up sapphire-localnet image to run this test:
+    // docker run -it -p8544-8548:8544-8548 ghcr.io/oasisprotocol/sapphire-localnet
+    if ((await ethers.provider.getNetwork()).chainId == BigInt(1337)) {
+      this.skip();
+    }
 
-    const receipt = await provider.getTransactionReceipt(response.hash);
-    if (!receipt || receipt.status != 1) throw new Error('tx failed');
+    await commentGasless('Hello, plain world', true, false);
+  });
+
+  it('Should comment gasless (plain tx, unwrapped client)', async function () {
+    // Set up sapphire-localnet image to run this test:
+    // docker run -it -p8544-8548:8544-8548 ghcr.io/oasisprotocol/sapphire-localnet
+    if ((await ethers.provider.getNetwork()).chainId == BigInt(1337)) {
+      this.skip();
+    }
+
+    await commentGasless('Hello, plain world', true, true);
   });
 });
