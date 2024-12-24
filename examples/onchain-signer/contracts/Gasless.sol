@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
+import {encryptCallData} from "@oasisprotocol/sapphire-contracts/contracts/CalldataEncryption.sol";
 import {EIP155Signer} from "@oasisprotocol/sapphire-contracts/contracts/EIP155Signer.sol";
 
 struct EthereumKeypair {
@@ -25,8 +26,27 @@ contract Gasless {
         bytes memory innercall
     ) external view returns (bytes memory output) {
         bytes memory data = abi.encode(innercallAddr, innercall);
+        return
+            EIP155Signer.sign(
+                kp.addr,
+                kp.secret,
+                EIP155Signer.EthTx({
+                    nonce: kp.nonce,
+                    gasPrice: 100_000_000_000,
+                    gasLimit: 250000,
+                    to: address(this),
+                    value: 0,
+                    data: encryptCallData(abi.encodeCall(this.proxy, data)),
+                    chainId: block.chainid
+                })
+            );
+    }
 
-        // Call will invoke proxy().
+    function makeProxyTxPlain(
+        address innercallAddr,
+        bytes memory innercall
+    ) external view returns (bytes memory output) {
+        bytes memory data = abi.encode(innercallAddr, innercall);
         return
             EIP155Signer.sign(
                 kp.addr,

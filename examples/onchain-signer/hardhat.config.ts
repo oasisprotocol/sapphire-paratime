@@ -26,7 +26,17 @@ const config: HardhatUserConfig = {
     'sapphire-testnet': { ...sapphireTestnet, accounts },
     'sapphire-localnet': { ...sapphireLocalnet, accounts },
   },
-  solidity: '0.8.20',
+  solidity: {
+    version: '0.8.20',
+    settings: {
+      // XXX: Needs to match https://github.com/oasisprotocol/sapphire-paratime/blob/main/contracts/hardhat.config.ts
+      optimizer: {
+        enabled: true,
+        runs: (1 << 32) - 1,
+      },
+      viaIR: true,
+    },
+  },
 };
 
 export default config;
