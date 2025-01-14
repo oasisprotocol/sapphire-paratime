@@ -229,7 +229,7 @@ function _chainName2ChainId(bytes32 name) pure returns (uint256) {
     if (name == "sapphire-testnet") return 0x5aff;
     if (name == "polygon-mumbai") return 80001;
     if (name == "avalanche") return 43114;
-    if (name == "avalanche-fuji") return 43313;
+    if (name == "avalanche-fuji") return 43113;
     if (name == "arbitrum-testnet") return 0x66eeb;
     return 0;
 }
