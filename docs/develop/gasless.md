@@ -1,5 +1,5 @@
 ---
-description: Submitting transactions without paying for fees
+description: Sign and submit transactions without paying for fees
 ---
 
 # Gasless Transactions
@@ -35,6 +35,7 @@ features such as the browser support are not fully implemented yet.
 ## On-Chain Signer
 
 The on-chain signer is a smart contract which:
+
 1. receives the user's transaction,
 2. checks whether the transaction is valid,
 3. wraps it into a meta-transaction (which includes paying for the transaction
@@ -44,7 +45,7 @@ The on-chain signer is a smart contract which:
 The steps above are executed as a confidential read-only call. Finally, the user
 then submits the obtained transaction to the network.
 
-![Diagram of the On-Chain Signing](images/gasless-on-chain-signer.svg)
+![Diagram of the On-Chain Signing](../images/gasless-on-chain-signer.svg)
 
 ### EIP155Signer
 
@@ -271,7 +272,6 @@ creators can close the poll.
 
 [demo-voting]: https://github.com/oasisprotocol/demo-voting
 [demo-voting-playground]: https://playground.oasis.io/demo-voting
-[dao-opl]: https://github.com/oasisprotocol/docs/blob/main/docs/dapp/opl/host.md
 [EIP-155]: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
 
 ## Gas Station Network
@@ -280,7 +280,7 @@ creators can close the poll.
 Sapphire in a forked `@oasislabs/opengsn-cli` package. The diagram below
 illustrates a flow for signing a transaction by using a GSN[^1].
 
-![Diagram of the Gas Station Network Flow](images/gasless-gsn-flow.jpg)
+![Diagram of the Gas Station Network Flow](../images/gasless-gsn-flow.jpg)
 
 [^1]: The GSN flow diagram is courtesy of [OpenGSN documentation][opengsn-docs].
 
@@ -374,6 +374,7 @@ requests and forward them to the relay hub on Sapphire Testnet.
 
 We can test whether a relayed request can be forwarded and processed correctly.
 Scroll up to find the GSN deployment response and use the following parameters:
+
 - `Forwarder` as `--to`,
 - `Paymaster` as `--paymaster`,
 - your account address as `--from`

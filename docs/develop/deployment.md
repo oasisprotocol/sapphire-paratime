@@ -1,5 +1,5 @@
 ---
-description: Deploying upgradable and deterministic contracts
+description: Deploying upgradable and deterministic contracts with proxies
 ---
 
 # Deployment Patterns

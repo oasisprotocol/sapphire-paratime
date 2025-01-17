@@ -11,7 +11,7 @@ The Sapphire wrapper with automatically encrypt the `eth_call`, `eth_estimateGas
 and `eth_signTransaction` JSON-RPC calls
 
 [@oasisprotocol/sapphire-paratime]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
-[sapphire paratime]: https://docs.oasis.io/dapp/sapphire/
+[sapphire paratime]: https://docs.oasis.io/build/sapphire/
 
 _If your dapp doesn't port in under 10 minutes, it's a bug!_<br />
 If you have more than a little trouble, please file an issue.<br />
@@ -59,5 +59,5 @@ signed queries manually using the `overrides` parameter to `SignedCallDataPack.m
 ## See Also
 
 - [Oasis Testnet Faucet](https://faucet.testnet.oasis.io/)
-- [Creating dapps for Sapphire](https://docs.oasis.io/dapp/sapphire/quickstart)
+- [Creating dapps for Sapphire](https://docs.oasis.io/build/sapphire/quickstart)
 - [How to Transfer ROSE into an EVM ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime/)

@@ -1,5 +1,5 @@
 ---
-description: "Secure dApps: Recipes for Confidentiality"
+description: "Recipes for Confidentiality: Security considerations when writing confidential contracts"
 ---
 
 # Security

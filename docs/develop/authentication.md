@@ -74,7 +74,7 @@ which created the contract, calling `isOwner` will return:
  * `false`, with `sapphire.wrap` but without an attached signer
  * `true`, with `sapphire.wrap` and an attached signer
  * `true`, if called via the contract which created it
-* `true`, if called via transaction
+ * `true`, if called via transaction
 
 ## Caching Signed Queries
 
