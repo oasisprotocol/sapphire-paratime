@@ -151,7 +151,7 @@ jobs:
           pip install -r requirements.dev.txt
           pip install sphinx myst-parser
           make wheel
-          pip install dist/sapphire.py-*.whl
+          pip install dist/sapphire_py-*.whl
 
       - name: Build docs
         run: |
