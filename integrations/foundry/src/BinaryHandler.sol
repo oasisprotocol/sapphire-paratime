@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
+
 import "./Precompiles.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {console} from "forge-std/console.sol";
@@ -22,36 +23,36 @@ contract BinaryHandler is Precompiles {
     CoreCurrentEpochPrecompile coreCurrentEpochPrecompile;
     RoflIsAuthorizedOriginPrecompile roflIsAuthorizedOriginPrecompile;
     DecodePrecompile decodePrecompile;
-    
+
     constructor() {
         // Deploy typed contracts for each precompile
         vm.etch(RANDOM_BYTES, type(RandomBytesPrecompile).runtimeCode);
         vm.label(RANDOM_BYTES, "RANDOM_BYTES");
-        
+
         vm.etch(X25519_DERIVE, type(X25519DerivePrecompile).runtimeCode);
         vm.label(X25519_DERIVE, "X25519_DERIVE");
-        
+
         vm.etch(CURVE25519_COMPUTE_PUBLIC, type(Curve25519ComputePublicPrecompile).runtimeCode);
         vm.label(CURVE25519_COMPUTE_PUBLIC, "CURVE25519_COMPUTE_PUBLIC");
-        
+
         vm.etch(DEOXYSII_SEAL, type(DeoxysiiSealPrecompile).runtimeCode);
         vm.label(DEOXYSII_SEAL, "DEOXYSII_SEAL");
-        
+
         vm.etch(DEOXYSII_OPEN, type(DeoxysiiOpenPrecompile).runtimeCode);
         vm.label(DEOXYSII_OPEN, "DEOXYSII_OPEN");
-        
+
         vm.etch(KEYPAIR_GENERATE, type(KeypairGeneratePrecompile).runtimeCode);
         vm.label(KEYPAIR_GENERATE, "KEYPAIR_GENERATE");
-        
+
         vm.etch(SIGN, type(SignPrecompile).runtimeCode);
         vm.label(SIGN, "SIGN");
-        
+
         vm.etch(VERIFY, type(VerifyPrecompile).runtimeCode);
         vm.label(VERIFY, "VERIFY");
 
         vm.etch(GAS_USED, type(GasUsedPrecompile).runtimeCode);
         vm.label(GAS_USED, "GAS_USED");
-        
+
         vm.etch(PAD_GAS, type(PadGasPrecompile).runtimeCode);
         vm.label(PAD_GAS, "PAD_GAS");
 
@@ -59,39 +60,23 @@ contract BinaryHandler is Precompiles {
         vm.label(SUBCALL, "SUBCALL");
 
         vm.etch(
-            address(bytes20(keccak256(bytes(CORE_CALLDATAPUBLICKEY)))), 
+            address(bytes20(keccak256(bytes(CORE_CALLDATAPUBLICKEY)))),
             type(CoreCalldataPublicKeyPrecompile).runtimeCode
         );
-        vm.label(
-            address(bytes20(keccak256(bytes(CORE_CALLDATAPUBLICKEY)))), 
-            "CORE_CALLDATAPUBLICKEY"
-        );
-        
-        vm.etch(
-            address(bytes20(keccak256(bytes(CORE_CURRENT_EPOCH)))), 
-            type(CoreCurrentEpochPrecompile).runtimeCode
-        );
-        vm.label(
-            address(bytes20(keccak256(bytes(CORE_CURRENT_EPOCH)))), 
-            "CORE_CURRENT_EPOCH"
-        );
-        
-        vm.etch(
-            address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))), 
-            type(RoflIsAuthorizedOriginPrecompile).runtimeCode
-        );
-        vm.label(
-            address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))), 
-            "ROFL_IS_AUTHORIZED_ORIGIN"
-        );
+        vm.label(address(bytes20(keccak256(bytes(CORE_CALLDATAPUBLICKEY)))), "CORE_CALLDATAPUBLICKEY");
+
+        vm.etch(address(bytes20(keccak256(bytes(CORE_CURRENT_EPOCH)))), type(CoreCurrentEpochPrecompile).runtimeCode);
+        vm.label(address(bytes20(keccak256(bytes(CORE_CURRENT_EPOCH)))), "CORE_CURRENT_EPOCH");
 
         vm.etch(
-            address(bytes20(keccak256(bytes("0x987654321098765432109876543210")))), 
-            type(DecodePrecompile).runtimeCode
+            address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))),
+            type(RoflIsAuthorizedOriginPrecompile).runtimeCode
         );
-        vm.label(
-            address(bytes20(keccak256(bytes("0x987654321098765432109876543210")))), 
-            "DECODE"
+        vm.label(address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))), "ROFL_IS_AUTHORIZED_ORIGIN");
+
+        vm.etch(
+            address(bytes20(keccak256(bytes("0x987654321098765432109876543210")))), type(DecodePrecompile).runtimeCode
         );
+        vm.label(address(bytes20(keccak256(bytes("0x987654321098765432109876543210")))), "DECODE");
     }
 }

@@ -6,8 +6,8 @@ import {Vm} from "forge-std/Vm.sol";
 import {console} from "forge-std/console.sol";
 
 import "../src/TestCalldataEncryption.sol";
-import "../lib/sapphire-paratime/contracts/contracts/Subcall.sol";
-import "../lib/sapphire-paratime/contracts/contracts/Sapphire.sol";
+import "../lib/contracts/Subcall.sol";
+// import "../lib/contracts/Sapphire.sol";
 import "./BinaryHandler.sol";
 import "./Counter.sol";
 

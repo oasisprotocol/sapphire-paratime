@@ -2,9 +2,9 @@
 all: build test
 
 build:
-	forge install foundry-rs/forge-std --no-commit --no-git
-	forge install oasisprotocol/sapphire-paratime --no-commit --no-git
-	cd src/precompiles && cargo +nightly build --release
+	# forge install foundry-rs/forge-std --no-commit --no-git
+	# cp -r ../../contracts/contracts/ lib/contracts
+	# cd src/precompiles && cargo +nightly build --release
 
 test:
 	forge test

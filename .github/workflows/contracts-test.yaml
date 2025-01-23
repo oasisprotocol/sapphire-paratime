@@ -53,19 +53,6 @@ jobs:
         run: pnpm install
       - name: Build
         run: make -C clients/js build
-      - name: Install libclang-dev
-        run: sudo apt-get update && sudo apt-get install -y libclang-dev
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-      - name: Install Rustup
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-      - name: Install Rust nightly
-        run: rustup toolchain install nightly
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
       - uses: JarvusInnovations/background-action@v1
         name: RPC proxy will error if non-encrypted calls are made
         with:

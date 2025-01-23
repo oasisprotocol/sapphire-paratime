@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import { Sapphire } from "../lib/sapphire-paratime/contracts/contracts/Sapphire.sol";
-import { encryptCallData } from "../lib/sapphire-paratime/contracts/contracts/CalldataEncryption.sol";
-import { EIP155Signer } from "../lib/sapphire-paratime/contracts/contracts/EIP155Signer.sol";
+import {Sapphire} from "../lib/contracts/Sapphire.sol";
+import {encryptCallData} from "../lib//contracts/CalldataEncryption.sol";
+import {EIP155Signer} from "../lib/contracts/EIP155Signer.sol";
 
 contract TestCalldataEncryption {
     function testEncryptCallData(
@@ -25,10 +25,7 @@ contract TestCalldataEncryption {
         uint64 gasLimit,
         address myAddr,
         bytes32 myKey
-    )
-        external view
-        returns (bytes memory)
-    {
+    ) external view returns (bytes memory) {
         EIP155Signer.EthTx memory theTx = EIP155Signer.EthTx({
             nonce: nonce,
             gasPrice: gasPrice,
@@ -44,9 +41,7 @@ contract TestCalldataEncryption {
 
     event ExampleEvent(bytes);
 
-    function example(bytes calldata in_calldata)
-        external
-    {
+    function example(bytes calldata in_calldata) external {
         emit ExampleEvent(in_calldata);
     }
 }

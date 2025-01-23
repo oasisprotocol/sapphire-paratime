@@ -17,7 +17,10 @@ contract RandomBytesPrecompile {
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // X25519 Derive Precompile
@@ -32,7 +35,10 @@ contract X25519DerivePrecompile {
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Deoxysii Seal Precompile
@@ -40,14 +46,18 @@ contract DeoxysiiSealPrecompile {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
 
     fallback(bytes calldata input) external returns (bytes memory) {
-        (bytes32 key, bytes32 nonce, bytes memory plaintext, bytes memory ad) = abi.decode(input, (bytes32, bytes32, bytes, bytes));
+        (bytes32 key, bytes32 nonce, bytes memory plaintext, bytes memory ad) =
+            abi.decode(input, (bytes32, bytes32, bytes, bytes));
         bytes memory params = abi.encode(key, nonce, plaintext, ad);
         string[] memory inputs = new string[](2);
         inputs[0] = "src/precompiles/target/release/deoxysii_seal";
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Deoxysii Open Precompile
@@ -55,14 +65,18 @@ contract DeoxysiiOpenPrecompile {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
 
     fallback(bytes calldata input) external returns (bytes memory) {
-        (bytes32 key, bytes32 nonce, bytes memory ciphertext, bytes memory ad) = abi.decode(input, (bytes32, bytes32, bytes, bytes));
+        (bytes32 key, bytes32 nonce, bytes memory ciphertext, bytes memory ad) =
+            abi.decode(input, (bytes32, bytes32, bytes, bytes));
         bytes memory params = abi.encode(key, nonce, ciphertext, ad);
         string[] memory inputs = new string[](2);
         inputs[0] = "src/precompiles/target/release/deoxysii_open";
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Curve25519 Compute Public Precompile
@@ -76,7 +90,10 @@ contract Curve25519ComputePublicPrecompile {
         inputs[1] = vm.toString(abi.encodePacked(privateKey));
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Keypair Generate Precompile
@@ -91,7 +108,10 @@ contract KeypairGeneratePrecompile {
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Sign Precompile
@@ -99,14 +119,18 @@ contract SignPrecompile {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
 
     fallback(bytes calldata input) external returns (bytes memory) {
-        (uint256 sigType, bytes memory privateKey, bytes memory context, bytes memory message) = abi.decode(input, (uint256, bytes, bytes, bytes));
+        (uint256 sigType, bytes memory privateKey, bytes memory context, bytes memory message) =
+            abi.decode(input, (uint256, bytes, bytes, bytes));
         bytes memory params = abi.encode(sigType, privateKey, context, message);
         string[] memory inputs = new string[](2);
         inputs[0] = "src/precompiles/target/release/sign";
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Verify Precompile
@@ -114,7 +138,7 @@ contract VerifyPrecompile {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
 
     fallback(bytes calldata input) external returns (bytes memory) {
-        (uint256 sigType, bytes memory publicKey, bytes memory context, bytes memory message, bytes memory signature) = 
+        (uint256 sigType, bytes memory publicKey, bytes memory context, bytes memory message, bytes memory signature) =
             abi.decode(input, (uint256, bytes, bytes, bytes, bytes));
         bytes memory params = abi.encode(sigType, publicKey, context, message, signature);
         string[] memory inputs = new string[](2);
@@ -122,7 +146,10 @@ contract VerifyPrecompile {
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Gas Used Precompile
@@ -135,7 +162,10 @@ contract GasUsedPrecompile {
         inputs[1] = vm.toString(bytes(""));
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Pad Gas Precompile
@@ -149,7 +179,10 @@ contract PadGasPrecompile {
         inputs[1] = vm.toString(abi.encode(target));
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Subcall Precompile
@@ -166,9 +199,11 @@ contract SubcallPrecompile {
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
-}
 
+    receive() external payable {
+        revert("No ether accepted");
+    }
+}
 
 // Core Calldata Public Key Precompile
 contract CoreCalldataPublicKeyPrecompile {
@@ -180,7 +215,10 @@ contract CoreCalldataPublicKeyPrecompile {
         inputs[1] = vm.toString(abi.encodePacked(hex"f6"));
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // Core Current Epoch Precompile
@@ -193,7 +231,10 @@ contract CoreCurrentEpochPrecompile {
         inputs[1] = vm.toString(abi.encodePacked(hex"f6"));
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 // ROFL Is Authorized Origin Precompile
@@ -207,7 +248,10 @@ contract RoflIsAuthorizedOriginPrecompile {
         inputs[1] = vm.toString(abi.encodePacked(hex"55", appId));
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 contract DecodePrecompile {
@@ -222,13 +266,15 @@ contract DecodePrecompile {
         inputs[1] = vm.toString(params);
         return vm.ffi(inputs);
     }
-    receive() external payable { revert("No ether accepted"); }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
 }
 
 abstract contract SapphireDecryptor {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
     bytes32 private privateKey_ = 0x1234567890123456789012345678901234567890123456789012345678901234;
-
 
     fallback(bytes calldata encryptedData) external payable returns (bytes memory) {
         // Try to decrypt using rust binary
@@ -237,7 +283,7 @@ abstract contract SapphireDecryptor {
         inputs[0] = "src/precompiles/target/release/decode";
         inputs[1] = vm.toString(params);
         bytes memory decryptedData = vm.ffi(inputs);
-        
+
         // If data was encrypted (different after decryption)
         if (keccak256(encryptedData) != keccak256(decryptedData)) {
             // Forward the decrypted calldata to this contract
@@ -245,7 +291,7 @@ abstract contract SapphireDecryptor {
             require(success, "Inner call failed");
             return result;
         }
-        
+
         // If data wasn't encrypted, revert since no matching function was found
         revert("No matching function");
     }
