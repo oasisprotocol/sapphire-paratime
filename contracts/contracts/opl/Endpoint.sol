@@ -185,13 +185,9 @@ function autoswitch(bytes32 protocol) view returns (bytes32 networkName) {
     if (block.chainid == 1337 || block.chainid == 31337) return "local";
     (, bool isTestnet) = _getChainConfig(block.chainid);
     if (isTestnet) {
-        if (protocol == "ethereum") return "goerli";
         if (protocol == "bsc") return "bsc-testnet";
-        if (protocol == "polygon") return "polygon-mumbai";
         if (protocol == "fantom") return "fantom-testnet";
         if (protocol == "sapphire") return "sapphire-testnet";
-        if (protocol == "arbitrum-one") return "arbitrum-testnet";
-        if (protocol == "arbitrum-nova") return "arbitrum-testnet";
         if (protocol == "avalanche") return "avalanche-fuji";
         revert AutoConfigUnavailable();
     }
@@ -215,7 +211,6 @@ function _getRemoteChainId(bytes32 _remoteChainName) view returns (uint256) {
 
 function _chainName2ChainId(bytes32 name) pure returns (uint256) {
     if (name == "ethereum") return 1;
-    if (name == "goerli") return 5;
     if (name == "optimism") return 10;
     if (name == "bsc") return 56;
     if (name == "bsc-testnet") return 97;
@@ -227,10 +222,8 @@ function _chainName2ChainId(bytes32 name) pure returns (uint256) {
     if (name == "arbitrum-nova") return 0xa4ba;
     if (name == "sapphire") return 0x5afe;
     if (name == "sapphire-testnet") return 0x5aff;
-    if (name == "polygon-mumbai") return 80001;
     if (name == "avalanche") return 43114;
     if (name == "avalanche-fuji") return 43113;
-    if (name == "arbitrum-testnet") return 0x66eeb;
     return 0;
 }
 
@@ -242,9 +235,6 @@ function _getChainConfig(uint256 _chainId)
     if (_chainId == 1)
         // ethereum
         return (0x4066D196A423b2b3B8B054f4F40efB47a74E200C, false);
-    if (_chainId == 5)
-        // goerli
-        return (0xF25170F86E4291a99a9A560032Fe9948b8BcFBB2, true);
     if (_chainId == 10)
         // optimism
         return (0x0D71D18126E03646eb09FEc929e2ae87b7CAE69d, false);
@@ -284,11 +274,5 @@ function _getChainConfig(uint256 _chainId)
     if (_chainId == 43114)
         // avalanche c-chain
         return (0x5a926eeeAFc4D217ADd17e9641e8cE23Cd01Ad57, false);
-    if (_chainId == 80001)
-        // polygon mumbai testnet
-        return (0x7d43AABC515C356145049227CeE54B608342c0ad, true);
-    if (_chainId == 0x66eeb)
-        // arbitrum testnet
-        return (0x7d43AABC515C356145049227CeE54B608342c0ad, true);
     revert AutoConfigUnavailable();
 }
