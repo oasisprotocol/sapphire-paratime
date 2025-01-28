@@ -11,10 +11,6 @@ test:
 
 clean:
 	forge clean
-	rm -rf cache
-	rm -rf src/precompiles/target
-	rm -rf build
-	rm -rf lib
-	rm -rf src/precompiles/Cargo.lock
-
+	rm -rf cache build lib src/precompiles/Cargo.lock src/precompiles/target
+	
 .PHONY: all build test clean

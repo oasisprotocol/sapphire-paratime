@@ -12,9 +12,7 @@ test:
 
 clean:
 	forge clean
-	rm -rf cache
-	rm -rf src
-	rm -rf build
-	rm -rf lib
+	rm -rf cache build lib src/precompiles/Cargo.lock src/precompiles/target
+
 .PHONY: all build test clean
 
