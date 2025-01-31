@@ -5,11 +5,7 @@ import { ethers } from 'hardhat';
 import { SiweMessage } from 'siwe';
 import '@nomicfoundation/hardhat-chai-matchers';
 
-import { SiweParserTests__factory } from '../typechain-types/factories/contracts/tests';
-import {
-  SiweParserTests,
-  ParsedSiweMessageStruct,
-} from '../typechain-types/contracts/tests/SiweParserTests';
+import { ParsedSiweMessageStruct } from '../typechain-types/contracts/tests/SiweParserTests';
 
 describe('SiweParser', function () {
   async function deploy() {
