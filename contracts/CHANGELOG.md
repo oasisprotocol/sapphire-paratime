@@ -6,6 +6,31 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.12 (2025-01)
+
+### Added
+
+* HMAC using SHA512-256
+* Calldata encryption
+* `EIP1159Signer` and `EIP2930Signer` contracts
+
+### Changed
+
+* Data location of `token` parameter in `auth/SiweAuth.sol:authMsgSender`
+  changed from `calldata` to `memory` for convenience e.g. to allow passing
+  string literal
+* New prefixes for SIWE related errors
+* Move CBOR parser into separate `CBOR.sol` module
+
+### Fixed
+
+* `avalanche-fuji` chain ID
+
+### Removed
+
+* `goerli`, `polygon-mumbai` and `arbitrum-testnet` deprecated OPL/Celer
+  endpoints
+
 ## 0.2.11 (2024-09)
 
 ### Added
