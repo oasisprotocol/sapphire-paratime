@@ -26,9 +26,9 @@ struct ParsedSiweMessage {
  */
 library SiweParser {
     /// Invalid length of the hex-encoded address
-    error InvalidAddressLength();
+    error SiweParser_InvalidAddressLength();
     /// Invalid length of the nonce
-    error InvalidNonce();
+    error SiweParser_InvalidNonce();
 
     /**
      * @notice Convert string containing hex address without 0x prefix to solidity address object.
@@ -39,7 +39,7 @@ library SiweParser {
         returns (address)
     {
         if (s.length != 40) {
-            revert InvalidAddressLength();
+            revert SiweParser_InvalidAddressLength();
         }
 
         bytes memory r = new bytes(s.length / 2);
@@ -219,7 +219,7 @@ library SiweParser {
         p.chainId = _parseUint(chainId);
         (p.nonce, i) = _parseField(siweMsg, "Nonce", i);
         if (p.nonce.length < 8) {
-            revert InvalidNonce();
+            revert SiweParser_InvalidNonce();
         }
         (p.issuedAt, i) = _parseField(siweMsg, "Issued At", i);
         (p.expirationTime, i) = _parseField(siweMsg, "Expiration Time", i);
