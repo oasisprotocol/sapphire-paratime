@@ -158,17 +158,18 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="siweauth"><a class="header" href="#siweauth">SiweAuth</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/352eb6a34b8750dbf32512df0d68cfaf81025ea5/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/7b688e79f0730aeb59de83007cf7795381d5de4e/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 <a href="/contracts/auth/A13e.sol/abstract.A13e.html">A13e</a></p>
-<p>Inherit this contract, if you wish to enable SIWE-based
-authentication for your contract methods that require authenticated calls.
+<p>Inherit this contract if you wish to enable SIWE-based
+authentication in your contract functions that require authentication.
 The smart contract needs to be bound to a domain (passed in constructor).</p>
 <h4 id="example"><a class="header" href="#example">Example</a></h4>
 <pre><code class="language-solidity">contract MyContract is SiweAuth {
 address private _owner;
-modifier onlyOwner(bytes calldata bearer) {
-if (authMsgSender(bearer) != _owner) {
+string private _message;
+modifier onlyOwner(bytes memory token) {
+if (msg.sender != _owner &amp;&amp; authMsgSender(token) != _owner) {
 revert("not allowed");
 }
 _;
@@ -176,8 +177,11 @@ _;
 constructor(string memory domain) SiweAuth(domain) {
 _owner = msg.sender;
 }
-function getSecretMessage(bytes calldata bearer) external view onlyOwner(bearer) returns (string memory) {
-return "Very secret message";
+function getSecretMessage(bytes memory token) external view onlyOwner(token) returns (string memory) {
+return _message;
+}
+function setSecretMessage(string calldata message) external onlyOwner("") {
+_message = message;
 }
 }
 </code></pre>
@@ -186,12 +190,12 @@ return "Very secret message";
 <p>Domain which the dApp is associated with</p>
 <pre><code class="language-solidity">string private _domain;
 </code></pre>
-<h3 id="_bearerenckey"><a class="header" href="#_bearerenckey">_bearerEncKey</a></h3>
-<p>Encryption key which the bearer tokens are encrypted with</p>
-<pre><code class="language-solidity">bytes32 private _bearerEncKey;
+<h3 id="_authtokenenckey"><a class="header" href="#_authtokenenckey">_authTokenEncKey</a></h3>
+<p>Encryption key which the authentication tokens are encrypted with</p>
+<pre><code class="language-solidity">bytes32 private _authTokenEncKey;
 </code></pre>
 <h3 id="default_validity"><a class="header" href="#default_validity">DEFAULT_VALIDITY</a></h3>
-<p>Default bearer token validity, if no expiration-time provided</p>
+<p>Default authentication token validity, if no expiration-time provided</p>
 <pre><code class="language-solidity">uint256 private constant DEFAULT_VALIDITY = 24 hours;
 </code></pre>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
@@ -208,35 +212,35 @@ runs on the specified domain.</p>
 <pre><code class="language-solidity">function domain() public view returns (string memory);
 </code></pre>
 <h3 id="authmsgsender"><a class="header" href="#authmsgsender">authMsgSender</a></h3>
-<pre><code class="language-solidity">function authMsgSender(bytes calldata bearer) internal view override checkRevokedBearer(bearer) returns (address);
+<pre><code class="language-solidity">function authMsgSender(bytes memory token) internal view override checkRevokedAuthToken(token) returns (address);
 </code></pre>
 <h2 id="errors"><a class="header" href="#errors">Errors</a></h2>
-<h3 id="chainidmismatch"><a class="header" href="#chainidmismatch">ChainIdMismatch</a></h3>
+<h3 id="siweauth_chainidmismatch"><a class="header" href="#siweauth_chainidmismatch">SiweAuth_ChainIdMismatch</a></h3>
 <p>Chain ID in the SIWE message does not match the actual chain ID</p>
-<pre><code class="language-solidity">error ChainIdMismatch();
+<pre><code class="language-solidity">error SiweAuth_ChainIdMismatch();
 </code></pre>
-<h3 id="domainmismatch"><a class="header" href="#domainmismatch">DomainMismatch</a></h3>
+<h3 id="siweauth_domainmismatch"><a class="header" href="#siweauth_domainmismatch">SiweAuth_DomainMismatch</a></h3>
 <p>Domain in the SIWE message does not match the domain of a dApp</p>
-<pre><code class="language-solidity">error DomainMismatch();
+<pre><code class="language-solidity">error SiweAuth_DomainMismatch();
 </code></pre>
-<h3 id="addressmismatch"><a class="header" href="#addressmismatch">AddressMismatch</a></h3>
+<h3 id="siweauth_addressmismatch"><a class="header" href="#siweauth_addressmismatch">SiweAuth_AddressMismatch</a></h3>
 <p>User address in the SIWE message does not match the message signer's address</p>
-<pre><code class="language-solidity">error AddressMismatch();
+<pre><code class="language-solidity">error SiweAuth_AddressMismatch();
 </code></pre>
-<h3 id="notbeforeinfuture"><a class="header" href="#notbeforeinfuture">NotBeforeInFuture</a></h3>
+<h3 id="siweauth_notbeforeinfuture"><a class="header" href="#siweauth_notbeforeinfuture">SiweAuth_NotBeforeInFuture</a></h3>
 <p>The Not before value in the SIWE message is still in the future</p>
-<pre><code class="language-solidity">error NotBeforeInFuture();
+<pre><code class="language-solidity">error SiweAuth_NotBeforeInFuture();
 </code></pre>
-<h3 id="expired"><a class="header" href="#expired">Expired</a></h3>
-<p>The bearer token validity or the Expires value in the SIWE message is in the past</p>
-<pre><code class="language-solidity">error Expired();
+<h3 id="siweauth_expired"><a class="header" href="#siweauth_expired">SiweAuth_Expired</a></h3>
+<p>Validity of the authentication token or the Expires value in the SIWE message is in the past</p>
+<pre><code class="language-solidity">error SiweAuth_Expired();
 </code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../../contracts/auth/SiweAuth.sol/struct.Bearer.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../../contracts/auth/SiweAuth.sol/struct.AuthToken.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -250,7 +254,7 @@ runs on the specified domain.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../../contracts/auth/SiweAuth.sol/struct.Bearer.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../../contracts/auth/SiweAuth.sol/struct.AuthToken.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 

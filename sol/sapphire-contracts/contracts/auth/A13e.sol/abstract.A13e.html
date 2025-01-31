@@ -158,45 +158,46 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="a13e"><a class="header" href="#a13e">A13e</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/352eb6a34b8750dbf32512df0d68cfaf81025ea5/contracts/contracts/auth/A13e.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/7b688e79f0730aeb59de83007cf7795381d5de4e/contracts/contracts/auth/A13e.sol">Git Source</a></p>
 <p>This is the interface for universal authentication mechanism (e.g.
 SIWE):</p>
 <ol>
-<li>The user-facing app calls login() to generate the bearer token on-chain.</li>
-<li>Any smart contract method that requires authentication accept this token
-as an argument. Then, it passes the token to authMsgSender() to verify it
-and obtain the <strong>authenticated</strong> user address. This address can then serve
-as a user ID for authorization.</li>
+<li>The user-facing app calls <code>login()</code> which generates the authentication
+token on-chain.</li>
+<li>Any smart contract method that requires authentication can take this token
+as an argument. Passing this token to <code>authMsgSender()</code> verifies it and
+returns the <strong>authenticated</strong> user address. This verified address can then
+serve as a user ID for authorization.</li>
 </ol>
 <h2 id="state-variables"><a class="header" href="#state-variables">State Variables</a></h2>
-<h3 id="_revokedbearers"><a class="header" href="#_revokedbearers">_revokedBearers</a></h3>
-<p>A mapping of revoked bearers. Access it directly or use the checkRevokedBearer modifier.</p>
-<pre><code class="language-solidity">mapping(bytes32 =&gt; bool) internal _revokedBearers;
+<h3 id="_revokedauthtokens"><a class="header" href="#_revokedauthtokens">_revokedAuthTokens</a></h3>
+<p>A mapping of revoked authentication tokens. Access it directly or use the checkRevokedAuthToken modifier.</p>
+<pre><code class="language-solidity">mapping(bytes32 =&gt; bool) internal _revokedAuthTokens;
 </code></pre>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
-<h3 id="checkrevokedbearer"><a class="header" href="#checkrevokedbearer">checkRevokedBearer</a></h3>
-<p>Reverts if the given bearer was revoked</p>
-<pre><code class="language-solidity">modifier checkRevokedBearer(bytes calldata bearer);
+<h3 id="checkrevokedauthtoken"><a class="header" href="#checkrevokedauthtoken">checkRevokedAuthToken</a></h3>
+<p>Reverts if the given token was revoked</p>
+<pre><code class="language-solidity">modifier checkRevokedAuthToken(bytes memory token);
 </code></pre>
 <h3 id="login"><a class="header" href="#login">login</a></h3>
 <p>Verify the login message and its signature and generate the
-bearer token.</p>
+token.</p>
 <pre><code class="language-solidity">function login(string calldata message, SignatureRSV calldata sig) external view virtual returns (bytes memory);
 </code></pre>
 <h3 id="authmsgsender"><a class="header" href="#authmsgsender">authMsgSender</a></h3>
-<p>Validate the bearer token and return authenticated msg.sender.</p>
-<pre><code class="language-solidity">function authMsgSender(bytes calldata bearer) internal view virtual returns (address);
+<p>Validate the token and return authenticated msg.sender.</p>
+<pre><code class="language-solidity">function authMsgSender(bytes memory token) internal view virtual returns (address);
 </code></pre>
-<h3 id="revokebearer"><a class="header" href="#revokebearer">revokeBearer</a></h3>
-<p>Revoke the bearer token with the corresponding hash.
-e.g. In case when the bearer token is leaked or for extra-secure apps on
+<h3 id="revokeauthtoken"><a class="header" href="#revokeauthtoken">revokeAuthToken</a></h3>
+<p>Revoke the authentication token with the corresponding hash.
+e.g. In case when the token is leaked or for extra-secure apps on
 every logout.</p>
-<pre><code class="language-solidity">function revokeBearer(bytes32 bearer) internal;
+<pre><code class="language-solidity">function revokeAuthToken(bytes32 token) internal;
 </code></pre>
 <h2 id="errors"><a class="header" href="#errors">Errors</a></h2>
-<h3 id="revokedbearer"><a class="header" href="#revokedbearer">RevokedBearer</a></h3>
-<p>The bearer token was revoked</p>
-<pre><code class="language-solidity">error RevokedBearer();
+<h3 id="revokedauthtoken"><a class="header" href="#revokedauthtoken">RevokedAuthToken</a></h3>
+<p>The authentication token was revoked</p>
+<pre><code class="language-solidity">error RevokedAuthToken();
 </code></pre>
 
                     </main>
@@ -207,7 +208,7 @@ every logout.</p>
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../../../contracts/auth/SiweAuth.sol/struct.Bearer.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../../contracts/auth/SiweAuth.sol/struct.AuthToken.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -221,7 +222,7 @@ every logout.</p>
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../../../contracts/auth/SiweAuth.sol/struct.Bearer.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../../contracts/auth/SiweAuth.sol/struct.AuthToken.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
