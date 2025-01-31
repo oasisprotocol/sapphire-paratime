@@ -19,14 +19,14 @@ abstract contract A13e {
     mapping(bytes32 => bool) internal _revokedAuthTokens;
 
     /// The authentication token was revoked
-    error RevokedAuthToken();
+    error A13e_RevokedAuthToken();
 
     /**
      * @notice Reverts if the given token was revoked
      */
     modifier checkRevokedAuthToken(bytes memory token) {
         if (_revokedAuthTokens[keccak256(token)]) {
-            revert RevokedAuthToken();
+            revert A13e_RevokedAuthToken();
         }
         _;
     }
