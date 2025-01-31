@@ -7,7 +7,7 @@ import {SignatureRSV, A13e} from "./A13e.sol";
 import {ParsedSiweMessage, SiweParser} from "../SiweParser.sol";
 import {Sapphire} from "../Sapphire.sol";
 
-struct Bearer {
+struct AuthToken {
     string domain; // [ scheme "://" ] domain.
     address userAddr;
     uint256 validUntil; // in Unix timestamp.
@@ -15,8 +15,8 @@ struct Bearer {
 
 /**
  * @title Base contract for SIWE-based authentication
- * @notice Inherit this contract, if you wish to enable SIWE-based
- * authentication for your contract methods that require authenticated calls.
+ * @notice Inherit this contract if you wish to enable SIWE-based
+ * authentication in your contract functions that require authentication.
  * The smart contract needs to be bound to a domain (passed in constructor).
  *
  * #### Example
@@ -24,9 +24,10 @@ struct Bearer {
  * ```solidity
  * contract MyContract is SiweAuth {
  *   address private _owner;
+ *   string private _message;
  *
- *   modifier onlyOwner(bytes calldata bearer) {
- *     if (authMsgSender(bearer) != _owner) {
+ *   modifier onlyOwner(bytes memory token) {
+ *     if (msg.sender != _owner && authMsgSender(token) != _owner) {
  *       revert("not allowed");
  *     }
  *     _;
@@ -36,8 +37,12 @@ struct Bearer {
  *     _owner = msg.sender;
  *   }
  *
- *   function getSecretMessage(bytes calldata bearer) external view onlyOwner(bearer) returns (string memory) {
- *     return "Very secret message";
+ *   function getSecretMessage(bytes memory token) external view onlyOwner(token) returns (string memory) {
+ *     return _message;
+ *   }
+ *
+ *   function setSecretMessage(string calldata message) external onlyOwner("") {
+ *     _message = message;
  *   }
  * }
  * ```
@@ -45,28 +50,28 @@ struct Bearer {
 contract SiweAuth is A13e {
     /// Domain which the dApp is associated with
     string private _domain;
-    /// Encryption key which the bearer tokens are encrypted with
-    bytes32 private _bearerEncKey;
-    /// Default bearer token validity, if no expiration-time provided
+    /// Encryption key which the authentication tokens are encrypted with
+    bytes32 private _authTokenEncKey;
+    /// Default authentication token validity, if no expiration-time provided
     uint256 private constant DEFAULT_VALIDITY = 24 hours;
 
     /// Chain ID in the SIWE message does not match the actual chain ID
-    error ChainIdMismatch();
+    error SiweAuth_ChainIdMismatch();
     /// Domain in the SIWE message does not match the domain of a dApp
-    error DomainMismatch();
+    error SiweAuth_DomainMismatch();
     /// User address in the SIWE message does not match the message signer's address
-    error AddressMismatch();
+    error SiweAuth_AddressMismatch();
     /// The Not before value in the SIWE message is still in the future
-    error NotBeforeInFuture();
-    /// The bearer token validity or the Expires value in the SIWE message is in the past
-    error Expired();
+    error SiweAuth_NotBeforeInFuture();
+    /// Validity of the authentication token or the Expires value in the SIWE message is in the past
+    error SiweAuth_Expired();
 
     /**
      * @notice Instantiate the contract which uses SIWE for authentication and
      * runs on the specified domain.
      */
     constructor(string memory inDomain) {
-        _bearerEncKey = bytes32(Sapphire.randomBytes(32, ""));
+        _authTokenEncKey = bytes32(Sapphire.randomBytes(32, ""));
         _domain = inDomain;
     }
 
@@ -76,7 +81,7 @@ contract SiweAuth is A13e {
         override
         returns (bytes memory)
     {
-        Bearer memory b;
+        AuthToken memory b;
 
         // Derive the user's address from the signature.
         bytes memory eip191msg = abi.encodePacked(
@@ -95,23 +100,23 @@ contract SiweAuth is A13e {
         ParsedSiweMessage memory p = SiweParser.parseSiweMsg(bytes(siweMsg));
 
         if (p.chainId != block.chainid) {
-            revert ChainIdMismatch();
+            revert SiweAuth_ChainIdMismatch();
         }
 
         if (keccak256(p.schemeDomain) != keccak256(bytes(_domain))) {
-            revert DomainMismatch();
+            revert SiweAuth_DomainMismatch();
         }
         b.domain = string(p.schemeDomain);
 
         if (p.addr != addr) {
-            revert AddressMismatch();
+            revert SiweAuth_AddressMismatch();
         }
 
         if (
             p.notBefore.length != 0 &&
             block.timestamp <= SiweParser.timestampFromIso(p.notBefore)
         ) {
-            revert NotBeforeInFuture();
+            revert SiweAuth_NotBeforeInFuture();
         }
 
         if (p.expirationTime.length != 0) {
@@ -125,11 +130,11 @@ contract SiweAuth is A13e {
             b.validUntil = block.timestamp + DEFAULT_VALIDITY;
         }
         if (block.timestamp >= b.validUntil) {
-            revert Expired();
+            revert SiweAuth_Expired();
         }
 
         bytes memory encB = Sapphire.encrypt(
-            _bearerEncKey,
+            _authTokenEncKey,
             0,
             abi.encode(b),
             ""
@@ -144,26 +149,29 @@ contract SiweAuth is A13e {
         return _domain;
     }
 
-    function authMsgSender(bytes calldata bearer)
+    function authMsgSender(bytes memory token)
         internal
         view
         override
-        checkRevokedBearer(bearer)
+        checkRevokedAuthToken(token)
         returns (address)
     {
-        bytes memory bearerEncoded = Sapphire.decrypt(
-            _bearerEncKey,
+        if (token.length == 0) {
+            return address(0);
+        }
+        bytes memory authTokenEncoded = Sapphire.decrypt(
+            _authTokenEncKey,
             0,
-            bearer,
+            token,
             ""
         );
-        Bearer memory b = abi.decode(bearerEncoded, (Bearer));
+        AuthToken memory b = abi.decode(authTokenEncoded, (AuthToken));
 
         if (keccak256(bytes(b.domain)) != keccak256(bytes(_domain))) {
-            revert DomainMismatch();
+            revert SiweAuth_DomainMismatch();
         }
         if (b.validUntil < block.timestamp) {
-            revert Expired();
+            revert SiweAuth_Expired();
         }
 
         return b.userAddr;
