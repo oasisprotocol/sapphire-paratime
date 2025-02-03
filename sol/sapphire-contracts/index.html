@@ -173,12 +173,12 @@
 <p>Once installed, you can import and use the Sapphire contracts as follows:</p>
 <pre><code class="language-solidity">pragma solidity ^0.8.13;
 
-import "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
+import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 
 contract RandomNumber {
-  function generateNumber() public view returns (uint) {
-    return uint(bytes32(Sapphire.randomBytes(32, "")));
-  }
+    function generateNumber() public view returns (uint) {
+        return uint(bytes32(Sapphire.randomBytes(32, "")));
+    }
 }
 </code></pre>
 <h2 id="documentation"><a class="header" href="#documentation">Documentation</a></h2>
