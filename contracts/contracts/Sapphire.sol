@@ -109,18 +109,6 @@ library Sapphire {
      * TupleHash algorithms are SHA-3 derived functions defined in [NIST
      * Special Publication 800-185](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf).
      *
-     * #### DANGER: Prior to Sapphire ParaTime 0.6.0
-     *
-     * All view queries and simulated transactions (via `eth_call`) would
-     * receive the same entropy in-between blocks if they use the same
-     * `num_bytes` and `pers` parameters. If your contract requires
-     * confidentiality you should generate a secret in the constructor to be
-     * used with view calls:
-     *
-     * ```solidity
-     * Sapphire.randomBytes(64, abi.encodePacked(msg.sender, this.perContactSecret));
-     * ```
-     *
      * #### Example
      *
      * ```solidity
