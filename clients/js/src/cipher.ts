@@ -79,7 +79,9 @@ function formatFailure(fail: CallFailure): string {
 
 export abstract class Cipher {
   public abstract kind: CipherKind;
+  // The Sapphire's public key rotated each epoch
   public abstract publicKey: Uint8Array;
+  // The client's keypair for encrypting/decrypting transactions and queries using the X25519-DeoxysII, rotated on-demand.
   public abstract ephemeralKey: Uint8Array;
   public abstract epoch?: number;
 
