@@ -149,9 +149,11 @@ authentication flow:
 ![SIWE authentication flow on Sapphire](../diagrams/siwe-sapphire-flow.mmd.svg)
 
 Consider the `MessageBox` contract from [above](#authenticated-view-calls), and
-let's extend it with SIWE:
+let's extend it with [SiweAuth]:
 
 ```solidity
+import {SiweAuth} from "@oasisprotocol/sapphire-contracts/contracts/auth/SiweAuth.sol";
+
 contract MessageBox is SiweAuth {
   address private _owner;
   string private _message;
@@ -167,7 +169,7 @@ contract MessageBox is SiweAuth {
     _owner = msg.sender;
   }
 
-  function getSecretMessage(bytes calldata token) external view onlyOwner(token) returns (string memory) {
+  function getSecretMessage(bytes memory token) external view onlyOwner(token) returns (string memory) {
     return _message;
   }
 
@@ -195,11 +197,12 @@ requests a wallet to sign a log-in message and fetch a fresh session token.
 
 ```typescript
 import {SiweMessage} from 'siwe';
+import { ethers } from 'hardhat'
 
 let token = '';
 
 async function getSecretMessage(): Promise<Message> {
-  const messageBox = await hre.ethers.getContractAt('MessageBox', '0x5FbDB2315678afecb367f032d93F642f64180aa3');
+  const messageBox = await ethers.getContractAt('MessageBox', '0x5FbDB2315678afecb367f032d93F642f64180aa3');
 
   if (token == '') { // Stored in browser session.
     const domain = await messageBox.domain();
@@ -210,7 +213,7 @@ async function getSecretMessage(): Promise<Message> {
       version: "1",
       chainId: 0x5afe, // Sapphire Testnet
     }).toMessage();
-    const sig = Signature.from((await window.ethereum.getSigner(addr)).signMessage(siweMsg));
+    const sig = ethers.Signature.from((await window.ethereum.getSigner(addr)).signMessage(siweMsg));
     token = await messageBox.login(siweMsg, sig);
   }
 
@@ -222,7 +225,7 @@ async function getSecretMessage(): Promise<Message> {
 
 To see a running example of the TypeScript SIWE code including the Hardhat
 tests, Node.js and the browser, check out the official Oasis [demo-starter]
-project.
+project. The SIWE authentication is implemented inside the [Hardhat tests].
 
 :::
 
@@ -234,28 +237,37 @@ your Web3 endpoint.
 
 :::
 
-[demo-starter]: https://github.com/oasisprotocol/demo-starter/tree/matevz/sapphire-paratime-2.0
+[demo-starter]: https://github.com/oasisprotocol/demo-starter
+[Hardhat tests]: https://github.com/oasisprotocol/demo-starter/blob/master/backend/test/MessageBox.ts
+[SiweAuth]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/auth/SiweAuth.sol/contract.SiweAuth.html
 [EIP-4361]: https://eips.ethereum.org/EIPS/eip-4361
 [single sign-on]: https://en.wikipedia.org/wiki/Single_sign-on
 [sp-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 
 ### via signed queries
 
-The [EIP-712] proposal defines a method to show data to the user in a structured
-fashion so they can verify it and sign it. On the frontend, apps signing a view
-call would require user interaction each time—sometimes even multiple times per
-page—which is bad UX that frustrates users. Backend services on the other hand
-can have direct access to an Ethereum wallet without needing user interaction.
-This is possible because these services do not access unspecified websites, and
-only execute trusted code.
+[EIP-712] proposed a method to show data to the user in a structured fashion so
+they can verify it before signing. In the browser however, apps requiring signed
+view calls would trigger user interaction with their wallet each time—sometimes
+even multiple times per page—which is bad UX that frustrates users. Backend
+services on the other hand often have direct access to an Ethereum wallet (e.g.
+a secret key stored in the environment variable) without needing user
+interaction. This is possible because a backend service connects to a trusted
+site and executes trusted code, so it's fine to sign the necessary view calls
+non interactively.
 
-The Sapphire wrappers for [Go][sp-go] and [Python][sp-py] will make sure to
-**automatically sign any view calls** you make to a contract running on Sapphire
-using the proposed [EIP-712] method. Suppose we want to store the private key of
-an account used to sign the view calls inside a `PRIVATE_KEY` environment
-variable. The following snippets demonstrate how to trigger signed queries
-without any changes to the original `MessageBox` contract from
-[above](#authenticated-view-calls).
+The Sapphire wrappers for [Go][sp-go] and [Python][sp-py] will **sign any view
+call** you make to a contract deployed on Sapphire using the aforementioned
+[EIP-712]. Suppose we want to store the private key of an account used to sign
+the view calls inside a `PRIVATE_KEY` environment variable. The following
+snippets demonstrate how to trigger signed queries **without any changes to the
+original `MessageBox` contract from [above](#authenticated-view-calls)**.
+
+[sp-go]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/go
+[sp-py]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/py
+
+[wrapped-go]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/clients/go#WrapClient
+[wrapped-py]: https://api.docs.oasis.io/py/sapphirepy/sapphirepy.html#sapphirepy.sapphire.wrap
 
 <Tabs>
     <TabItem value="Go">
@@ -332,7 +344,7 @@ def get_c10l_message(address: str, network_name: Optional[str] = "sapphire-local
     w3 = Web3(Web3.HTTPProvider(sapphire.NETWORKS[network_name]))
     account: LocalAccount = Account.from_key(os.environ.get("PRIVATE_KEY"))
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
-    w3 = sapphire.wrap(w3)
+    w3 = sapphire.wrap(w3, account)
     
     compiled_contract = json.load("MessageBox_compiled.json")
     contract_data = compiled_contract["contracts"]["MessageBox.sol"]["MessageBox"]
@@ -351,11 +363,18 @@ def get_c10l_message(address: str, network_name: Optional[str] = "sapphire-local
     </TabItem>
 </Tabs>
 
-[sp-go]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/go
-[sp-py]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/py
+:::tip
 
-[wrapped-go]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/clients/go#WrapClient
-[wrapped-py]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/clients/py/sapphirepy/sapphire.py#L268
+If your smart contract needs to support view calls from both the frontend and
+the backend, then take the [SIWE approach](#via-siwe-token). The backend
+implementation then depends on your programming language:
+
+- **Go and Python**: Pass an empty string as a `token` parameter to your smart
+  contract and let the wrapper sign the view call using EIP-712. Since
+  `msg.sender` will be defined, the `isOwner` modifier will pass just fine.
+- **TypeScript**: Recycle the frontend client-side code
+  [from above](#via-siwe-token) to generate the SIWE message, perform the 
+  authentication and pass it in the view call.
 
 [Oasis starter project for Go]: https://github.com/oasisprotocol/demo-starter-go
 [Oasis starter project for Python]: https://github.com/oasisprotocol/demo-starter-py
