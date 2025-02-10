@@ -1,0 +1,7 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib']
+ffi = true
+memory_limit = 1000000000
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
