@@ -3,7 +3,7 @@ all: build test
 
 build:
 	forge install foundry-rs/forge-std --no-commit --no-git
-	forge soldeer install @oasisprotocol-sapphire-contracts~0.2.11
+	forge soldeer install @oasisprotocol-sapphire-contracts~0.2.11 --config-location foundry
 	cd src/precompiles && cargo +nightly build --release
 
 test:
