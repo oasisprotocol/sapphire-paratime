@@ -78,4 +78,3 @@ jobs:
         run: cargo install mdbook-pagetoc
       - name: Build docs
         working-directory: contracts
-        run: pnpm doc

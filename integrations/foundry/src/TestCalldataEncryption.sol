@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {Sapphire} from "../lib/contracts/Sapphire.sol";
-import {encryptCallData} from "../lib//contracts/CalldataEncryption.sol";
-import {EIP155Signer} from "../lib/contracts/EIP155Signer.sol";
+import {Sapphire} from "@oasisprotocol-sapphire-contracts-0.2.11/Sapphire.sol";
+import {encryptCallData} from "@oasisprotocol-sapphire-contracts-0.2.11/CalldataEncryption.sol";
+import {EIP155Signer} from "@oasisprotocol-sapphire-contracts-0.2.11/EIP155Signer.sol";
 
 contract TestCalldataEncryption {
     function testEncryptCallData(

@@ -130,8 +130,8 @@ jobs:
           python3 -munittest discover
           pytest sapphirepy/tests/
   
-  test-foundry:
-    name: test-foundry
+  test-examples-foundry:
+    name: test-examples-foundry
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -157,4 +157,33 @@ jobs:
         run: make build
 
       - name: Run tests
-        run: forge test -vvv
+        run: forge test
+
+  test-integrations-foundry:
+    name: test-integrations-foundry
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./integrations/foundry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install libclang-dev
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install Rustup
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+      - name: Install Rust nightly
+        run: rustup toolchain install nightly
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+      
+      - name: Install dependencies
+        run: make build
+      
+      - name: Run tests
+        run: forge test

@@ -6,8 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {console} from "forge-std/console.sol";
 
 import "../src/TestCalldataEncryption.sol";
-import "../lib/contracts/Subcall.sol";
-// import "../lib/contracts/Sapphire.sol";
+import "@oasisprotocol-sapphire-contracts-0.2.11/Subcall.sol";
 import "./BinaryHandler.sol";
 import "./Counter.sol";
 

@@ -47,8 +47,12 @@ generated gasless transactions with encrypted calldata.
 
 This folder contains precompile contracts and rust bindings that can be 
 imported into separate Foundry projects. 
+To install the dependencies, run `make build` ( Using foundry.toml ).
+
 
 ## Usage
+To test the precompiles, run `forge test`.
+
 For a test example, see [sapphire-paratime/examples/foundry].
 [sapphire-paratime/examples/foundry]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/foundry
 
