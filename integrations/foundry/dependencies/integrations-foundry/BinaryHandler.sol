@@ -75,8 +75,8 @@ contract BinaryHandler is Precompiles {
         vm.label(address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))), "ROFL_IS_AUTHORIZED_ORIGIN");
 
         vm.etch(
-            address(bytes20(keccak256(bytes("0x987654321098765432109876543210")))), type(DecodePrecompile).runtimeCode
+            DECODE, type(DecodePrecompile).runtimeCode
         );
-        vm.label(address(bytes20(keccak256(bytes("0x987654321098765432109876543210")))), "DECODE");
+        vm.label(DECODE, "DECODE");
     }
 }

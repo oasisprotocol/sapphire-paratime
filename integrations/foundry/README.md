@@ -21,6 +21,12 @@ generated gasless transactions with encrypted calldata.
 - `DeoxysiiSeal`: Encrypt data using Deoxys-II
 - `DeoxysiiOpen`: Decrypt data using Deoxys-II
 - `Curve25519ComputePublic`: Compute public keys
+- `DECODE`: decode cbor encoded data and decrypt the calldata. 
+<span style="color:red">Warning</span>: This precompile is not part of 
+the Sapphire EVM. It is only used for
+testing encryption envelope without having to decode the CBOR encoded data 
+in solidity tests.
+
 
 ### Key Management
 - `KeypairGenerate`: Generate cryptographic keypairs

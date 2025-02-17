@@ -143,13 +143,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libclang-dev
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Install Rustup
+      - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           profile: minimal
-      - name: Install Rust nightly
-        run: rustup toolchain install nightly
       - name: Install CMake
         uses: lukka/get-cmake@latest
 
@@ -172,13 +170,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libclang-dev
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Install Rustup
+      - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           profile: minimal
-      - name: Install Rust nightly
-        run: rustup toolchain install nightly
       - name: Install CMake
         uses: lukka/get-cmake@latest
       

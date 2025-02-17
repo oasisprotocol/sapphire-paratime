@@ -22,6 +22,10 @@ remappings_prefix = ""
 # ignored when `soldeer.toml` is used as config (uses `remappings.txt`)
 remappings_location = "txt"
 
+[dependencies]
+
+
+
 
 
 

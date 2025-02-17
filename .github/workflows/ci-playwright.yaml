@@ -76,3 +76,4 @@ jobs:
         with:
           name: playwright-test-results
           path: examples/wagmi-v2/test-results
+          retention-days: 5

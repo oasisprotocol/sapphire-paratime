@@ -38,6 +38,9 @@ contract Precompiles {
     /// Address of the SUBCALL precompile
     address public constant SUBCALL = 0x0100000000000000000000000000000000000103;
 
+    /// Address of the DECODE precompile
+    address public constant DECODE = 0x0100000000000000000000000000000000000201;
+
     // METHODS:
     // Consensus
     string public constant CONSENSUS_DELEGATE = "consensus.Delegate";
