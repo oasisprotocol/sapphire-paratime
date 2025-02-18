@@ -87,7 +87,7 @@ export function isWrappedEthereumProvider<P extends EIP2696_EthereumProvider>(
  */
 export function wrapEthereumProvider<P extends EIP2696_EthereumProvider>(
   upstream: P,
-  options?: SapphireWrapOptions,
+  options?: SapphireWrapConfig,
 ): P {
   if (isWrappedEthereumProvider(upstream)) {
     return upstream;
