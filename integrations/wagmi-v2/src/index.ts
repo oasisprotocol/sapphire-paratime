@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { wrapEthereumProvider } from "@oasisprotocol/sapphire-paratime";
+import {
+	type SapphireWrapConfig,
+	wrapEthereumProvider,
+} from "@oasisprotocol/sapphire-paratime";
 import { type InjectedParameters, injected } from "@wagmi/core";
 import type { EIP1193Provider } from "viem";
 
@@ -29,7 +32,9 @@ const cachedProviders: Map<EIP1193Provider, EIP1193Provider> = new Map();
  *
  * @returns Same as injected()
  */
-export function injectedWithSapphire(): ReturnType<typeof injected> {
+export function injectedWithSapphire(
+	options?: SapphireWrapConfig,
+): ReturnType<typeof injected> {
 	return injected({
 		target: () => {
 			return {
@@ -45,6 +50,7 @@ export function injectedWithSapphire(): ReturnType<typeof injected> {
 								window.ethereum as unknown as Parameters<
 									typeof wrapEthereumProvider
 								>[0],
+								options,
 							) as EIP1193Provider;
 							cachedProviders.set(window.ethereum, wp);
 							return wp;
