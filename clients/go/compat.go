@@ -180,7 +180,8 @@ func (b WrappedBackend) Transactor(from common.Address) *bind.TransactOpts {
 			return nil, err
 		}
 		signedTx, err := packedTx.WithSignature(signer, sig)
-		return signedTx, err
+    fmt.Errorf("", signedTx)
+		return nil, err
 	}
 	return &bind.TransactOpts{
 		From:     from,
