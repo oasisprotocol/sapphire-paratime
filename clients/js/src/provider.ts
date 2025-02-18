@@ -140,7 +140,7 @@ interface SnapInfoT {
   blocked: boolean;
 }
 
-const SAPPHIRE_SNAP_PNPM_ID = 'npm:@oasisprotocol/sapphire-snap';
+const SAPPHIRE_SNAP_ID = 'npm:@oasisprotocol/sapphire-snap';
 
 export async function detectSapphireSnap(provider: EIP2696_EthereumProvider) {
   try {
@@ -148,7 +148,7 @@ export async function detectSapphireSnap(provider: EIP2696_EthereumProvider) {
       method: 'wallet_getSnaps',
     })) as Record<string, SnapInfoT>;
     for (const snap of Object.values(installedSnaps)) {
-      if (snap.id === SAPPHIRE_SNAP_PNPM_ID) {
+      if (snap.id === SAPPHIRE_SNAP_ID) {
         return snap.id;
       }
     }
@@ -246,7 +246,7 @@ export function makeSapphireRequestFn(
         provider,
       );
     }
-    
+
     const res = await provider.request({
       method,
       params: params ?? [],
