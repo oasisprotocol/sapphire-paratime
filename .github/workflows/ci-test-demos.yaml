@@ -1,11 +1,6 @@
-name: ci-test-go
+name: ci-test-demos
 
 on:
-  push:
-    branches:
-      - main
-      - stable/*
-      - rc/*
   pull_request:
     branches:
       - main
@@ -13,8 +8,8 @@ on:
       - rc/*
 
 jobs:
-  test-client-go:
-    name: test-client-go
+  test-demo-starter-go:
+    name: test-demo-starter-go
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -39,5 +34,20 @@ jobs:
         with:
           go-version: "1.22.x"
 
+      - uses: actions/checkout@v4
+        with:
+          repository: oasisprotocol/demo-starter-go
+          path: ./demos/demo-starter-go
+
+      - name: Replace dependency with local client
+        working-directory: ./demos/demo-starter-go
+        run: |
+          echo "replace github.com/oasisprotocol/sapphire-paratime/clients/go => $GITHUB_WORKSPACE/clients/go" >> go.mod
+
+      - name: Build
+        working-directory: ./demos/demo-starter-go
+        run: make install-deps && go mod tidy && make
+
       - name: Test
-        run: go test -v ./...
+        working-directory: ./demos/demo-starter-go
+        run: make test
