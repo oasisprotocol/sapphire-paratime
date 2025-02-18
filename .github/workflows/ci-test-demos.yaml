@@ -1,0 +1,53 @@
+name: ci-test-demos
+
+on:
+  pull_request:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+
+jobs:
+  test-demo-starter-go:
+    name: test-demo-starter-go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/go
+    services:
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
+        ports:
+          - 8545:8545
+          - 8546:8546
+        env:
+          OASIS_DOCKER_START_EXPLORER: no
+        options: >-
+          --rm
+          --health-cmd="test -f /CONTAINER_READY"
+          --health-start-period=90s
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: oasisprotocol/demo-starter-go
+          path: ./demos/demo-starter-go
+
+      - name: Replace dependency with local client
+        working-directory: ./demos/demo-starter-go
+        run: |
+          echo "replace github.com/oasisprotocol/sapphire-paratime/clients/go => $GITHUB_WORKSPACE/clients/go" >> go.mod
+
+      - name: Build
+        working-directory: ./demos/demo-starter-go
+        run: make install-deps && go mod tidy && make
+
+      - name: Test
+        working-directory: ./demos/demo-starter-go
+        run: make test
