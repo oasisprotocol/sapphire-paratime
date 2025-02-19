@@ -3,6 +3,7 @@
 import {
 	KeyFetcher,
 	NETWORKS as SapphireNETWORKS,
+	type SapphireWrapConfig,
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
 
@@ -69,7 +70,9 @@ export type SapphireHttpTransport = Transport<
  *
  * @returns Same as http()
  */
-export function sapphireHttpTransport<T extends Transport>(): T {
+export function sapphireHttpTransport<T extends Transport>(
+	options?: SapphireWrapConfig,
+): T {
 	const cachedProviders: Record<string, unknown> = {};
 	return ((params) => {
 		if (!params.chain) {
@@ -79,7 +82,7 @@ export function sapphireHttpTransport<T extends Transport>(): T {
 		}
 		const url = params.chain.rpcUrls.default.http[0];
 		if (!(url in cachedProviders)) {
-			const x = wrapEthereumProvider(http(url)(params));
+			const x = wrapEthereumProvider(http(url)(params), options);
 			Reflect.set(x, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, true);
 			cachedProviders[url] = x;
 		}

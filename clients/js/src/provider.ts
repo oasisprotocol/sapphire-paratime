@@ -87,7 +87,7 @@ export function isWrappedEthereumProvider<P extends EIP2696_EthereumProvider>(
  */
 export function wrapEthereumProvider<P extends EIP2696_EthereumProvider>(
   upstream: P,
-  options?: SapphireWrapOptions,
+  options?: SapphireWrapConfig,
 ): P {
   if (isWrappedEthereumProvider(upstream)) {
     return upstream;
@@ -140,7 +140,7 @@ interface SnapInfoT {
   blocked: boolean;
 }
 
-const SAPPHIRE_SNAP_PNPM_ID = 'npm:@oasisprotocol/sapphire-snap';
+const SAPPHIRE_SNAP_ID = 'npm:@oasisprotocol/sapphire-snap';
 
 export async function detectSapphireSnap(provider: EIP2696_EthereumProvider) {
   try {
@@ -148,7 +148,7 @@ export async function detectSapphireSnap(provider: EIP2696_EthereumProvider) {
       method: 'wallet_getSnaps',
     })) as Record<string, SnapInfoT>;
     for (const snap of Object.values(installedSnaps)) {
-      if (snap.id === SAPPHIRE_SNAP_PNPM_ID) {
+      if (snap.id === SAPPHIRE_SNAP_ID) {
         return snap.id;
       }
     }
@@ -236,11 +236,6 @@ export function makeSapphireRequestFn(
       transactionData = params[0].data = cipher.encryptCall(params[0].data);
     }
 
-    const res = await provider.request({
-      method,
-      params: params ?? [],
-    });
-
     if (snapId !== undefined && transactionData !== undefined) {
       // Run in background so as to not delay results
       notifySapphireSnap(
@@ -251,6 +246,11 @@ export function makeSapphireRequestFn(
         provider,
       );
     }
+
+    const res = await provider.request({
+      method,
+      params: params ?? [],
+    });
 
     // Decrypt responses which return encrypted data
     if (method === 'eth_call') {
