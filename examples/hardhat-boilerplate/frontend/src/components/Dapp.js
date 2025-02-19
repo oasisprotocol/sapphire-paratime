@@ -24,8 +24,8 @@ import { NoTokensMessage } from "./NoTokensMessage";
 // Here's a list of network ids https://docs.metamask.io/guide/ethereum-provider.html#properties
 // to use when deploying to other networks.
 //const HARDHAT_NETWORK_ID = '23294'; // Sapphire Mainnet
-//const HARDHAT_NETWORK_ID = '23295'; // Sapphire Testnet
-const HARDHAT_NETWORK_ID = '23293'; // Sapphire Localnet
+const HARDHAT_NETWORK_ID = '23295'; // Sapphire Testnet
+// const HARDHAT_NETWORK_ID = '23293'; // Sapphire Localnet
 
 // This is an error code that indicates that the user canceled a transaction
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
