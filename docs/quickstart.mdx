@@ -4,7 +4,7 @@ import {findSidebarItem} from '@site/src/sidebarUtils';
 # Quickstart
 
 <p style={{width: '100%'}}>
-    <iframe style={{margin: 'auto', display:'block'}} width="560" height="315" src="https://www.youtube-nocookie.com/embed/LDLz06X_KNY" title="Deploying a Smart Contract on Oasis Sapphire: A Tutorial" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
+    <iframe style={{margin: 'auto', display:'block'}} width="560" height="315" src="https://www.youtube-nocookie.com/embed/-Qnsoo4loxg" title="Tutorial: Create a Sapphire Native dApp" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
 </p>
 
 In this tutorial, you will build and deploy a unique dApp that requires
@@ -31,70 +31,77 @@ Let's make it happen!
 
 ### Init a new Hardhat project
 
-We're going to use Hardhat, but Sapphire should be compatible with your dev
-environment of choice. Let us know if things are not as expected!
+We're going to use Hardhat with TypeScript which relies on NodeJS, but Sapphire
+should be compatible with your dev environment of choice. See examples in
+[Go][Oasis starter project for Go] and
+[Python][Oasis starter project for Python] at the end of this chapter. Let us
+know if things are not as expected!
 
-1. Make & enter a new directory `mkdir quickstart && cd quickstart`
-2. `npx hardhat@~2.19.4 init` then create a TypeScript project and install the project dependencies.
+[Oasis starter project for Go]: https://github.com/oasisprotocol/demo-starter-go
+[Oasis starter project for Python]: https://github.com/oasisprotocol/demo-starter-py
+
+1. Make & enter a new directory:
+
+   ```sh
+   mkdir quickstart && cd quickstart
+   ```
+
+2. Create a TypeScript project and install the project dependencies:
+
+   ```sh
+   npx hardhat init
+   ```
+
 3. Add [`@oasisprotocol/sapphire-hardhat`] as dependency:
 
-  ```shell npm2yarn
-  npm install -D @oasisprotocol/sapphire-hardhat
-  ```
+   ```shell npm2yarn
+   npm install -D @oasisprotocol/sapphire-hardhat
+   ```
 
 ### Add the Sapphire Testnet to Hardhat
 
-Open up your `hardhat.config.ts` and drop in these lines.
+Open up your `hardhat.config.ts` and import `sapphire-hardhat`.
 
-```js title="hardhat.config.ts"
- import { HardhatUserConfig } from "hardhat/config";
- // highlight-next-line
- import '@oasisprotocol/sapphire-hardhat';
- import "@nomicfoundation/hardhat-toolbox";
+![code typescript {2}](../examples/hardhat/hardhat.config.ts#config-preamble)
 
- const config: HardhatUserConfig = {
-  solidity: "0.8.19",
-  // highlight-start
-  networks: {
-    'sapphire-testnet': {
-      // This is Testnet! If you want Mainnet, add a new network config item.
-      url: "https://testnet.sapphire.oasis.io",
-      accounts: process.env.PRIVATE_KEY
-        ? [process.env.PRIVATE_KEY]
-        : [],
-      chainId: 0x5aff,
-    },
-  },
-  // highlight-end
- };
+By importing `@oasisprotocol/sapphire-hardhat`, **any network config entry
+corresponding to the Sapphire's chain ID will automatically be wrapped with
+Sapphire specifics for encrypting and signing the transactions**.
 
- export default config;
-```
+Next, let's add an account with a private key from an environment variable:
 
-By importing `@oasisprotocol/sapphire-hardhat` at the top of the config file,
-**any network config entry corresponding to the Sapphire's chain ID will
-automatically be wrapped with Sapphire specifics for encrypting and signing the
-transactions**.
+![code typescript {6-12}](../examples/hardhat/hardhat.config.ts#config-preamble)
+
+Finally, let's add the [Sapphire Testnet] network to the network property of
+`HardhatUserConfig`:
+
+![code typescript {4-19}](../examples/hardhat/hardhat.config.ts#config-networks)
 
 ### Get some Sapphire Testnet tokens
 
-Now for the fun part. As you have configured the Sapphire Test network, get some native TEST tokens.
-Hit up the one and only [Oasis Testnet faucet], select "Sapphire" and enter your address.
-Submit the form and TEST be on your way.
+Now for the fun part. As you have configured the Sapphire Test network, get
+some native TEST tokens. Hit up the one and only [Oasis Testnet faucet], select
+"Sapphire" and enter your wallet address. Submit the form and TEST be on your
+way.
 
 [Oasis Testnet faucet]: https://faucet.testnet.oasis.io
+[Sapphire Testnet]: ./network.mdx
 
 ### Get the Contract
 
 This is a Sapphire tutorial and you're already a Solidity expert, so let's not
 bore you with explaining the gritty details of the contract.
-Start by pasting [Vigil.sol] into `contracts/Vigil.sol`.
+Start by pasting `Vigil.sol` into `contracts/Vigil.sol`.
 
-While you're there, also place [run-vigil.ts] into `scripts/run-vigil.ts`.
-We'll need that later.
+1. Create a new file called `Vigil.sol` under `contracts/`:
+2. Paste the following contract into it:
 
-[Vigil.sol]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat/contracts/Vigil.sol
-[run-vigil.ts]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat/scripts/run-vigil.ts
+<details>
+  <summary> Vigil.sol contract </summary>
+
+  ![code solidity](../examples/hardhat/contracts/Vigil.sol)
+</details>
+
 
 #### Vigil.sol, the interesting parts
 
@@ -121,8 +128,28 @@ And the methods we'll care most about are
 
 The rest of the methods are useful if you actually intended to use the contract,
 but they demonstrate that developing for Sapphire is essentially the same as for
-Ethereum.
-You can even write tests against the Hardhat network and use Hardhat plugins.
+Ethereum. You can even write tests against the Hardhat network and use Hardhat
+plugins.
+
+### Add the Tasks
+
+We will use [Hardhat tasks] to automate the deployment and testing of the
+Vigil contract.
+
+1. Create a new file called `index.ts` under `tasks/`:
+2. Paste the following tasks to the `tasks/index.ts`:
+
+<details>
+  <summary> tasks/index.ts </summary>
+
+  ![code typescript](../examples/hardhat/tasks/index.ts)
+</details>
+
+3. Import the tasks inside `hardhat.config.ts`:
+
+![code typescript {4}](../examples/hardhat/hardhat.config.ts#config-preamble)
+
+[Hardhat tasks]: https://hardhat.org/hardhat-runner/docs/guides/tasks
 
 ### Run the Contract
 
@@ -136,7 +163,7 @@ Pretty cool if you ask me!
 Anyway, make it happen by running
 
 ```shell
-PRIVATE_KEY="0x..." npx hardhat run scripts/run-vigil.ts --network sapphire-testnet
+PRIVATE_KEY="0x..." npx hardhat full-vigil --network sapphire-testnet
 ```
 
 And if you see something like the following, you'll know you're well on the road
@@ -149,7 +176,7 @@ Checking the secret
 failed to fetch secret: reverted: not expired
 Waiting...
 Checking the secret again
-The secret ingredient is brussels sprouts
+The secret ingredient is brussel sprouts
 ```
 
 ## All done!
@@ -181,9 +208,6 @@ out the official [Oasis starter] files.
 Are you building your dApp in languages other than TypeScript? Check out the
 official [Oasis starter project for Go] and the [Oasis starter project for Python].
 
-[Oasis starter project for Go]: https://github.com/oasisprotocol/demo-starter-go
-[Oasis starter project for Python]: https://github.com/oasisprotocol/demo-starter-py
-
 :::
 
 ## See also
@@ -194,5 +218,5 @@ official [Oasis starter project for Go] and the [Oasis starter project for Pytho
 
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
 [develop]: ./develop/README.mdx
-[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat
+[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat
 [`@oasisprotocol/sapphire-hardhat`]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
