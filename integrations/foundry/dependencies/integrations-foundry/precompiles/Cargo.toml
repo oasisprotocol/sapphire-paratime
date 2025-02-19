@@ -72,8 +72,8 @@ sha2 = "0.10"
 x25519-dalek = "2.0"
 rand = "0.8"
 ed25519-dalek = "2.1.1"
-oasis-core-keymanager = { git = "https://github.com/oasisprotocol/oasis-core", tag = "runtime/v24.3-rt1" }
-oasis-core-runtime = { git = "https://github.com/oasisprotocol/oasis-core", tag = "runtime/v24.3-rt1" }
+oasis-core-keymanager = { git = "https://github.com/oasisprotocol/oasis-core", tag = "v25.0" }
+oasis-core-runtime = { git = "https://github.com/oasisprotocol/oasis-core", tag = "v25.0" }
 oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", package = "oasis-runtime-sdk", branch = "main" }
 evm = { git = "https://github.com/oasisprotocol/evm", tag = "v0.39.1-oasis" }
 oasis_cbor = { version = "0.5.1", package = "oasis-cbor" }
