@@ -9,37 +9,37 @@ sapphirepy.deoxysii module
 
 .. automodule:: sapphirepy.deoxysii
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 sapphirepy.envelope module
 --------------------------
 
 .. automodule:: sapphirepy.envelope
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 sapphirepy.error module
 -----------------------
 
 .. automodule:: sapphirepy.error
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 sapphirepy.sapphire module
 --------------------------
 
 .. automodule:: sapphirepy.sapphire
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: sapphirepy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
