@@ -1,7 +1,20 @@
-# @oasisprotocol/sapphire-wagmi-v2
+# Sapphire-Wagmi
 
-A plugin for Wagmi v2 that wraps the providers connected to the Sapphire network to enable end-to-end encryption for transactions, view calls and gas
-estimations
+[![version][wagmi-version]][wagmi-npm]
+[![size][wagmi-size]][wagmi-bundlephobia]
+![downloads][wagmi-downloads]
+
+[wagmi-npm]: https://www.npmjs.org/package/@oasisprotocol/sapphire-wagmi-v2
+[wagmi-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-wagmi-v2
+[wagmi-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-wagmi-v2
+[wagmi-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-wagmi-v2
+[wagmi-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-wagmi-v2.svg
+
+A plugin for [Wagmi][wagmi] v2 that wraps the providers connected to the
+Sapphire network to enable end-to-end encryption for transactions, view calls
+and gas estimations.
+
+[wagmi]: https://wagmi.sh/
 
 ## Usage
 
@@ -47,7 +60,6 @@ wrapped.
 [EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
 [EIP-1193]: https://eips.ethereum.org/EIPS/eip-1193
 
-
 To connect to your `sapphire-localnet` instance, define a custom chain:
 
 ```typescript
@@ -66,3 +78,8 @@ const sapphireLocalnet = defineChain({
 	testnet: true,
 });
 ```
+
+For a complete example of how to use this library, please refer to our
+[Wagmi example][example].
+
+[example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2

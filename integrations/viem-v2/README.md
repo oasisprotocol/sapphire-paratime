@@ -1,4 +1,14 @@
-# @oasisprotocol/sapphire-viem-v2
+# Sapphire-Viem
+
+[![version][viem-version]][viem-npm]
+[![size][viem-size]][viem-bundlephobia]
+![downloads][viem-downloads]
+
+[viem-npm]: https://www.npmjs.org/package/@oasisprotocol/sapphire-viem-v2
+[viem-version]: https://img.shields.io/npm/v/@oasisprotocol/sapphire-viem-v2
+[viem-size]: https://img.shields.io/bundlephobia/minzip/@oasisprotocol/sapphire-viem-v2
+[viem-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-viem-v2
+[viem-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-viem-v2.svg
 
 A plugin for [Viem] 2.x that encrypts transactions, gas estimations and calls to
 the Oasis Sapphire network to enable end-to-end encryption between the dApp and
@@ -66,3 +76,8 @@ const walletClient = await wrapWalletClient(createWalletClient({
 Be careful to verify that any transactions which contain sensitive information
 are encrypted by checking the Oasis block explorer and looking for the green
 lock icon.
+
+You can find more example code demonstrating how to use the library in our
+[Hardhat-Viem example][example].
+
+[example]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/hardhat-viem
