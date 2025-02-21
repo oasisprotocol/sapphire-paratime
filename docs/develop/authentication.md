@@ -51,8 +51,8 @@ In Sapphire, you need to consider the following types of contract calls:
     [EIP-712] defines a format for signing view calls with the keypair of your
     Ethereum account. Sapphire will validate such signatures and automatically
     set the `msg.sender` parameter in your contract to the address of the
-    signing account. This method is mostly appropriate for backend services,
-    since the frontend would require user interaction each time.
+    signing account. This method is most appropriate for backend services
+    because frontend applications would require user interaction each time.
 
 5. **Transactions** (authenticated by signature)
 
