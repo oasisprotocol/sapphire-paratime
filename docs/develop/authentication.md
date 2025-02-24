@@ -246,6 +246,16 @@ your Web3 endpoint.
 
 ### via signed queries
 
+:::info
+
+Sapphire TypeScript wrapper v1 included signed view calls which resulted in
+MetaMask popups for every view call. We recommend authenticating [via SIWE token]
+with the Sapphire TypeScript wrapper v2 going forward.
+
+:::
+
+[via SIWE token]: #via-siwe-token
+
 [EIP-712] proposed a method to show data to the user in a structured fashion so
 they can verify it before signing. In the browser however, apps requiring signed
 view calls would trigger user interaction with their wallet each time—sometimes
