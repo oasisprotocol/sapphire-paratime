@@ -6,6 +6,16 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 2.1.0 (2025-02)
+
+### Added
+
+- Enabled Snap connection in Sapphire integrations
+
+### Fixed
+
+- Support Brave wallet default
+
 ## 2.0.1 (2024-09)
 
 https://github.com/oasisprotocol/sapphire-paratime/milestone/2?closed=1
