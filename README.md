@@ -110,6 +110,15 @@ JS libraries should be updated with a version bump in the `package.json`
 file and a respective tag in the pattern of `{{path}}/v{{semver}}`, such as
 `clients/js/v1.1.1`.
 
+This repository allows the use of `alpha`, `beta`, and `next` releases for NPM
+packages, but prefers a linear upgrade path when possible from `latest` to
+`next`. such as `integrations/hardhat/v2.22.2-next`. While we prefer the use
+of CI and e2e testing such as dAppwright, this may not be possible for all
+supported use cases. When releasing a new version of a package, seek to upgrade
+`demo-` repos to the release version, and test both `demo-` dapps and this
+repository's `examples` against the to be released package with commonly used
+browser wallets such as Rabby, MetaMask, and Brave.
+
 ## Contributing
 
 Developers are encouraged to contribute their improvements to the Sapphire
