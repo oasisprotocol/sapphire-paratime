@@ -5,6 +5,7 @@ packages:
   - integrations/ethers-v6
   - integrations/hardhat
   - contracts/
+  - examples/hardhat
   - examples/hardhat-boilerplate
   - examples/hardhat-boilerplate/frontend
   - examples/hardhat-viem
