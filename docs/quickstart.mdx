@@ -56,7 +56,7 @@ environment of choice. Let us know if things are not as expected!
 
 Open up your `hardhat.config.ts` and import `sapphire-hardhat`.
 
-![code typescript](../examples/hardhat/hardhat.config.ts#config-import)
+![code typescript](../examples/hardhat-viem/hardhat.config.ts)
 
 By importing `@oasisprotocol/sapphire-hardhat`, **any network config entry
 corresponding to the Sapphire's chain ID will automatically be wrapped with
@@ -64,8 +64,6 @@ Sapphire specifics for encrypting and signing the transactions**.
 
 Next, let's add the Sapphire testnet network to the network property of
 HardhatUserConfig.
-
-![code typescript](../examples/hardhat/hardhat.config.ts#config-networks)
 
 ### Get some Sapphire Testnet tokens
 
@@ -87,7 +85,7 @@ Start by pasting `Vigil.sol` into `contracts/Vigil.sol`.
 <details>
   <summary> Vigil.sol contract </summary>
 
-  ![code Solidity](../examples/hardhat/contracts/Vigil.sol)
+  ![code Solidity](../examples/hardhat-viem/contracts/Example.sol)
 </details>
 
 3. Add deploy and check tasks to Hardhat config:
@@ -95,7 +93,6 @@ Start by pasting `Vigil.sol` into `contracts/Vigil.sol`.
 <details>
   <summary> hardhat.config.ts </summary>
 
-  ![code typescript](../examples/hardhat/hardhat.config.ts#config-tasks)
 </details>
 
 #### Vigil.sol, the interesting parts
