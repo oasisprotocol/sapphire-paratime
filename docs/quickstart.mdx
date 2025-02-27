@@ -36,54 +36,36 @@ environment of choice. Let us know if things are not as expected!
 
 1. Make & enter a new directory:
 
-```sh
-mkdir quickstart && cd quickstart
-```
+  ```sh
+  mkdir quickstart && cd quickstart
+  ```
 
 2. Create a TypeScript project and install the project dependencies:
 
-```sh
-npx hardhat init
-```
+  ```sh
+  npx hardhat init
+  ```
 
 3. Add [`@oasisprotocol/sapphire-hardhat`] as dependency:
 
-```shell npm2yarn
-npm install -D @oasisprotocol/sapphire-hardhat
-```
+  ```shell npm2yarn
+  npm install -D @oasisprotocol/sapphire-hardhat
+  ```
 
 ### Add the Sapphire Testnet to Hardhat
 
-Open up your `hardhat.config.ts` and drop in these lines.
+Open up your `hardhat.config.ts` and import `sapphire-hardhat`.
 
-  ```js title="hardhat.config.ts"
-  import { HardhatUserConfig } from "hardhat/config";
-  // highlight-next-line
-  import '@oasisprotocol/sapphire-hardhat';
-  import "@nomicfoundation/hardhat-toolbox";
-
-  const config: HardhatUserConfig = {
-   solidity: "0.8.19",
-   // highlight-start
-   networks: {
-     'sapphire-testnet': {
-       // This is Testnet! If you want Mainnet, add a new network config item.
-       url: "https://testnet.sapphire.oasis.io",
-       accounts: process.env.PRIVATE_KEY
-         ? [process.env.PRIVATE_KEY]
-         : [],
-       chainId: 0x5aff,
-     },
-   },
-   // highlight-end
-  };
-
-  export default config;
-  ```
+![code typescript](../examples/hardhat/hardhat.config.ts#config-import)
 
 By importing `@oasisprotocol/sapphire-hardhat`, **any network config entry
 corresponding to the Sapphire's chain ID will automatically be wrapped with
 Sapphire specifics for encrypting and signing the transactions**.
+
+Next, let's add the Sapphire testnet network to the network property of
+HardhatUserConfig.
+
+![code typescript](../examples/hardhat/hardhat.config.ts#config-networks)
 
 ### Get some Sapphire Testnet tokens
 
@@ -105,139 +87,15 @@ Start by pasting `Vigil.sol` into `contracts/Vigil.sol`.
 <details>
   <summary> Vigil.sol contract </summary>
 
-  ```solidity title="contracts/Vigil.sol" showLineNumbers
-  // SPDX-License-Identifier: MIT
-  pragma solidity ^0.8.9;
-
-  contract Vigil {
-      struct SecretMetadata {
-          address creator;
-          string name;
-          /// @notice How long (in seconds) the secret should remain so past the creator's last update.
-          uint256 longevity;
-      }
-
-      event SecretCreated(
-          address indexed creator,
-          string indexed name,
-          uint256 index
-      );
-      event SecretRevealed(
-          address indexed creator,
-          string indexed name,
-          uint256 index
-      );
-
-      SecretMetadata[] public _metas;
-      bytes[] private _secrets;
-      /// @dev The unix timestamp at which the address was last seen.
-      mapping(address => uint256) public _lastSeen;
-
-      function createSecret(
-          string calldata name,
-          uint256 longevity,
-          bytes calldata secret
-      ) external {
-          _updateLastSeen();
-          _metas.push(
-              SecretMetadata({
-                  creator: msg.sender,
-                  name: name,
-                  longevity: longevity
-              })
-          );
-          _secrets.push(secret);
-          emit SecretCreated(msg.sender, name, _metas.length - 1);
-      }
-
-      /// @notice Reveals the secret at the specified index.
-      function revealSecret(uint256 index) external returns (bytes memory) {
-          require(index < _metas.length, "no such secret");
-          address creator = _metas[index].creator;
-          uint256 expiry = _lastSeen[creator] + _metas[index].longevity;
-          require(block.timestamp >= expiry, "not expired");
-          emit SecretRevealed(creator, _metas[index].name, index);
-          return _secrets[index];
-      }
-
-      /// @notice Returns the time (in seconds since the epoch) at which the owner was last seen, or zero if never seen.
-      function getLastSeen(address owner) external view returns (uint256) {
-          return _lastSeen[owner];
-      }
-
-      function getMetas(uint256 offset, uint256 count)
-          external
-          view
-          returns (SecretMetadata[] memory)
-      {
-          if (offset >= _metas.length) return new SecretMetadata[](0);
-          uint256 c = offset + count <= _metas.length
-              ? count
-              : _metas.length - offset;
-          SecretMetadata[] memory metas = new SecretMetadata[](c);
-          for (uint256 i = 0; i < c; ++i) {
-              metas[i] = _metas[offset + i];
-          }
-          return metas;
-      }
-
-      function refreshSecrets() external {
-          _updateLastSeen();
-      }
-
-      function _updateLastSeen() internal {
-          _lastSeen[msg.sender] = block.timestamp;
-      }
-  }
-  ```
+  ![code Solidity](../examples/hardhat/contracts/Vigil.sol)
 </details>
 
-3. Create a new file named `run-vigil.ts` into `scripts/run-vigil.ts`
-4. Paste the following contract into it:
+3. Add deploy and check tasks to Hardhat config:
 
 <details>
-  <summary> run-vigil.ts script </summary>
+  <summary> hardhat.config.ts </summary>
 
-  ```js title="scripts/run-vigil.ts" showLineNumbers
-  // Usage: pnpm hardhat run --network <network> scripts/run-vigil.ts
-
-  import { ethers } from 'hardhat';
-
-  async function main() {
-    console.log((await ethers.provider.getNetwork()).name);
-    const Vigil = await ethers.getContractFactory('Vigil');
-    const vigil = await Vigil.deploy();
-    console.log('Vigil deployed to:', await vigil.getAddress());
-
-    const tx = await vigil.createSecret(
-      'ingredient',
-      30 /* seconds */,
-      Buffer.from('brussel sprouts'),
-    );
-    console.log('Storing a secret in', tx.hash);
-    await tx.wait();
-    try {
-      console.log('Checking the secret');
-      await vigil.connect(ethers.provider).revealSecret.staticCall(0);
-      console.log('Uh oh. The secret was available!');
-      process.exit(1);
-    } catch (e: any) {
-      console.log('failed to fetch secret:', e.message);
-    }
-    console.log('Waiting...');
-
-    await new Promise((resolve) => setTimeout(resolve, 30_000));
-    console.log('Checking the secret again');
-    await (await vigil.revealSecret(0)).wait(); // Reveal the secret.
-    const secret = await vigil.revealSecret.staticCallResult(0); // Get the value.
-    console.log('The secret ingredient is', Buffer.from(secret[0].slice(2), 'hex').toString());
-  }
-
-  main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
-  ```
+  ![code typescript](../examples/hardhat/hardhat.config.ts#config-tasks)
 </details>
 
 #### Vigil.sol, the interesting parts
@@ -304,6 +162,13 @@ deeper, please check out the [develop] chapter and join the discussion on the
 
 Best of luck on your future forays into confidentiality!
 
+:::info Example: Hardhat
+
+Visit the Sapphire ParaTime repository to download the [Hardhat][hardhat-example]
+example of this quickstart.
+
+:::
+
 :::info Example: Starter project
 
 If your project involves building a web frontend, we recommend that you check
@@ -331,5 +196,5 @@ official [Oasis starter project for Go] and the [Oasis starter project for Pytho
 
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
 [develop]: ./develop/README.mdx
-[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat
+[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat
 [`@oasisprotocol/sapphire-hardhat`]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
