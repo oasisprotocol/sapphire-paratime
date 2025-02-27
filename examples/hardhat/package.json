@@ -1,0 +1,19 @@
+{
+  "name": "sapphire-examples-hardhat",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat full-vigil --network sapphire-localnet"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.19"
+  },
+  "devDependencies": {
+    "@oasisprotocol/sapphire-paratime": "workspace:^",
+    "@oasisprotocol/sapphire-hardhat": "workspace:^",
+    "@biomejs/biome": "1.9.4",
+    "ts-node": "^10.9.2",
+    "chai": "^4.3.7",
+    "typescript": "^5.7.3"
+  }
+}
