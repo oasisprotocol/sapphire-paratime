@@ -45,7 +45,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        7
+        8
     } else {
         // Mainnet.
         4
@@ -94,10 +94,12 @@ impl modules::rofl::Config for Config {
     const GAS_COST_CALL_AUTHORIZED_ORIGIN_ENTITY: u64 = 2000;
     /// Gas cost of rofl.StakeThresholds call.
     const GAS_COST_CALL_STAKE_THRESHOLDS: u64 = 10;
+    /// Gas cost of rofl.DeriveKey call.
+    const GAS_COST_CALL_DERIVE_KEY: u64 = 10_000;
 
-    /// Amount of stake required for maintaining an application (10_000 ROSE/TEST).
+    /// Amount of stake required for maintaining an application (100 ROSE/TEST).
     const STAKE_APP_CREATE: BaseUnits =
-        BaseUnits::new(10_000_000_000_000_000_000_000, Denomination::NATIVE);
+        BaseUnits::new(100_000_000_000_000_000_000, Denomination::NATIVE);
 }
 
 /// The EVM ParaTime.
@@ -193,7 +195,7 @@ impl sdk::Runtime for Runtime {
                     },
                     max_batch_gas: 15_000_000,
                     max_tx_size: 128 * 1024,
-                    max_tx_signers: 2,
+                    max_tx_signers: 3,
                     max_multisig_signers: 8,
                     gas_costs: modules::core::GasCosts {
                         tx_byte: 1,
