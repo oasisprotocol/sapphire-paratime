@@ -34,8 +34,18 @@ Let's make it happen!
 We're going to use Hardhat, but Sapphire should be compatible with your dev
 environment of choice. Let us know if things are not as expected!
 
-1. Make & enter a new directory `mkdir quickstart && cd quickstart`
-2. `npx hardhat@~2.19.4 init` then create a TypeScript project and install the project dependencies.
+1. Make & enter a new directory:
+
+  ```sh
+  mkdir quickstart && cd quickstart
+  ```
+
+2. Create a TypeScript project and install the project dependencies:
+
+  ```sh
+  npx hardhat init
+  ```
+
 3. Add [`@oasisprotocol/sapphire-hardhat`] as dependency:
 
   ```shell npm2yarn
@@ -44,37 +54,18 @@ environment of choice. Let us know if things are not as expected!
 
 ### Add the Sapphire Testnet to Hardhat
 
-Open up your `hardhat.config.ts` and drop in these lines.
+Open up your `hardhat.config.ts` and import `sapphire-hardhat`.
 
-```js title="hardhat.config.ts"
- import { HardhatUserConfig } from "hardhat/config";
- // highlight-next-line
- import '@oasisprotocol/sapphire-hardhat';
- import "@nomicfoundation/hardhat-toolbox";
+![code typescript](../examples/hardhat/hardhat.config.ts#config-import)
 
- const config: HardhatUserConfig = {
-  solidity: "0.8.19",
-  // highlight-start
-  networks: {
-    'sapphire-testnet': {
-      // This is Testnet! If you want Mainnet, add a new network config item.
-      url: "https://testnet.sapphire.oasis.io",
-      accounts: process.env.PRIVATE_KEY
-        ? [process.env.PRIVATE_KEY]
-        : [],
-      chainId: 0x5aff,
-    },
-  },
-  // highlight-end
- };
+By importing `@oasisprotocol/sapphire-hardhat`, **any network config entry
+corresponding to the Sapphire's chain ID will automatically be wrapped with
+Sapphire specifics for encrypting and signing the transactions**.
 
- export default config;
-```
+Next, let's add the Sapphire testnet network to the network property of
+HardhatUserConfig.
 
-By importing `@oasisprotocol/sapphire-hardhat` at the top of the config file,
-**any network config entry corresponding to the Sapphire's chain ID will
-automatically be wrapped with Sapphire specifics for encrypting and signing the
-transactions**.
+![code typescript](../examples/hardhat/hardhat.config.ts#config-networks)
 
 ### Get some Sapphire Testnet tokens
 
@@ -88,13 +79,24 @@ Submit the form and TEST be on your way.
 
 This is a Sapphire tutorial and you're already a Solidity expert, so let's not
 bore you with explaining the gritty details of the contract.
-Start by pasting [Vigil.sol] into `contracts/Vigil.sol`.
+Start by pasting `Vigil.sol` into `contracts/Vigil.sol`.
 
-While you're there, also place [run-vigil.ts] into `scripts/run-vigil.ts`.
-We'll need that later.
+1. Create a new file called `Vigil.sol` under `contracts/`:
+2. Paste the following contract into it:
 
-[Vigil.sol]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat/contracts/Vigil.sol
-[run-vigil.ts]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat/scripts/run-vigil.ts
+<details>
+  <summary> Vigil.sol contract </summary>
+
+  ![code Solidity](../examples/hardhat/contracts/Vigil.sol)
+</details>
+
+3. Add deploy and check tasks to Hardhat config:
+
+<details>
+  <summary> hardhat.config.ts </summary>
+
+  ![code typescript](../examples/hardhat/hardhat.config.ts#config-tasks)
+</details>
 
 #### Vigil.sol, the interesting parts
 
@@ -149,7 +151,7 @@ Checking the secret
 failed to fetch secret: reverted: not expired
 Waiting...
 Checking the secret again
-The secret ingredient is brussels sprouts
+The secret ingredient is brussel sprouts
 ```
 
 ## All done!
@@ -194,5 +196,5 @@ official [Oasis starter project for Go] and the [Oasis starter project for Pytho
 
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
 [develop]: ./develop/README.mdx
-[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/blob/stable/clients/js/1.x/examples/hardhat
+[hardhat-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/hardhat
 [`@oasisprotocol/sapphire-hardhat`]: https://www.npmjs.com/package/@oasisprotocol/sapphire-hardhat
