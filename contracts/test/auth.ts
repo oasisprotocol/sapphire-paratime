@@ -179,4 +179,13 @@ describe('Auth', function () {
     await siweAuthTests.testRevokeAuthToken(ethers.keccak256(token5));
     await expect(siweAuthTests.testVerySecretMessage(token5)).to.be.reverted;
   });
+
+  it('Should change domain', async function () {
+    const siweAuthTests = await deploy('localhost');
+    expect(await siweAuthTests.domain()).to.be.equal('localhost');
+
+    const tx = await siweAuthTests.setDomain('localhost2', { gasLimit: 50000 });
+    await tx.wait();
+    expect(await siweAuthTests.domain()).to.be.equal('localhost2');
+  });
 });
