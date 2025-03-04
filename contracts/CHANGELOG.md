@@ -6,6 +6,18 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.13 (2025-03)
+
+### Changed
+
+* `SiweAuth._domain` visibility changed from private to internal, so a
+  subcontract can change it if wanted
+
+### Removed
+
+* Obsolete warning in Sapphire.sol `randomBytes()` for Sapphire versions prior
+  to 0.6.0
+
 ## 0.2.12 (2025-01)
 
 ### Added
