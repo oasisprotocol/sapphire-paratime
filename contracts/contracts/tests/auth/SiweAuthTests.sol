@@ -11,6 +11,12 @@ contract SiweAuthTests is SiweAuth {
         _owner = msg.sender;
     }
 
+    function setDomain(string memory inDomain) external {
+        if (msg.sender==_owner) {
+            _domain = inDomain;
+        }
+    }
+
     function testVerySecretMessage(bytes calldata token)
         external
         view

@@ -49,7 +49,7 @@ struct AuthToken {
  */
 contract SiweAuth is A13e {
     /// Domain which the dApp is associated with
-    string private _domain;
+    string internal _domain;
     /// Encryption key which the authentication tokens are encrypted with
     bytes32 private _authTokenEncKey;
     /// Default authentication token validity, if no expiration-time provided

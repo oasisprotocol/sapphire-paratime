@@ -221,28 +221,61 @@ async function getSecretMessage(): Promise<Message> {
 }
 ```
 
+#### A few words about the SIWE domain parameter {#siwe-domain}
+
+During contract deployment you have to provide **the domain** where the web
+content of your dApp will be hosted at. MetaMask will check whether the domain
+shown in the user's browser window matches the one provided in the SIWE message
+used for logging in and then warn the user if there is a discrepancy. On the
+other hand—if the SIWE message is forged to match the (exploited) web site
+domain, the on-chain [SiweAuth] message will fail validation and prevent the
+user from obtaining a valid token.
+
+When deploying your contract, the provided domain **should include the host
+chunk of the [URI], including any subdomains, and optionally the port**. No
+scheme (e.g. `http://`, `https://`) or path (e.g. `/my-app/login`) should be
+included. If you wish to enforce authentication only on a specific
+port, provide it alongside the domain, e.g. `mydomain.com:12345`. Otherwise,
+MetaMask will consider any port valid.
+
+The visibility of `_domain` in [SiweAuth] is **`internal`**. By default, a
+public getter is implemented, so a web app can automatically obtain a domain
+name when generating the SIWE message. No setters are provided in keeping the
+domain immutable. If needed, feel free to implement a setter in your contract
+with appropriate authentication mechanisms (e.g. `onlyOwner` modifier). For
+traceability, we also suggest to **emit an event** when the domain is
+changed as transactions may be encrypted.
+
 :::info Example: Starter project
 
 To see a running example of the TypeScript SIWE code including the Hardhat
 tests, Node.js and the browser, check out the official Oasis [demo-starter]
-project. The SIWE authentication is implemented inside the [Hardhat tests].
+project. The SIWE authentication is implemented on the backend as a
+[Hardhat task], in [unit tests], and on the frontend within the
+[Web3 Auth provider] code.
 
 :::
 
 :::tip Sapphire TypeScript wrapper?
 
-While the [Sapphire TypeScript wrapper][sp-npm] offers a convenient end-to-end
-encryption for the contract calls, it is not mandatory for SIWE, if you trust
-your Web3 endpoint.
+While the [Sapphire TypeScript wrapper][sp-npm] offers convenient end-to-end
+encryption for contract calls and transactions, using the TypeScript wrapper
+is required for SIWE security if you trust your Web3 endpoint. The token
+generation occurs inside the Sapphire's TEE and the communication with your
+Web3 endpoint is secured via HTTPS.
 
 :::
 
 [demo-starter]: https://github.com/oasisprotocol/demo-starter
-[Hardhat tests]: https://github.com/oasisprotocol/demo-starter/blob/master/backend/test/MessageBox.ts
+[Hardhat task]: https://github.com/oasisprotocol/demo-starter/blob/master/backend/hardhat.config.ts
+[unit tests]: https://github.com/oasisprotocol/demo-starter/blob/master/backend/test/MessageBox.ts
+[Web3 Auth provider]: https://github.com/oasisprotocol/demo-starter/blob/master/frontend/src/providers/Web3AuthProvider.tsx
+[tests]: https://github.com/oasisprotocol/demo-starter/blob/master/backend/test/MessageBox.ts
 [SiweAuth]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/auth/SiweAuth.sol/contract.SiweAuth.html
 [EIP-4361]: https://eips.ethereum.org/EIPS/eip-4361
 [single sign-on]: https://en.wikipedia.org/wiki/Single_sign-on
 [sp-npm]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
+[URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Syntax
 
 ### via signed queries
 
@@ -374,7 +407,9 @@ implementation then depends on your programming language:
   `msg.sender` will be defined, the `isOwner` modifier will pass just fine.
 - **TypeScript**: Recycle the frontend client-side code
   [from above](#via-siwe-token) to generate the SIWE message, perform the 
-  authentication and pass it in the view call.
+  authentication and pass it in the view call. You can check out the
+  demo-starter's [Hardhat task] and [unit tests] for a working example.
+
 
 [Oasis starter project for Go]: https://github.com/oasisprotocol/demo-starter-go
 [Oasis starter project for Python]: https://github.com/oasisprotocol/demo-starter-py
