@@ -129,3 +129,57 @@ jobs:
           python3 -mpip install --user -r requirements.dev.txt
           python3 -munittest discover
           python3 -m pytest sapphirepy/tests/
+  
+  test-examples-foundry:
+    name: test-examples-foundry
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./examples/foundry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install libclang-dev
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Install dependencies
+        run: make build
+
+      - name: Run tests
+        run: forge test
+
+  test-integrations-foundry:
+    name: test-integrations-foundry
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./integrations/foundry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install libclang-dev
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+      
+      - name: Install dependencies
+        run: make build
+      
+      - name: Run tests
+        run: forge test
