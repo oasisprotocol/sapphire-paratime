@@ -65,6 +65,10 @@ jobs:
         working-directory: ./integrations
         run: |
           for i in */ ; do
+            if [ "$i" == "foundry/" ]; then
+              continue
+            fi
+
             pushd $i
             pnpm build # Required for typedoc
             if [ "$i" == "hardhat/" ]; then

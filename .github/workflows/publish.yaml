@@ -88,7 +88,7 @@ jobs:
         env:
           SOLDEER_AUTH_TOKEN: ${{ secrets.SOLDEER_TOKEN }}
         run: |
-          echo "$SOLDEER_AUTH_TOKEN" > ~/.soldeer/.soldeer_login
+          mkdir -p ~/.soldeer && echo "$SOLDEER_AUTH_TOKEN" > ~/.soldeer/.soldeer_login
       - name: Publish to Soldeer
         run: soldeer push @oasisprotocol-sapphire-contracts~$CONTRACTS_VERSION
         working-directory: contracts/contracts
