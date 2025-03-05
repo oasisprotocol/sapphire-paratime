@@ -14,11 +14,6 @@ contract Vigil {
         string indexed name,
         uint256 index
     );
-    event SecretRevealed(
-        address indexed creator,
-        string indexed name,
-        uint256 index
-    );
 
     SecretMetadata[] public _metas;
     bytes[] private _secrets;
@@ -43,12 +38,11 @@ contract Vigil {
     }
 
     /// Reveal the secret at the specified index.
-    function revealSecret(uint256 index) external returns (bytes memory) {
+    function revealSecret(uint256 index) external view returns (bytes memory) {
         require(index < _metas.length, "no such secret");
         address creator = _metas[index].creator;
         uint256 expiry = _lastSeen[creator] + _metas[index].longevity;
         require(block.timestamp >= expiry, "not expired");
-        emit SecretRevealed(creator, _metas[index].name, index);
         return _secrets[index];
     }
 
