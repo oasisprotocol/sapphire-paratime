@@ -1,14 +1,16 @@
 // #region config-preamble
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
 import "@oasisprotocol/sapphire-hardhat";
 import "@nomicfoundation/hardhat-toolbox";
-import "./tasks"
+import "./tasks";
 
-// Hardhat Node and sapphire-dev test key
-const firstPrivateKey = `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`;
-const accounts = process.env.PRIVATE_KEY
-  ? [process.env.PRIVATE_KEY]
-  : [firstPrivateKey];
+const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {
+  mnemonic: "test test test test test test test test test test test junk",
+  path: "m/44'/60'/0'/0",
+  initialIndex: 0,
+  count: 20,
+  passphrase: "",
+};
 // #endregion config-preamble
 
 

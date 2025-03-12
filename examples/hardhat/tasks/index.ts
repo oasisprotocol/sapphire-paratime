@@ -17,7 +17,7 @@ task("create-secret")
     const tx = await vigil.createSecret(
       "ingredient",
       30 /* seconds */,
-      Buffer.from("brussel sprouts"),
+      Buffer.from("brussels sprouts"),
     );
     console.log("Storing a secret in", tx.hash);
   });
