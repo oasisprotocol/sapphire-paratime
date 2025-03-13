@@ -121,7 +121,7 @@ jobs:
       - name: Install sapphirepy .whl file
         run: |
           pip3 install --user -r requirements.txt
-          pip3 install --user dist/sapphire_py-0.3.0-py3-none-any.whl
+          pip3 install --user dist/*.whl
 
       - name: Python client tests
         working-directory: clients/py
