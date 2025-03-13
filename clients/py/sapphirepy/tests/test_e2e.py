@@ -6,9 +6,10 @@ from typing import Type, Union
 from web3 import Web3
 from web3.exceptions import ContractLogicError, ContractCustomError
 from web3.contract.contract import Contract
-from web3.middleware import construct_sign_and_send_raw_middleware
+from web3.middleware import SignAndSendRawMiddlewareBuilder
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
+from eth_utils import function_signature_to_4byte_selector
 
 from sapphirepy import sapphire
 
@@ -17,10 +18,11 @@ GREETER_ABI = os.path.join(TESTDATA, 'Greeter.abi')
 GREETER_BIN = os.path.join(TESTDATA, 'Greeter.bin')
 GREETER_SOL = os.path.join(TESTDATA, 'Greeter.sol')
 
+
 def compiled_test_contract():
     if not os.path.exists(GREETER_ABI):
         # pylint: disable=import-outside-toplevel
-        import solcx   # type: ignore
+        import solcx  # type: ignore
 
         with open(GREETER_SOL, 'r', encoding='utf-8') as handle:
             solcx.install_solc(version='0.8.9')
@@ -45,8 +47,9 @@ def compiled_test_contract():
                 'bin': json.load(bin_handle)
             }
 
+
 class TestEndToEnd(unittest.TestCase):
-    greeter:Union[Contract,Type[Contract]]
+    greeter: Union[Contract, Type[Contract]]
     w3: Web3
 
     def setUp(self):
@@ -55,7 +58,7 @@ class TestEndToEnd(unittest.TestCase):
 
         w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
         # w3 = Web3(Web3.HTTPProvider('https://testnet.sapphire.oasis.io'))
-        w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+        w3.middleware_onion.add(SignAndSendRawMiddlewareBuilder.build(account))
         self.w3_no_signer = Web3(Web3.HTTPProvider('http://localhost:8545'))
         self.w3 = w3 = sapphire.wrap(w3, account)
 
@@ -63,7 +66,7 @@ class TestEndToEnd(unittest.TestCase):
 
         iface = compiled_test_contract()
 
-        contract = w3.eth.contract(abi=iface['abi'], bytecode=iface['bin'], )
+        contract = w3.eth.contract(abi=iface['abi'], bytecode=iface['bin'])
         tx_hash = contract.constructor().transact({'gasPrice': w3.eth.gas_price})
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
@@ -73,9 +76,12 @@ class TestEndToEnd(unittest.TestCase):
     def test_viewcall_revert_custom(self):
         with self.assertRaises(ContractCustomError) as cm:
             self.greeter.functions.revertWithCustomError().call()
-        data = self.greeter.encode_abi(
-            fn_name="MyCustomError", args=["thisIsCustom"]
-        )
+
+        error_signature = "MyCustomError(string)"
+        selector = function_signature_to_4byte_selector(error_signature)
+        error_data = self.w3.eth.abi.encode_parameters(['string'], ["thisIsCustom"])
+        data = selector + error_data
+
         self.assertEqual(cm.exception.args[0], data)
 
     def test_viewcall_revert_reason(self):
@@ -102,6 +108,7 @@ class TestEndToEnd(unittest.TestCase):
         y = w3.eth.wait_for_transaction_receipt(x)
         z = greeter.events.Greeting().process_receipt(y)
         self.assertEqual(z[0].args['g'], 'Hello')
+
 
 if __name__ == '__main__':
     unittest.main()
