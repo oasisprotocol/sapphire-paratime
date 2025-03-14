@@ -7,7 +7,7 @@ from typing import (
     TypedDict,
     Union
 )
-from toolz import (
+from toolz import (  # type: ignore
     curry,
 )
 
@@ -22,8 +22,7 @@ from web3.types import (  # noqa: F401
     MakeBatchRequestFn,
     MakeRequestFn,
     RPCEndpoint,
-    RPCResponse,
-    TxParams
+    RPCResponse
 )
 from web3.middleware.base import (
     Web3MiddlewareBuilder,
@@ -87,7 +86,7 @@ class CalldataPublicKeyManager:
             self._keys.append(pk)
 
 
-def _should_intercept(method: RPCEndpoint, params: tuple[TxParams]):
+def _should_intercept(method: RPCEndpoint, params: Any):
     if not ENCRYPT_DEPLOYS:
         if method in ('eth_sendTransaction', 'eth_estimateGas'):
             # When 'to' flag is missing, we assume it's a deployment
@@ -97,7 +96,7 @@ def _should_intercept(method: RPCEndpoint, params: tuple[TxParams]):
 
 
 def _encrypt_tx_params(pk: CalldataPublicKey,
-                       params: tuple[TxParams],
+                       params: Any,
                        method,
                        web3: Web3,
                        account: Optional[LocalAccount]=None) -> TransactionCipher:
@@ -127,12 +126,12 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
 
 def _new_signed_call_data_pack(encrypted_data: dict,
                                data_bytes: bytes,
-                               params: tuple[TxParams],
+                               params: Any,
                                web3: Web3,
                                account: LocalAccount) -> dict:
     # Update params with default values, these get used outside the scope of this function
-    params[0]['gas'] = params[0].get('gas', DEFAULT_GAS_LIMIT)
-    params[0]['gasPrice'] = params[0].get('gasPrice', web3.to_wei(DEFAULT_GAS_PRICE, 'wei'))
+    params[0]['gas'] = int(params[0].get('gas', DEFAULT_GAS_LIMIT))
+    params[0]['gasPrice'] = web3.to_wei(params[0].get('gasPrice', DEFAULT_GAS_PRICE), 'wei')
 
     domain_data = {
         "name": "oasis-runtime-sdk/evm: signed query",
@@ -270,7 +269,7 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
                         raise RuntimeError('Could not retrieve callDataPublicKey!')
                     do_fetch = False
 
-                    c = _encrypt_tx_params(pk, params, method, self._w3, self.sapphire_account)
+                    c = _encrypt_tx_params(pk, params, method, cast("Web3", self._w3), self.sapphire_account)
 
                     # We may encounter three errors here:
                     #  'core: invalid call format: epoch too far in the past'

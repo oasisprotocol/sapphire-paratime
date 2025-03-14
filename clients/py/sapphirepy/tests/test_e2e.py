@@ -53,13 +53,13 @@ class TestEndToEnd(unittest.TestCase):
     w3: Web3
 
     def setUp(self):
-        account: LocalAccount = Account.from_key("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")  # pylint: disable=no-value-for-parameter
+        # account: LocalAccount = Account.from_key("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")  # pylint: disable=no-value-for-parameter
+        account: LocalAccount = Account.from_key("0fa641fa1757e41f502b8971facbf10602d9dc072d50faf79873db9239c1e973")  # pylint: disable=no-value-for-parameter
 
-
-        w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
-        # w3 = Web3(Web3.HTTPProvider('https://testnet.sapphire.oasis.io'))
+        # w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
+        w3 = Web3(Web3.HTTPProvider('https://testnet.sapphire.oasis.io'))
         w3.middleware_onion.add(SignAndSendRawMiddlewareBuilder.build(account))
-        self.w3_no_signer = Web3(Web3.HTTPProvider('http://localhost:8545'))
+        self.w3_no_signer = Web3(Web3.HTTPProvider('https://testnet.sapphire.oasis.io'))
         self.w3 = w3 = sapphire.wrap(w3, account)
 
         w3.eth.default_account = account.address
@@ -79,10 +79,10 @@ class TestEndToEnd(unittest.TestCase):
 
         error_signature = "MyCustomError(string)"
         selector = function_signature_to_4byte_selector(error_signature)
-        error_data = self.w3.eth.abi.encode_parameters(['string'], ["thisIsCustom"])
+        error_data = self.w3.codec.encode(['string'], ["thisIsCustom"])
         data = selector + error_data
 
-        self.assertEqual(cm.exception.args[0], data)
+        self.assertEqual(cm.exception.args[0], '0x' + data.hex())
 
     def test_viewcall_revert_reason(self):
         with self.assertRaises(ContractLogicError) as cm:
