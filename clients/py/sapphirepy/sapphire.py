@@ -5,11 +5,29 @@ from typing import (
     cast,
     Optional,
     TypedDict,
+    Union
+)
+from toolz import (  # type: ignore
+    curry,
 )
 
 import cbor2
-from web3 import Web3
-from web3.types import RPCEndpoint, RPCResponse, TxParams, Middleware
+from web3 import (  # noqa: F401
+    AsyncWeb3,
+    Web3,
+)
+from web3.types import (  # noqa: F401
+    AsyncMakeBatchRequestFn,
+    AsyncMakeRequestFn,
+    MakeBatchRequestFn,
+    MakeRequestFn,
+    RPCEndpoint,
+    RPCResponse
+)
+from web3.middleware.base import (
+    Web3MiddlewareBuilder,
+)
+from web3.middleware import Web3Middleware
 from eth_typing import HexStr
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
@@ -30,7 +48,7 @@ EPOCH_LIMIT = 5
 # Default gas price
 DEFAULT_GAS_PRICE = 100_000_000_000
 # Default gas limit
-DEFAULT_GAS_LIMIT = 30_000_000
+DEFAULT_GAS_LIMIT = 30000000
 # Default block range
 DEFAULT_BLOCK_RANGE = 15
 
@@ -68,7 +86,7 @@ class CalldataPublicKeyManager:
             self._keys.append(pk)
 
 
-def _should_intercept(method: RPCEndpoint, params: tuple[TxParams]):
+def _should_intercept(method: RPCEndpoint, params: Any):
     if not ENCRYPT_DEPLOYS:
         if method in ('eth_sendTransaction', 'eth_estimateGas'):
             # When 'to' flag is missing, we assume it's a deployment
@@ -78,7 +96,7 @@ def _should_intercept(method: RPCEndpoint, params: tuple[TxParams]):
 
 
 def _encrypt_tx_params(pk: CalldataPublicKey,
-                       params: tuple[TxParams],
+                       params: Any,
                        method,
                        web3: Web3,
                        account: Optional[LocalAccount]=None) -> TransactionCipher:
@@ -108,12 +126,12 @@ def _encrypt_tx_params(pk: CalldataPublicKey,
 
 def _new_signed_call_data_pack(encrypted_data: dict,
                                data_bytes: bytes,
-                               params: tuple[TxParams],
+                               params: Any,
                                web3: Web3,
                                account: LocalAccount) -> dict:
     # Update params with default values, these get used outside the scope of this function
-    params[0]['gas'] = params[0].get('gas', DEFAULT_GAS_LIMIT)
-    params[0]['gasPrice'] = params[0].get('gasPrice', web3.to_wei(DEFAULT_GAS_PRICE, 'wei'))
+    params[0]['gas'] = int(params[0].get('gas', DEFAULT_GAS_LIMIT))
+    params[0]['gasPrice'] = web3.to_wei(params[0].get('gasPrice', DEFAULT_GAS_PRICE), 'wei')
 
     domain_data = {
         "name": "oasis-runtime-sdk/evm: signed query",
@@ -146,7 +164,11 @@ def _new_signed_call_data_pack(encrypted_data: dict,
     }
     nonce = web3.eth.get_transaction_count(web3.to_checksum_address(params[0]['from']))
     block_number = web3.eth.block_number
-    block_hash = web3.eth.get_block(block_number-1)['hash'].hex()
+
+    block_hash = web3.eth.get_block(block_number - 1)['hash'].hex()
+    if block_hash.startswith('0x'):
+        block_hash = block_hash[2:]
+
     msg_data = {
         "from": params[0].get('from'),
         "to": params[0].get('to'),
@@ -158,7 +180,7 @@ def _new_signed_call_data_pack(encrypted_data: dict,
             {
                 "nonce": nonce,
                 "blockNumber": block_number - 1,
-                "blockHash": unhexlify(block_hash[2:]),
+                "blockHash": unhexlify(block_hash),
                 "blockRange": DEFAULT_BLOCK_RANGE,
             }
     }
@@ -176,7 +198,7 @@ def _new_signed_call_data_pack(encrypted_data: dict,
     leash = {
         "nonce": nonce,
         "block_number": block_number - 1,
-        "block_hash": unhexlify(block_hash[2:]),
+        "block_hash": unhexlify(block_hash),
         "block_range": DEFAULT_BLOCK_RANGE,
     }
 
@@ -185,21 +207,33 @@ def _new_signed_call_data_pack(encrypted_data: dict,
         'leash': leash,
         'signature': bytes(signed_msg['signature']),
     }
+    params[0]['gas'] = hex(params[0]['gas'])
+    params[0]['gasPrice'] = hex(params[0]['gasPrice'])
     return data_pack
 
 
-def construct_sapphire_middleware(
-        account: Optional[LocalAccount] = None
-) -> Middleware:
+class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
     """
     Construct a Sapphire middleware for Web3.py.
     :param account: Used to encrypt signed queries.
     :return: A Sapphire middleware function.
     """
 
-    def sapphire_middleware(
-            make_request: Callable[[RPCEndpoint, Any], Any], w3: "Web3"
-    ) -> Callable[[RPCEndpoint, Any], RPCResponse]:
+    sapphire_account = None
+
+    @staticmethod
+    @curry
+    def build(
+        account: LocalAccount,
+        w3: Union["Web3", "AsyncWeb3"],
+    ) -> "ConstructSapphireMiddlewareBuilder":
+        middleware = ConstructSapphireMiddlewareBuilder(w3)
+        middleware.sapphire_account = account
+        return middleware
+
+    def wrap_make_request(self,
+            make_request: "MakeRequestFn"
+    ) -> "MakeRequestFn":
         """
         Transparently encrypt the calldata for:
 
@@ -220,7 +254,7 @@ def construct_sapphire_middleware(
         """
         manager = CalldataPublicKeyManager()
 
-        def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
+        def middleware(method: "RPCEndpoint", params: Any) -> "RPCResponse":
             if _should_intercept(method, params):
                 do_fetch = True
                 pk = manager.newest
@@ -235,7 +269,7 @@ def construct_sapphire_middleware(
                         raise RuntimeError('Could not retrieve callDataPublicKey!')
                     do_fetch = False
 
-                    c = _encrypt_tx_params(pk, params, method, w3, account)
+                    c = _encrypt_tx_params(pk, params, method, cast("Web3", self._w3), self.sapphire_account)
 
                     # We may encounter three errors here:
                     #  'core: invalid call format: epoch too far in the past'
@@ -259,10 +293,7 @@ def construct_sapphire_middleware(
 
                 return result
             return make_request(method, params)
-
         return middleware
-
-    return sapphire_middleware
 
 
 def wrap(w3: Web3, account: Optional[LocalAccount] = None):
@@ -273,5 +304,5 @@ def wrap(w3: Web3, account: Optional[LocalAccount] = None):
           added, otherwise pre-signed transactions will not be encrypted.
     """
     if 'sapphire' not in w3.middleware_onion:
-        w3.middleware_onion.add(construct_sapphire_middleware(account), "sapphire")
+        w3.middleware_onion.add(ConstructSapphireMiddlewareBuilder.build(account), "sapphire")
     return w3
