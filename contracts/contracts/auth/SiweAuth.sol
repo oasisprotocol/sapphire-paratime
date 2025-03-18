@@ -7,10 +7,13 @@ import {SignatureRSV, A13e} from "./A13e.sol";
 import {ParsedSiweMessage, SiweParser} from "../SiweParser.sol";
 import {Sapphire} from "../Sapphire.sol";
 
+/// @title AuthToken structure for SIWE-based authentication
 struct AuthToken {
     string domain; // [ scheme "://" ] domain.
     address userAddr;
     uint256 validUntil; // in Unix timestamp.
+    string statement; // Human-readable statement from the SIWE message.
+    string[] resources; // Resources this token grants access to.
 }
 
 /**
@@ -69,12 +72,19 @@ contract SiweAuth is A13e {
     /**
      * @notice Instantiate the contract which uses SIWE for authentication and
      * runs on the specified domain.
+     * @param inDomain The domain this contract is associated with
      */
     constructor(string memory inDomain) {
         _authTokenEncKey = bytes32(Sapphire.randomBytes(32, ""));
         _domain = inDomain;
     }
 
+    /**
+     * @notice Login using a SIWE message and signature
+     * @param siweMsg The signed SIWE message
+     * @param sig The signature of the SIWE message
+     * @return The encrypted authentication token
+     */
     function login(string calldata siweMsg, SignatureRSV calldata sig)
         external
         view
@@ -133,6 +143,15 @@ contract SiweAuth is A13e {
             revert SiweAuth_Expired();
         }
 
+        // Store statement from the SIWE message.
+        b.statement = string(p.statement);
+
+        // Store resources from the SIWE message.
+        b.resources = new string[](p.resources.length);
+        for (uint256 i = 0; i < p.resources.length; i++) {
+            b.resources[i] = string(p.resources[i]);
+        }
+
         bytes memory encB = Sapphire.encrypt(
             _authTokenEncKey,
             0,
@@ -144,11 +163,17 @@ contract SiweAuth is A13e {
 
     /**
      * @notice Return the domain associated with the dApp.
+     * @return The domain string
      */
     function domain() public view returns (string memory) {
         return _domain;
     }
 
+    /**
+     * @notice Get the authenticated address from a token
+     * @param token The authentication token
+     * @return The authenticated user address or zero address if token is empty
+     */
     function authMsgSender(bytes memory token)
         internal
         view
@@ -159,6 +184,61 @@ contract SiweAuth is A13e {
         if (token.length == 0) {
             return address(0);
         }
+
+        AuthToken memory b = decodeAndValidateToken(token);
+        return b.userAddr;
+    }
+
+    /**
+     * @notice Get the statement from the authentication token
+     * @param token The authentication token
+     * @return The statement string from the SIWE message
+     */
+    function getStatement(bytes memory token)
+        internal
+        view
+        checkRevokedAuthToken(token)
+        returns (string memory)
+    {
+        if (token.length == 0) {
+            return "";
+        }
+
+        AuthToken memory b = decodeAndValidateToken(token);
+        return b.statement;
+    }
+
+    /**
+     * @notice Get all resources from the authentication token
+     * @param token The authentication token
+     * @return Array of resource URIs the token grants access to
+     */
+    function getResources(bytes memory token)
+        internal
+        view
+        checkRevokedAuthToken(token)
+        returns (string[] memory)
+    {
+        if (token.length == 0) {
+            return new string[](0);
+        }
+
+        AuthToken memory b = decodeAndValidateToken(token);
+        return b.resources;
+    }
+
+    /**
+     * @notice Helper function to decrypt, decode and validate a token
+     * @dev Performs token decoding as well as domain and validation
+     * @param token The authentication token
+     * @return The decoded and validated AuthToken struct
+     */
+    function decodeAndValidateToken(bytes memory token)
+        internal
+        view
+        virtual
+        returns (AuthToken memory)
+    {
         bytes memory authTokenEncoded = Sapphire.decrypt(
             _authTokenEncKey,
             0,
@@ -167,13 +247,16 @@ contract SiweAuth is A13e {
         );
         AuthToken memory b = abi.decode(authTokenEncoded, (AuthToken));
 
+        // Validate domain
         if (keccak256(bytes(b.domain)) != keccak256(bytes(_domain))) {
             revert SiweAuth_DomainMismatch();
         }
+
+        // Validate expiry
         if (b.validUntil < block.timestamp) {
             revert SiweAuth_Expired();
         }
 
-        return b.userAddr;
+        return b;
     }
 }
