@@ -158,7 +158,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="siweauth"><a class="header" href="#siweauth">SiweAuth</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/5f60d77c1e27e6f5c34502003a1bce4b9bf9552b/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/95683788593f1e2eeac76e6e9092fb5f0d22ebf6/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 <a href="/contracts/auth/A13e.sol/abstract.A13e.html">A13e</a></p>
 <p>Inherit this contract if you wish to enable SIWE-based
@@ -204,16 +204,92 @@ _message = message;
 runs on the specified domain.</p>
 <pre><code class="language-solidity">constructor(string memory inDomain);
 </code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>inDomain</code></td><td><code>string</code></td><td>The domain this contract is associated with</td></tr>
+</tbody></table>
+</div>
 <h3 id="login"><a class="header" href="#login">login</a></h3>
+<p>Login using a SIWE message and signature</p>
 <pre><code class="language-solidity">function login(string calldata siweMsg, SignatureRSV calldata sig) external view override returns (bytes memory);
 </code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>siweMsg</code></td><td><code>string</code></td><td>The signed SIWE message</td></tr>
+<tr><td><code>sig</code></td><td><code>SignatureRSV</code></td><td>The signature of the SIWE message</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes</code></td><td>The encrypted authentication token</td></tr>
+</tbody></table>
+</div>
 <h3 id="domain"><a class="header" href="#domain">domain</a></h3>
 <p>Return the domain associated with the dApp.</p>
 <pre><code class="language-solidity">function domain() public view returns (string memory);
 </code></pre>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>string</code></td><td>The domain string</td></tr>
+</tbody></table>
+</div>
 <h3 id="authmsgsender"><a class="header" href="#authmsgsender">authMsgSender</a></h3>
+<p>Get the authenticated address from a token</p>
 <pre><code class="language-solidity">function authMsgSender(bytes memory token) internal view override checkRevokedAuthToken(token) returns (address);
 </code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>token</code></td><td><code>bytes</code></td><td>The authentication token</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>address</code></td><td>The authenticated user address or zero address if token is empty</td></tr>
+</tbody></table>
+</div>
+<h3 id="getstatement"><a class="header" href="#getstatement">getStatement</a></h3>
+<p>Get the statement from the authentication token</p>
+<pre><code class="language-solidity">function getStatement(bytes memory token) internal view checkRevokedAuthToken(token) returns (string memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>token</code></td><td><code>bytes</code></td><td>The authentication token</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>string</code></td><td>The statement string from the SIWE message</td></tr>
+</tbody></table>
+</div>
+<h3 id="getresources"><a class="header" href="#getresources">getResources</a></h3>
+<p>Get all resources from the authentication token</p>
+<pre><code class="language-solidity">function getResources(bytes memory token) internal view checkRevokedAuthToken(token) returns (string[] memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>token</code></td><td><code>bytes</code></td><td>The authentication token</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>string[]</code></td><td>Array of resource URIs the token grants access to</td></tr>
+</tbody></table>
+</div>
+<h3 id="decodeandvalidatetoken"><a class="header" href="#decodeandvalidatetoken">decodeAndValidateToken</a></h3>
+<p>Helper function to decrypt, decode and validate a token</p>
+<p><em>Performs token decoding as well as domain and validation</em></p>
+<pre><code class="language-solidity">function decodeAndValidateToken(bytes memory token) internal view virtual returns (AuthToken memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>token</code></td><td><code>bytes</code></td><td>The authentication token</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>AuthToken</code></td><td>The decoded and validated AuthToken struct</td></tr>
+</tbody></table>
+</div>
 <h2 id="errors"><a class="header" href="#errors">Errors</a></h2>
 <h3 id="siweauth_chainidmismatch"><a class="header" href="#siweauth_chainidmismatch">SiweAuth_ChainIdMismatch</a></h3>
 <p>Chain ID in the SIWE message does not match the actual chain ID</p>
