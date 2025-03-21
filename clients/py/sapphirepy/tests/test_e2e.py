@@ -85,7 +85,7 @@ class TestEndToEnd(unittest.TestCase):
         error_data = self.w3.codec.encode(["string"], ["thisIsCustom"])
         data = selector + error_data
 
-        self.assertEqual(cm.exception.args[0], "0x" + data.hex())
+        self.assertEqual(cm.exception.args[0], f"0x{data.hex()}")
 
     def test_viewcall_revert_reason(self):
         with self.assertRaises(ContractLogicError) as cm:
