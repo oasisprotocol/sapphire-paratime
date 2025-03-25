@@ -1,3 +1,4 @@
+import asyncio
 from binascii import unhexlify, hexlify
 from typing import Any, cast, Optional, TypedDict, Union
 from toolz import (  # type: ignore
@@ -23,7 +24,13 @@ from eth_typing import HexStr
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 
+import asyncio
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Coroutine, TypeVar
+
 from .envelope import TransactionCipher
+
 
 NETWORKS = {
     "sapphire": "https://sapphire.oasis.io",
@@ -223,15 +230,18 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
     @curry
     def build(
         account: LocalAccount,
-        w3: Union["Web3", "AsyncWeb3"],
+        w3: Union[Web3, AsyncWeb3],
     ) -> "ConstructSapphireMiddlewareBuilder":
         # pylint: disable=no-value-for-parameter,arguments-differ
         middleware = ConstructSapphireMiddlewareBuilder(w3)
         middleware.sapphire_account = account
         return middleware
 
-    def wrap_make_request(self, make_request: "MakeRequestFn") -> "MakeRequestFn":
+    def wrap_make_request(self, make_request: MakeRequestFn) -> MakeRequestFn:
         """
+        Synchronous wrapper around async_wrap_make_request.
+        Creates a new event loop to run the async middleware.
+        
         Transparently encrypt the calldata for:
 
          - eth_estimateGas
@@ -249,89 +259,38 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
 
         Pre-signed transactions can't be encrypted if submitted via this instance.
         """
-        manager = CalldataPublicKeyManager()
 
-        def middleware(method: "RPCEndpoint", params: Any) -> "RPCResponse":
-            if _should_intercept(method, params):
-                do_fetch = True
-                pk = manager.newest
-                while do_fetch:
-                    if not pk:
-                        # If no calldata public key exists, fetch one
-                        cdpk = cast(
-                            RPCResponse,
-                            make_request(RPCEndpoint("oasis_callDataPublicKey"), []),
-                        )
-                        pk = cast(Optional[CalldataPublicKey], cdpk.get("result", None))
-                        if pk:
-                            manager.add(pk)
-                    if not pk:
-                        raise RuntimeError("Could not retrieve callDataPublicKey!")
-                    do_fetch = False
-
-                    if (
-                        method == "eth_call"
-                        and params[0]["from"]
-                        and self.sapphire_account
-                    ):
-                        block_number = cast(int, self._w3.eth.block_number)
-                        signed_call_data = {
-                            "chain_id": self._w3.eth.chain_id,
-                            "nonce": self._w3.eth.get_transaction_count(
-                                self._w3.to_checksum_address(params[0]["from"])
-                            ),
-                            "block_number": block_number,
-                            "block_hash": cast(
-                                BlockData, self._w3.eth.get_block(block_number - 1)
-                            )["hash"].hex(),
-                            "gas_price": self._w3.to_wei(
-                                params[0].get("gasPrice", DEFAULT_GAS_PRICE), "wei"
-                            ),
-                        }
-                        c = _encrypt_tx_params(
-                            pk, params, self.sapphire_account, signed_call_data
-                        )
-                    else:
-                        c = _encrypt_tx_params(pk, params, self.sapphire_account)
-
-                    # We may encounter three errors here:
-                    #  'core: invalid call format: epoch too far in the past'
-                    #  'core: invalid call format: Tag verification failed'
-                    #  'core: invalid call format: epoch in the future'
-                    # We can only do something meaningful with the first!
-                    result = cast(RPCResponse, make_request(method, params))
-                    if result.get("error", None) is not None:
-                        error = result["error"]
-                        if not isinstance(error, str) and error["code"] == -32000:
-                            if (
-                                error["message"]
-                                == "core: invalid call format: epoch too far in the past"
-                            ):
-                                # force the re-fetch, and encrypt with new key
-                                do_fetch = True
-                                pk = None
-                                continue
-
-                # Only eth_call is decrypted
-                if method == "eth_call" and result.get("result", "0x") != "0x":
-                    decrypted = c.decrypt(unhexlify(result["result"][2:]))
-                    result["result"] = HexStr("0x" + hexlify(decrypted).decode("ascii"))
-
-                return result
+        # Create an async version of the make_request function
+        async def async_make_request(method: RPCEndpoint, params: Any) -> RPCResponse:
             return make_request(method, params)
+
+        async def main(method, params):
+            async_middleware = await self.async_wrap_make_request(async_make_request)
+            return await async_middleware(method, params)
+
+        def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
+            try:
+                asyncio.get_running_loop()  # Triggers RuntimeError if no running event loop
+                # Create a separate thread so we can block before returning
+                with ThreadPoolExecutor(1) as pool:
+                    result = pool.submit(lambda: asyncio.run(main(method, params))).result()
+            except RuntimeError:
+                result = asyncio.run(main(method, params))
+            return result
+            # return loop.run_until_complete(main(method, params))
 
         return middleware
 
     async def async_wrap_make_request(
-        self, make_request: "AsyncMakeRequestFn"
-    ) -> "AsyncMakeRequestFn":
+        self, make_request: AsyncMakeRequestFn
+    ) -> AsyncMakeRequestFn:
         """
         Async version of wrap_make_request that handles the same encryption logic
         for eth_estimateGas, eth_sendTransaction, and eth_call
         """
         manager = CalldataPublicKeyManager()
 
-        async def middleware(method: "RPCEndpoint", params: Any) -> "RPCResponse":
+        async def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
             if _should_intercept(method, params):
                 do_fetch = True
                 pk = manager.newest
@@ -351,38 +310,49 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
                         raise RuntimeError("Could not retrieve callDataPublicKey!")
                     do_fetch = False
 
-                    if (
-                        method == "eth_call"
-                        and params[0]["from"]
-                        and self.sapphire_account
-                    ):
-                        block_number = await cast(
-                            Coroutine[Any, Any, int], self._w3.eth.block_number
+                    if method == "eth_call" and params[0]["from"] and self.sapphire_account:
+                        # Get block number - use inline if to handle async vs sync
+                        block_number = (
+                            await self._w3.eth.block_number 
+                            if isinstance(self._w3, AsyncWeb3) 
+                            else self._w3.eth.block_number
                         )
+                        
+                        # Get chain ID - inline if
+                        chain_id = (
+                            await self._w3.eth.chain_id
+                            if isinstance(self._w3, AsyncWeb3)
+                            else self._w3.eth.chain_id
+                        )
+                        
+                        # Get transaction count - inline if
+                        nonce = (
+                            await self._w3.eth.get_transaction_count(
+                                self._w3.to_checksum_address(params[0]["from"])
+                            )
+                            if isinstance(self._w3, AsyncWeb3)
+                            else self._w3.eth.get_transaction_count(
+                                self._w3.to_checksum_address(params[0]["from"])
+                            )
+                        )
+                        
+                        # Get block and extract hash - inline if
+                        block_hash = (
+                            (await self._w3.eth.get_block(block_number - 1))["hash"].hex()
+                            if isinstance(self._w3, AsyncWeb3)
+                            else self._w3.eth.get_block(block_number - 1)["hash"].hex()
+                        )
+                        
                         signed_call_data = {
-                            "chain_id": await cast(
-                                Coroutine[Any, Any, int], self._w3.eth.chain_id
-                            ),
-                            "nonce": await cast(
-                                Coroutine[Any, Any, int],
-                                self._w3.eth.get_transaction_count(
-                                    self._w3.to_checksum_address(params[0]["from"])
-                                ),
-                            ),
+                            "chain_id": chain_id,
+                            "nonce": nonce,
                             "block_number": block_number,
-                            "block_hash": (
-                                await cast(
-                                    Coroutine[Any, Any, BlockData],
-                                    self._w3.eth.get_block(block_number - 1),
-                                )
-                            )["hash"].hex(),
+                            "block_hash": block_hash,
                             "gas_price": self._w3.to_wei(
                                 params[0].get("gasPrice", DEFAULT_GAS_PRICE), "wei"
                             ),
                         }
-                        c = _encrypt_tx_params(
-                            pk, params, self.sapphire_account, signed_call_data
-                        )
+                        c = _encrypt_tx_params(pk, params, self.sapphire_account, signed_call_data)
                     else:
                         c = _encrypt_tx_params(pk, params, self.sapphire_account)
 
