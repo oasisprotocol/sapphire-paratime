@@ -18,66 +18,110 @@ and gas estimations.
 
 ## Usage
 
-First install the package.
+### Installation
+
+First install the package and its dependencies.
 
 ```
 npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
 ```
 
-Next, in your Wagmi config definition, setup Sapphire wrapping for the injected
-provide using `injectedWithSapphire()` and then define the transports using the
+### [EIP-6963] Multi Injected Provider Discovery
+
+#### Single chain - Sapphire
+
+When your application connects exclusively to Sapphire networks, the most 
+straightforward approach is to set `sapphireConfig.replaceProviders = true`. 
+This configuration ensures that all EIP-6963 providers are automatically wrapped 
+with end-to-end encryption upon registration.
+
+```typescript
+import { http } from "wagmi";
+import { sapphire, sapphireTestnet } from "wagmi/chains";
+import {
+  sapphireLocalnet,
+  createSapphireConfig,
+} from "@oasisprotocol/sapphire-wagmi-v2";
+
+export const wagmiConfig = createSapphireConfig({
+  sapphireConfig: {
+    replaceProviders: true,
+  },
+  chains: [sapphire, sapphireTestnet, sapphireLocalnet],
+  transports: {
+    [sapphire.id]: http(),
+    [sapphireTestnet.id]: http(),
+    [sapphireLocalnet.id]: http(),
+  },
+});
+```
+
+#### Multichain
+
+For multichain applications, you must manage which providers use end-to-end
+encryption. It's essential to avoid using encrypted connectors for non-Sapphire
+chains, and conversely, to ensure Sapphire chains use the appropriate encrypted
+connectors.
+
+```typescript
+import { http } from "wagmi";
+import { sapphire, sapphireTestnet } from "wagmi/chains";
+import {
+  sapphireLocalnet,
+  createSapphireConfig,
+} from "@oasisprotocol/sapphire-wagmi-v2";
+
+export const wagmiConfig = createSapphireConfig({
+  sapphireConfig: {
+    replaceProviders: false,
+    // Define which providers you want to wrap via RDNS
+    wrappedProvidersFilter: (rdns) => ['io.metamask'].includes(rdns)
+  },
+  chains: [sapphire, sapphireTestnet, sapphireLocalnet],
+  transports: {
+    [sapphire.id]: http(),
+    [sapphireTestnet.id]: http(),
+    [sapphireLocalnet.id]: http(),
+  },
+});
+```
+
+The configuration above creates duplicate connectors with the naming convention 
+`sapphire.${rdns}` for each selected provider. For example, in an application 
+supporting both Ethereum and Sapphire networks, you would use the 
+`sapphire.io.metamask` connector specifically for Sapphire chains and the 
+standard `io.metamask` connector for Ethereum chain.
+
+[EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
+
+### [EIP-1193] Injected provider
+
+In your Wagmi config definition, wrap the injected provider for Sapphire using 
+`injectedWithSapphire()`, then define the transports using the
 `sapphireHttpTransport()` function.
 
 ```typescript
 import { createConfig } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
-	injectedWithSapphire,
-	sapphireHttpTransport,
+  injectedWithSapphire,
+  sapphireHttpTransport,
+  sapphireLocalnet
 } from "@oasisprotocol/sapphire-wagmi-v2";
 
-export const config = createConfig({
-	multiInjectedProviderDiscovery: false,
-	chains: [sapphire, sapphireTestnet],
-	connectors: [injectedWithSapphire()],
-	transports: {
-		[sapphire.id]: sapphireHttpTransport(),
-		[sapphireTestnet.id]: sapphireHttpTransport()
-	},
+export const wagmiConfig = createConfig({
+  multiInjectedProviderDiscovery: false,
+  chains: [sapphire, sapphireTestnet, sapphireLocalnet],
+  connectors: [injectedWithSapphire()],
+  transports: {
+    [sapphire.id]: sapphireHttpTransport(),
+    [sapphireTestnet.id]: sapphireHttpTransport(),
+    [sapphireLocalnet.id]: sapphireHttpTransport()
+  },
 });
 ```
 
-Please note that while [EIP-6963] (Multi Injected Provider Discovery) is
-supported by Wagmi it is only possible to wrap the default injected [EIP-1193]
-compatible provider. For this reason you must disable MIPD support in the
-Wagmi configuration as additional discovered providers will not be Sapphire
-wrapped.
-
-```typescript
-    multiInjectedProviderDiscovery: false,
-```
-
-[EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
 [EIP-1193]: https://eips.ethereum.org/EIPS/eip-1193
-
-To connect to your `sapphire-localnet` instance, define a custom chain:
-
-```typescript
-import { defineChain } from "viem";
-
-const sapphireLocalnet = defineChain({
-	id: 0x5afd,
-	name: "Oasis Sapphire Localnet",
-	network: "sapphire-localnet",
-	nativeCurrency: { name: "Sapphire Local Rose", symbol: "TEST", decimals: 18 },
-	rpcUrls: {
-		default: {
-			http: ["http://localhost:8545"],
-		},
-	},
-	testnet: true,
-});
-```
 
 For a complete example of how to use this library, please refer to our
 [Wagmi example][example].

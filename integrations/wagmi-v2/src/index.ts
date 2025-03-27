@@ -101,7 +101,7 @@ export function injectedWithSapphire(
  * });
  * ```
  *
- * In case your dApp is multichain, the bellow example will create duplicate connectors for Sapphire:
+ * In case your dApp is multichain, the below example will create duplicate connectors for Sapphire:
  *
  * ```typescript
  * import { createSapphireConfig } from '@oasisprotocol/sapphire-wagmi-v2';
