@@ -129,8 +129,11 @@ export function createSapphireConfig<
 		CreateSapphireConfigParameters,
 ): Config<chains, transports, connectorFns> {
 	const { sapphireConfig, ...restParameters } = parameters;
-	const { replaceProviders = false, wrappedProvidersFilter = () => true } =
-		sapphireConfig;
+	const {
+		replaceProviders = false,
+		wrappedProvidersFilter = () => true,
+		wrap: wrapOptions,
+	} = sapphireConfig;
 
 	const _addEventListener = EventTarget.prototype.addEventListener;
 	Object.defineProperty(EventTarget.prototype, "addEventListener", {
@@ -167,6 +170,7 @@ export function createSapphireConfig<
 												...announceProviderEvent.detail,
 												provider: wrapEthereumProvider(
 													announceProviderEvent.detail.provider,
+													wrapOptions,
 												),
 											},
 										},
@@ -194,7 +198,7 @@ export function createSapphireConfig<
 												name: `${name} (Sapphire)`,
 												icon,
 											},
-											provider: wrapEthereumProvider(provider),
+											provider: wrapEthereumProvider(provider, wrapOptions),
 										}),
 									});
 

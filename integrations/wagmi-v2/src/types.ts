@@ -2,7 +2,10 @@
  * @license Apache-2.0
  */
 
-import type { EIP2696_EthereumProvider } from "@oasisprotocol/sapphire-paratime";
+import type {
+	EIP2696_EthereumProvider,
+	SapphireWrapConfig,
+} from "@oasisprotocol/sapphire-paratime";
 import type { EIP1193Provider } from "viem";
 
 export type SupportedRegister = {
@@ -32,7 +35,7 @@ export interface EIP6963AnnounceProviderEvent
 }
 
 export type CreateSapphireConfigParameters = {
-	sapphireConfig:
+	sapphireConfig: { wrap?: SapphireWrapConfig } & (
 		| {
 				replaceProviders: true;
 				wrappedProvidersFilter?: never;
@@ -40,5 +43,6 @@ export type CreateSapphireConfigParameters = {
 		| {
 				replaceProviders?: false;
 				wrappedProvidersFilter?: (rdns: Rdns) => boolean;
-		  };
+		  }
+	);
 };
