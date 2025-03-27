@@ -8,7 +8,7 @@ import {
 	useWaitForTransactionReceipt,
 	useWalletClient,
 } from "wagmi";
-import { isCalldataEnveloped } from '@oasisprotocol/sapphire-paratime';
+import { isCalldataEnveloped } from "@oasisprotocol/sapphire-paratime";
 import type { Abi } from "abitype";
 
 /*
@@ -74,7 +74,9 @@ function App() {
 	const { data: writeReceipt, error: writeTxError } =
 		useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
 
-	const { data: writeTxInfo } = useTransaction({hash: writeReceipt?.transactionHash});
+	const { data: writeTxInfo } = useTransaction({
+		hash: writeReceipt?.transactionHash,
+	});
 
 	async function doDeploy() {
 		const hash = await walletClient?.deployContract({
@@ -101,11 +103,11 @@ function App() {
 				abi: StorageABI,
 				address: contractAddress,
 				functionName: "store",
-				args: [BigInt(Math.round((Math.random() * 100000)))],
+				args: [BigInt(Math.round(Math.random() * 100000))],
 			} as const;
 			const result = await walletClient!.writeContract({
 				...callArgs,
-				gas: await publicClient.estimateContractGas(callArgs)
+				gas: await publicClient.estimateContractGas(callArgs),
 			});
 			setWriteTxHash(result);
 		}
@@ -186,8 +188,13 @@ function App() {
 										</span>
 										<br />
 										Write Tx Calldata:&nbsp;
-										<span id="isWriteEnveloped" data-testid="is-write-enveloped">
-											{isCalldataEnveloped(writeTxInfo?.input) ? 'encrypted' : 'plaintext'}
+										<span
+											id="isWriteEnveloped"
+											data-testid="is-write-enveloped"
+										>
+											{isCalldataEnveloped(writeTxInfo?.input)
+												? "encrypted"
+												: "plaintext"}
 										</span>
 									</>
 								)}
@@ -199,7 +206,9 @@ function App() {
 						</button>
 						{readResult !== undefined && (
 							<>
-								<span id="readResult" data-testid="read-result">{readResult.toString()}</span>
+								<span id="readResult" data-testid="read-result">
+									{readResult.toString()}
+								</span>
 							</>
 						)}
 						<br />
@@ -221,7 +230,7 @@ function App() {
 						key={connector.uid}
 						onClick={() => connect({ connector })}
 						type="button"
-						id={"connect-" + connector.id}
+						data-testid={connector.id}
 					>
 						{connector.name}
 					</button>
