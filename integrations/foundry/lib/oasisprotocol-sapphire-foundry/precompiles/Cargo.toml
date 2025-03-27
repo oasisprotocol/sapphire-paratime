@@ -74,9 +74,12 @@ rand = "0.8"
 ed25519-dalek = "2.1.1"
 oasis-core-keymanager = { git = "https://github.com/oasisprotocol/oasis-core", tag = "v25.0" }
 oasis-core-runtime = { git = "https://github.com/oasisprotocol/oasis-core", tag = "v25.0" }
-oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", package = "oasis-runtime-sdk", branch = "main" }
+oasis-runtime-sdk = { git = "https://github.com/oasisprotocol/oasis-sdk", tag="runtime-sdk/v0.12.0" }
 evm = { git = "https://github.com/oasisprotocol/evm", tag = "v0.39.1-oasis" }
 oasis_cbor = { version = "0.5.1", package = "oasis-cbor" }
+
+[patch.crates-io]
+time = { git = "https://github.com/time-rs/time", tag = "v0.3.36" }
 
 [build]
 rustflags = ["-C", "target-feature=+aes,+ssse3"]
