@@ -16,6 +16,7 @@ env:
   OASIS_UNSAFE_SKIP_AVR_VERIFY: "1"
   OASIS_UNSAFE_KM_POLICY_KEYS: "1"
   OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES: "1"
+  CMAKE_POLICY_VERSION_MINIMUM: "3.5"
 
 jobs:
   test-rust:
@@ -139,17 +140,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install libclang-dev
-        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+
+      - name: Install libclang-dev, cmake
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev cmake
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           profile: minimal
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
 
       - name: Install dependencies
         run: make build
@@ -166,20 +168,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install libclang-dev
-        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+
+      - name: Install libclang-dev, cmake
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev cmake
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           profile: minimal
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
-      
+
       - name: Install dependencies
         run: make build
-      
+        
       - name: Run tests
         run: forge test
+        
