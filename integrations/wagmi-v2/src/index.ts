@@ -148,41 +148,31 @@ export function createSapphireConfig<
 					type,
 					(event: Event) => {
 						let patchCustomEvent = null;
+						const announceProviderEvent = event as EIP6963AnnounceProviderEvent;
 
 						if (
 							SUPPORTED_RDNS.includes(
 								(event as EIP6963AnnounceProviderEvent).detail.info.rdns,
-							)
+							) &&
+							!isWrappedEthereumProvider(announceProviderEvent.detail.provider)
 						) {
-							const announceProviderEvent =
-								event as EIP6963AnnounceProviderEvent;
-
+							/* Replace announced supported providers with wrapped provider */
 							if (replaceProviders) {
-								if (
-									!isWrappedEthereumProvider(
-										announceProviderEvent.detail.provider,
-									)
-								) {
-									patchCustomEvent = new CustomEvent(
-										EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
-										{
-											detail: {
-												...announceProviderEvent.detail,
-												provider: wrapEthereumProvider(
-													announceProviderEvent.detail.provider,
-													wrapOptions,
-												),
-											},
+								patchCustomEvent = new CustomEvent(
+									EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
+									{
+										detail: {
+											...announceProviderEvent.detail,
+											provider: wrapEthereumProvider(
+												announceProviderEvent.detail.provider,
+												wrapOptions,
+											),
 										},
-									);
-								}
+									},
+								);
+								/* Duplicate supported providers(replaceProviders = false), i.e. MetaMask -> [MetaMask, SapphireMetaMask] */
 							} else if (
-								wrappedProvidersFilter(
-									announceProviderEvent.detail.info.rdns,
-								) &&
-								!isWrappedEthereumProvider(
-									announceProviderEvent.detail.provider,
-								)
+								wrappedProvidersFilter(announceProviderEvent.detail.info.rdns)
 							) {
 								const {
 									info: { name, rdns, icon, uuid },
