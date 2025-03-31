@@ -62,6 +62,7 @@ jobs:
           go install github.com/oasisprotocol/oasis-sdk/tools/orc@latest
           pushd runtime
           orc init ${RUNTIME_EXECUTABLE} --sgx-executable ${RUNTIME_SGXS} --output ../sapphire-paratime.orc
+          orc sgx-set-sig ../sapphire-paratime.orc
           popd
         env:
           RUNTIME_EXECUTABLE: ${{ github.workspace }}/${{ steps.build-elf.outputs.build-path }}/sapphire-paratime
@@ -70,7 +71,6 @@ jobs:
       - name: Publish the release
         uses: ncipollo/release-action@v1
         with:
-          # Create a draft since the release requires an offline signing process.
           draft: true
           artifacts: sapphire-paratime.orc,localnet-sapphire-paratime.orc
           token: ${{ secrets.GITHUB_TOKEN }}
