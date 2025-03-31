@@ -1718,8 +1718,8 @@ dependencies = [
 
 [[package]]
 name = "keymanager"
-version = "0.5.0"
-source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.5.0#551e8edcb51154b8bda51ce7e512320114301d6c"
+version = "0.5.0-testnet"
+source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.5.0-testnet#7dc49813dc42e33fa8f1feac3d98077e6b76b3bc"
 dependencies = [
  "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v24.0)",
  "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v24.0)",
@@ -2298,7 +2298,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.11.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.12.0#f44fc72492b45db6d8988087fede4bf9b8a7155a"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.0#64591f71e93286a602f5ec6bbc6ca9ef6ff02ce9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2339,7 +2339,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.6.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.12.0#f44fc72492b45db6d8988087fede4bf9b8a7155a"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.0#64591f71e93286a602f5ec6bbc6ca9ef6ff02ce9"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2355,6 +2355,7 @@ dependencies = [
  "num 0.4.3",
  "oasis-cbor",
  "oasis-runtime-sdk",
+ "oasis-runtime-sdk-macros",
  "once_cell",
  "primitive-types",
  "rand_core",
@@ -2371,12 +2372,30 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.12.0#f44fc72492b45db6d8988087fede4bf9b8a7155a"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.0#64591f71e93286a602f5ec6bbc6ca9ef6ff02ce9"
 dependencies = [
  "darling 0.20.10",
+ "hex",
  "proc-macro2 1.0.93",
  "quote 1.0.38",
  "syn 2.0.98",
+ "tiny-keccak 2.0.2",
+]
+
+[[package]]
+name = "oasis-runtime-sdk-rofl-market"
+version = "0.1.0"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.0#64591f71e93286a602f5ec6bbc6ca9ef6ff02ce9"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "oasis-cbor",
+ "oasis-runtime-sdk",
+ "oasis-runtime-sdk-evm",
+ "once_cell",
+ "rustc-hex",
+ "thiserror",
+ "zeroize",
 ]
 
 [[package]]
@@ -2989,11 +3008,12 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "0.9.2"
+version = "0.10.0-testnet"
 dependencies = [
  "keymanager",
  "oasis-runtime-sdk",
  "oasis-runtime-sdk-evm",
+ "oasis-runtime-sdk-rofl-market",
  "once_cell",
 ]
 
