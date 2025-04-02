@@ -27,6 +27,22 @@ description: List of Standard Contract Addresses
 [wr-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3
 [wr-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94
 
+## Router Nitro Tokens (Mainnet)
+
+| Token Name                  | Address                                                             | Decimals |
+| --------------------------- | ------------------------------------------------------------------- | -------- |
+| bridged USDC.e              | [`0x97eec1c29f745dC7c267F90292AA663d997a601D`][router-usdc-mainnet] | 6        |
+| Tether USD (USDT)           | [`0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B`][router-usdt-mainnet] | 6        |
+| Wrapped Ether (WETH)        | [`0xB6dc6C8b71e88642cEAD3be1025565A9eE74d1C6`][router-weth-mainnet] | 18       |
+| The 4th Pillar Token (FOUR) | [`0x9c1da2B647d25B9e71d8aBB83E4DDe236dcb672B`][router-four-mainnet] | 18       |
+| Ocean Token (OCEAN)         | [`0x2F301d3b045544A9D7Ec3FA090CD78986F11f2E7`][router-ocean-mainnet]| 18       |
+
+[router-usdc-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x97eec1c29f745dC7c267F90292AA663d997a601D
+[router-usdt-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B
+[router-weth-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0xB6dc6C8b71e88642cEAD3be1025565A9eE74d1C6
+[router-four-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x9c1da2B647d25B9e71d8aBB83E4DDe236dcb672B
+[router-ocean-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x2F301d3b045544A9D7Ec3FA090CD78986F11f2E7
+
 ## Celer cBridge Tokens (Mainnet)
 <!-- NOTE: this is generated using `_fetch-cbridge-tokens.py` -->
 <!-- WARNING: please don't manually update the table! -->
@@ -57,6 +73,8 @@ description: List of Standard Contract Addresses
 | [Safe Singleton Factory][singleton-factory] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-mainnet] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-testnet] | [Singleton Factory][singleton-factory] |
 | [Band Oracle][band-oracle] | [`0xDA7a001b254CD22e46d3eAB04d937489c93174C3`][band-oracle-mainnet] | [`0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A`][band-oracle-testnet] | [Oracle][band-oracle-source] |
 | [Router Gateway][router-gateway] | [`0x86dfc31d9cb3280ee1eb1096caa9fc66299af973`][router-gateway-mainnet] | [`0xfbE6D1e711CC2BC241dfa682CBbFF6D68bf62e67`][router-gateway-testnet] | [Gateway][router-gateway-source] |
+| [Router Asset Forwarder][router-forwarder] | [`0x21c1e74caadf990e237920d5515955a024031109`][router-gateway-mainnet] | - | [Asset Forwarder][router-forwarder-source] |
+| [Router Asset Bridge][router-bridge] | [`0x01b4ce0d48ce91eb6bcaf5db33870c65d641b894`][router-gateway-mainnet] | - | [Asset Bridge][router-bridge-source] |
 
 [message-executor]: https://im-docs.celer.network/developer/development-guide/message-executor
 [message-executor-source]: https://github.com/celer-network/im-executor
@@ -73,6 +91,12 @@ description: List of Standard Contract Addresses
 [band-oracle-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0xDA7a001b254CD22e46d3eAB04d937489c93174C3
 [band-oracle-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A
 [router-gateway]: https://docs.routerprotocol.com/develop/message-transfer-via-crosstalk/key-concepts/high-level-architecture
+[router-forwarder]: https://docs.routerprotocol.com/develop/message-transfer-via-crosstalk/key-concepts/high-level-architecture
+[router-bridge]: https://docs.routerprotocol.com/develop/message-transfer-via-crosstalk/key-concepts/high-level-architecture
 [router-gateway-source]: https://github.com/router-protocol/router-contracts/tree/main/gateway/evm
+[router-bridge-source]: https://github.com/router-protocol/router-contracts/tree/main/asset-bridge/evm
+[router-forwarder-source]: https://github.com/router-protocol/router-contracts/tree/main/asset-forwarder/evm
 [router-gateway-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x86DFc31d9cB3280eE1eB1096caa9fC66299Af973
+[router-forwarder-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x21c1e74caadf990e237920d5515955a024031109
+[router-bridge-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x01b4ce0d48ce91eb6bcaf5db33870c65d641b894
 [router-gateway-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0xfbE6D1e711CC2BC241dfa682CBbFF6D68bf62e67
