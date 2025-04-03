@@ -1,19 +1,19 @@
-import { createConfig } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
-	injectedWithSapphire,
-	sapphireHttpTransport,
 	sapphireLocalnet,
+	createSapphireConfig,
 } from "@oasisprotocol/sapphire-wagmi-v2";
+import { http } from "wagmi";
 
-export const config = createConfig({
-	multiInjectedProviderDiscovery: false,
+export const config = createSapphireConfig({
+	sapphireConfig: {
+		replaceProviders: true,
+	},
 	chains: [sapphire, sapphireTestnet, sapphireLocalnet],
-	connectors: [injectedWithSapphire()],
 	transports: {
-		[sapphire.id]: sapphireHttpTransport(),
-		[sapphireTestnet.id]: sapphireHttpTransport(),
-		[sapphireLocalnet.id]: sapphireHttpTransport(),
+		[sapphire.id]: http(),
+		[sapphireTestnet.id]: http(),
+		[sapphireLocalnet.id]: http(),
 	},
 });
 
