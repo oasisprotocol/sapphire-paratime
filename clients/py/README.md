@@ -8,6 +8,10 @@ pip3 install --user -r requirements.dev.txt
 make
 ```
 
+## Changelog
+
+https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/py/CHANGELOG.md
+
 ## Usage
 
 ```python
@@ -49,6 +53,7 @@ async_w3 = sapphire.wrap(async_w3, account)
 The Sapphire middleware for Web3.py ensures all transactions, gas estimates and
 view calls are end-to-end encrypted between your application and the smart
 contract.
+
 
 ## License
 
