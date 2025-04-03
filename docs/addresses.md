@@ -73,8 +73,8 @@ description: List of Standard Contract Addresses
 | [Safe Singleton Factory][singleton-factory] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-mainnet] | [`0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7`][singleton-factory-testnet] | [Singleton Factory][singleton-factory] |
 | [Band Oracle][band-oracle] | [`0xDA7a001b254CD22e46d3eAB04d937489c93174C3`][band-oracle-mainnet] | [`0x0c2362c9A0586Dd7295549C65a4A5e3aFE10a88A`][band-oracle-testnet] | [Oracle][band-oracle-source] |
 | [Router Gateway][router-gateway] | [`0x86dfc31d9cb3280ee1eb1096caa9fc66299af973`][router-gateway-mainnet] | [`0xfbE6D1e711CC2BC241dfa682CBbFF6D68bf62e67`][router-gateway-testnet] | [Gateway][router-gateway-source] |
-| [Router Asset Forwarder][router-forwarder] | [`0x21c1e74caadf990e237920d5515955a024031109`][router-gateway-mainnet] | - | [Asset Forwarder][router-forwarder-source] |
-| [Router Asset Bridge][router-bridge] | [`0x01b4ce0d48ce91eb6bcaf5db33870c65d641b894`][router-gateway-mainnet] | - | [Asset Bridge][router-bridge-source] |
+| [Router Asset Forwarder][router-forwarder] | [`0x21c1e74caadf990e237920d5515955a024031109`][router-forwarder-mainnet] | - | [Asset Forwarder][router-forwarder-source] |
+| [Router Asset Bridge][router-bridge] | [`0x01b4ce0d48ce91eb6bcaf5db33870c65d641b894`][router-bridge-mainnet] | - | [Asset Bridge][router-bridge-source] |
 
 [message-executor]: https://im-docs.celer.network/developer/development-guide/message-executor
 [message-executor-source]: https://github.com/celer-network/im-executor
