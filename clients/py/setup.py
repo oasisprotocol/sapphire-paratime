@@ -28,6 +28,6 @@ setup(
     packages=find_packages(include=["sapphirepy"]),
     install_requires=REQUIREMENTS,
     url="https://github.com/oasisprotocol/sapphire-paratime",
-    version="0.3.0",
+    version="0.4.0",
     zip_safe=True,
 )
