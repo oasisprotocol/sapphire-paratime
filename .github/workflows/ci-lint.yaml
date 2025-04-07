@@ -120,7 +120,7 @@ jobs:
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Lint Go
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v1.56.2
           working-directory: ./clients/go
