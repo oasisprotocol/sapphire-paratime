@@ -578,17 +578,58 @@ SOFTWARE.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="sapphirepy.sapphire.construct_sapphire_middleware">
-<span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">construct_sapphire_middleware</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LocalAccount</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">RPCEndpoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">RPCResponse</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Web3</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#construct_sapphire_middleware"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.construct_sapphire_middleware" title="Link to this definition">¶</a></dt>
-<dd><p>Construct a Sapphire middleware for Web3.py.
+<dl class="py class">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">ConstructSapphireMiddlewareBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AsyncWeb3</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Web3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#ConstructSapphireMiddlewareBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Web3MiddlewareBuilder</span></code></p>
+<p>Construct a Sapphire middleware for Web3.py.
 :param account: Used to encrypt signed queries.
 :return: A Sapphire middleware function.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.async_wrap_make_request">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">async_wrap_make_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">RPCEndpoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Coroutine</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">RPCResponse</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">RPCEndpoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Coroutine</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">RPCResponse</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#ConstructSapphireMiddlewareBuilder.async_wrap_make_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.async_wrap_make_request" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of wrap_make_request that handles the same encryption logic
+for eth_estimateGas, eth_sendTransaction, and eth_call</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#ConstructSapphireMiddlewareBuilder.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.sapphire_account">
+<span class="sig-name descname"><span class="pre">sapphire_account</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.sapphire_account" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.wrap_make_request">
+<span class="sig-name descname"><span class="pre">wrap_make_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">RPCEndpoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">RPCResponse</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">RPCEndpoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">RPCResponse</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#ConstructSapphireMiddlewareBuilder.wrap_make_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.wrap_make_request" title="Link to this definition">¶</a></dt>
+<dd><p>Synchronous wrapper around async_wrap_make_request.
+Creates a new event loop to run the async middleware.</p>
+<p>Transparently encrypt the calldata for:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>eth_estimateGas</p></li>
+<li><p>eth_sendTransaction</p></li>
+<li><p>eth_call</p></li>
+</ul>
+</div></blockquote>
+<p>The calldata public key, which used to derive a shared secret with an
+ephemeral key, is retrieved upon the first request. This key is rotated by
+Sapphire every epoch, and only transactions encrypted with keys from the
+last 5 epochs are considered valid.</p>
+<p>Deployment transactions will not be encrypted, unless the global
+ENCRYPT_DEPLOYS flag is set. Encrypting deployments will prevent contracts
+from being verified.</p>
+<p>Pre-signed transactions can’t be encrypted if submitted via this instance.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sapphirepy.sapphire.wrap">
-<span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Web3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LocalAccount</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#wrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.wrap" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sapphirepy.sapphire.</span></span><span class="sig-name descname"><span class="pre">wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Web3</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">AsyncWeb3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LocalAccount</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sapphirepy/sapphire.html#wrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sapphirepy.sapphire.wrap" title="Link to this definition">¶</a></dt>
 <dd><p>Adds the Sapphire transaction encryption middleware to a Web3.py provider.</p>
 <dl class="simple">
 <dt>Note: the provider must be wrapped <em>after</em> any signing middleware has been</dt><dd><p>added, otherwise pre-signed transactions will not be encrypted.</p>
@@ -738,7 +779,13 @@ SOFTWARE.</p>
 <li><a class="reference internal" href="#sapphirepy.sapphire.CalldataPublicKeyManager.newest"><code class="docutils literal notranslate"><span class="pre">CalldataPublicKeyManager.newest</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#sapphirepy.sapphire.construct_sapphire_middleware"><code class="docutils literal notranslate"><span class="pre">construct_sapphire_middleware()</span></code></a></li>
+<li><a class="reference internal" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder"><code class="docutils literal notranslate"><span class="pre">ConstructSapphireMiddlewareBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.async_wrap_make_request"><code class="docutils literal notranslate"><span class="pre">ConstructSapphireMiddlewareBuilder.async_wrap_make_request()</span></code></a></li>
+<li><a class="reference internal" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.build"><code class="docutils literal notranslate"><span class="pre">ConstructSapphireMiddlewareBuilder.build</span></code></a></li>
+<li><a class="reference internal" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.sapphire_account"><code class="docutils literal notranslate"><span class="pre">ConstructSapphireMiddlewareBuilder.sapphire_account</span></code></a></li>
+<li><a class="reference internal" href="#sapphirepy.sapphire.ConstructSapphireMiddlewareBuilder.wrap_make_request"><code class="docutils literal notranslate"><span class="pre">ConstructSapphireMiddlewareBuilder.wrap_make_request()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#sapphirepy.sapphire.wrap"><code class="docutils literal notranslate"><span class="pre">wrap()</span></code></a></li>
 </ul>
 </li>

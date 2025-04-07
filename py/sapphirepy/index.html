@@ -256,17 +256,42 @@ make
 </pre></div>
 </div>
 </section>
+<section id="changelog">
+<h3>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">¶</a></h3>
+<p>https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/py/CHANGELOG.md</p>
+</section>
 <section id="usage">
 <h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">web3</span><span class="w"> </span><span class="kn">import</span> <span class="n">Web3</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">web3</span><span class="w"> </span><span class="kn">import</span> <span class="n">Web3</span><span class="p">,</span> <span class="n">AsyncWeb3</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">web3.middleware</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignAndSendRawMiddlewareBuilder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eth_account</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eth_account.signers.local</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalAccount</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">sapphirepy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sapphire</span>
 
-<span class="c1"># Setup your Web3 provider with a signing account.</span>
 <span class="n">w3</span> <span class="o">=</span> <span class="n">Web3</span><span class="p">(</span><span class="n">Web3</span><span class="o">.</span><span class="n">HTTPProvider</span><span class="p">(</span><span class="n">sapphire</span><span class="o">.</span><span class="n">NETWORKS</span><span class="p">[</span><span class="s1">&#39;sapphire-localnet&#39;</span><span class="p">]))</span>
-<span class="n">w3</span><span class="o">.</span><span class="n">middleware_onion</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">construct_sign_and_send_raw_middleware</span><span class="p">(</span><span class="n">account</span><span class="p">))</span>
+<span class="n">async_w3</span> <span class="o">=</span> <span class="n">AsyncWeb3</span><span class="p">(</span>
+    <span class="n">AsyncWeb3</span><span class="o">.</span><span class="n">AsyncHTTPProvider</span><span class="p">(</span>
+        <span class="n">sapphire</span><span class="o">.</span><span class="n">NETWORKS</span><span class="p">[</span><span class="s1">&#39;sapphire-localnet&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Optional: Setup your Web3 provider with a signing account.</span>
+<span class="c1"># This account is used for signing transactions.</span>
+<span class="n">account</span><span class="p">:</span> <span class="n">LocalAccount</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Account</span><span class="o">.</span><span class="n">from_key</span><span class="p">(</span>  <span class="c1"># pylint: disable=no-value-for-parameter</span>
+        <span class="n">private_key</span><span class="o">=</span><span class="s2">&quot;&lt;your_private_key_here&gt;&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">w3</span><span class="o">.</span><span class="n">middleware_onion</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">SignAndSendRawMiddlewareBuilder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">account</span><span class="p">))</span>
 
 <span class="c1"># Finally, wrap the provider to add Sapphire end-to-end encryption.</span>
-<span class="n">w3</span> <span class="o">=</span> <span class="n">sapphire</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">w3</span><span class="p">)</span>
+<span class="c1"># Note: Account parameter in the wrap() function is used for signing view</span>
+<span class="c1"># calls and can be different from the account used for singing transactions.</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="n">sapphire</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">w3</span><span class="p">,</span> <span class="n">account</span><span class="p">)</span> <span class="c1"># Can provide custom &quot;account&quot; parameter</span>
+<span class="c1"># Wrapper middleware also works with AsyncWeb3</span>
+<span class="n">async_w3</span> <span class="o">=</span> <span class="n">sapphire</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">async_w3</span><span class="p">,</span> <span class="n">account</span><span class="p">)</span>
+
 <span class="c1"># Optionally, query Oasis Web3 Gateway for the gas price.</span>
 <span class="c1"># from web3.gas_strategies.rpc import rpc_gas_price_strategy</span>
 <span class="c1"># w3.eth.set_gas_price_strategy(rpc_gas_price_strategy)</span>
@@ -344,6 +369,7 @@ license.</p>
 <li><a class="reference internal" href="#">sapphirepy documentation</a><ul>
 <li><a class="reference internal" href="#sapphire-py">sapphire.py</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#changelog">Changelog</a></li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 </ul>
