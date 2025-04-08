@@ -19,7 +19,7 @@ setup(
         "Typing :: Typed"
     ],
     description="Oasis Sapphire encryption middleware for Web3.py",
-    name="sapphire.py",
+    name="oasis-sapphire-py",
     license="Apache Software License 2.0",
     long_description=README,
     long_description_content_type="text/markdown",
