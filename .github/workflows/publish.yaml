@@ -72,6 +72,7 @@ jobs:
     needs: publish
     if: startsWith(github.ref_name, 'contracts/v')
     steps:
+      - uses: actions/checkout@v4
       - name: Extract version from tag
         id: extract-tag-version
         env:
