@@ -135,7 +135,10 @@ export function createSapphireConfig<
 		wrap: wrapOptions,
 	} = sapphireConfig;
 
-	const listenerMap = new WeakMap<EventListenerOrEventListenerObject, EventListener>();
+	const listenerMap = new WeakMap<
+		EventListenerOrEventListenerObject,
+		EventListener
+	>();
 
 	const _addEventListener = EventTarget.prototype.addEventListener;
 	const _removeEventListener = EventTarget.prototype.removeEventListener;
@@ -218,12 +221,16 @@ export function createSapphireConfig<
 			callback: EventListenerOrEventListenerObject | null,
 			options?: EventListenerOptions | boolean,
 		): void {
-			if (type === EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME && callback && listenerMap.has(callback)) {
-				const wrapperFn = listenerMap.get(callback)!;
+			if (
+				type === EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME &&
+				callback &&
+				listenerMap.has(callback)
+			) {
+				const wrapperFn = listenerMap.get(callback);
 
 				listenerMap.delete(callback);
 
-				_removeEventListener.call(this, type, wrapperFn, options);
+				_removeEventListener.call(this, type, wrapperFn ?? null, options);
 			} else {
 				_removeEventListener.call(this, type, callback, options);
 			}
