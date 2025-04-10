@@ -22,7 +22,7 @@ description: List of Standard Contract Addresses
 [cx-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed
 [cx-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed
 
-[wrose-dapp]: https://wrose.oasis.io/
+[wrose-dapp]: https://rose.oasis.io/wrap
 [wrose-source]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/contracts/contracts/WrappedROSE.sol
 [wr-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3
 [wr-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94
