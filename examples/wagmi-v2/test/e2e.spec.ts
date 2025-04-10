@@ -9,7 +9,7 @@ export const test = baseTest.extend<{
 		// Launch context with extension
 		const [wallet, _, context] = await dappwright.bootstrap("", {
 			wallet: "metamask",
-			version: MetaMaskWallet.recommendedVersion,
+			version: "12.10.4",
 			seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
 			headless: false,
 		});
@@ -27,39 +27,70 @@ export const test = baseTest.extend<{
 
 	wallet: async ({ context }, use) => {
 		const metamask = await dappwright.getWallet("metamask", context);
-
 		await use(metamask);
 	},
 });
 
 test.beforeEach(async ({ wallet, page }) => {
 	// Use first account from seed. dAppwright adds two accounts by default.
-	await wallet.switchAccount(1); // Selector queries as a string
+	// Changed from numeric index to name as per PR #440
+	await wallet.switchAccount("Alice");
+	
 	await page.bringToFront();
 });
 
 test("deploy contract and send encrypted transaction", async ({
 	wallet,
 	page,
+	context
 }) => {
 	await page.goto("http://localhost:3000");
+	
+	// Store the URL in case we need to navigate back after confirmation
+	const appUrl = page.url();
 
 	// Use address of first account
 	await page.getByTestId("io.metamask").click();
 	await wallet.approve();
+	
 	await expect(
 		page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 	).toBeVisible();
 
 	await page.getByText("Deploy").click();
 	await wallet.confirmTransaction();
+	
+	// Check if page is still available after confirmation
+	let pageIsClosed = false;
+	try {
+		await page.evaluate(() => document.title);
+	} catch (e) {
+		pageIsClosed = true;
+	}
+	
+	// If the page is closed, create a new one and navigate back
+	if (pageIsClosed) {
+		page = await context.newPage();
+		await page.goto(appUrl);
+	}
+	
 	await expect(page.getByText("Contract:")).toBeVisible();
 
 	await page.getByText("Write").click();
 	await wallet.confirmTransaction();
+	
+	// Check again if page is still available
+	try {
+		await page.evaluate(() => document.title);
+	} catch (e) {
+		page = await context.newPage();
+		await page.goto(appUrl);
+	}
+	
 	await expect(page.getByText("Contract:")).toBeVisible();
 	await expect(page.getByTestId("is-write-enveloped")).toHaveText("encrypted");
 
 	await page.getByText("Read").click();
+	
 	await expect(page.getByTestId("read-result")).not.toBeEmpty();
 });

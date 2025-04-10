@@ -19,7 +19,7 @@
 		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
 		"@playwright/test": "^1.48.2",
 		"@tanstack/react-query": "5.0.5",
-		"@tenkeylabs/dappwright": "^2.8.6",
+		"@tenkeylabs/dappwright": "^2.10.0",
 		"abitype": "^1.0.2",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
