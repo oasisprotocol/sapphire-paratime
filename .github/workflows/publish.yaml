@@ -106,7 +106,7 @@ jobs:
       - name: Publish to Soldeer
         run: |
           echo "Publishing version: ${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}"
-          soldeer push oasis-sapphire-contracts~${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}
+          soldeer push @oasis-sapphire-contracts~${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}
         working-directory: contracts/contracts
 
   publish-py:
