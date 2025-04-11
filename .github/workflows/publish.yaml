@@ -86,13 +86,27 @@ jobs:
           toolchain: stable
       - name: Install soldeer
         run: cargo install soldeer
-      - name: Set soldeer access token
-        env:
-          SOLDEER_AUTH_TOKEN: ${{ secrets.SOLDEER_TOKEN }}
+      - name: Install expect
         run: |
-          mkdir -p ~/.soldeer && echo "$SOLDEER_AUTH_TOKEN" > ~/.soldeer/.soldeer_login
+          apt-get update
+          apt-get install -y expect
+      - name: Login to Soldeer
+        env:
+          SOLDEER_EMAIL: ${{ secrets.SOLDEER_EMAIL }}
+          SOLDEER_PASSWORD: ${{ secrets.SOLDEER_PASSWORD }}
+        run: |
+          expect << 'EOF'
+          spawn soldeer login
+          expect "Email address"
+          send "$env(SOLDEER_EMAIL)\r"
+          expect "Password"
+          send "$env(SOLDEER_PASSWORD)\r"
+          expect eof
+          EOF
       - name: Publish to Soldeer
-        run: soldeer push @oasisprotocol-sapphire-contracts~$CONTRACTS_VERSION
+        run: |
+          echo "Publishing version: ${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}"
+          soldeer push oasis-sapphire-contracts~${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}
         working-directory: contracts/contracts
 
   publish-py:
