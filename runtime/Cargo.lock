@@ -2300,7 +2300,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk"
 version = "0.11.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.3#83bbe92a89c123d345671a9185429561ba4128ad"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=andrej/feature/consensus-delegation-method#c95d1458960143dfc2be164de4c180d33b3125ab"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2341,7 +2341,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-evm"
 version = "0.6.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.3#83bbe92a89c123d345671a9185429561ba4128ad"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=andrej/feature/consensus-delegation-method#c95d1458960143dfc2be164de4c180d33b3125ab"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2374,7 +2374,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-macros"
 version = "0.3.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.3#83bbe92a89c123d345671a9185429561ba4128ad"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=andrej/feature/consensus-delegation-method#c95d1458960143dfc2be164de4c180d33b3125ab"
 dependencies = [
  "darling 0.20.11",
  "hex",
@@ -2387,7 +2387,7 @@ dependencies = [
 [[package]]
 name = "oasis-runtime-sdk-rofl-market"
 version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-sdk?tag=runtime-sdk/v0.13.3#83bbe92a89c123d345671a9185429561ba4128ad"
+source = "git+https://github.com/oasisprotocol/oasis-sdk?branch=andrej/feature/consensus-delegation-method#c95d1458960143dfc2be164de4c180d33b3125ab"
 dependencies = [
  "anyhow",
  "ethabi",
