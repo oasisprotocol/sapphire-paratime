@@ -86,23 +86,11 @@ jobs:
           toolchain: stable
       - name: Install soldeer
         run: cargo install soldeer
-      - name: Install expect
-        run: |
-          apt-get update
-          apt-get install -y expect
       - name: Login to Soldeer
         env:
           SOLDEER_EMAIL: ${{ secrets.SOLDEER_EMAIL }}
           SOLDEER_PASSWORD: ${{ secrets.SOLDEER_PASSWORD }}
-        run: |
-          expect << 'EOF'
-          spawn soldeer login
-          expect "Email address"
-          send "$env(SOLDEER_EMAIL)\r"
-          expect "Password"
-          send "$env(SOLDEER_PASSWORD)\r"
-          expect eof
-          EOF
+        run: soldeer login --email "$SOLDEER_EMAIL" --password "$SOLDEER_PASSWORD"
       - name: Publish to Soldeer
         run: |
           echo "Publishing version: ${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}"
