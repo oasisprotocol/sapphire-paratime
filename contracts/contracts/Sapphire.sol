@@ -359,15 +359,30 @@ library Sapphire {
 
     /**
      * @notice Sign a message within the provided context using the specified
-     * algorithm, and return the signature. The `context_or_digest` and
-     * `messages` parameters change in meaning slightly depending on the method
-     * requested. For methods that take a context in addition to the message you
-     * must pass the context in the `context_or_digest` parameter and use
-     * `message` as expected. For methods that take a pre-existing hash of the
-     * message, pass that in `context_or_digest` and leave `message` empty.
-     * Specifically the `Ed25519Oasis` and `Secp256k1Oasis` variants take both a
-     * context and a message (each are variable length `bytes`), the context
-     * serves as a domain separator.
+     * algorithm, and return the signature. The `contextOrHash` and
+     * `message` parameters change in meaning slightly depending on the algorithm
+     * requested:
+     *
+     * For algorithms that use domain-separation contexts:
+     * - Ed25519Oasis and Secp256k1Oasis: Pass the domain separator context string as
+     *   `contextOrHash` and the message to sign as `message`.
+     *
+     * For algorithms that use pre-computed hashes:
+     * - Ed25519PrehashedSha512: Pass the SHA-512 hash (64 bytes) as `contextOrHash`
+     *   and set `message` to empty.
+     * - Secp256k1PrehashedKeccak256: Pass the Keccak256 hash (32 bytes) as `contextOrHash`
+     *   and set `message` to empty. The hash should be computed as `bytes memory hash = abi.encodePacked(keccak256(message))`.
+     * - Secp256k1PrehashedSha256: Pass the SHA-256 hash (32 bytes) as `contextOrHash`
+     *   and set `message` to empty.
+     * - Secp256r1PrehashedSha256: Pass the SHA-256 hash (32 bytes) as `contextOrHash`
+     *   and set `message` to empty.
+     * - Secp384r1PrehashedSha384: Pass the SHA-384 hash (48 bytes) as `contextOrHash`
+     *   and set `message` to empty.
+     *
+     * For Sr25519 signatures (for Substrate compatibility):
+     * - Sr25519: You MUST pass "substrate" as the `contextOrHash` parameter to ensure
+     *   compatibility with Substrate off-chain signing that uses the `{ withType: true }`
+     *   parameter. Pass the message to sign as the `message` parameter.
      *
      * #### Precompile address
      *
@@ -391,23 +406,36 @@ library Sapphire {
      *   bytes) as context, empty message.
      * - `7` (`Secp256r1PrehashedSha256`): 9,000 gas, pre-existing hash (32
      *   bytes) as context, empty message.
-     * - `8` (`Secp384r1PrehashedSha384`): 43,200 gas, pre-existing hash (32
+     * - `8` (`Secp384r1PrehashedSha384`): 43,200 gas, pre-existing hash (48
      *   bytes) as context, empty message.
      *
      * #### Example
      *
      * ```solidity
+     * // Example 1: Signing with Ed25519Pure
      * Sapphire.SigningAlg alg = Sapphire.SigningAlg.Ed25519Pure;
      * bytes memory pk;
      * bytes memory sk;
      * (pk, sk) = Sapphire.generateSigningKeyPair(alg, Sapphire.randomBytes(32, ""));
      * bytes memory signature = Sapphire.sign(alg, sk, "", "signed message");
+     *
+     * // Example 2: Signing with Secp256k1PrehashedKeccak256
+     * alg = Sapphire.SigningAlg.Secp256k1PrehashedKeccak256;
+     * bytes memory message = "message to sign";
+     * bytes memory digest = abi.encodePacked(keccak256(message));
+     * signature = Sapphire.sign(alg, sk, digest, "");
+     *
+     * // Example 3: Signing with Sr25519 (Substrate compatibility)
+     * alg = Sapphire.SigningAlg.Sr25519;
+     * bytes memory message = "message to sign";
+     * signature = Sapphire.sign(alg, sk, "substrate", message);
      * ```
      *
      * @param alg The signing algorithm to use.
      * @param secretKey The secret key to use for signing. The key must be valid
      * for use with the requested algorithm.
      * @param contextOrHash Domain-Separator Context, or precomputed hash bytes.
+     * The format and meaning depends on the selected algorithm (see above).
      * @param message Message to sign, should be zero-length if precomputed hash
      * given.
      * @return signature The resulting signature.
@@ -427,12 +455,13 @@ library Sapphire {
     }
 
     /**
-     * @notice Verifies that the provided digest was signed with using the
-     * secret key corresponding to the provided private key and the specified
+     * @notice Verifies that the provided digest was signed using the
+     * secret key corresponding to the provided public key and the specified
      * signing algorithm.
      *
-     * The `method`, `context_or_digest` and `message` parameters have the same
-     * meaning as described above in the [sign()](#sign) function.
+     * The `contextOrHash` and `message` parameters behave the same way as in the
+     * sign() function. Please refer to the [sign()](#sign) function documentation
+     * for details on how these parameters should be used with each algorithm.
      *
      * #### Precompile address
      *
@@ -456,21 +485,37 @@ library Sapphire {
      * #### Example
      *
      * ```solidity
+     * // Example 1: Verifying with Secp256k1PrehashedKeccak256
      * Sapphire.SigningAlg alg = Sapphire.SigningAlg.Secp256k1PrehashedKeccak256;
      * bytes memory pk;
      * bytes memory sk;
-     * bytes memory digest = abi.encodePacked(keccak256("signed message"));
+     * bytes memory message = "message to sign";
+     * // Create the hash
+     * bytes memory digest = abi.encodePacked(keccak256(message));
+     * // Generate keys and sign
      * (pk, sk) = Sapphire.generateSigningKeyPair(alg, Sapphire.randomBytes(32, ""));
      * bytes memory signature = Sapphire.sign(alg, sk, digest, "");
-     * require( Sapphire.verify(alg, pk, digest, "", signature) );
+     * // Verify the signature (pass the same hash used for signing)
+     * bool isValid = Sapphire.verify(alg, pk, digest, "", signature);
+     * require(isValid, "Invalid signature");
+     *
+     * // Example 2: Verifying with Sr25519 (Substrate compatibility)
+     * alg = Sapphire.SigningAlg.Sr25519;
+     * message = "message to sign";
+     * // Sign with "substrate" context
+     * signature = Sapphire.sign(alg, sk, "substrate", message);
+     * // Verify with the same "substrate" context
+     * isValid = Sapphire.verify(alg, pk, "substrate", message, signature);
+     * require(isValid, "Invalid signature");
      * ```
      *
      * @param alg The signing algorithm by which the signature was generated.
      * @param publicKey The public key against which to check the signature.
-     * @param contextOrHash Domain-Separator Context, or precomputed hash bytes
-     * @param message The hash of the message that was signed, should be
-     * zero-length if precomputed hash was given.
-     * @param signature The signature to check.
+     * @param contextOrHash Domain-Separator Context, or precomputed hash bytes.
+     * The format and meaning depends on the selected algorithm (see above).
+     * @param message The message that was signed, should be zero-length if
+     * precomputed hash was given in contextOrHash.
+     * @param signature The signature to verify.
      * @return verified Whether the signature is valid for the given parameters.
      * @custom:see @oasisprotocol/oasis-sdk :: precompile/confidential.rs :: call_verify
      */
