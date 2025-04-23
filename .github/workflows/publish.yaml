@@ -72,6 +72,7 @@ jobs:
     needs: publish
     if: startsWith(github.ref_name, 'contracts/v')
     steps:
+      - uses: actions/checkout@v4
       - name: Extract version from tag
         id: extract-tag-version
         env:
@@ -85,13 +86,15 @@ jobs:
           toolchain: stable
       - name: Install soldeer
         run: cargo install soldeer
-      - name: Set soldeer access token
+      - name: Login to Soldeer
         env:
-          SOLDEER_AUTH_TOKEN: ${{ secrets.SOLDEER_TOKEN }}
-        run: |
-          mkdir -p ~/.soldeer && echo "$SOLDEER_AUTH_TOKEN" > ~/.soldeer/.soldeer_login
+          SOLDEER_EMAIL: ${{ secrets.SOLDEER_EMAIL }}
+          SOLDEER_PASSWORD: ${{ secrets.SOLDEER_PASSWORD }}
+        run: soldeer login --email "$SOLDEER_EMAIL" --password "$SOLDEER_PASSWORD"
       - name: Publish to Soldeer
-        run: soldeer push @oasisprotocol-sapphire-contracts~$CONTRACTS_VERSION
+        run: |
+          echo "Publishing version: ${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}"
+          soldeer push @oasis-sapphire-contracts~${{ steps.extract-tag-version.outputs.CONTRACTS_VERSION }}
         working-directory: contracts/contracts
 
   publish-py:
