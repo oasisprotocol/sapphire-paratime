@@ -45,7 +45,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        9
+        10
     } else {
         // Mainnet.
         5
@@ -308,6 +308,8 @@ impl sdk::Runtime for Runtime {
 
                         store_receipt: 20_000,
                         take_receipt: 15_000,
+
+                        delegation: 10_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
