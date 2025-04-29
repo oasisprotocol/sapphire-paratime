@@ -12,7 +12,3 @@ packages:
   - examples/onchain-signer
   - examples/wagmi-v2
   - examples/wagmi-v1
-
-overrides:
-  "elliptic": "^6.6.1"
-

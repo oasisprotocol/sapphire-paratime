@@ -38,13 +38,13 @@
 	},
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
-		"viem": "^2.6.9"
+		"viem": "2.x"
 	},
 	"peerDependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@wagmi/core": "2.x",
 		"typescript": ">=5.0.4",
-		"viem": "^2.6.9"
+		"viem": "2.x"
 	},
 	"peerDependenciesMeta": {
 		"typescript": {

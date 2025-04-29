@@ -1,0 +1,18 @@
+{
+  "name": "@oasisprotocol/sapphire-paratime",
+  "private": true,
+  "description": "Sapphire ParaTime - Oasis Protocol Foundation",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oasisprotocol/sapphire-paratime.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "elliptic": "^6.6.1"
+    }
+  }
+}
