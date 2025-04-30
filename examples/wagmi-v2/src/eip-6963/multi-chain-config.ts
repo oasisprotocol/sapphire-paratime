@@ -1,13 +1,14 @@
+import { http } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
 	sapphireLocalnet,
 	createSapphireConfig,
 } from "@oasisprotocol/sapphire-wagmi-v2";
-import { http } from "wagmi";
 
 export const config = createSapphireConfig({
 	sapphireConfig: {
-		replaceProviders: true,
+		replaceProviders: false,
+		wrappedProvidersFilter: (rdns) => ["io.metamask"].includes(rdns),
 	},
 	chains: [sapphire, sapphireTestnet, sapphireLocalnet],
 	transports: {
@@ -16,9 +17,3 @@ export const config = createSapphireConfig({
 		[sapphireLocalnet.id]: http(),
 	},
 });
-
-declare module "wagmi" {
-	interface Register {
-		config: typeof config;
-	}
-}
