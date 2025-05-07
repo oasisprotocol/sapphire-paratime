@@ -135,78 +135,72 @@ export function createSapphireConfig<
 		wrap: wrapOptions,
 	} = sapphireConfig;
 
-	const _addEventListener = EventTarget.prototype.addEventListener;
-	Object.defineProperty(EventTarget.prototype, "addEventListener", {
-		value: function (
-			type: string,
-			callback: EventListenerOrEventListenerObject | null,
-			options?: AddEventListenerOptions | boolean,
-		): void {
-			if (type === EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME) {
-				_addEventListener.call(
-					this,
-					type,
-					(event: Event) => {
-						let patchCustomEvent = null;
-						const announceProviderEvent = event as EIP6963AnnounceProviderEvent;
+	// SSR check
+	const _dispatchEvent =
+		typeof window !== "undefined" ? window.dispatchEvent : undefined;
 
-						if (
-							SUPPORTED_RDNS.includes(
-								(event as EIP6963AnnounceProviderEvent).detail.info.rdns,
-							) &&
-							!isWrappedEthereumProvider(announceProviderEvent.detail.provider)
-						) {
-							/* Replace announced supported providers with wrapped provider */
-							if (replaceProviders) {
-								patchCustomEvent = new CustomEvent(
-									EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
-									{
-										detail: {
-											...announceProviderEvent.detail,
-											provider: wrapEthereumProvider(
-												announceProviderEvent.detail.provider,
-												wrapOptions,
-											),
-										},
+	if (_dispatchEvent) {
+		Object.defineProperty(window, "dispatchEvent", {
+			value: function (event: Event): boolean {
+				if (event.type === EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME) {
+					const announceProviderEvent = event as EIP6963AnnounceProviderEvent;
+
+					// Check if this is a supported provider that's not already wrapped
+					if (
+						SUPPORTED_RDNS.includes(announceProviderEvent.detail.info.rdns) &&
+						!isWrappedEthereumProvider(announceProviderEvent.detail.provider)
+					) {
+						if (replaceProviders) {
+							const wrappedEvent = new CustomEvent(
+								EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
+								{
+									detail: {
+										...announceProviderEvent.detail,
+										provider: wrapEthereumProvider(
+											announceProviderEvent.detail.provider,
+											wrapOptions,
+										),
 									},
-								);
-								/* Duplicate supported providers(replaceProviders = false), i.e. MetaMask -> [MetaMask, SapphireMetaMask] */
-							} else if (
-								wrappedProvidersFilter(announceProviderEvent.detail.info.rdns)
-							) {
-								const {
-									info: { name, rdns, icon, uuid },
-									provider,
-								} = announceProviderEvent.detail;
+								},
+							);
 
-								const dispatchAnnounceProviderEvent: CustomEvent<EIP6963ProviderDetail> =
-									new CustomEvent(EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME, {
-										detail: Object.freeze({
-											info: {
-												uuid: `sapphire.${uuid}`,
-												rdns: `sapphire.${rdns}` as Rdns,
-												name: `${name} (Sapphire)`,
-												icon,
-											},
-											provider: wrapEthereumProvider(provider, wrapOptions),
-										}),
-									});
-
-								window.dispatchEvent(dispatchAnnounceProviderEvent);
-							}
+							return _dispatchEvent.call(this, wrappedEvent);
 						}
+						// Duplicate mode: dispatch original event, then dispatch a wrapped duplicate
+						if (
+							wrappedProvidersFilter(announceProviderEvent.detail.info.rdns)
+						) {
+							_dispatchEvent.call(this, event);
 
-						return typeof callback === "function"
-							? callback(patchCustomEvent ?? event)
-							: callback?.handleEvent(patchCustomEvent ?? event);
-					},
-					options,
-				);
-			} else {
-				_addEventListener.call(this, type, callback, options);
-			}
-		},
-	});
+							const {
+								info: { name, rdns, icon, uuid },
+								provider,
+							} = announceProviderEvent.detail;
+
+							const sapphireProviderEvent: CustomEvent<EIP6963ProviderDetail> =
+								new CustomEvent(EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME, {
+									detail: Object.freeze({
+										info: {
+											uuid: `sapphire.${uuid}`,
+											rdns: `sapphire.${rdns}` as Rdns,
+											name: `${name} (Sapphire)`,
+											icon,
+										},
+										provider: wrapEthereumProvider(provider, wrapOptions),
+									}),
+								});
+
+							return _dispatchEvent.call(this, sapphireProviderEvent);
+						}
+					}
+				}
+
+				return _dispatchEvent.call(this, event);
+			},
+			writable: true,
+			configurable: true,
+		});
+	}
 
 	return createConfig<chains, transports, connectorFns>({
 		...restParameters,
