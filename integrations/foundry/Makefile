@@ -2,7 +2,7 @@
 all: build test
 
 build:
-	forge install foundry-rs/forge-std --no-commit --no-git
+	forge install foundry-rs/forge-std --no-git
 	cd lib/oasisprotocol-sapphire-foundry/precompiles && cargo +nightly build --release
 
 test:
