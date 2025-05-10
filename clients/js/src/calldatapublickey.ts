@@ -171,7 +171,11 @@ export class KeyFetcher {
   }
 
   public async cipher(upstream: EIP2696_EthereumProvider): Promise<Cipher> {
-    const { key, epoch } = await this.fetch(upstream);
+    const { key, epoch } = await this.fetch(upstream).catch((error) => {
+      // Log error to help debug: rainbowkit swallowed err if getChainId called this during connectToWallet
+      console.error('KeyFetcher.cipher failed', error);
+      throw error;
+    });
     return X25519DeoxysII.ephemeral(key, epoch);
   }
 
