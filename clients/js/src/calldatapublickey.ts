@@ -113,6 +113,10 @@ export async function fetchRuntimePublicKey(args: {
       'latest',
     ],
   })) as string;
+  if (call_resp === '0x') {
+    throw new Error(`fetchRuntimePublicKey - invalid response: ${call_resp}`);
+  }
+
   const resp_bytes = getBytes(call_resp);
 
   // NOTE: to avoid pulling-in a full ABI decoder dependency, slice it manually
