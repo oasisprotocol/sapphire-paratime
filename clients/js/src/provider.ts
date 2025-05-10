@@ -222,7 +222,6 @@ export function makeSapphireRequestFn(
     const snapId = filled_options.enableSapphireSnap
       ? await detectSapphireSnap(provider)
       : undefined;
-    const cipher = await filled_options.fetcher.cipher(provider);
     const { method, params } = args;
 
     let transactionData: BytesLike | undefined = undefined;
@@ -233,34 +232,42 @@ export function makeSapphireRequestFn(
       /^eth_((send|sign)Transaction|call|estimateGas)$/.test(method) &&
       params[0].data // Ignore balance transfers without calldata
     ) {
+      // TODO: should we attempt to detect `if (not sapphire) throw` instead of
+      // failing to fetch public key in the next line?
+      const cipher = await filled_options.fetcher.cipher(provider);
       transactionData = params[0].data = cipher.encryptCall(params[0].data);
-    }
 
-    if (snapId !== undefined && transactionData !== undefined) {
-      // Run in background so as to not delay results
-      notifySapphireSnap(
-        snapId,
-        cipher,
-        transactionData,
-        filled_options,
-        provider,
-      );
-    }
-
-    const res = await provider.request({
-      method,
-      params: params ?? [],
-    });
-
-    // Decrypt responses which return encrypted data
-    if (method === 'eth_call') {
-      // If it's an unencrypted core.CallDataPublicKey query, don't attempt to decrypt the response
-      if (!isCallDataPublicKeyQuery(params)) {
-        return cipher.decryptResult(res as BytesLike);
+      if (snapId !== undefined && transactionData !== undefined) {
+        // Run in background so as to not delay results
+        notifySapphireSnap(
+          snapId,
+          cipher,
+          transactionData,
+          filled_options,
+          provider,
+        );
       }
-    }
 
-    return res;
+      const res = await provider.request({
+        method,
+        params: params ?? [],
+      });
+
+      // Decrypt responses which return encrypted data
+      if (method === 'eth_call') {
+        // If it's an unencrypted core.CallDataPublicKey query, don't attempt to decrypt the response
+        if (!isCallDataPublicKeyQuery(params)) {
+          return cipher.decryptResult(res as BytesLike);
+        }
+      }
+      return res;
+    } else {
+      const res = await provider.request({
+        method,
+        params: params ?? [],
+      });
+      return res;
+    }
   };
 
   return makeTaggedProxyObject(f, SAPPHIRE_EIP1193_REQUESTFN, filled_options);

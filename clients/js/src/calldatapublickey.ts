@@ -113,6 +113,10 @@ export async function fetchRuntimePublicKey(args: {
       'latest',
     ],
   })) as string;
+  if (call_resp === '0x') {
+    throw new Error(`fetchRuntimePublicKey - invalid response: ${call_resp}`);
+  }
+
   const resp_bytes = getBytes(call_resp);
 
   // NOTE: to avoid pulling-in a full ABI decoder dependency, slice it manually
@@ -167,7 +171,11 @@ export class KeyFetcher {
   }
 
   public async cipher(upstream: EIP2696_EthereumProvider): Promise<Cipher> {
-    const { key, epoch } = await this.fetch(upstream);
+    const { key, epoch } = await this.fetch(upstream).catch((error) => {
+      // Log error to help debug: rainbowkit swallowed err if getChainId called this during connectToWallet
+      console.error('KeyFetcher.cipher failed', error);
+      throw error;
+    });
     return X25519DeoxysII.ephemeral(key, epoch);
   }
 
