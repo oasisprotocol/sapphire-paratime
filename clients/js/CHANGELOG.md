@@ -6,6 +6,16 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 2.2.0 (2025-05)
+
+### Added
+
+- Preconfigured `NETWORKS` are now compatible with `wallet_addEthereumChain`
+
+### Fixed
+
+- Don't throw on `eth_chainId` request on non-sapphire chain
+
 ## 2.1.0 (2025-02)
 
 ### Added
