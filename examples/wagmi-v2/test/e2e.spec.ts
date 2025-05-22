@@ -9,7 +9,7 @@ export const test = baseTest.extend<{
 		// Launch context with extension
 		const [wallet, _, context] = await dappwright.bootstrap("", {
 			wallet: "metamask",
-			version: "12.10.4",
+			version: MetaMaskWallet.recommendedVersion,
 			seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
 			headless: false,
 		});
@@ -34,7 +34,7 @@ export const test = baseTest.extend<{
 test.beforeEach(async ({ wallet, page }) => {
 	// Use first account from seed. dAppwright adds two accounts by default.
 	// Changed from numeric index to name as per PR #440
-	await wallet.switchAccount("Alice");
+	await wallet.switchAccount("batman");
 	
 	await page.bringToFront();
 });
@@ -52,9 +52,9 @@ test("deploy contract and send encrypted transaction", async ({
 	// Use address of first account
 	await page.getByTestId("io.metamask").click();
 	await wallet.approve();
-	
+
 	await expect(
-		page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
+		page.getByText("0x70997970C51812dc3A010C7d01b50e0d17dc79C8"),
 	).toBeVisible();
 
 	await page.getByText("Deploy").click();
