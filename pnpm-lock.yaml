@@ -448,15 +448,9 @@ importers:
       '@oasisprotocol/sapphire-wagmi-v2':
         specifier: workspace:^
         version: link:../../integrations/wagmi-v2
-      '@playwright/test':
-        specifier: ^1.48.2
-        version: 1.52.0
       '@tanstack/react-query':
         specifier: 5.0.5
         version: 5.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@tenkeylabs/dappwright':
-        specifier: ^2.11.0
-        version: 2.11.0(playwright-core@1.52.0)
       abitype:
         specifier: ^1.0.2
         version: 1.0.8(typescript@5.8.3)
@@ -476,6 +470,12 @@ importers:
       '@biomejs/biome':
         specifier: ^1.7.0
         version: 1.9.4
+      '@playwright/test':
+        specifier: ^1.48.2
+        version: 1.52.0
+      '@tenkeylabs/dappwright':
+        specifier: ^2.11.0
+        version: 2.11.0(playwright-core@1.52.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.3.20

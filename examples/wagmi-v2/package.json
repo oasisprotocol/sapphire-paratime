@@ -17,9 +17,7 @@
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
-		"@playwright/test": "^1.48.2",
 		"@tanstack/react-query": "5.0.5",
-		"@tenkeylabs/dappwright": "^2.11.0",
 		"abitype": "^1.0.2",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
@@ -28,6 +26,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
+		"@playwright/test": "^1.48.2",
+		"@tenkeylabs/dappwright": "^2.11.0",
 		"@types/react": "^18.2.79",
 		"@types/react-dom": "^18.2.25",
 		"@vitejs/plugin-react": "^4.2.1",
