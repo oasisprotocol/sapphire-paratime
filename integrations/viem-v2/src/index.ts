@@ -10,6 +10,7 @@ import {
 import type {
 	Chain,
 	Client,
+	HttpTransportConfig,
 	SerializeTransactionFn,
 	Transport,
 	WalletClient,
@@ -71,22 +72,24 @@ export type SapphireHttpTransport = Transport<
  * @returns Same as http()
  */
 export function sapphireHttpTransport<T extends Transport>(
-	options?: SapphireWrapConfig,
+	sapphireConfig?: SapphireWrapConfig,
+	url?: string,
+	httpConfig?: HttpTransportConfig
 ): T {
 	const cachedProviders: Record<string, unknown> = {};
 	return ((params) => {
-		if (!params.chain) {
+		const url_ = url || params.chain?.rpcUrls.default.http[0];
+		if (!url_) {
 			throw new Error(
-				"sapphireHttpTransport() not possible with no params.chain!",
+				"sapphireHttpTransport() needs a chain.rpcUrls.default.http[0] to be set or explicit url",
 			);
 		}
-		const url = params.chain.rpcUrls.default.http[0];
-		if (!(url in cachedProviders)) {
-			const x = wrapEthereumProvider(http(url)(params), options);
+		if (!(url_ in cachedProviders)) {
+			const x = wrapEthereumProvider(http(url_, httpConfig)(params), sapphireConfig);
 			Reflect.set(x, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, true);
-			cachedProviders[url] = x;
+			cachedProviders[url_] = x;
 		}
-		return cachedProviders[url];
+		return cachedProviders[url_];
 	}) as T;
 }
 
