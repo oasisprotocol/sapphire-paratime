@@ -1,4 +1,4 @@
 [doc]
 out = "sol/sapphire-contracts"
 title = "Sapphire Contracts Lib"
-ignore = ["contracts/tests/*"]
+ignore = ["contracts/tests/*", "contracts/tests/auth/*"]
