@@ -10,11 +10,10 @@
 [github-ci-audit-link]: https://github.com/oasisprotocol/sapphire-paratime/actions?query=workflow:ci-audit+branch:main
 <!-- markdownlint-enable line-length -->
 
-This is the Sapphire ParaTime, an [Oasis Protocol Foundation] official
-ParaTime for the [Oasis Network] built using the [Oasis SDK]. It's chock-full
-of Oasis.
+This is the Sapphire ParaTime, an [Oasis] official ParaTime for the [Oasis
+Network] built using the [Oasis SDK]. It's chock-full of Oasis.
 
-[Oasis Protocol Foundation]: https://oasisprotocol.org/
+[Oasis]: https://oasis.net/
 [Oasis Network]: https://docs.oasis.io/oasis-network-primer/
 [Oasis SDK]: https://github.com/oasisprotocol/oasis-sdk
 
