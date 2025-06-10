@@ -17,4 +17,8 @@ contract Counter is SapphireDecryptor {
     function withdraw() external {
         payable(msg.sender).transfer(address(this).balance);
     }
+
+    function thisCompilesToPush0AndShouldDetectWrongEvmVersion() public pure returns (bool) {
+        return false; // This will compile to PUSH0 in new unsupported EVM versions
+    }
 }
