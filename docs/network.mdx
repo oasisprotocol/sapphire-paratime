@@ -9,7 +9,7 @@ import {AddSapphireToMetaMask as S, AddSapphireTestnetToMetaMask as ST} from '@s
 ## Networks
 
 |                   | Mainnet                             | Testnet                             | Localnet                                   |
-| ------------------| ----------------------------------- | ----------------------------------- | ------------------------------------------ |
+|-------------------|-------------------------------------|-------------------------------------|--------------------------------------------|
 | Network name      | `sapphire`                          | `sapphire-testnet`                  | `sapphire-localnet`                        |
 | Long network name | `Oasis Sapphire`                    | `Oasis Sapphire Testnet`            | `Oasis Sapphire Localnet`                  |
 | Chain ID          | Hex:`0x5afe`<br /> Decimal: `23294` | Hex:`0x5aff`<br /> Decimal: `23295` | Hex:`0x5afd`<br /> Decimal: `23293`        |
@@ -46,12 +46,12 @@ node][paratime-client-node] and the [Web3-compatible gateway].
 
 You can connect to one of the public Web3 gateways below (in alphabetic order):
 
-| Provider                    | Mainnet RPC URLs                                                        | Testnet RPC URLs                                                                           | Supports Confidential Queries |
-|-----------------------------|-------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|-------------------------------|
-| [1RPC]                      | <S rpcs={['https://1rpc.io/oasis/sapphire']} />                         | *N/A*                                                                                      | Yes                           |
-| [Oasis Protocol Foundation] | <S rpcs={['https://sapphire.oasis.io','wss://sapphire.oasis.io/ws']} /> | <ST rpcs={['https://testnet.sapphire.oasis.io','wss://testnet.sapphire.oasis.io/ws']} /> | Yes                           |
+| Provider | Mainnet RPC URLs                                                        | Testnet RPC URLs                                                                         | Supports Confidential Queries |
+|----------|-------------------------------------------------------------------------|------------------------------------------------------------------------------------------|-------------------------------|
+| [1RPC]   | <S rpcs={['https://1rpc.io/oasis/sapphire']} />                         | *N/A*                                                                                    | Yes                           |
+| [Oasis]  | <S rpcs={['https://sapphire.oasis.io','wss://sapphire.oasis.io/ws']} /> | <ST rpcs={['https://testnet.sapphire.oasis.io','wss://testnet.sapphire.oasis.io/ws']} /> | Yes                           |
 
-[Oasis Protocol Foundation]: https://oasisprotocol.org
+[Oasis]: https://oasis.net
 
 Public RPCs may have rate limits or traffic restrictions. For professional,
 dedicated RPC endpoints, consider the following providers (in alphabetic order):
@@ -71,21 +71,21 @@ dedicated RPC endpoints, consider the following providers (in alphabetic order):
 
 ## Block Explorers
 
-| Name (Provider)                               | Mainnet URL                                | Testnet URL                                | EIP-3091 compatible |
-|-----------------------------------------------|--------------------------------------------|--------------------------------------------|---------------------|
-| Oasis Explorer ([Oasis Protocol Foundation])  | `https://explorer.oasis.io/mainnet/sapphire` | `https://explorer.oasis.io/testnet/sapphire` | Yes                 |
-| Oasis Scan ([Bit Cat])                        | [https://www.oasisscan.com/paratimes/000…279](https://www.oasisscan.com/paratimes/000000000000000000000000000000000000000000000000f80306c9858e7279) | [https://testnet.oasisscan.com/paratimes/000…f6c](https://testnet.oasisscan.com/paratimes/000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c) | No |
+| Name (Provider)          | Mainnet URL                                                                                                                                         | Testnet URL                                                                                                                                                 | EIP-3091 compatible |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|
+| Oasis Explorer ([Oasis]) | `https://explorer.oasis.io/mainnet/sapphire`                                                                                                        | `https://explorer.oasis.io/testnet/sapphire`                                                                                                                | Yes                 |
+| Oasis Scan ([Bit Cat])   | [https://www.oasisscan.com/paratimes/000…279](https://www.oasisscan.com/paratimes/000000000000000000000000000000000000000000000000f80306c9858e7279) | [https://testnet.oasisscan.com/paratimes/000…f6c](https://testnet.oasisscan.com/paratimes/000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c) | No                  |
 
 [Bit Cat]: https://www.bitcat365.com/
 
 ## Indexers
 
-| Name (Provider)      | Mainnet URL                                                    | Testnet URL                                            | Documentation                              |
-|--------------------|------------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------|
-| [Covalent]                   | `https://api.covalenthq.com/v1/oasis-sapphire-mainnet` | `https://api.covalenthq.com/v1/oasis-sapphire-testnet` | [Unified API docs][Covalent-docs]          |
-| [Goldsky Subgraph][Goldsky]  | *N/A*                                                  | *N/A*                                                  | [Documentation site][Goldsky-docs]         |
-| Oasis Nexus ([Oasis Protocol Foundation]) | `https://nexus.oasis.io/v1/`              | `https://testnet.nexus.oasis.io/v1/`                   | [API][Nexus-docs]                          |
-| Oasis Scan ([Bit Cat])       | `https://api.oasisscan.com/v2/mainnet`                 | `https://api.oasisscan.com/v2/testnet`                 | [Runtime API][OasisScan-docs] |
+| Name (Provider)              | Mainnet URL                                            | Testnet URL                                            | Documentation                                                                                             |
+|------------------------------|--------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| [Covalent]                   | `https://api.covalenthq.com/v1/oasis-sapphire-mainnet` | `https://api.covalenthq.com/v1/oasis-sapphire-testnet` | [Unified API docs][Covalent-docs]                                                                         |
+| [Goldsky Subgraph][Goldsky]  | *N/A*                                                  | *N/A*                                                  | [Documentation site][Goldsky-docs]                                                                        |
+| Oasis Nexus ([Oasis])        | `https://nexus.oasis.io/v1/`                           | `https://testnet.nexus.oasis.io/v1/`                   | [API][Nexus-docs]                                                                                         |
+| Oasis Scan ([Bit Cat])       | `https://api.oasisscan.com/v2/mainnet`                 | `https://api.oasisscan.com/v2/testnet`                 | [Runtime API][OasisScan-docs]                                                                             |
 | [SubQuery Network][SubQuery] | *N/A*                                                  | *N/A*                                                  | [SubQuery Academy][SubQuery-docs], [QuickStart][SubQuery-quickstart], [Starter project][SubQuery-starter] |
 
 [Covalent]: https://www.covalenthq.com/

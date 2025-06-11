@@ -1,4 +1,4 @@
-# Sapphire Paratime
+# Sapphire ParaTime
 
 [![license](https://img.shields.io/github/license/oasisprotocol/sapphire-paratime.svg)](https://github.com/oasisprotocol/sapphire-paratime/blob/main/LICENSE)
 [![ci-lint](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml/badge.svg)](https://github.com/oasisprotocol/sapphire-paratime/actions/workflows/ci-lint.yaml)
@@ -132,7 +132,7 @@ See our [Contributing Guidelines](CONTRIBUTING.md).
 Oasis remains committed to unlocking the full potential of privacy applications
 on Web3.
 
-Build with [us](https://oasisprotocol.org/opl#how-to-get-started) today!
+Build with [us](https://oasis.net/sapphire) today!
 
 ## License
 
