@@ -211,7 +211,7 @@ async function getSecretMessage(): Promise<Message> {
       address: addr, // User's selected account address.
       uri: `http://${domain}`,
       version: "1",
-      chainId: 0x5afe, // Sapphire Testnet
+      chainId: 0x5aff, // Sapphire Testnet
     }).toMessage();
     const sig = ethers.Signature.from((await window.ethereum.getSigner(addr)).signMessage(siweMsg));
     token = await messageBox.login(siweMsg, sig);
