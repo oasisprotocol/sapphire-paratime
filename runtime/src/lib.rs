@@ -310,6 +310,7 @@ impl sdk::Runtime for Runtime {
                         take_receipt: 15_000,
 
                         delegation: 10_000,
+                        shares_to_tokens: 10_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
