@@ -45,7 +45,7 @@ const fn chain_id() -> u64 {
 const fn state_version() -> u32 {
     if is_testnet() {
         // Testnet.
-        10
+        11
     } else {
         // Mainnet.
         6
@@ -92,6 +92,8 @@ impl modules::rofl::Config for Config {
     const GAS_COST_CALL_AUTHORIZED_ORIGIN_NODE: u64 = 2000;
     /// Gas cost of rofl.AuthorizedOriginEntity call.
     const GAS_COST_CALL_AUTHORIZED_ORIGIN_ENTITY: u64 = 2000;
+    /// Gas cost of rofl.OriginApp call.
+    const GAS_COST_CALL_ORIGIN_APP: u64 = 1000;
     /// Gas cost of rofl.StakeThresholds call.
     const GAS_COST_CALL_STAKE_THRESHOLDS: u64 = 10;
     /// Gas cost of rofl.DeriveKey call.
@@ -100,6 +102,12 @@ impl modules::rofl::Config for Config {
     /// Amount of stake required for maintaining an application (100 ROSE/TEST).
     const STAKE_APP_CREATE: BaseUnits =
         BaseUnits::new(100_000_000_000_000_000_000, Denomination::NATIVE);
+
+    /// Endorsement policy evaluator.
+    type EndorsementPolicyEvaluator = (
+        modules::rofl::policy::BasicEndorsementPolicyEvaluator,
+        module_rofl_market::policy::ProviderEndorsementPolicyEvaluator,
+    );
 }
 
 impl module_rofl_market::Config for Config {
@@ -120,6 +128,8 @@ impl module_rofl_market::Config for Config {
     const GAS_COST_CALL_PROVIDER_REMOVE: u64 = 100_000;
     /// Gas cost of roflmarket.InstanceCreate call.
     const GAS_COST_CALL_INSTANCE_CREATE: u64 = 100_000;
+    /// Gas cost of roflmarket.InstanceChangeAdmin call.
+    const GAS_COST_CALL_INSTANCE_CHANGE_ADMIN: u64 = 10_000;
     /// Gas cost of roflmarket.InstanceAccept call.
     const GAS_COST_CALL_INSTANCE_ACCEPT_BASE: u64 = 10_000;
     /// Gas cost of each accepted instance in roflmarket.InstanceAccept call.
@@ -228,8 +238,8 @@ impl sdk::Runtime for Runtime {
         if is_testnet() {
             // Testnet.
             Some(TrustRoot {
-                height: 21044750,
-                hash: "defbded6ddb4b9fda7dc6ed9d4c2b9b977a711495d7ba97028c4ba0b362326f8".into(),
+                height: 24544750,
+                hash: "6b2b5e7990e0c8bee8035934bc52a83a16fe4bff4dbb81b1aa5a8f9409b2eafe".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c"
                     .into(),
                 chain_context: "0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76"
@@ -310,6 +320,7 @@ impl sdk::Runtime for Runtime {
                         take_receipt: 15_000,
 
                         delegation: 10_000,
+                        shares_to_tokens: 10_000,
                     },
                     disable_delegate: false,
                     disable_undelegate: false,
