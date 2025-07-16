@@ -32,9 +32,9 @@ export const test = baseTest.extend<{
 });
 
 test.beforeEach(async ({ wallet, page }) => {
-	// Use first account from seed. dAppwright adds two accounts by default.
-	// Changed from numeric index to name as per PR #440
-	await wallet.switchAccount("batman");
+	// Metmask seems to name the accounts weird in the setup (maybe different every version?)
+	// "jvh" corresponds to address 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+	await wallet.switchAccount("jvh");
 	
 	await page.bringToFront();
 });
