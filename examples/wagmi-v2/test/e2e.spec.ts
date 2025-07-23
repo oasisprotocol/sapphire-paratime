@@ -33,14 +33,6 @@ export const test = baseTest.extend<{
 	},
 });
 
-test.beforeEach(async ({ wallet, page }) => {
-	// Metmask seems to name the accounts weird in the setup (maybe different every version?)
-	// "jvh" corresponds to address 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
-	await wallet.switchAccount("jvh");
-	
-	await page.bringToFront();
-});
-
 [
 	{ url: "/eip-6963-single-chain", rdns: "io.metamask" },
 	{ url: "/eip-6963-multi-chain", rdns: "sapphire.io.metamask" },
@@ -61,7 +53,7 @@ test.beforeEach(async ({ wallet, page }) => {
 			await wallet.approve();
 
 			await expect(
-				page.getByText("0x70997970C51812dc3A010C7d01b50e0d17dc79C8"),
+				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
 
 			await page.getByText("Deploy").click();
