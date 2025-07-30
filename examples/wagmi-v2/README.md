@@ -30,3 +30,94 @@ Please note that `multiInjectedProviderDiscovery` is disabled, as [EIP-6963] is
 not yet supported by the Sapphire Wagmi integration.
 
 [EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
+
+
+
+
+
+
+
+
+
+### Third-party integration
+
+#### Rainbowkit
+
+Injected wallet
+
+```ts
+wallets: [
+    (wallet => () => ({
+      ...wallet,
+      id: 'injected-sapphire',
+      name: 'Injected (Sapphire)',
+      createConnector: walletDetails =>
+        createConnector(config => ({
+          ...injectedWithSapphire()(config),
+          ...walletDetails,
+        })),
+    }))(injectedWallet())
+]
+```
+
+WalletConnect
+
+```ts
+const sapphireWalletConnectWallet = (sapphireOptions?: SapphireWrapConfig) => ({projectId, options}: WalletConnectWalletOptions): Wallet => ({
+  id: "walletConnect-sapphire",
+  name: "WalletConnect (Sapphire)",
+  installed: void 0,
+  iconUrl: walletConnectIconUrl,
+  iconBackground: "#3b99fc",
+  qrCode: {  getUri: (uri) => uri },
+  createConnector: (walletDetails: RainbowKitDetails) =>
+    createConnector((config) => ({
+      ...walletConnectWithSapphire({
+        projectId,
+        ...options,
+        showQrModal: false,
+        rkDetailsShowQrModal: walletDetails.rkDetails.showQrModal,
+        rkDetailsIsWalletConnectModalConnector: walletDetails.rkDetails.isWalletConnectModalConnector
+      }, sapphireOptions)(config),
+      ...walletDetails
+    })),
+});
+```
+
+Metamask
+
+```ts
+const wrappedMetaMaskWallet = ({projectId, options}: WalletConnectWalletOptions): Wallet => {
+  const baseWallet = metaMaskWallet({
+    projectId,
+  });
+
+  return {
+    ...baseWallet,
+    id: 'metamask-wrapped',
+    name: 'MetaMask (Sapphire)',
+    createConnector: (walletDetails) => {
+      const baseConnector = baseWallet.createConnector(walletDetails);
+
+      return createConnector((config) => {
+        const connector = baseConnector(config);
+        const originalGetProvider = connector.getProvider.bind(connector);
+
+        connector.getProvider = async () => {
+          const provider = await originalGetProvider();
+
+          if (isWrappedEthereumProvider(provider as EIP2696_EthereumProvider)) {
+            return provider;
+          }
+
+          return wrapEthereumProvider(
+            provider as EIP2696_EthereumProvider,
+          );
+        };
+
+        return connector;
+      });
+    }
+  };
+};
+```

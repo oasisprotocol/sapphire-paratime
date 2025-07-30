@@ -5,8 +5,8 @@
 import {
 	type SapphireWrapConfig,
 	isWrappedEthereumProvider,
-	wrapEthereumProvider,
-} from "@oasisprotocol/sapphire-paratime";
+	wrapEthereumProvider, type EIP2696_EthereumProvider,
+} from '@oasisprotocol/sapphire-paratime';
 import {
 	type Config,
 	type CreateConfigParameters,
@@ -15,8 +15,9 @@ import {
 	type Transport,
 	createConfig,
 	injected,
-} from "@wagmi/core";
+} from '@wagmi/core';
 import type { Chain, EIP1193Provider } from "viem";
+import { walletConnect, type WalletConnectParameters } from "wagmi/connectors";
 import {
 	EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
 	SUPPORTED_RDNS,
@@ -83,6 +84,44 @@ export function injectedWithSapphire(
 			};
 		},
 	} as InjectedParameters);
+}
+
+/**
+ * Wrap the WalletConnect connector with the Sapphire encryption layer.
+ * Used to provide encrypted transactions and calldata using WalletConnect.
+ */
+export function walletConnectWithSapphire(
+	parameters: WalletConnectParameters,
+	sapphireOptions?: SapphireWrapConfig,
+): CreateConnectorFn {
+	const baseConnectorFn = walletConnect(parameters);
+
+	return (config) => {
+		const connector = baseConnectorFn(config);
+
+		const originalGetProvider = connector.getProvider?.bind(connector);
+
+		if (originalGetProvider) {
+			connector.getProvider = async function(parameters?: { chainId?: number | undefined } | undefined) {
+				const provider = await originalGetProvider(parameters);
+
+				if (provider && !isWrappedEthereumProvider(provider as EIP2696_EthereumProvider)) {
+					if (!cachedProviders.has(provider as EIP1193Provider)) {
+						const wrappedProvider = wrapEthereumProvider(
+							provider as EIP2696_EthereumProvider,
+							sapphireOptions,
+						);
+						cachedProviders.set(provider as EIP1193Provider, wrappedProvider as EIP1193Provider);
+					}
+					return cachedProviders.get(provider as EIP1193Provider)! as typeof provider;
+				}
+
+				return provider!;
+			};
+		}
+
+		return connector;
+	};
 }
 
 /**

@@ -10,6 +10,7 @@ import {
 } from "wagmi";
 import { isCalldataEnveloped } from "@oasisprotocol/sapphire-paratime";
 import type { Abi } from "abitype";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 /*
 // SPDX-License-Identifier: Apache-2.0
@@ -129,6 +130,8 @@ function App() {
 		<>
 			<div>
 				<h2>Account</h2>
+
+				<ConnectButton />
 
 				<div>
 					status: {account.status}
