@@ -30,6 +30,7 @@ library Subcall {
     // ROFL
     string private constant ROFL_IS_AUTHORIZED_ORIGIN =
         "rofl.IsAuthorizedOrigin";
+    string private constant ROFL_ORIGIN_APP = "rofl.OriginApp";
 
     /// Address of the SUBCALL precompile
     address internal constant SUBCALL =
@@ -533,6 +534,38 @@ library Subcall {
         if (status != 0 || data.length != 1 || data[0] != 0xf5) {
             revert RoflOriginNotAuthorizedForApp();
         }
+    }
+
+    /**
+     * @notice Get the ROFL app identifier for the current origin transaction.
+     *
+     * #### Example
+     *
+     * ```solidity
+     * // Store ROFL app-specific price observation.
+     * mapping(bytes21 => uint32) private observations;
+     * ...
+     * observations[Subcall.getRoflAppId()] = 25540;
+     * ```
+     *
+     * @return appId The 21-byte ROFL application identifier
+     */
+    function getRoflAppId() internal view returns (bytes21 appId) {
+        (uint64 status, bytes memory data) = subcall_static(
+            ROFL_ORIGIN_APP,
+            hex"f6" // null
+        );
+
+        // CBOR data item 0x55: 0b010 unstructured byte string, 0b10101 21 elements.
+        if (status != 0 || data[0] != 0x55) {
+            revert SubcallError();
+        }
+
+        assembly {
+            // Skip the solidity 32-byte array length and the CBOR byte.
+            appId := mload(add(data, 33))
+        }
+        return appId;
     }
 
     struct CallDataPublicKey {
