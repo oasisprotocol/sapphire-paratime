@@ -30,6 +30,8 @@ library Subcall {
     // ROFL
     string private constant ROFL_IS_AUTHORIZED_ORIGIN =
         "rofl.IsAuthorizedOrigin";
+    string private constant ROFL_ORIGIN_APP = "rofl.OriginApp";
+
 
     /// Address of the SUBCALL precompile
     address internal constant SUBCALL =
@@ -533,6 +535,21 @@ library Subcall {
         if (status != 0 || data.length != 1 || data[0] != 0xf5) {
             revert RoflOriginNotAuthorizedForApp();
         }
+    }
+
+    /**
+     * @notice Get the ROFL app identifier for the current origin transaction.
+     * @return appId The 21-byte ROFL application identifier
+     */
+    function roflGetAppId() internal view returns (bytes21) {
+        (uint64 status, bytes memory data) = subcall_static(
+            ROFL_ORIGIN_APP,
+            hex"f6" // null
+        );
+
+        if (status != 0) { revert SubcallError(); }
+
+        return abi.decode(data, (bytes21));
     }
 
     struct CallDataPublicKey {
