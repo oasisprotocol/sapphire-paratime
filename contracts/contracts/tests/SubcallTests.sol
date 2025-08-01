@@ -113,6 +113,10 @@ contract SubcallTests {
         Subcall.roflEnsureAuthorizedOrigin(appId);
     }
 
+    function testRoflOriginApp() external view returns (bytes21){
+        return Subcall.roflGetAppId();
+    }
+
     event RawResult(uint64, bytes);
 
     function testParseCallDataPublicKey(bytes memory data)
