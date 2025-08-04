@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { FC, PropsWithChildren, useEffect, useState } from "react";
 import {
 	useAccount,
 	useConnect,
@@ -56,9 +56,9 @@ const StorageABI = [
 	},
 ] as const satisfies Abi;
 
-function App() {
+export const App: FC<PropsWithChildren> = ({ children }) => {
 	const account = useAccount();
-	const { connectors, connect, status, error } = useConnect();
+	const { status, error } = useConnect();
 	const { disconnect } = useDisconnect();
 	const { data: walletClient } = useWalletClient();
 	const [deployHash, setDeployHash] = useState<undefined | `0x${string}`>();
@@ -225,21 +225,12 @@ function App() {
 
 			<div>
 				<h2>Connect</h2>
-				{connectors.map((connector) => (
-					<button
-						key={connector.uid}
-						onClick={() => connect({ connector })}
-						type="button"
-						data-testid={connector.id}
-					>
-						{connector.name}
-					</button>
-				))}
+				{children}
 				<div>{status}</div>
 				<div>{error?.message}</div>
 			</div>
 		</>
 	);
-}
+};
 
 export default App;
