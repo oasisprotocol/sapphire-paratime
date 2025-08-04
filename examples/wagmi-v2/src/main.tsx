@@ -1,53 +1,72 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ReactDOM from "react-dom/client";
-import { WagmiProvider } from "wagmi";
+import { useConnect, useConnectors, WagmiProvider } from "wagmi";
 import {
 	createBrowserRouter,
 	Navigate,
 	RouterProvider,
 } from "react-router-dom";
-import { config as eip6963SingleChainConfig } from "./eip-6963/single-chain-config";
-import { config as eip6963MultiChainConfig } from "./eip-6963/multi-chain-config";
-import { config as eip1193Config } from "./eip-1193/config";
+import { ConnectButton, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import App from "./App.tsx";
+import { config } from "./wagmi.ts";
+import { rainbowKitConfig } from "./rainbowkit.ts";
 
 import "./index.css";
+import "@rainbow-me/rainbowkit/styles.css";
+
+const WagmiConnectors = () => {
+	const { connect } = useConnect();
+	const connectors = useConnectors();
+
+	return (
+		<>
+			{connectors.map((connector) => (
+				<button
+					key={connector.id}
+					onClick={() => connect({ connector })}
+					type="button"
+					data-testid={connector.id}
+				>
+					{connector.name}
+				</button>
+			))}
+		</>
+	);
+};
 
 const router = createBrowserRouter([
 	{
-		path: "/eip-6963-single-chain",
+		path: "/wagmi",
 		element: (
-			<WagmiProvider config={eip6963SingleChainConfig}>
+			<WagmiProvider config={config}>
 				<QueryClientProvider client={new QueryClient()}>
-					<App />
+					<App>
+						<WagmiConnectors />
+					</App>
 				</QueryClientProvider>
 			</WagmiProvider>
 		),
 	},
 	{
-		path: "/eip-6963-multi-chain",
+		path: "/rainbowkit",
 		element: (
-			<WagmiProvider config={eip6963MultiChainConfig}>
+			<WagmiProvider config={rainbowKitConfig as unknown as typeof config}>
 				<QueryClientProvider client={new QueryClient()}>
-					<App />
-				</QueryClientProvider>
-			</WagmiProvider>
-		),
-	},
-	{
-		path: "/eip-1193",
-		element: (
-			<WagmiProvider config={eip1193Config}>
-				<QueryClientProvider client={new QueryClient()}>
-					<App />
+					<RainbowKitProvider>
+						<App>
+							{/* To simplify the process of testing */}
+							<WagmiConnectors />
+							<ConnectButton />
+						</App>
+					</RainbowKitProvider>
 				</QueryClientProvider>
 			</WagmiProvider>
 		),
 	},
 	{
 		path: "*",
-		element: <Navigate to="/" replace />,
+		element: <Navigate to="/wagmi" replace />,
 	},
 ]);
 
