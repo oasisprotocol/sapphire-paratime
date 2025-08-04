@@ -34,9 +34,8 @@ export const test = baseTest.extend<{
 });
 
 [
-	{ url: "/eip-6963-single-chain", rdns: "io.metamask" },
-	{ url: "/eip-6963-multi-chain", rdns: "sapphire.io.metamask" },
-	{ url: "/eip-1193", rdns: "injected-sapphire" },
+	{ url: "/wagmi", rdns: "metamask-sapphire" },
+	{ url: "/rainbowkit", rdns: "metamask-sapphire" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
