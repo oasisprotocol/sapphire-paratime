@@ -34,9 +34,8 @@ export const test = baseTest.extend<{
 });
 
 [
-	{ url: "/eip-6963-single-chain", rdns: "io.metamask" },
-	{ url: "/eip-6963-multi-chain", rdns: "sapphire.io.metamask" },
-	{ url: "/eip-1193", rdns: "injected-sapphire" },
+	{ url: "/wagmi", rdns: "metamask-sapphire" },
+	{ url: "/rainbowkit", rdns: "metamask-sapphire" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
@@ -73,9 +72,9 @@ export const test = baseTest.extend<{
 				await page.goto(appUrl);
 			}
 
-			await expect(page.getByText("Contract:")).toBeVisible();
+			await expect(page.getByText("Contract Address:")).toBeVisible();
 
-			await page.getByText("Write").click();
+			await page.getByText("Write to contract").click();
 			await wallet.confirmTransaction();
 
 			// Check again if page is still available
@@ -86,7 +85,7 @@ export const test = baseTest.extend<{
 				await page.goto(appUrl);
 			}
 
-			await expect(page.getByText("Contract:")).toBeVisible();
+			await expect(page.getByText("Contract Address:")).toBeVisible();
 			await expect(page.getByTestId("is-write-enveloped")).toHaveText(
 				"encrypted",
 			);
