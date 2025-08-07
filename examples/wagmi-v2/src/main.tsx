@@ -15,6 +15,13 @@ import { rainbowKitConfig } from "./rainbowkit.ts";
 import "./index.css";
 import "@rainbow-me/rainbowkit/styles.css";
 
+// Avoid WalletConnect(isGlobalCoreDisabled) collisions by avoiding the shared core
+if (typeof window !== "undefined") {
+	(window as any).process = { env: { DISABLE_GLOBAL_CORE: "true" } };
+}
+
+const queryClient = new QueryClient();
+
 const WagmiConnectors = () => {
 	const { connect } = useConnect();
 	const connectors = useConnectors();
@@ -40,7 +47,7 @@ const router = createBrowserRouter([
 		path: "/wagmi",
 		element: (
 			<WagmiProvider config={config}>
-				<QueryClientProvider client={new QueryClient()}>
+				<QueryClientProvider client={queryClient}>
 					<App>
 						<WagmiConnectors />
 					</App>
@@ -52,7 +59,7 @@ const router = createBrowserRouter([
 		path: "/rainbowkit",
 		element: (
 			<WagmiProvider config={rainbowKitConfig as unknown as typeof config}>
-				<QueryClientProvider client={new QueryClient()}>
+				<QueryClientProvider client={queryClient}>
 					<RainbowKitProvider>
 						<App>
 							{/* To simplify the process of testing */}
