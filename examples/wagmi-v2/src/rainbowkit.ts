@@ -12,7 +12,7 @@ import {
 import { metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
 import { walletConnect } from "wagmi/connectors";
 
-const { VITE_WALLET_CONNECT_PROJECT_ID } = import.meta.env;
+const { VITE_WALLET_CONNECT_RAINBOWKIT_PROJECT_ID } = import.meta.env;
 
 interface ConnectorsForWalletsParameters {
 	projectId: string;
@@ -44,7 +44,7 @@ const wrappedMetaMaskWallet = ({
 	projectId,
 }: ConnectorsForWalletsParameters): Wallet =>
 	wrapRainbowKitWalletWithSapphire(metaMaskWallet({ projectId }), {
-		id: "metamask-sapphire",
+		id: "metamask-sapphire-rk",
 		name: "MetaMask (Sapphire)",
 	});
 
@@ -56,7 +56,7 @@ const wrappedWalletConnectWallet = ({
 	projectId,
 	...options
 }: ConnectorsForWalletsParameters): Wallet => ({
-	id: "walletConnect-sapphire",
+	id: "walletConnect-sapphire-rk",
 	name: "WalletConnect (Sapphire)",
 	iconUrl: walletConnectIconUrl,
 	iconBackground: "#3b99fc",
@@ -97,7 +97,7 @@ const connectors = connectorsForWallets(
 	],
 	{
 		appName: "Wagmi v2 Example",
-		projectId: VITE_WALLET_CONNECT_PROJECT_ID,
+		projectId: VITE_WALLET_CONNECT_RAINBOWKIT_PROJECT_ID,
 	},
 );
 
