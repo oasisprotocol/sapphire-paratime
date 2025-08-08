@@ -3,30 +3,13 @@
  */
 
 import {
+	type EIP2696_EthereumProvider,
 	type SapphireWrapConfig,
 	isWrappedEthereumProvider,
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
-import {
-	type Config,
-	type CreateConfigParameters,
-	type CreateConnectorFn,
-	type InjectedParameters,
-	type Transport,
-	createConfig,
-	injected,
-} from "@wagmi/core";
-import type { Chain, EIP1193Provider } from "viem";
-import {
-	EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
-	SUPPORTED_RDNS,
-} from "./constants.js";
-import type {
-	CreateSapphireConfigParameters,
-	EIP6963AnnounceProviderEvent,
-	EIP6963ProviderDetail,
-	Rdns,
-} from "./types.js";
+import { type InjectedParameters, injected } from "@wagmi/core";
+import type { EIP1193Provider } from "viem";
 
 export * from "@oasisprotocol/sapphire-viem-v2";
 
@@ -85,124 +68,95 @@ export function injectedWithSapphire(
 	} as InjectedParameters);
 }
 
+interface BaseConnector {
+	getProvider?(): Promise<unknown> | unknown;
+	name?: string;
+	id?: string;
+}
+
+type ConnectorFactoryReturn<C extends BaseConnector = BaseConnector> = C;
+
 /**
- * Creates a wagmi configuration with wrapped EIP-6963 Sapphire encryption layer.
- *
- * In case you are only using Sapphire chain:
+ * Wrap any Wagmi connector with the Sapphire encryption layer.
+ * Used to provide encrypted transactions and calldata to any connector type (WalletConnect, MetaMask, etc.).
  *
  * ```typescript
- * import { createSapphireConfig } from '@oasisprotocol/sapphire-wagmi-v2';
+ * import { wrapConnectorWithSapphire } from '@oasisprotocol/sapphire-wagmi-v2';
+ * import { walletConnect } from '@wagmi/connectors';
  *
- * export const config = createSapphireConfig({
- *   sapphireConfig: {
- *     replaceProviders: true,
- *   }
+ * export const config = createConfig({
+ *   connectors: [
+ *     wrapConnectorWithSapphire(
+ *       walletConnect({ projectId: 'your-project-id' }),
+ *       {
+ *         id: 'walletconnect-sapphire',
+ *         name: 'WalletConnect (Sapphire)',
+ *       }
+ *     )
+ *   ],
  *   ...
  * });
  * ```
  *
- * In case your dApp is multichain, the below example will create duplicate connectors for Sapphire:
- *
- * ```typescript
- * import { createSapphireConfig } from '@oasisprotocol/sapphire-wagmi-v2';
- *
- * export const config = createSapphireConfig({
- *   sapphireConfig: {
- *     replaceProviders: false,
- *     // Define which providers you want to wrap via RDNS
- *     wrappedProvidersFilter: (rdns) => ['io.metamask'].includes(rdns)
- *   }
- *   ...
- * });
- * ```
- *
- * @param {CreateConfigParameters<chains, transports, connectorFns> & CreateSapphireConfigParameters} parameters - Extended wagmi parameters,
- * with sapphireConfig
- * @return {Config<chains, transports, connectorFns>} Wagmi config
+ * @returns A wrapped connector factory that provides Sapphire encryption
  */
-export function createSapphireConfig<
-	chains extends readonly [Chain, ...Chain[]],
-	transports extends Record<chains[number]["id"], Transport>,
-	connectorFns extends readonly CreateConnectorFn[],
+export const wrapConnectorWithSapphire = <
+	// biome-ignore lint/suspicious/noExplicitAny: Generic type parameter needs to accept any array type
+	T extends any[],
+	C extends BaseConnector = BaseConnector,
 >(
-	parameters: CreateConfigParameters<chains, transports, connectorFns> &
-		CreateSapphireConfigParameters,
-): Config<chains, transports, connectorFns> {
-	const { sapphireConfig, ...restParameters } = parameters;
-	const {
-		replaceProviders = false,
-		wrappedProvidersFilter = () => true,
-		wrap: wrapOptions,
-	} = sapphireConfig;
+	connectorFactory: (...args: T) => ConnectorFactoryReturn<C>,
+	options?: {
+		customWrapper?: <TConnector extends C>(connector: TConnector) => TConnector;
+		sapphireWrapConfig?: SapphireWrapConfig;
+		name?: string;
+		id?: string;
+	},
+): ((...args: T) => ConnectorFactoryReturn<C>) => {
+	const cachedWrappedProviders: Map<
+		EIP2696_EthereumProvider,
+		EIP2696_EthereumProvider
+	> = new Map();
 
-	// SSR check
-	const _dispatchEvent =
-		typeof window !== "undefined" ? window.dispatchEvent : undefined;
+	return (...args: T) => {
+		const baseConnector = connectorFactory(...args);
 
-	if (_dispatchEvent) {
-		Object.defineProperty(window, "dispatchEvent", {
-			value: function (event: Event): boolean {
-				if (event.type === EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME) {
-					const announceProviderEvent = event as EIP6963AnnounceProviderEvent;
+		if (options?.name) {
+			baseConnector.name = options.name;
+		}
+		if (options?.id) {
+			baseConnector.id = options.id;
+		}
 
-					// Check if this is a supported provider that's not already wrapped
-					if (
-						SUPPORTED_RDNS.includes(announceProviderEvent.detail.info.rdns) &&
-						!isWrappedEthereumProvider(announceProviderEvent.detail.provider)
-					) {
-						if (replaceProviders) {
-							const wrappedEvent = new CustomEvent(
-								EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME,
-								{
-									detail: {
-										...announceProviderEvent.detail,
-										provider: wrapEthereumProvider(
-											announceProviderEvent.detail.provider,
-											wrapOptions,
-										),
-									},
-								},
-							);
+		if (options?.customWrapper) {
+			return options.customWrapper(baseConnector);
+		}
 
-							return _dispatchEvent.call(this, wrappedEvent);
-						}
-						// Duplicate mode: dispatch original event, then dispatch a wrapped duplicate
-						if (
-							wrappedProvidersFilter(announceProviderEvent.detail.info.rdns)
-						) {
-							_dispatchEvent.call(this, event);
+		const originalGetProvider = baseConnector.getProvider?.bind(baseConnector);
+		if (originalGetProvider) {
+			baseConnector.getProvider = async () => {
+				const provider = await originalGetProvider();
 
-							const {
-								info: { name, rdns, icon, uuid },
-								provider,
-							} = announceProviderEvent.detail;
-
-							const sapphireProviderEvent: CustomEvent<EIP6963ProviderDetail> =
-								new CustomEvent(EIP6963_ANNOUNCE_PROVIDER_EVENT_NAME, {
-									detail: Object.freeze({
-										info: {
-											uuid: `sapphire.${uuid}`,
-											rdns: `sapphire.${rdns}` as Rdns,
-											name: `${name} (Sapphire)`,
-											icon,
-										},
-										provider: wrapEthereumProvider(provider, wrapOptions),
-									}),
-								});
-
-							return _dispatchEvent.call(this, sapphireProviderEvent);
-						}
-					}
+				if (isWrappedEthereumProvider(provider as EIP2696_EthereumProvider)) {
+					return provider;
 				}
 
-				return _dispatchEvent.call(this, event);
-			},
-			writable: true,
-			configurable: true,
-		});
-	}
+				if (!cachedWrappedProviders.has(provider as EIP2696_EthereumProvider)) {
+					const wrappedProvider = wrapEthereumProvider(
+						provider as EIP2696_EthereumProvider,
+						options?.sapphireWrapConfig,
+					);
+					cachedWrappedProviders.set(
+						provider as EIP2696_EthereumProvider,
+						wrappedProvider,
+					);
+					return wrappedProvider;
+				}
 
-	return createConfig<chains, transports, connectorFns>({
-		...restParameters,
-	});
-}
+				return cachedWrappedProviders.get(provider as EIP2696_EthereumProvider);
+			};
+		}
+
+		return baseConnector;
+	};
+};
