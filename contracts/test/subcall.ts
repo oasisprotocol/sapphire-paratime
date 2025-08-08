@@ -391,6 +391,20 @@ describe('Subcall', () => {
     await expect(contract.testRoflEnsureAuthorizedOrigin(appId)).to.be.reverted;
   });
 
+  /// Checks the current ROFL app id.
+  /// Since the tx is not signed inside a working ROFL app, it should return an invalid instance error.
+  it('rofl.OriginApp', async () => {
+    let tx = await contract.testSubcall('rofl.OriginApp', cborg.encode(null));
+    let receipt = await tx.wait();
+
+    if (!receipt) throw new Error('tx failed');
+    const event = decodeResult(receipt);
+    expect(event.status).eq(12n); // rofl.OriginApp response status, 12 = unknown instance
+
+    // Also test the Subcall.getRoflAppId wrapper.
+    await expect(contract.testGetRoflAppId()).to.be.reverted;
+  });
+
   it('CallDataPublicKey CBOR parsing works', async () => {
     const example =
       '0xa26565706f636818336a7075626c69635f6b6579a4636b65795820969010b54ebcda50415eedf2554109edac4735a58ddf1e4b43b9a765fa734f0a68636865636b73756d5820dfe9285ada1376ac95a411ee68d3991a8c72b68cea1fcc79d084f8df2d93f646697369676e617475726558405ed83560ea48a003993cb0b1c5610272a4077bc02242215996029c14476fd33e1c04a84dc99a8c76f4111a758dd185cd0b588469cfde1214898c8571ac170e066a65787069726174696f6e183d';
