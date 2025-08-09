@@ -44,11 +44,16 @@ contracts easier.
 
 While the underlying proxy implementations in EIP-1822 work perfectly in
 facilitating smart contract upgrades, the tools typically used to manage these
-proxies may not function as expected on Oasis Sapphire.
-For example, the [openzeppelin-upgrades] library, which relies on the EIP-1967
-standard, uses [eth_getStorageAt] to access contract storage. This function
-does not work in a confidential environment which forbids direct storage
-access.
+proxies may still face limitations on Oasis Sapphire.
+
+As of now, only the following well-known EIP-1967 slots are readable via
+`eth_getStorageAt`, enabling compatibility with most proxy tooling:
+
+- Proxy implementation address
+- Beacon proxy implementation
+- Admin slot
+
+Access to all other storage remains restricted in the confidential environment.
 
 Additionally, Sapphire natively protects against replay and currently does not
 allow an empty chain ID à la pre [EIP-155] transactions.
