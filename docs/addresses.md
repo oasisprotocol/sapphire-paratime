@@ -27,21 +27,6 @@ description: List of Standard Contract Addresses
 [wr-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3
 [wr-testnet]: https://explorer.oasis.io/testnet/sapphire/address/0xB759a0fbc1dA517aF257D5Cf039aB4D86dFB3b94
 
-## Router Nitro Tokens (Mainnet)
-
-| Token Name                  | Address                                                             | Decimals |
-| --------------------------- | ------------------------------------------------------------------- | -------- |
-| bridged USDC.e              | [`0x97eec1c29f745dC7c267F90292AA663d997a601D`][router-usdc-mainnet] | 6        |
-| Tether USD (USDT)           | [`0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B`][router-usdt-mainnet] | 6        |
-| Wrapped Ether (WETH)        | [`0xB6dc6C8b71e88642cEAD3be1025565A9eE74d1C6`][router-weth-mainnet] | 18       |
-| The 4th Pillar Token (FOUR) | [`0x9c1da2B647d25B9e71d8aBB83E4DDe236dcb672B`][router-four-mainnet] | 18       |
-| Ocean Token (OCEAN)         | [`0x2F301d3b045544A9D7Ec3FA090CD78986F11f2E7`][router-ocean-mainnet]| 18       |
-
-[router-usdc-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x97eec1c29f745dC7c267F90292AA663d997a601D
-[router-usdt-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B
-[router-weth-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0xB6dc6C8b71e88642cEAD3be1025565A9eE74d1C6
-[router-four-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x9c1da2B647d25B9e71d8aBB83E4DDe236dcb672B
-[router-ocean-mainnet]: https://explorer.oasis.io/mainnet/sapphire/address/0x2F301d3b045544A9D7Ec3FA090CD78986F11f2E7
 
 ## Celer cBridge Tokens (Mainnet)
 <!-- NOTE: this is generated using `_fetch-cbridge-tokens.py` -->
