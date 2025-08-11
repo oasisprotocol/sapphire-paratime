@@ -1,0 +1,335 @@
+---
+title: Encrypted Events
+description: Emit confidential event data on Sapphire that only specific users can read, while keeping logs indexable.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import DocCard from '@theme/DocCard';
+import { findSidebarItem } from '@site/src/sidebarUtils';
+
+On standard blockchains, all event data is public. Oasis Sapphire's
+confidential EVM allows you to encrypt an event's **payload**, keeping
+sensitive data private while the event topics remain public for indexing and
+off-chain triggers. This unlocks powerful new use cases for dApps that need to
+log private information.
+
+In this chapter, you'll learn **three** patterns for encrypting event data:
+
+1. **[Passing a Symmetric Key](#pattern-1-passing-a-symmetric-key):** A client
+   passes a secret key directly to the contract in an encrypted transaction.
+2. **[Deriving a Symmetric Key (ECDH)](#pattern-2-deriving-a-symmetric-key-ecdh):**
+   The contract and client use Elliptic Curve Diffie-Hellman (ECDH) to derive
+   a shared secret key.
+3. **[On‑chain Key Generation (ROFL‑friendly)](#pattern-3-on-chain-key-generation-rofl-friendly):**
+   The contract generates a symmetric key on-chain and exposes a guarded
+   public function intended for ROFL-based consumers.
+
+We'll cover the on-chain smart contract logic and the off-chain decryption
+process. A full working example is available inside the
+**[Sapphire Examples][encrypted-events-example]** folder.
+
+## How it Works: Basic Concept
+
+To emit the encrypted event you need to **define an event**,
+**generate a nonce**, **encrypt the text** with
+additional authenticated data (AAD), and finally **emit the ciphertext**.
+How you obtain the key is covered in the specific pattern subsection below.
+
+### The `Encrypted` Event
+
+Define a standard event signature in your contract. This structure is shared by
+all patterns.
+
+```solidity
+// In your contract
+event Encrypted(address indexed sender, bytes32 nonce, bytes ciphertext);
+```
+
+- `sender`: The address that initiated the encryption. Indexing it helps in
+  filtering events.
+- `nonce`: A unique number used once per encryption with a given key. **Never
+  reuse a key/nonce pair!**
+- `ciphertext`: The encrypted data payload.
+
+### On-Chain Encryption
+
+Sapphire provides a precompile for encryption. The basic flow inside a contract
+function is:
+
+1. **Get a Nonce:** Generate a fresh, random nonce for each encryption with
+   [`Sapphire.randomBytes`]. Passing a domain separator is good practice.
+
+   ```solidity
+   // A 32-byte nonce for Deoxys-II, which uses the first 15 bytes
+   bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("my-dapp-nonce")));
+   ```
+
+2. **Encrypt the Data:** Use [`Sapphire.encrypt`] with a key, the nonce, your
+   text (plaintext), and additional authenticated data.
+
+   ```solidity
+   // Keep names identical to the library
+   bytes memory ad = "additional data";
+   bytes memory encrypted = Sapphire.encrypt(key, nonce, text, ad);
+   ```
+
+3. **Emit the Event:**
+
+   ```solidity
+   emit Encrypted(msg.sender, nonce, encrypted);
+   ```
+
+### Off-Chain Decryption
+
+To read the secret text, an off-chain client with the correct key listens for
+`Encrypted` events and decrypts the `ciphertext`.
+
+```typescript
+import { AEAD, NonceSize } from '@oasisprotocol/deoxysii';
+import { ethers } from 'ethers';
+
+// You need:
+// - key: A Uint8Array(32) symmetric key
+// - nonceFromEvent: The 'nonce' field from the event log
+// - ciphertextFromEvent: The 'ciphertext' field from the event log
+// - ad: AAD bytes if used on-chain (a.k.a. "authenticated data")
+
+const aead = new AEAD(key);
+
+const plaintext = aead.decrypt(
+  // IMPORTANT: Deoxys-II uses a 15-byte nonce.
+  // We slice the first 15 bytes from the 32-byte value stored on-chain.
+  ethers.getBytes(nonceFromEvent).slice(0, NonceSize),
+  ethers.getBytes(ciphertextFromEvent),
+  ad,
+);
+
+console.log('Decrypted message:', ethers.toUtf8String(plaintext));
+```
+
+## Pattern 1: Passing a Symmetric Key
+
+This is the simplest approach. The client generates a 32‑byte symmetric key and
+passes it to the smart contract as an argument inside the encrypted
+transaction.
+
+### TypeScript: generate a `bytes32` key
+
+<Tabs>
+  <TabItem value="ethers" label="Ethers" default>
+
+```ts
+import { ethers } from 'ethers';
+
+const key = ethers.randomBytes(32); // Uint8Array
+const keyHex = ethers.hexlify(key) as `0x${string}`; // for contract calls
+
+// Pass keyHex directly to a Solidity function taking `bytes32 key`.
+// Use the `key` (Uint8Array) for off-chain decryption.
+```
+
+  </TabItem>
+  <TabItem value="node" label="Node.js">
+
+```ts
+import { ethers } from 'ethers';
+import { randomBytes } from 'crypto';
+
+const key = randomBytes(32); // Buffer, compatible with Uint8Array
+const keyHex = ethers.hexlify(key) as `0x${string}`; // for contract calls
+
+// Pass keyHex directly to a Solidity function taking `bytes32 key`.
+// Use the `key` (Buffer) for off-chain decryption.
+```
+
+  </TabItem>
+</Tabs>
+
+### Contract Implementation
+
+The function takes the key and the text, encrypts, and emits the event.
+
+```solidity title="EncryptedEvents.sol"
+import { Sapphire } from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
+
+contract EncryptedEvents {
+    event Encrypted(address indexed sender, bytes32 nonce, bytes ciphertext);
+
+    function emitEncrypted(bytes32 key, bytes calldata text) external {
+        bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("my-dapp-nonce")));
+        bytes memory ad = bytes(""); // optional AAD
+        bytes memory encrypted = Sapphire.encrypt(key, nonce, text, ad);
+        emit Encrypted(msg.sender, nonce, encrypted);
+    }
+}
+```
+
+The off-chain client is responsible for managing this key and using it for
+decryption as shown above.
+
+## Pattern 2: Deriving a Symmetric Key (ECDH)
+
+In this more advanced pattern, you don't send a key with every transaction.
+Instead, the contract holds a long‑lived Curve25519 secret key (in
+confidential state), and a shared secret is **derived on‑chain** from the
+caller’s public key using X25519 (ECDH).
+
+### Contract Implementation (ECDH)
+
+1. **Generate a Keypair:** In the constructor, generate a Curve25519 keypair and
+   store the secret key in confidential state. The public key can be exposed
+   for clients.
+
+   ```solidity title="EncryptedEventsECDH.sol"
+   contract EncryptedEventsECDH {
+       Sapphire.Curve25519SecretKey private _contractSk;
+       Sapphire.Curve25519PublicKey public contractPk;
+
+       constructor() {
+           (Sapphire.Curve25519PublicKey pk, Sapphire.Curve25519SecretKey sk) =
+               Sapphire.generateCurve25519KeyPair(bytes(""));
+           contractPk = pk;
+           _contractSk = sk;
+       }
+       // ...
+   }
+   ```
+
+2. **Derive and Encrypt:** The emit function now takes the caller's public key,
+   derives the shared key, encrypts the text, and emits the event.
+
+   ```solidity title="EncryptedEventsECDH.sol"
+   function emitEncryptedECDH(
+       Sapphire.Curve25519PublicKey callerPublicKey,
+       bytes calldata text
+   ) external {
+       // Derive the shared symmetric key
+       bytes32 key = Sapphire.deriveSymmetricKey(callerPublicKey, _contractSk);
+
+       // Encrypt and emit as before
+       bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("my-dapp-nonce")));
+       bytes memory ad = bytes(""); // optional AAD
+       bytes memory encrypted = Sapphire.encrypt(key, nonce, text, ad);
+       emit Encrypted(msg.sender, nonce, encrypted);
+   }
+   ```
+
+### Off-Chain Key Derivation
+
+The client derives the shared key from its **secret** and the contract’s
+**public** key.
+
+```typescript
+import { mraeDeoxysii } from '@oasisprotocol/client-rt';
+import { AEAD } from '@oasisprotocol/deoxysii';
+import { ethers } from 'ethers';
+
+// contractPkHex: 0x-prefixed Curve25519 public key (bytes32) fetched on-chain
+// callerSkBytes: Uint8Array(32) caller's Curve25519 secret key
+const sharedKey = mraeDeoxysii.deriveSymmetricKey(
+  ethers.getBytes(contractPkHex),
+  callerSkBytes,
+);
+
+const aead = new AEAD(sharedKey);
+// ... decrypt with aead.decrypt() as shown earlier.
+```
+
+### Recommended: Bind Ciphertext with AAD
+
+**Additional Authenticated Data (AAD)** binds a ciphertext to its context. If
+the bytes don’t match during decryption, it fails. Provide the **same bytes**
+to [`Sapphire.encrypt`] on-chain (as `ad`) and to `AEAD.decrypt` off-chain (as
+`adBytes`).
+
+#### Option A: Sender‑Bound AAD
+
+Bind to `msg.sender` (useful for user-specific data).
+
+- **On-Chain AAD:** `bytes memory ad = abi.encodePacked(msg.sender);`
+- **Off-Chain AAD:** Get the `sender` from the event log and convert to bytes.
+
+  ```typescript
+  const adBytes = ethers.getBytes(senderAddress); // 20 bytes
+  ```
+
+#### Option B: Context‑Bound AAD
+
+Bind to the (chain, contract). This is relayer‑agnostic.
+
+- **On-Chain AAD:** `bytes memory ad = abi.encodePacked(block.chainid, address(this));`
+- **Off-Chain AAD:** Reconstruct the same packed bytes.
+
+  ```typescript
+  const { chainId } = await provider.getNetwork();
+  const adBytes = ethers.getBytes(
+    ethers.solidityPacked(['uint256', 'address'], [chainId, contractAddress]),
+  );
+  ```
+
+## Pattern 3: On-chain Key Generation (ROFL-friendly)
+
+For **ROFL** containers and similar trusted off-chain compute, you may prefer
+to **generate the symmetric key on-chain** and expose a **guarded** public
+function that encrypts and emits events. The ROFL worker fetches events and
+uses its corresponding secret material to decrypt.
+
+<DocCard item={findSidebarItem('/build/rofl/')} />
+
+### Contract Sketch
+
+```solidity title="EncryptedEventsROFL.sol"
+import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
+
+contract EncryptedEventsROFL {
+    event Encrypted(address indexed sender, bytes32 nonce, bytes ciphertext);
+
+    // IMPORTANT: This is a sketch. Do **not** deploy this contract as-is.
+    // Replace this with a real ROFL/OPL authorization scheme (e.g., allowlist,
+    // appd/attestation checks, marketplace‑managed identities, etc.).
+    address public roflApp; // set to your ROFL app's address in your deployment flow
+
+    modifier onlyROFL() {
+        require(msg.sender == roflApp, "only ROFL app");
+        _;
+    }
+
+    function emitWithOnchainKey(bytes calldata text) external onlyROFL {
+        // 1) Generate a fresh symmetric key on-chain (per call or per session)
+        bytes32 key = bytes32(Sapphire.randomBytes(32, bytes("rofl:onchain:key")));
+
+        // 2) Encrypt with optional context-binding AAD
+        bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("rofl:nonce")));
+        bytes memory ad = abi.encodePacked(block.chainid, address(this));
+        bytes memory encrypted = Sapphire.encrypt(key, nonce, text, ad);
+
+        // 3) Emit
+        emit Encrypted(msg.sender, nonce, encrypted);
+
+        // Optionally: persist or wrap `key` for ROFL retrieval using your chosen scheme.
+        // Do NOT emit or log secrets in production.
+    }
+}
+```
+
+## Important Notes
+
+- **Carefully store the secret key**: Keep the key **inside** the
+  contract/state or wrap it for ROFL; never emit it.
+- **Replay attacks**: Always use [AAD](#recommended-bind-ciphertext-with-aad)
+  to bind ciphertexts to contract/chain or sender.
+- **ROFL key derivation**: If you're deriving event encryption keys inside
+  ROFL, ensure the derivation mirrors your on-chain logic.
+
+:::example Encrypted Events
+
+See the **[Encrypted Events Demo][encrypted-events-example]** example folder
+for end-to-end Hardhat tasks to deploy, emit, and decrypt events using the
+patterns above, plus tests and a step-by-step tutorial.
+
+:::
+
+[`Sapphire.encrypt`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/Sapphire.sol/library.Sapphire.html#encrypt-1
+[`Sapphire.randomBytes`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/Sapphire.sol/library.Sapphire.html#randombytes
+[encrypted-events-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/encrypted-events

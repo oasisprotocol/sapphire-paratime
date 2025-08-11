@@ -12,3 +12,4 @@ packages:
   - examples/onchain-signer
   - examples/wagmi-v2
   - examples/wagmi-v1
+  - examples/encrypted-events
