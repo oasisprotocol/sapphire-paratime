@@ -1,11 +1,7 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import ReactDOM from "react-dom/client";
 import { useConnect, useConnectors, WagmiProvider } from "wagmi";
-import {
-	createBrowserRouter,
-	Navigate,
-	RouterProvider,
-} from "react-router-dom";
+import { createHashRouter, Navigate, RouterProvider } from "react-router-dom";
 import { ConnectButton, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import App from "./App.tsx";
@@ -14,13 +10,12 @@ import { rainbowKitConfig } from "./rainbowkit.ts";
 
 import "./index.css";
 import "@rainbow-me/rainbowkit/styles.css";
+import { queryClient } from "./query-client.ts";
 
 // Avoid WalletConnect(isGlobalCoreDisabled) collisions by avoiding the shared core
 if (typeof window !== "undefined") {
 	(window as any).process = { env: { DISABLE_GLOBAL_CORE: "true" } };
 }
-
-const queryClient = new QueryClient();
 
 const WagmiConnectors = () => {
 	const { connect } = useConnect();
@@ -42,7 +37,7 @@ const WagmiConnectors = () => {
 	);
 };
 
-const router = createBrowserRouter([
+const router = createHashRouter([
 	{
 		path: "/wagmi",
 		element: (
