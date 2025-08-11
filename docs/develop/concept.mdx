@@ -3,13 +3,13 @@ description: Sapphire concepts
 ---
 
 import DocCard from '@theme/DocCard';
-import {findSidebarItem} from '@site/src/sidebarUtils';
+import { findSidebarItem } from '@site/src/sidebarUtils';
 
 # Concepts
 
 ## Transactions & Calls
 
-{/*-- https://github.com/oasisprotocol/docs/blob/455980674563cad92ff1e1b62a7a5f2d4d6809f0/docs/general/images/architecture/client-km-compute.svg -->*/}
+{/* -- https://github.com/oasisprotocol/docs/blob/455980674563cad92ff1e1b62a7a5f2d4d6809f0/docs/general/images/architecture/client-km-compute.svg --> */}
 ![Client, Key Manager, Compute Node diagram](../../../general/images/architecture/client-km-compute.svg)
 
 The figure above illustrates the flow of a **confidential smart contract
@@ -86,7 +86,7 @@ explicit getters.
 ## Contract Logs
 
 Contract logs/events (e.g., those emitted by the Solidity `emit` keyword)
-are exactly like Ethereum. Data contained in events is *not* encrypted.
+are exactly like Ethereum. Data contained in events is _not_ encrypted.
 Precompiled contracts are available to help you encrypt data that you can
 then pack into an event, however.
 
@@ -98,6 +98,12 @@ the confidentiality of your state. As a concrete example, the ERC-20 spec
 requires implementers to emit an `event Transfer(from, to, amount)`, which is
 obviously problematic if you're writing a confidential token. What you can
 do instead is fork that contract and remove the offending emissions.
+
+:::
+
+:::tip
+
+To keep event payloads confidential while retaining indexability and triggers, see [Encrypted Events](./encrypted-events.mdx).
 
 :::
 
