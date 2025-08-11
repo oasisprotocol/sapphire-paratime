@@ -3,7 +3,7 @@ title: Encrypted Events
 description: Learn how to emit confidential event data on Sapphire that only specific users can read, while keeping logs indexable.
 ---
 
-On standard blockchains, all event data is public. Oasis Sapphire's confidential EVM allows you to encrypt an event's **payload**, keeping sensitive data private while the event topics remain public for indexing and off-chain triggers. This unlocks powerful new use cases for dApps that need to log private information. 🤫
+On standard blockchains, all event data is public. Oasis Sapphire's confidential EVM allows you to encrypt an event's **payload**, keeping sensitive data private while the event topics remain public for indexing and off-chain triggers. This unlocks powerful new use cases for dApps that need to log private information.
 
 In this tutorial, you'll learn two primary patterns for encrypting event data:
 
@@ -43,7 +43,7 @@ Sapphire provides a precompiled contract for easy encryption. The basic flow ins
 
    ```solidity
    // A 32-byte nonce for Deoxys-II, which uses the first 15 bytes
-   bytes32 nonce = bytes32(Sapphire.randomBytes(32, "my-dapp-nonce"));
+   bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("my-dapp-nonce")));
    ```
 
 2. **Encrypt the Data:** Use the `Sapphire.encrypt` function with a key, the nonce, your message, and optional authenticated data (AAD).
@@ -95,10 +95,6 @@ This self-contained example is key to understanding the end-to-end flow without 
 
 This is the simplest approach. The client generates a 32-byte symmetric key and passes it as an argument in the transaction to the smart contract.
 
-:::info
-This pattern is only secure on Sapphire, where transaction calldata is automatically encrypted. **Do not use this on a public, non-confidential blockchain.**
-:::
-
 ### Contract Implementation
 
 The function takes the key and the message, encrypts, and emits the event.
@@ -110,8 +106,8 @@ contract EncryptedEvents {
     event Encrypted(address indexed sender, bytes32 nonce, bytes ciphertext);
 
     function emitEncrypted(bytes32 key, bytes calldata message) external {
-        bytes32 nonce = bytes32(Sapphire.randomBytes(32, "my-dapp-nonce"));
-        bytes memory cipher = Sapphire.encrypt(key, nonce, message, "" /* aad */);
+        bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("my-dapp-nonce")));
+        bytes memory cipher = Sapphire.encrypt(key, nonce, message, bytes("") /* aad */);
         emit Encrypted(msg.sender, nonce, cipher);
     }
 }
@@ -136,7 +132,7 @@ In this more advanced pattern, you don't need to send a key with every transacti
 
        constructor() {
            (Sapphire.Curve25519PublicKey pk, Sapphire.Curve25519SecretKey sk) =
-               Sapphire.generateCurve25519KeyPair("");
+               Sapphire.generateCurve25519KeyPair(bytes(""));
            contractPk = pk;
            _contractSk = sk;
        }
@@ -148,15 +144,15 @@ In this more advanced pattern, you don't need to send a key with every transacti
 
    ```solidity
    function emitEncryptedECDH(
-       Sapphire.Curve25519PublicKey calldata callerPublicKey,
+       Sapphire.Curve25519PublicKey callerPublicKey,
        bytes calldata message
    ) external {
        // Derive the shared symmetric key
        bytes32 key = Sapphire.deriveSymmetricKey(callerPublicKey, _contractSk);
 
        // Encrypt and emit as before
-       bytes32 nonce = bytes32(Sapphire.randomBytes(32, "my-dapp-nonce"));
-       bytes memory cipher = Sapphire.encrypt(key, nonce, message, "" /* aad */);
+       bytes32 nonce = bytes32(Sapphire.randomBytes(32, bytes("my-dapp-nonce")));
+       bytes memory cipher = Sapphire.encrypt(key, nonce, message, bytes("") /* aad */);
        emit Encrypted(msg.sender, nonce, cipher);
    }
    ```
@@ -267,4 +263,4 @@ To see these patterns in action, you can run the [Encrypted Events Demo reposito
    npx hardhat enc --action emit --mode key --contract <CONTRACT_ADDRESS> --key 0x11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff --message "Hello confidential world"
    ```
 
-Your listener terminal should instantly show the decrypted message\! Explore the repository's `README.md` for more commands, including the ECDH pattern.
+Your listener terminal should instantly show the decrypted message! Explore the repository's `README.md` for more commands, including the ECDH pattern.
