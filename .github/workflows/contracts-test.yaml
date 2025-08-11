@@ -25,7 +25,7 @@ jobs:
       SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 3001
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install jq
         run: sudo apt install -y jq
       - name: Setup pnpm
