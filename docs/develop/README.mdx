@@ -1,8 +1,9 @@
 ---
 description: Develop new dApps on Sapphire
 ---
+
 import DocCardList from '@theme/DocCardList';
-import {findSidebarItem} from '@site/src/sidebarUtils';
+import { findSidebarItem } from '@site/src/sidebarUtils';
 
 # Develop on Sapphire
 
@@ -27,12 +28,14 @@ on the [Network information] page.
 
 ### Features
 
-<DocCardList items={[
+<DocCardList
+  items={[
     findSidebarItem('/build/sapphire/develop/deployment'),
     findSidebarItem('/build/sapphire/develop/gasless'),
     findSidebarItem('/build/sapphire/develop/security'),
     findSidebarItem('/build/sapphire/develop/authentication'),
-]} />
+  ]}
+/>
 
 [Randomness, Subcalls and More Precompiles][sapphire-contracts] in the contracts API reference
 
@@ -49,11 +52,11 @@ To connect your frontend to your smart contracts, see the [Browser] chapter.
 If you want to connect and execute transactions from your backend.
 Sapphire has three clients in different programming languages:
 
-| Language        | Package                                            | API Reference | GitHub              |
-| --------------- | -------------------------------------------------- | ------------- | ------------------- |
-| **Javascript**  | [@oasisprotocol/sapphire-paratime][sapphire-npmjs] | [API][js-api] | [GitHub][js-github] |
-| **Go**          | [@oasisprotocol/sapphire-paratime][go-pkg]         | [API][go-api] | [GitHub][go-github] |
-| **Python**      |                                                    | [API][py-api] | [GitHub][py-github] |
+| Language       | Package                                            | API Reference | GitHub              |
+| -------------- | -------------------------------------------------- | ------------- | ------------------- |
+| **Javascript** | [@oasisprotocol/sapphire-paratime][sapphire-npmjs] | [API][js-api] | [GitHub][js-github] |
+| **Go**         | [@oasisprotocol/sapphire-paratime][go-pkg]         | [API][go-api] | [GitHub][go-github] |
+| **Python**     |                                                    | [API][py-api] | [GitHub][py-github] |
 
 [sapphire-npmjs]: https://www.npmjs.com/package/@oasisprotocol/sapphire-paratime
 [go-pkg]: https://pkg.go.dev/github.com/oasisprotocol/sapphire-paratime/clients/go
@@ -64,7 +67,7 @@ Sapphire has three clients in different programming languages:
 [go-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/go/README.md
 [Py-github]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/clients/py/README.md
 
-## Testing 
+## Testing
 
 [Test][testing] confidential contracts with Hardhat or Ethers.
 
@@ -74,20 +77,21 @@ Sapphire has three clients in different programming languages:
 
 See our [Examples] page for demo dApps that bring all the above together.
 
-[examples]: ../examples.mdx
+[examples]: ../examples/README.mdx
 
 ## Tools and Services
 
-<DocCardList items={[
+<DocCardList
+  items={[
     findSidebarItem('/build/tools/abi-playground'),
     findSidebarItem('/build/tools/localnet'),
     findSidebarItem('/build/tools/remix'),
     findSidebarItem('/build/tools/verification'),
     findSidebarItem('/build/tools/band'),
-]} />
+  ]}
+/>
 
 Should you have any questions or ideas to share, feel free to reach out to us
 on [discord and other social media channels][social-media].
 
 [social-media]: https://github.com/oasisprotocol/docs/blob/main/docs/get-involved/README.md#social-media-channels
-
