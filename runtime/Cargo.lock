@@ -1651,8 +1651,8 @@ dependencies = [
 
 [[package]]
 name = "keymanager"
-version = "0.6.0-testnet"
-source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.6.0-testnet#0839f1c195773d5317793024fb71c0f6c1a70608"
+version = "0.6.0"
+source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.6.0#8ba936fa04bb573398fa4e43750eb390eb28c01d"
 dependencies = [
  "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v25.2)",
  "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v25.2)",
@@ -2857,7 +2857,7 @@ dependencies = [
 
 [[package]]
 name = "sapphire-paratime"
-version = "1.0.0-testnet"
+version = "1.0.0"
 dependencies = [
  "keymanager",
  "oasis-runtime-sdk",
@@ -3111,9 +3111,9 @@ dependencies = [
 
 [[package]]
 name = "slab"
-version = "0.4.10"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04dc19736151f35336d325007ac991178d504a119863a2fcb3758cdb5e52c50d"
+checksum = "7a2ae44ef20feb57a68b23d846850f861394c2e02dc425a50098ae8c90267589"
 
 [[package]]
 name = "slog"
