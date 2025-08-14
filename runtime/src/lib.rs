@@ -48,7 +48,7 @@ const fn state_version() -> u32 {
         11
     } else {
         // Mainnet.
-        6
+        7
     }
 }
 
@@ -248,8 +248,8 @@ impl sdk::Runtime for Runtime {
         } else {
             // Mainnet.
             Some(TrustRoot {
-                height: 19327937,
-                hash: "965b97464e8cb549926a0f39670025af9e0fdc271114cb1c9e7fdebb5516cd5f".into(),
+                height: 22327937,
+                hash: "01670e0af13fa4ceaeee8bd9672374d27a889b9304c44ab9acfd7f97663ee1b9".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000f80306c9858e7279"
                     .into(),
                 chain_context: "bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55"
