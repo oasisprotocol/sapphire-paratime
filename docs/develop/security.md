@@ -1,5 +1,5 @@
 ---
-description: "Recipes for Confidentiality: Security considerations when writing confidential contracts"
+description: Recipes for Confidentiality, Security considerations when writing confidential contracts
 ---
 
 # Security
@@ -110,32 +110,123 @@ contract Secret {
 
 ## Gas Padding
 
-To prevent leaking information about a particular transaction, Sapphire
-provides a [precompile] for dApp developers to **pad the amount of gas used
-in a transaction**.
+Gas padding lets you equalize **EVM execution** gas across private code paths to
+reduce side‑channel leakage. Sapphire provides a precompile
+([`Sapphire.padGas`][precompile]) that burns execution gas so that your
+function’s execution cost is brought up to a target amount. The gas padding
+call is usually done somewhere at the end of the executed code to cover all
+possible execution paths.
+
+Scope & limits:
+
+- Pads **only the EVM engine (execution) gas** spent by your contract’s code
+  path. It **does not** include the intrinsic/transaction‑size component
+  (calldata bytes, signature, envelope, etc.). The transaction size and the fee
+  attributable to it remains public.
+- Practically: if you pad to `10_000`, the total fee is `tx_size_gas +
+exec_gas_padded(≈10_000)`.
+- Padding is intentionally limited to the execution layer. If total gas were
+  fully padded, an attacker could vary transaction size to leak information;
+  therefore only the EVM execution portion is padded.
+- `padGas` protects the code path **within your contract**. Gas used by
+  external calls can still differ unless those contracts also pad.
+
+### Example attack (leaky code path)
+
+```solidity
+contract Leaky {
+  bytes32 private secret;
+  bytes32 private tmp;
+
+  // Returns true on correct guess; success path does extra work
+  // (leaks via fee).
+  function guess(bytes32 candidate) external returns (bool ok) {
+    if (candidate == secret) {
+      for (uint i = 0; i < 10_000; ++i) {
+        tmp = keccak256(abi.encodePacked(tmp, i));
+      }
+      return true;
+    }
+    return false;
+  }
+}
+```
+
+An observer (or the caller) can compare total fees and infer whether
+`candidate == secret`.
+
+### Fix with padding
+
+```solidity
+contract Padded {
+  bytes32 private secret;
+  bytes32 private tmp;
+
+  function guess(bytes32 candidate) external returns (bool ok) {
+    if (candidate == secret) {
+      for (uint i = 0; i < 10_000; ++i) {
+        tmp = keccak256(abi.encodePacked(tmp, i));
+      }
+      ok = true;
+    }
+    // Equalize execution cost across branches. Pads execution only
+    // tx size cost stays visible.
+    Sapphire.padGas(100_000);
+  }
+}
+```
+
+Choose a target that is greater or equal to the **worst‑case execution** for the function, with
+a safety margin. You can measure worst‑case cost in tests (e.g., with
+tracers) and read the current execution gas via [`Sapphire.gasUsed()`][used].
+
+### When to use
+
+- Branches depend on confidential state/input and have materially different
+  execution cost.
+- Success vs. revert paths would leak acceptance via fee differences.
+- Before returning from functions that conditionally perform heavy computation.
+
+### When _not_ to rely on it (alone)
+
+- It does **not** hide **transaction size** (calldata length). Different‑length
+  inputs will still lead to different total fees.
+- It does not pad external contracts you call unless **they** also pad.
+- It is not a replacement for constant‑time logic where feasible.
+
+### Masking input size (guidance)
+
+- Prefer fixed‑size ABI types (`bytes32` instead of `bytes`) and pass
+  **hashes** of variable‑length data rather than the data itself.
+- If variable‑length bytes/ciphertext must be sent, **pad client‑side to a
+  fixed length or to bucketized sizes** (e.g., 256/512/1024 bytes) before
+  encrypting/sending; strip padding inside the contract.
+- Bundle multiple fields into a fixed‑size envelope and parse lengths inside
+  the confidential execution.
+
+#### Simple example
 
 ```solidity
 contract GasExample {
   bytes32 tmp;
 
-  function constantMath(bool doMath, uint128 padGasAmount) external {
+  function constantMath(bool doMath, uint128 padTo) external {
     if (doMath) {
       bytes32 x;
-
       for (uint256 i = 0; i < 100; i++) {
         x = keccak256(abi.encodePacked(x, tmp));
       }
-
       tmp = x;
     }
-
-    Sapphire.padGas(padGasAmount);
+    // Pads EVM execution only; tx size cost remains public.
+    Sapphire.padGas(padTo);
   }
 }
 ```
 
-Both contract calls below should use the same amount of gas. Sapphire also
-provides the precompile to return the gas [used] by the current transaction.
+Both calls below will consume the **same execution gas**, while the
+**transaction‑size gas** may still differ if calldata sizes differ. You can
+also query the execution gas with [`Sapphire.gasUsed()`][used].
 
 ```typescript
 await contract.constantMath(true, 100000);
