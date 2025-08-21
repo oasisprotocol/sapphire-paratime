@@ -1,10 +1,13 @@
 sequenceDiagram
     autonumber
-    participant Client as Client<br/>(e.g. Node.js,<br/>MetaMask)
-    participant Web3 as Oasis Web3<br/>Gateway
-    participant ClientN as Oasis Node<br/>Sapphire<br/>ParaTime Client
-    participant Compute as Oasis Node<br/>Sapphire ParaTime<br/>Compute 🔒
-    participant KM as Oasis Node<br/>Key Manager<br/>🔒
+    # Didn't find any way to add a class in sequenceDiagram to act as a selector.
+    box rgba(999,999,999,0) # Acts as selector to override background color as details.alert--info
+        participant Client as Client<br/>(e.g. Node.js,<br/>MetaMask)
+        participant Web3 as Oasis Web3<br/>Gateway
+        participant ClientN as Oasis Node<br/>Sapphire<br/>ParaTime Client
+        participant Compute as Oasis Node<br/>Sapphire ParaTime<br/>Compute 🔒
+        participant KM as Oasis Node<br/>Key Manager<br/>🔒
+    end
 
     Client->>Client: Create transaction<br/>call data
 
