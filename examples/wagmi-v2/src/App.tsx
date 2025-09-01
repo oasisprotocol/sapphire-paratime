@@ -8,9 +8,11 @@ import {
 	useTransaction,
 	useWaitForTransactionReceipt,
 	useWriteContract,
+	useSwitchChain,
 } from "wagmi";
 import { isCalldataEnveloped } from "@oasisprotocol/sapphire-paratime";
 import type { Abi } from "abitype";
+
 
 const { PROD } = import.meta.env;
 
@@ -51,6 +53,52 @@ const STORAGE_ABI = [
 
 type TxHash = `0x${string}` | undefined;
 
+const NetworkSection: FC<{
+	account: ReturnType<typeof useAccount>;
+	chains: ReturnType<typeof useSwitchChain>['chains'];
+	switchChain: ReturnType<typeof useSwitchChain>['switchChain'];
+	isPending: boolean;
+	error: Error | null;
+}> = ({ account, chains, switchChain, isPending, error }) => (
+	<div>
+		<h3>Network</h3>
+		<div>
+			Current: {account.chain?.name ?? 'Unknown'} (ID: {account.chainId})
+		</div>
+		<div style={{ marginTop: '10px' }}>
+			<label htmlFor="network-select">Switch to: </label>
+			<select 
+				id="network-select"
+				onChange={(e) => {
+					const chainId = parseInt(e.target.value);
+					if (chainId && switchChain) {
+						switchChain({ chainId });
+					}
+				}}
+				disabled={isPending}
+				value={account.chainId || ''}
+			>
+				<option value="">Select network...</option>
+				{chains.map((chain) => (
+					<option 
+						key={chain.id} 
+						value={chain.id}
+						disabled={account.chainId === chain.id}
+					>
+						{chain.name} {account.chainId === chain.id ? '(current)' : ''}
+					</option>
+				))}
+			</select>
+		</div>
+		{isPending && <div>Switching network...</div>}
+		{error && (
+			<div style={{ color: "red", marginTop: '5px' }}>
+				Network Error: {error.message}
+			</div>
+		)}
+	</div>
+);
+
 const AccountInfo: FC<{ account: ReturnType<typeof useAccount> }> = ({
 	account,
 }) => (
@@ -65,7 +113,6 @@ const AccountInfo: FC<{ account: ReturnType<typeof useAccount> }> = ({
 					<br />
 				</>
 			)}
-			Chain ID: {account.chainId}
 			{account.chain && <span> ({account.chain.name})</span>}
 		</div>
 	</div>
@@ -185,6 +232,13 @@ export const App: FC<PropsWithChildren> = ({ children }) => {
 	const { status, error } = useConnect();
 	const { disconnect } = useDisconnect();
 	const publicClient = usePublicClient();
+	
+	const { 
+		switchChain, 
+		chains, 
+		isPending: isSwitchingChain, 
+		error: switchChainError 
+	} = useSwitchChain();
 
 	const [contractAddress, setContractAddress] = useState<TxHash>(() => {
 		const stored = localStorage.getItem("contractAddress");
@@ -297,6 +351,14 @@ export const App: FC<PropsWithChildren> = ({ children }) => {
 			{account.status === "connected" && (
 				<>
 					<hr />
+					<NetworkSection
+						account={account}
+						chains={chains}
+						switchChain={switchChain}
+						isPending={isSwitchingChain}
+						error={switchChainError}
+					/>
+					<hr />
 					<DeploySection
 						onDeploy={handleDeploy}
 						deployHash={deployHash}
@@ -336,22 +398,6 @@ export const App: FC<PropsWithChildren> = ({ children }) => {
 			>
 				{children}
 			</ConnectSection>
-
-			{!PROD && (
-				<div style={{ fontSize: "12px", color: "red", marginTop: "10px" }}>
-					___DEBUG___
-					<br />
-					<br />
-					isWriteTxPending={String(isWriteTxPending)}
-					<br />
-					writeTxHash={writeTxHash || "undefined"}
-					<br />
-					writeTxReceipt={writeTxReceipt?.transactionHash || "undefined"}
-					<br />
-					contractAddress={contractAddress || "undefined"}
-					<br />
-				</div>
-			)}
 		</div>
 	);
 };
