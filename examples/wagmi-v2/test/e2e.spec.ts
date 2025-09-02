@@ -55,7 +55,7 @@ export const test = baseTest.extend<{
 				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
 
-			await page.getByText("Deploy").click();
+			await page.getByRole('button', { name: 'Deploy Contract' }).click();
 			await wallet.confirmTransaction();
 
 			// Check if page is still available after confirmation
@@ -74,7 +74,7 @@ export const test = baseTest.extend<{
 
 			await expect(page.getByText("Contract Address:")).toBeVisible();
 
-			await page.getByText("Write to contract").click();
+			await page.getByRole('button', { name: 'Write to Contract' }).click();
 			await wallet.confirmTransaction();
 
 			// Check again if page is still available
@@ -90,7 +90,7 @@ export const test = baseTest.extend<{
 				"encrypted",
 			);
 
-			await page.getByText("Read").click();
+			await page.getByRole('button', { name: 'Read from Contract' }).click();
 
 			await expect(page.getByTestId("read-result")).not.toBeEmpty();
 		});
