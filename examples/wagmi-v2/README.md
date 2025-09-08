@@ -1,39 +1,41 @@
+# Wagmi v2 Sapphire Example
+
 This is a [Vite](https://vitejs.dev) project bootstrapped with [create-wagmi].
 
 [create-wagmi]: https://github.com/wevm/wagmi/tree/main/packages/create-wagmi
 
-This project demonstrates different usage of `@oasisprotocol/sapphire-wagmi-v2`
-library. It uses the Sapphire wrapper to encrypt contract deployments,
-transactions, view calls & gas estimations.
+This is a project that demonstrates how to integrate the
+`@oasisprotocol/sapphire-wagmi-v2` library with [Wagmi v2](https://wagmi.sh/).
+It uses the Sapphire wrapper to encrypt contract deployments, transactions, view
+calls & gas estimations.
 
-Choose one of the following approaches, that best suits your needs.
+## Usage
 
-### [EIP-6963] Multi Injected Provider Discovery
+Feel free to copy the code from the following examples in your project:
 
-#### Single chain - Sapphire
+### Wagmi v2
 
-https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/eip-6963/single-chain-config.ts
+The following configuration is used in this example:
 
-For basic example of how to use this library, please refer to
-our [@oasisprotocol/sapphire-wagmi-v2][@oasisprotocol/sapphire-wagmi-v2-eip-6963-single-chain] package.
+https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/wagmi.ts
 
-#### Multichain
+### RainbowKit
 
-https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/eip-6963/multi-chain-config.ts
+The configuration demonstrates usage by 3rd party library. It is based on the
+following example:
 
-For basic example of how to use this library, please refer to
-our [@oasisprotocol/sapphire-wagmi-v2][@oasisprotocol/sapphire-wagmi-v2-eip-6963-multichain] package.
+https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/rainbowkit.ts
 
-[EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
-[@oasisprotocol/sapphire-wagmi-v2-eip-6963-single-chain]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2#single-chain---sapphire
-[@oasisprotocol/sapphire-wagmi-v2-eip-6963-multichain]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2#multichain
+Similar configuration can be used with other 3rd party libraries that are built 
+upon Wagmi v2.
 
-### [EIP-1193] Injected provider
+> [!NOTE]
+> Example uses WalletConnect on mobile for MetaMask connector, as deep-linking
+> is not reliable on mobile. This makes the example a bit more complicated as it
+> needs to be. In case you want to use a simpler version, feel free to remove the
+> mobile WalletConnect logic.
 
-https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/eip-1193/config.ts
+For more examples of how to use this library, please refer to
+our [@oasisprotocol/sapphire-wagmi-v2][@oasisprotocol/sapphire-wagmi-v2] package.
 
-For basic example of how to use this library, please refer to
-our [@oasisprotocol/sapphire-wagmi-v2][@oasisprotocol/sapphire-wagmi-v2-eip-1193] package.
-
-[EIP-1193]: https://eips.ethereum.org/EIPS/eip-1193
-[@oasisprotocol/sapphire-wagmi-v2-eip-1193]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2#eip-1193-injected-provider
+[@oasisprotocol/sapphire-wagmi-v2]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v2

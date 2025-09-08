@@ -1,9 +1,10 @@
 import { Chain, sapphire, sapphireTestnet } from "wagmi/chains";
 import {
-	sapphireLocalnet,
-	wrapConnectorWithSapphire,
-} from "@oasisprotocol/sapphire-wagmi-v2";
-import { createConfig, http } from "wagmi";
+  sapphireLocalnet,
+  wrapConnectorWithSapphire,
+  sapphireHttpTransport,
+} from '@oasisprotocol/sapphire-wagmi-v2';
+import { createConfig } from "wagmi";
 import { connectorsForWallets, Wallet } from "@rainbow-me/rainbowkit";
 import {
 	metaMaskWallet,
@@ -157,9 +158,9 @@ const connectors = connectorsForWallets(
 export const rainbowKitConfig = createConfig({
 	chains: [sapphire, sapphireTestnet, sapphireLocalnet] as [Chain, ...Chain[]],
 	transports: {
-		[sapphire.id]: http(),
-		[sapphireTestnet.id]: http(),
-		[sapphireLocalnet.id]: http(),
+		[sapphire.id]: sapphireHttpTransport(),
+		[sapphireTestnet.id]: sapphireHttpTransport(),
+		[sapphireLocalnet.id]: sapphireHttpTransport(),
 	},
 	connectors,
 	multiInjectedProviderDiscovery: false,
