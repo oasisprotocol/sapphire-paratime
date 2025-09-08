@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { FC, PropsWithChildren, useEffect, useState } from "react";
 import {
 	useAccount,
 	useConnect,
+	useDeployContract,
 	useDisconnect,
 	usePublicClient,
 	useTransaction,
 	useWaitForTransactionReceipt,
-	useWalletClient,
+	useWriteContract,
+	useSwitchChain,
 } from "wagmi";
 import { isCalldataEnveloped } from "@oasisprotocol/sapphire-paratime";
 import type { Abi } from "abitype";
@@ -24,31 +26,21 @@ contract Storage {
     }
 }
 */
-const StorageBytecode =
+
+// Storage Contract ABI and Bytecode
+const STORAGE_BYTECODE =
 	"0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea26469706673582212201bc715d5ea5b4244a667a55f9fd36929a52a02208d9b458fdf543f5495011b2164736f6c63430008180033";
 
-const StorageABI = [
+const STORAGE_ABI = [
 	{
 		inputs: [],
 		name: "retrieve",
-		outputs: [
-			{
-				internalType: "uint256",
-				name: "",
-				type: "uint256",
-			},
-		],
+		outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
 		stateMutability: "view",
 		type: "function",
 	},
 	{
-		inputs: [
-			{
-				internalType: "uint256",
-				name: "num",
-				type: "uint256",
-			},
-		],
+		inputs: [{ internalType: "uint256", name: "num", type: "uint256" }],
 		name: "store",
 		outputs: [],
 		stateMutability: "nonpayable",
@@ -56,39 +48,102 @@ const StorageABI = [
 	},
 ] as const satisfies Abi;
 
-function App() {
+type TxHash = `0x${string}` | undefined;
+
+const AccountInfo: FC = () => {
 	const account = useAccount();
-	const { connectors, connect, status, error } = useConnect();
-	const { disconnect } = useDisconnect();
-	const { data: walletClient } = useWalletClient();
-	const [deployHash, setDeployHash] = useState<undefined | `0x${string}`>();
-	const [contractAddress, setContractAddress] = useState<
-		undefined | `0x${string}`
-	>();
-	const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
-	const [readResult, setReadResult] = useState<bigint | undefined>();
-	const publicClient = usePublicClient()!;
-	const { data: deployReceipt, error: deployTxError } =
-		useWaitForTransactionReceipt({ hash: deployHash, confirmations: 1 });
 
-	const { data: writeReceipt, error: writeTxError } =
-		useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
+	return (
+		<div>
+			<h2>Account</h2>
+			<div>
+				Status: {account.status}
+				<br />
+				{account.addresses && (
+					<>
+						Address: <span id="accountAddress">{account.addresses[0]}</span>
+						<br />
+					</>
+				)}
+				Chain ID: {account.chainId}
+				{account.chain && <span> ({account.chain.name})</span>}
+			</div>
+		</div>
+	);
+};
 
-	const { data: writeTxInfo } = useTransaction({
-		hash: writeReceipt?.transactionHash,
+const NetworkSection: FC = () => {
+	const account = useAccount();
+	const { switchChain, chains, isPending, error } = useSwitchChain();
+
+	return (
+		<div>
+			<h3>Network</h3>
+			<div>
+				Current: {account.chain?.name ?? "Unknown"} (ID: {account.chainId})
+			</div>
+			<div style={{ marginTop: "10px" }}>
+				<label htmlFor="network-select">Switch to: </label>
+				<select
+					id="network-select"
+					onChange={(e) => {
+						const chainId = parseInt(e.target.value);
+						if (chainId && switchChain) {
+							switchChain({ chainId });
+						}
+					}}
+					disabled={isPending}
+					value={account.chainId || ""}
+				>
+					<option value="">Select network...</option>
+					{chains.map((chain) => (
+						<option
+							key={chain.id}
+							value={chain.id}
+							disabled={account.chainId === chain.id}
+						>
+							{chain.name} {account.chainId === chain.id ? "(current)" : ""}
+						</option>
+					))}
+				</select>
+			</div>
+			{isPending && <div>Switching network...</div>}
+			{error && (
+				<div style={{ color: "red", marginTop: "5px" }}>
+					Network Error: {error.message}
+				</div>
+			)}
+		</div>
+	);
+};
+
+const DeploySection: FC = () => {
+	const [contractAddress, setContractAddress] = useState<TxHash>(() => {
+		const stored = localStorage.getItem("contractAddress");
+		return stored ? (stored as TxHash) : undefined;
 	});
 
-	async function doDeploy() {
-		const hash = await walletClient?.deployContract({
-			abi: StorageABI,
-			bytecode: StorageBytecode,
-			args: [],
+	const {
+		deployContract,
+		data: deployHash,
+		isPending: isDeploying,
+		error: deployError,
+	} = useDeployContract();
+
+	const { data: deployReceipt, error: deployTxError } =
+		useWaitForTransactionReceipt({
+			hash: deployHash,
+			confirmations: 1,
+			query: {
+				enabled: !!deployHash,
+			},
 		});
-		if (hash) {
-			console.log("Deploy hash set to", hash);
-			setDeployHash(hash);
+
+	useEffect(() => {
+		if (contractAddress) {
+			localStorage.setItem("contractAddress", contractAddress);
 		}
-	}
+	}, [contractAddress]);
 
 	useEffect(() => {
 		if (deployReceipt?.contractAddress) {
@@ -96,150 +151,242 @@ function App() {
 		}
 	}, [deployReceipt]);
 
-	async function doWrite() {
-		if (contractAddress) {
-			const callArgs = {
-				account: account.address!,
-				abi: StorageABI,
-				address: contractAddress,
-				functionName: "store",
-				args: [BigInt(Math.round(Math.random() * 100000))],
-			} as const;
-			const result = await walletClient!.writeContract({
-				...callArgs,
-				gas: await publicClient.estimateContractGas(callArgs),
+	const handleDeploy = (): void => {
+		try {
+			deployContract({
+				abi: STORAGE_ABI,
+				bytecode: STORAGE_BYTECODE,
+				args: [],
 			});
-			setWriteTxHash(result);
+		} catch (error) {
+			console.error("Deploy error:", error);
 		}
-	}
+	};
 
-	async function doRead() {
-		if (contractAddress) {
+	return (
+		<div>
+			<h3>Deploy Contract</h3>
+			<button type="button" onClick={handleDeploy} disabled={isDeploying}>
+				{isDeploying ? "Deploying..." : "Deploy Contract"}
+			</button>
+			{deployHash && (
+				<div>
+					Deploy Hash: <code>{deployHash}</code>
+				</div>
+			)}
+			{(deployTxError ?? deployError) && (
+				<div style={{ color: "red" }}>
+					Deploy Error: {(deployTxError ?? deployError)?.message}
+				</div>
+			)}
+			{contractAddress && (
+				<div>
+					Contract Address:{" "}
+					<span id="deployContractAddress">
+						<code>{contractAddress}</code>
+					</span>
+				</div>
+			)}
+		</div>
+	);
+};
+
+const WriteSection: FC<{ contractAddress: TxHash }> = ({ contractAddress }) => {
+	const {
+		writeContract,
+		data: writeTxHash,
+		isPending: isWriteTxPending,
+	} = useWriteContract();
+
+	const { data: writeTxReceipt } = useWaitForTransactionReceipt({
+		hash: writeTxHash,
+		confirmations: 1,
+		query: {
+			enabled: !!writeTxHash,
+		},
+	});
+
+	const { data: writeTxInfo } = useTransaction({
+		hash: writeTxHash,
+		query: {
+			enabled: !!writeTxHash && !!writeTxReceipt,
+		},
+	});
+
+	const handleWrite = (): void => {
+		if (!contractAddress) return;
+
+		try {
+			const randomValue = BigInt(Math.round(Math.random() * 100000));
+			console.log("Writing value:", randomValue.toString());
+
+			writeContract({
+				address: contractAddress,
+				abi: STORAGE_ABI,
+				functionName: "store",
+				args: [randomValue],
+			});
+		} catch (error) {
+			console.error("Write error:", error);
+		}
+	};
+
+	const isWriting = isWriteTxPending || (writeTxHash && !writeTxInfo);
+
+	return (
+		<div>
+			<h3>Write to Contract</h3>
+			<button
+				type="button"
+				onClick={handleWrite}
+				disabled={!contractAddress || isWriting}
+			>
+				{isWriting ? "Writing..." : "Write to Contract"}
+			</button>
+			{writeTxHash && (
+				<div>
+					<div>
+						Write Tx Hash: <code>{writeTxHash}</code>
+					</div>
+					{writeTxInfo && (
+						<div>
+							<div>
+								Block Hash:{" "}
+								<span id="writeReceiptBlockHash">
+									<code>{writeTxInfo.blockHash}</code>
+								</span>
+							</div>
+							<div>
+								Calldata:{" "}
+								<span id="isWriteEnveloped" data-testid="is-write-enveloped">
+									{isCalldataEnveloped(writeTxInfo?.input)
+										? "encrypted"
+										: "plaintext"}
+								</span>
+							</div>
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	);
+};
+
+const ReadSection: FC<{ contractAddress: TxHash }> = ({ contractAddress }) => {
+	const publicClient = usePublicClient();
+	const [readResult, setReadResult] = useState<bigint | undefined>();
+
+	const handleRead = async (): Promise<void> => {
+		if (!contractAddress || !publicClient) return;
+
+		try {
 			const result = await publicClient.readContract({
-				abi: StorageABI,
+				abi: STORAGE_ABI,
 				address: contractAddress,
 				functionName: "retrieve",
 				args: [],
 			});
 			setReadResult(result);
+		} catch (error) {
+			console.error("Read error:", error);
 		}
-	}
+	};
 
 	return (
-		<>
-			<div>
-				<h2>Account</h2>
-
+		<div>
+			<h3>Read from Contract</h3>
+			<button type="button" onClick={handleRead} disabled={!contractAddress}>
+				Read from Contract
+			</button>
+			{readResult !== undefined && (
 				<div>
-					status: {account.status}
-					<br />
-					{account.addresses && (
-						<>
-							address: <span id="accountAddress">{account.addresses[0]}</span>
-						</>
-					)}
-					<br />
-					chainId: {account.chainId}
-					{account.chain && <span>&nbsp;({account.chain?.name})</span>}
+					Result:{" "}
+					<span id="readResult" data-testid="read-result">
+						{readResult.toString()}
+					</span>
 				</div>
-
-				<hr />
-
-				<button type="button" onClick={doDeploy}>
-					Deploy
-				</button>
-				{deployHash}
-				<br />
-				{deployTxError && (
-					<>
-						Deploy Error: {deployTxError?.message}
-						<br />
-					</>
-				)}
-				{deployReceipt && (
-					<>
-						Contract:{" "}
-						<span id="deployContractAddress">
-							{deployReceipt?.contractAddress}
-						</span>
-						<br />
-						<hr />
-						<button type="button" onClick={doWrite}>
-							Write
-						</button>
-						<br />
-						{writeTxHash && (
-							<>
-								Write Tx Hash: {writeTxHash}
-								<br />
-								{writeTxError && (
-									<>
-										Write Tx Error: {writeTxError.message}
-										<br />
-									</>
-								)}
-								{writeReceipt && (
-									<>
-										Write Tx Gas: {writeReceipt.gasUsed.toString()}
-										<br />
-										Write Tx BlockHash:&nbsp;
-										<span id="writeReceiptBlockHash">
-											{writeReceipt.blockHash}
-										</span>
-										<br />
-										Write Tx Calldata:&nbsp;
-										<span
-											id="isWriteEnveloped"
-											data-testid="is-write-enveloped"
-										>
-											{isCalldataEnveloped(writeTxInfo?.input)
-												? "encrypted"
-												: "plaintext"}
-										</span>
-									</>
-								)}
-							</>
-						)}
-						<hr />
-						<button type="button" onClick={doRead}>
-							Read
-						</button>
-						{readResult !== undefined && (
-							<>
-								<span id="readResult" data-testid="read-result">
-									{readResult.toString()}
-								</span>
-							</>
-						)}
-						<br />
-					</>
-				)}
-				<hr />
-
-				{account.status === "connected" && (
-					<button type="button" onClick={() => disconnect()}>
-						Disconnect
-					</button>
-				)}
-			</div>
-
-			<div>
-				<h2>Connect</h2>
-				{connectors.map((connector) => (
-					<button
-						key={connector.uid}
-						onClick={() => connect({ connector })}
-						type="button"
-						data-testid={connector.id}
-					>
-						{connector.name}
-					</button>
-				))}
-				<div>{status}</div>
-				<div>{error?.message}</div>
-			</div>
-		</>
+			)}
+		</div>
 	);
-}
+};
+
+const ConnectSection: FC<{ children: React.ReactNode }> = ({ children }) => {
+	const { status, error } = useConnect();
+	const { disconnect } = useDisconnect();
+	const account = useAccount();
+
+	return (
+		<div>
+			<h2>Connect Wallet</h2>
+			{children}
+			<div>Status: {status}</div>
+			{error && <div style={{ color: "red" }}>{error.message}</div>}
+			{account.status === "connected" && (
+				<button type="button" onClick={() => disconnect()}>
+					Disconnect
+				</button>
+			)}
+		</div>
+	);
+};
+
+export const App: FC<PropsWithChildren> = ({ children }) => {
+	const account = useAccount();
+	const [contractAddress, setContractAddress] = useState<TxHash>(() => {
+		const stored = localStorage.getItem("contractAddress");
+		return stored ? (stored as TxHash) : undefined;
+	});
+
+	useEffect(() => {
+		const handleStorageChange = () => {
+			const stored = localStorage.getItem("contractAddress");
+			setContractAddress(stored ? (stored as TxHash) : undefined);
+		};
+
+		window.addEventListener("storage", handleStorageChange);
+
+		// Poll for changes since localStorage events don't fire in the same tab
+		const interval = setInterval(() => {
+			const stored = localStorage.getItem("contractAddress");
+			const current = stored ? (stored as TxHash) : undefined;
+			if (current !== contractAddress) {
+				setContractAddress(current);
+			}
+		}, 100);
+
+		return () => {
+			window.removeEventListener("storage", handleStorageChange);
+			clearInterval(interval);
+		};
+	}, [contractAddress]);
+
+	return (
+		<div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+			<AccountInfo />
+
+			{account.status === "connected" && (
+				<>
+					<hr />
+					<NetworkSection />
+					<hr />
+					<DeploySection />
+				</>
+			)}
+
+			{contractAddress && (
+				<>
+					<hr />
+					<WriteSection contractAddress={contractAddress} />
+
+					<hr />
+					<ReadSection contractAddress={contractAddress} />
+				</>
+			)}
+
+			<hr />
+			<ConnectSection>{children}</ConnectSection>
+		</div>
+	);
+};
 
 export default App;

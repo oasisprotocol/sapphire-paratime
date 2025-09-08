@@ -34,9 +34,8 @@ export const test = baseTest.extend<{
 });
 
 [
-	{ url: "/eip-6963-single-chain", rdns: "io.metamask" },
-	{ url: "/eip-6963-multi-chain", rdns: "sapphire.io.metamask" },
-	{ url: "/eip-1193", rdns: "injected-sapphire" },
+	{ url: "/#/wagmi", rdns: "metamask-sapphire" },
+	{ url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
@@ -56,7 +55,7 @@ export const test = baseTest.extend<{
 				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
 
-			await page.getByText("Deploy").click();
+			await page.getByRole('button', { name: 'Deploy Contract' }).click();
 			await wallet.confirmTransaction();
 
 			// Check if page is still available after confirmation
@@ -73,9 +72,9 @@ export const test = baseTest.extend<{
 				await page.goto(appUrl);
 			}
 
-			await expect(page.getByText("Contract:")).toBeVisible();
+			await expect(page.getByText("Contract Address:")).toBeVisible();
 
-			await page.getByText("Write").click();
+			await page.getByRole('button', { name: 'Write to Contract' }).click();
 			await wallet.confirmTransaction();
 
 			// Check again if page is still available
@@ -86,12 +85,12 @@ export const test = baseTest.extend<{
 				await page.goto(appUrl);
 			}
 
-			await expect(page.getByText("Contract:")).toBeVisible();
+			await expect(page.getByText("Contract Address:")).toBeVisible();
 			await expect(page.getByTestId("is-write-enveloped")).toHaveText(
 				"encrypted",
 			);
 
-			await page.getByText("Read").click();
+			await page.getByRole('button', { name: 'Read from Contract' }).click();
 
 			await expect(page.getByTestId("read-result")).not.toBeEmpty();
 		});

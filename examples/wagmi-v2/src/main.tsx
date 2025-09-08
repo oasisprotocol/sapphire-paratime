@@ -1,53 +1,74 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import ReactDOM from "react-dom/client";
-import { WagmiProvider } from "wagmi";
-import {
-	createBrowserRouter,
-	Navigate,
-	RouterProvider,
-} from "react-router-dom";
-import { config as eip6963SingleChainConfig } from "./eip-6963/single-chain-config";
-import { config as eip6963MultiChainConfig } from "./eip-6963/multi-chain-config";
-import { config as eip1193Config } from "./eip-1193/config";
+import { useConnect, useConnectors, WagmiProvider } from "wagmi";
+import { createHashRouter, Navigate, RouterProvider } from "react-router-dom";
+import { ConnectButton, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 import App from "./App.tsx";
+import { config } from "./wagmi.ts";
+import { rainbowKitConfig } from "./rainbowkit.ts";
 
 import "./index.css";
+import "@rainbow-me/rainbowkit/styles.css";
+import { queryClient } from "./query-client.ts";
 
-const router = createBrowserRouter([
+// Avoid WalletConnect(isGlobalCoreDisabled) collisions by avoiding the shared core
+if (typeof window !== "undefined") {
+	(window as any).process = { env: { DISABLE_GLOBAL_CORE: "true" } };
+}
+
+const WagmiConnectors = () => {
+	const { connect } = useConnect();
+	const connectors = useConnectors();
+
+	return (
+		<>
+			{connectors.map((connector) => (
+				<button
+					key={connector.id}
+					onClick={() => connect({ connector })}
+					type="button"
+					data-testid={connector.id}
+				>
+					{connector.name}
+				</button>
+			))}
+		</>
+	);
+};
+
+const router = createHashRouter([
 	{
-		path: "/eip-6963-single-chain",
+		path: "/wagmi",
 		element: (
-			<WagmiProvider config={eip6963SingleChainConfig}>
-				<QueryClientProvider client={new QueryClient()}>
-					<App />
+			<WagmiProvider config={config}>
+				<QueryClientProvider client={queryClient}>
+					<App>
+						<WagmiConnectors />
+					</App>
 				</QueryClientProvider>
 			</WagmiProvider>
 		),
 	},
 	{
-		path: "/eip-6963-multi-chain",
+		path: "/rainbowkit",
 		element: (
-			<WagmiProvider config={eip6963MultiChainConfig}>
-				<QueryClientProvider client={new QueryClient()}>
-					<App />
-				</QueryClientProvider>
-			</WagmiProvider>
-		),
-	},
-	{
-		path: "/eip-1193",
-		element: (
-			<WagmiProvider config={eip1193Config}>
-				<QueryClientProvider client={new QueryClient()}>
-					<App />
+			<WagmiProvider config={rainbowKitConfig as unknown as typeof config}>
+				<QueryClientProvider client={queryClient}>
+					<RainbowKitProvider>
+						<App>
+							{/* To simplify the process of testing */}
+							<WagmiConnectors />
+							<ConnectButton />
+						</App>
+					</RainbowKitProvider>
 				</QueryClientProvider>
 			</WagmiProvider>
 		),
 	},
 	{
 		path: "*",
-		element: <Navigate to="/" replace />,
+		element: <Navigate to="/wagmi" replace />,
 	},
 ]);
 
