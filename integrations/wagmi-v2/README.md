@@ -1,4 +1,4 @@
-# Sapphire-Wagmi
+# Sapphire Wagmi v2
 
 [![version][wagmi-version]][wagmi-npm]
 [![size][wagmi-size]][wagmi-bundlephobia]
@@ -10,9 +10,10 @@
 [wagmi-bundlephobia]: https://bundlephobia.com/package/@oasisprotocol/sapphire-wagmi-v2
 [wagmi-downloads]: https://img.shields.io/npm/dm/@oasisprotocol/sapphire-wagmi-v2.svg
 
-A plugin for [Wagmi][wagmi] v2 that wraps the providers connected to the
-Sapphire network to enable end-to-end encryption for transactions, view calls
-and gas estimations.
+A plugin for [Wagmi][wagmi] v2 that provides seamless integration with the Oasis
+Sapphire network, enabling end-to-end encryption for transactions and gas
+estimations. This package wraps providers and connectors to
+automatically encrypt data when interacting with Sapphire networks.
 
 [wagmi]: https://wagmi.sh/
 
@@ -20,7 +21,7 @@ and gas estimations.
 
 ### Installation
 
-First install the package and its dependencies.
+Install the package along with required peer dependencies:
 
 ```
 npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
@@ -30,75 +31,94 @@ npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
 
 #### Single chain - Sapphire
 
-When your application connects exclusively to Sapphire networks, the most 
-straightforward approach is to set `sapphireConfig.replaceProviders = true`. 
-This configuration ensures that all EIP-6963 providers are automatically wrapped 
-with end-to-end encryption upon registration.
+The primary way to use this library is by wrapping existing Wagmi connectors
+with [wrapConnectorWithSapphire()]. It is recommended to modify the connector
+name to differentiate it from "unwrapped" connectors. This works with any
+connector type (MetaMask, WalletConnect, Coinbase Wallet,
+etc.):
 
 ```typescript
-import { http } from "wagmi";
+import { createConfig } from "wagmi";
 import { sapphire, sapphireTestnet } from "wagmi/chains";
+import { metaMask, walletConnect } from "@wagmi/connectors";
 import {
-  sapphireLocalnet,
-  createSapphireConfig,
+  wrapConnectorWithSapphire,
+  sapphireHttpTransport
 } from "@oasisprotocol/sapphire-wagmi-v2";
 
-export const wagmiConfig = createSapphireConfig({
-  sapphireConfig: {
-    replaceProviders: true,
-  },
-  chains: [sapphire, sapphireTestnet, sapphireLocalnet],
+export const wagmiConfig = createConfig({
+  chains: [sapphire, sapphireTestnet],
+  connectors: [
+    wrapConnectorWithSapphire(
+      metaMask,
+      {
+        id: 'metamask-sapphire',
+        name: 'MetaMask (Sapphire)',
+      }
+    ),
+    wrapConnectorWithSapphire(
+      () => walletConnect({ projectId: 'your-project-id' }),
+      {
+        id: 'walletconnect-sapphire',
+        name: 'WalletConnect (Sapphire)',
+      }
+    ),
+  ],
   transports: {
-    [sapphire.id]: http(),
-    [sapphireTestnet.id]: http(),
-    [sapphireLocalnet.id]: http(),
+    [sapphire.id]: sapphireHttpTransport(),
+    [sapphireTestnet.id]: sapphireHttpTransport(),
+    [sapphireLocalnet.id]: sapphireHttpTransport(),
   },
 });
 ```
 
 #### Multichain
 
-For multichain applications, you must manage which providers use end-to-end
-encryption. It's essential to avoid using encrypted connectors for non-Sapphire
-chains, and conversely, to ensure Sapphire chains use the appropriate encrypted
-connectors.
+For applications supporting both Sapphire and non-Sapphire networks,
+create separate connectors for each network. It's essential to avoid using
+encrypted connectors for non-Sapphire chains, and conversely, to ensure Sapphire
+chains use the appropriate encrypted connectors.
 
 ```typescript
-import { http } from "wagmi";
-import { sapphire, sapphireTestnet } from "wagmi/chains";
+import { createConfig } from "wagmi";
+import { sapphire, mainnet } from "wagmi/chains";
+import { metaMask } from "@wagmi/connectors";
 import {
-  sapphireLocalnet,
-  createSapphireConfig,
+  wrapConnectorWithSapphire,
+  sapphireHttpTransport,
+  sapphireLocalnet
 } from "@oasisprotocol/sapphire-wagmi-v2";
+import { http } from "wagmi";
 
-export const wagmiConfig = createSapphireConfig({
-  sapphireConfig: {
-    replaceProviders: false,
-    // Define which providers you want to wrap via RDNS
-    wrappedProvidersFilter: (rdns) => ['io.metamask'].includes(rdns)
-  },
-  chains: [sapphire, sapphireTestnet, sapphireLocalnet],
+export const wagmiConfig = createConfig({
+  chains: [sapphire, sapphireLocalnet, mainnet],
+  connectors: [
+    // Regular MetaMask for non-Sapphire chains
+    metaMask(),
+    // Sapphire-wrapped MetaMask for Sapphire chains
+    wrapConnectorWithSapphire(
+      metaMask,
+      {
+        id: 'metamask-sapphire',
+        name: 'MetaMask (Sapphire)',
+      }
+    ),
+  ],
   transports: {
-    [sapphire.id]: http(),
-    [sapphireTestnet.id]: http(),
-    [sapphireLocalnet.id]: http(),
+    [sapphire.id]: sapphireHttpTransport(),
+    [sapphireLocalnet.id]: sapphireHttpTransport(),
+    [mainnet.id]: http(),
   },
 });
 ```
 
-The configuration above creates duplicate connectors with the naming convention 
-`sapphire.${rdns}` for each selected provider. For example, in an application 
-supporting both Ethereum and Sapphire networks, you would use the 
-`sapphire.io.metamask` connector specifically for Sapphire chains and the 
-standard `io.metamask` connector for Ethereum chain.
-
 [EIP-6963]: https://eips.ethereum.org/EIPS/eip-6963
+[wrapConnectorWithSapphire()]: https://api.docs.oasis.io/js/sapphire-wagmi-v2/functions/wrapConnectorWithSapphire.html
 
 ### [EIP-1193] Injected provider
 
-In your Wagmi config definition, wrap the injected provider for Sapphire using 
-`injectedWithSapphire()`, then define the transports using the
-`sapphireHttpTransport()` function.
+In your Wagmi config definition, wrap the injected provider for Sapphire
+using [injectedWithSapphire()].
 
 ```typescript
 import { createConfig } from "wagmi";
@@ -122,8 +142,41 @@ export const wagmiConfig = createConfig({
 ```
 
 [EIP-1193]: https://eips.ethereum.org/EIPS/eip-1193
+[injectedWithSapphire()]: https://api.docs.oasis.io/js/sapphire-wagmi-v2/functions/injectedWithSapphire.html
+
+### View-calls data encryption
+
+Use a public client with [createPublicClient()] and for read-only operations
+like querying blockchain data and calling view functions without requiring a
+wallet. The Sapphire transport is still necessary even for read operations to
+properly handle end-to-end encryption when accessing private contract state or
+making view calls that return encrypted data.
+
+```typescript
+import {
+  sapphireHttpTransport,
+  wrapWalletClient,
+  createSapphireSerializer,
+  sapphireLocalnet
+} from '@oasisprotocol/sapphire-wagmi-v2';
+import { createWalletClient } from 'viem';
+
+// Create a Sapphire-enabled HTTP transport
+const transport = sapphireHttpTransport();
+
+const client = await wrapWalletClient(
+  createWalletClient({
+    account,
+    chain: sapphireLocalnet,
+    transport: sapphireHttpTransport()
+  })
+);
+```
 
 For a complete example of how to use this library, please refer to our
-[Wagmi example][example].
+[Wagmi example][example]. In case you want to integrate with a 3rd wallet
+library, also see the [Wagmi example][example] for how to do so, as the example
+for Rainbowkit is provided.
 
 [example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2
+[createPublicClient()]: https://viem.sh/docs/clients/public
