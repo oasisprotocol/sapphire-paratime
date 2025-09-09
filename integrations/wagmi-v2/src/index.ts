@@ -100,7 +100,7 @@ type ConnectorFactoryReturn<C extends BaseConnector = BaseConnector> = C;
  *
  * @returns A wrapped connector factory that provides Sapphire encryption
  */
-export const wrapConnectorWithSapphire = <
+export function wrapConnectorWithSapphire<
 	// biome-ignore lint/suspicious/noExplicitAny: Generic type parameter needs to accept any array type
 	T extends any[],
 	C extends BaseConnector = BaseConnector,
@@ -112,7 +112,7 @@ export const wrapConnectorWithSapphire = <
 		name?: string;
 		id?: string;
 	},
-): ((...args: T) => ConnectorFactoryReturn<C>) => {
+): (...args: T) => ConnectorFactoryReturn<C> {
 	const cachedWrappedProviders: Map<
 		EIP2696_EthereumProvider,
 		EIP2696_EthereumProvider
@@ -159,4 +159,4 @@ export const wrapConnectorWithSapphire = <
 
 		return baseConnector;
 	};
-};
+}
