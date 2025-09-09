@@ -9,6 +9,7 @@ on:
       - integrations/**
     branches:
       - main
+  workflow_dispatch:
 
 # Cancel in-progress jobs on same branch.
 concurrency:
