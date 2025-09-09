@@ -6,6 +6,7 @@ on:
       - clients/js/**
       - contracts/**
       - clients/py/**
+      - integrations/**
     branches:
       - main
 
