@@ -1,9 +1,10 @@
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
-	sapphireLocalnet,
-	wrapConnectorWithSapphire,
-} from "@oasisprotocol/sapphire-wagmi-v2";
-import { createConfig, createConnector, http } from "wagmi";
+  sapphireLocalnet,
+  wrapConnectorWithSapphire,
+  sapphireHttpTransport,
+} from '@oasisprotocol/sapphire-wagmi-v2';
+import { createConfig, createConnector } from "wagmi";
 import { metaMask, walletConnect } from "wagmi/connectors";
 import { isMetaMaskInjected, isMobileDevice } from "./util.ts";
 
@@ -56,9 +57,9 @@ export const config = createConfig({
 	],
 	chains: [sapphire, sapphireTestnet, sapphireLocalnet],
 	transports: {
-		[sapphire.id]: http(),
-		[sapphireTestnet.id]: http(),
-		[sapphireLocalnet.id]: http(),
+		[sapphire.id]: sapphireHttpTransport(),
+		[sapphireTestnet.id]: sapphireHttpTransport(),
+		[sapphireLocalnet.id]: sapphireHttpTransport(),
 	},
 	multiInjectedProviderDiscovery: false,
 });
