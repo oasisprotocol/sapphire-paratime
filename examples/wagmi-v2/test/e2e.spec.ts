@@ -35,6 +35,7 @@ export const test = baseTest.extend<{
 
 [
 	{ url: "/#/wagmi", rdns: "metamask-sapphire" },
+	{ url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
 	{ url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {

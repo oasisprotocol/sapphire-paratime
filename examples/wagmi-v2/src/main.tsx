@@ -4,17 +4,25 @@ import { useConnect, useConnectors, WagmiProvider } from "wagmi";
 import { createHashRouter, Navigate, RouterProvider } from "react-router-dom";
 import { ConnectButton, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
-import App from "./App.tsx";
-import { config } from "./wagmi.ts";
-import { rainbowKitConfig } from "./rainbowkit.ts";
+import App from "./App";
+import { config } from "./wagmi";
+import { wagmiConfig as wagmiMultichainConfig } from "./wagmi-multichain";
+import { rainbowKitConfig } from "./rainbowkit";
 
 import "./index.css";
 import "@rainbow-me/rainbowkit/styles.css";
-import { queryClient } from "./query-client.ts";
+import { queryClient } from "./query-client";
+import { wagmiConfig } from './wagmi-multichain.ts';
 
 // Avoid WalletConnect(isGlobalCoreDisabled) collisions by avoiding the shared core
 if (typeof window !== "undefined") {
 	(window as any).process = { env: { DISABLE_GLOBAL_CORE: "true" } };
+}
+
+declare module "wagmi" {
+  interface Register {
+    config: typeof wagmiConfig | typeof config;
+  }
 }
 
 const WagmiConnectors = () => {
@@ -49,8 +57,20 @@ const router = createHashRouter([
 				</QueryClientProvider>
 			</WagmiProvider>
 		),
-	},
-	{
+  },
+  {
+    path: '/wagmi-multichain',
+    element: (
+      <WagmiProvider config={wagmiMultichainConfig}>
+        <QueryClientProvider client={queryClient}>
+          <App>
+            <WagmiConnectors />
+          </App>
+        </QueryClientProvider>
+      </WagmiProvider>
+    ),
+  },
+  {
 		path: "/rainbowkit",
 		element: (
 			<WagmiProvider config={rainbowKitConfig as unknown as typeof config}>
