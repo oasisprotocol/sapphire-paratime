@@ -21,7 +21,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         id: pnpm-install
@@ -76,7 +76,7 @@ jobs:
     needs: publish
     if: startsWith(github.ref_name, 'contracts/v')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Extract version from tag
         id: extract-tag-version
         env:
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'clients/py/v')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Python
         uses: actions/setup-python@v5
