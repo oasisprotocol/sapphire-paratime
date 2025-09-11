@@ -65,7 +65,13 @@ const AccountInfo: FC = () => {
 						<br />
 					</>
 				)}
-				Chain ID: {account.chainId}
+        {account.connector && (
+          <>
+            Connector: <span id="connectorName">{account.connector.name}</span>
+            <br />
+          </>
+        )}
+        Chain ID: {account.chainId}
 				{account.chain && <span> ({account.chain.name})</span>}
 			</div>
 		</div>
@@ -332,12 +338,12 @@ const ConnectSection: FC<{ children: React.ReactNode }> = ({ children }) => {
 
 export const App: FC<PropsWithChildren> = ({ children }) => {
 	const account = useAccount();
-	const [contractAddress, setContractAddress] = useState<TxHash>(() => {
+  const [contractAddress, setContractAddress] = useState<TxHash>(() => {
 		const stored = localStorage.getItem("contractAddress");
 		return stored ? (stored as TxHash) : undefined;
 	});
 
-	useEffect(() => {
+  useEffect(() => {
 		const handleStorageChange = () => {
 			const stored = localStorage.getItem("contractAddress");
 			setContractAddress(stored ? (stored as TxHash) : undefined);

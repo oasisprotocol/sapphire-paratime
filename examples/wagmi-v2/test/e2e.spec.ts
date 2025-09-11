@@ -34,9 +34,10 @@ export const test = baseTest.extend<{
 });
 
 [
-	{ url: "/#/wagmi", rdns: "metamask-sapphire" },
-	{ url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
-	{ url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
+  { url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
+  { url: "/#/wagmi", rdns: "metamask-sapphire" },
+  { url: "/#/wagmi-injected", rdns: "injected-sapphire" },
+  { url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
@@ -45,8 +46,26 @@ export const test = baseTest.extend<{
 			context,
 		}) => {
 			await page.goto(url);
+      await page.waitForLoadState('domcontentloaded');
 
-			// Store the URL in case we need to navigate back after confirmation
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+
+      // Check if wallet is already connected and disconnect if needed
+      try {
+        const disconnectButton = page.getByRole('button', { name: 'Disconnect' });
+        const isVisible = await disconnectButton.isVisible({ timeout: 5000 });
+
+        if (isVisible) {
+          await disconnectButton.click();
+          await expect(disconnectButton).not.toBeVisible({ timeout: 10000 });
+          await page.waitForTimeout(1000);
+        }
+      } catch {}
+
+      // Store the URL in case we need to navigate back after confirmation
 			const appUrl = page.url();
 
 			await page.getByTestId(rdns).click();
@@ -55,6 +74,9 @@ export const test = baseTest.extend<{
 			await expect(
 				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
+
+      // TODO: Bug in multichain, where double click on metamask-sapphire is necessary to get the wallet to connect
+      await page.getByTestId(rdns).click();
 
 			await page.getByRole('button', { name: 'Deploy Contract' }).click();
 			await wallet.confirmTransaction();
