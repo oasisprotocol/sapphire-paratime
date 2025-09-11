@@ -25,6 +25,12 @@ In case you want to use multiple chains besides Sapphire, you can use the follow
 
 https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/wagmi-multichain.ts
 
+### Wagmi v2 - injected provider
+
+In case you want to use injected provider, you can use the following configuration:
+
+https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2/src/wagmi-injected.ts
+
 ### RainbowKit
 
 The configuration demonstrates usage by 3rd party library. It is based on the
