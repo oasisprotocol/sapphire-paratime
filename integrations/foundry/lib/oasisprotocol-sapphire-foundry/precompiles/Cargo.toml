@@ -48,18 +48,6 @@ name = "subcall"
 path = "src/main.rs"
 
 [[bin]]
-name = "core_calldata_public_key"
-path = "src/main.rs"
-
-[[bin]]
-name = "core_current_epoch"
-path = "src/main.rs"
-
-[[bin]]
-name = "rofl_is_authorized_origin"
-path = "src/main.rs"
-
-[[bin]]
 name = "decode"
 path = "src/main.rs"
 

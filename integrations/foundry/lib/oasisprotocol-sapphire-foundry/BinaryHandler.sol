@@ -19,9 +19,6 @@ contract BinaryHandler is Precompiles {
     GasUsedPrecompile gasUsedPrecompile;
     PadGasPrecompile padGasPrecompile;
     SubcallPrecompile subcallPrecompile;
-    CoreCalldataPublicKeyPrecompile coreCalldataPublicKeyPrecompile;
-    CoreCurrentEpochPrecompile coreCurrentEpochPrecompile;
-    RoflIsAuthorizedOriginPrecompile roflIsAuthorizedOriginPrecompile;
     DecodePrecompile decodePrecompile;
 
     constructor() {
@@ -58,21 +55,6 @@ contract BinaryHandler is Precompiles {
 
         vm.etch(SUBCALL, type(SubcallPrecompile).runtimeCode);
         vm.label(SUBCALL, "SUBCALL");
-
-        vm.etch(
-            address(bytes20(keccak256(bytes(CORE_CALLDATAPUBLICKEY)))),
-            type(CoreCalldataPublicKeyPrecompile).runtimeCode
-        );
-        vm.label(address(bytes20(keccak256(bytes(CORE_CALLDATAPUBLICKEY)))), "CORE_CALLDATAPUBLICKEY");
-
-        vm.etch(address(bytes20(keccak256(bytes(CORE_CURRENT_EPOCH)))), type(CoreCurrentEpochPrecompile).runtimeCode);
-        vm.label(address(bytes20(keccak256(bytes(CORE_CURRENT_EPOCH)))), "CORE_CURRENT_EPOCH");
-
-        vm.etch(
-            address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))),
-            type(RoflIsAuthorizedOriginPrecompile).runtimeCode
-        );
-        vm.label(address(bytes20(keccak256(bytes(ROFL_IS_AUTHORIZED_ORIGIN)))), "ROFL_IS_AUTHORIZED_ORIGIN");
 
         vm.etch(
             DECODE, type(DecodePrecompile).runtimeCode

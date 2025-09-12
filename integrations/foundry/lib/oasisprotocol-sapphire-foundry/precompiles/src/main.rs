@@ -373,10 +373,33 @@ fn handle_subcall(input: &[u8]) -> Result<Vec<u8>, String> {
                 Token::Bytes(epoch.to_be_bytes().to_vec()),
             ]))
         },
- 
+
+        "rofl.IsAuthorizedOrigin" => {
+            let expected_body = vec![0x55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            if body != expected_body {
+                return Err("invalid body format".into());
+            }
+
+            Ok(ethabi::encode(&[
+                Token::Uint(0.into()),    // Success status
+                Token::Bytes(vec![0xf5]), // CBOR-encoded true
+            ]))
+        },
+
+        "rofl.OriginApp" => {
+            if body != vec![0xf6] {
+                return Err("invalid body format".into());
+            }
+
+            Ok(ethabi::encode(&[
+                Token::Uint(0.into()),    // Success status
+                Token::Bytes(vec![0x55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), // CBOR-encoded 21 elements array of zeros
+            ]))
+        },
+
         _ => {
             Ok(ethabi::encode(&[
-                Token::Uint(1.into()),        
+                Token::Uint(1.into()),
                 Token::Bytes("unknown".into())
             ]))
         }
