@@ -60,6 +60,10 @@ name = "rofl_is_authorized_origin"
 path = "src/main.rs"
 
 [[bin]]
+name = "rofl_get_app_id"
+path = "src/main.rs"
+
+[[bin]]
 name = "decode"
 path = "src/main.rs"
 

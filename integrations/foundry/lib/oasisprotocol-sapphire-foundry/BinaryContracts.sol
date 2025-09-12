@@ -254,6 +254,21 @@ contract RoflIsAuthorizedOriginPrecompile {
     }
 }
 
+contract RoflGetRoflAppId {
+    Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
+
+    fallback(bytes calldata) external returns (bytes memory) {
+        string[] memory inputs = new string[](2);
+        inputs[0] = "lib/oasisprotocol-sapphire-foundry/precompiles/target/release/rofl_get_rofl_app_id";
+        inputs[1] = vm.toString(abi.encodePacked(hex"f6"));
+        return vm.ffi(inputs);
+    }
+
+    receive() external payable {
+        revert("No ether accepted");
+    }
+}
+
 contract DecodePrecompile {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
 
