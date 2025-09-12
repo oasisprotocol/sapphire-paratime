@@ -55,4 +55,5 @@ contract Precompiles {
     string public constant OASIS_CALLDATAPUBLICKEY = "oasis_callDataPublicKey";
     // ROFL
     string public constant ROFL_IS_AUTHORIZED_ORIGIN = "rofl.IsAuthorizedOrigin";
+    string public constant ROFL_ORIGIN_APP = "rofl.OriginApp";
 }
