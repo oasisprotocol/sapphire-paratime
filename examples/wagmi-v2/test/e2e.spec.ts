@@ -24,6 +24,8 @@ export const test = baseTest.extend<{
 			symbol: "ROSE",
 		});
 
+    await wallet.switchNetwork("Sapphire Localnet");
+
 		await use(context);
 	},
 
@@ -34,9 +36,9 @@ export const test = baseTest.extend<{
 });
 
 [
-  { url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
   { url: "/#/wagmi", rdns: "metamask-sapphire" },
   { url: "/#/wagmi-injected", rdns: "injected-sapphire" },
+  { url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
   { url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {
@@ -77,6 +79,12 @@ export const test = baseTest.extend<{
 
       // TODO: Bug in multichain, where double click on metamask-sapphire is necessary to get the wallet to connect
       await page.getByTestId(rdns).click();
+
+      const networkSelect = page.locator('#network-select');
+      await networkSelect.selectOption('23293');
+
+      // Let network switch settle
+      await page.waitForTimeout(1000);
 
 			await page.getByRole('button', { name: 'Deploy Contract' }).click();
 			await wallet.confirmTransaction();
