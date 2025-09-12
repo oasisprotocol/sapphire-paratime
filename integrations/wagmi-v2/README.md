@@ -97,7 +97,7 @@ export const wagmiConfig = createConfig({
     metaMask(),
     // Sapphire-wrapped MetaMask for Sapphire chains
     wrapConnectorWithSapphire(
-      metaMask,
+      metaMask(),
       {
         id: 'metamask-sapphire',
         name: 'MetaMask (Sapphire)',

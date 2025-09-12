@@ -63,9 +63,3 @@ export const config = createConfig({
 	},
 	multiInjectedProviderDiscovery: false,
 });
-
-declare module "wagmi" {
-	interface Register {
-		config: typeof config;
-	}
-}
