@@ -1,9 +1,9 @@
 import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
-  sapphireLocalnet,
-  wrapConnectorWithSapphire,
-  sapphireHttpTransport,
-} from '@oasisprotocol/sapphire-wagmi-v2';
+	sapphireLocalnet,
+	wrapConnectorWithSapphire,
+	sapphireHttpTransport,
+} from "@oasisprotocol/sapphire-wagmi-v2";
 import { createConfig, createConnector } from "wagmi";
 import { metaMask, walletConnect } from "wagmi/connectors";
 import { isMetaMaskInjected, isMobileDevice } from "./util.ts";

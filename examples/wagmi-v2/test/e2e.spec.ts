@@ -24,7 +24,7 @@ export const test = baseTest.extend<{
 			symbol: "ROSE",
 		});
 
-    await wallet.switchNetwork("Sapphire Localnet");
+		await wallet.switchNetwork("Sapphire Localnet");
 
 		await use(context);
 	},
@@ -36,10 +36,10 @@ export const test = baseTest.extend<{
 });
 
 [
-  { url: "/#/wagmi", rdns: "metamask-sapphire" },
-  { url: "/#/wagmi-injected", rdns: "injected-sapphire" },
-  { url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
-  { url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
+	{ url: "/#/wagmi", rdns: "metamask-sapphire" },
+	{ url: "/#/wagmi-injected", rdns: "injected-sapphire" },
+	{ url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
+	{ url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
 ].forEach(({ url, rdns }) => {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
@@ -48,26 +48,28 @@ export const test = baseTest.extend<{
 			context,
 		}) => {
 			await page.goto(url);
-      await page.waitForLoadState('domcontentloaded');
+			await page.waitForLoadState("domcontentloaded");
 
-      await page.evaluate(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-      });
+			await page.evaluate(() => {
+				localStorage.clear();
+				sessionStorage.clear();
+			});
 
-      // Check if wallet is already connected and disconnect if needed
-      try {
-        const disconnectButton = page.getByRole('button', { name: 'Disconnect' });
-        const isVisible = await disconnectButton.isVisible({ timeout: 5000 });
+			// Check if wallet is already connected and disconnect if needed
+			try {
+				const disconnectButton = page.getByRole("button", {
+					name: "Disconnect",
+				});
+				const isVisible = await disconnectButton.isVisible({ timeout: 5000 });
 
-        if (isVisible) {
-          await disconnectButton.click();
-          await expect(disconnectButton).not.toBeVisible({ timeout: 10000 });
-          await page.waitForTimeout(1000);
-        }
-      } catch {}
+				if (isVisible) {
+					await disconnectButton.click();
+					await expect(disconnectButton).not.toBeVisible({ timeout: 10000 });
+					await page.waitForTimeout(1000);
+				}
+			} catch {}
 
-      // Store the URL in case we need to navigate back after confirmation
+			// Store the URL in case we need to navigate back after confirmation
 			const appUrl = page.url();
 
 			await page.getByTestId(rdns).click();
@@ -77,16 +79,16 @@ export const test = baseTest.extend<{
 				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
 
-      // TODO: Bug in multichain, where double click on metamask-sapphire is necessary to get the wallet to connect
-      await page.getByTestId(rdns).click();
+			// TODO: Bug in multichain, where double click on metamask-sapphire is necessary to get the wallet to connect
+			await page.getByTestId(rdns).click();
 
-      const networkSelect = page.locator('#network-select');
-      await networkSelect.selectOption('23293');
+			const networkSelect = page.locator("#network-select");
+			await networkSelect.selectOption("23293");
 
-      // Let network switch settle
-      await page.waitForTimeout(1000);
+			// Let network switch settle
+			await page.waitForTimeout(1000);
 
-			await page.getByRole('button', { name: 'Deploy Contract' }).click();
+			await page.getByRole("button", { name: "Deploy Contract" }).click();
 			await wallet.confirmTransaction();
 
 			// Check if page is still available after confirmation
@@ -105,7 +107,7 @@ export const test = baseTest.extend<{
 
 			await expect(page.getByText("Contract Address:")).toBeVisible();
 
-			await page.getByRole('button', { name: 'Write to Contract' }).click();
+			await page.getByRole("button", { name: "Write to Contract" }).click();
 			await wallet.confirmTransaction();
 
 			// Check again if page is still available
@@ -121,7 +123,7 @@ export const test = baseTest.extend<{
 				"encrypted",
 			);
 
-			await page.getByRole('button', { name: 'Read from Contract' }).click();
+			await page.getByRole("button", { name: "Read from Contract" }).click();
 
 			await expect(page.getByTestId("read-result")).not.toBeEmpty();
 		});
