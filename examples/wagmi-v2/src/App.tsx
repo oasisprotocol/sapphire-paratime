@@ -65,6 +65,12 @@ const AccountInfo: FC = () => {
 						<br />
 					</>
 				)}
+				{account.connector && (
+					<>
+						Connector: <span id="connectorName">{account.connector.name}</span>
+						<br />
+					</>
+				)}
 				Chain ID: {account.chainId}
 				{account.chain && <span> ({account.chain.name})</span>}
 			</div>

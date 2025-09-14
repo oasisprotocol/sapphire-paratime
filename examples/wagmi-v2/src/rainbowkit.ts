@@ -1,9 +1,9 @@
 import { Chain, sapphire, sapphireTestnet } from "wagmi/chains";
 import {
-  sapphireLocalnet,
-  wrapConnectorWithSapphire,
-  sapphireHttpTransport,
-} from '@oasisprotocol/sapphire-wagmi-v2';
+	sapphireLocalnet,
+	wrapConnectorWithSapphire,
+	sapphireHttpTransport,
+} from "@oasisprotocol/sapphire-wagmi-v2";
 import { createConfig } from "wagmi";
 import { connectorsForWallets, Wallet } from "@rainbow-me/rainbowkit";
 import {
