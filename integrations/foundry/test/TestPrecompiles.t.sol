@@ -152,17 +152,46 @@ contract PrecompileTest is SapphireTest {
         assertEq(symmetricKey1, symmetricKey2, "Symmetric keys should be equal");
     }
     
-    function testSubcallCoreCallDataPublicKey() public {
-        // Test direct subcall to core.CallDataPublicKey
-        (bool success, bytes memory result) = SUBCALL.call(
+    function testSubcall() public {
+        bool success;
+        bytes memory result;
+        uint64 status;
+        bytes memory data;
+
+        (success, result) = SUBCALL.call(
             abi.encode(
                 "core.CallDataPublicKey",
                 hex"f6" // null CBOR input
             )
         );
-        assertTrue(success, "Direct subcall failed");
-        console.logBytes(result);
-        // Decode result
-        (uint64 status, bytes memory data) = abi.decode(result, (uint64, bytes));        
+        assertTrue(success, "Direct core.CallDataPublicKey subcall failed");
+        (status, data) = abi.decode(result, (uint64, bytes));
+
+        (success, result) = SUBCALL.call(
+            abi.encode(
+                "core.CurrentEpoch",
+                hex"f6" // null CBOR input
+            )
+        );
+        assertTrue(success, "Direct rofl.OriginApp subcall failed");
+        (status, data) = abi.decode(result, (uint64, bytes));
+
+        (success, result) = SUBCALL.call(
+            abi.encode(
+                "rofl.IsAuthorizedOrigin",
+                hex"55000000000000000000000000000000000000000000" // CBOR-encoded rofl app with zeros id
+            )
+        );
+        assertTrue(success, "Direct rofl.OriginApp subcall failed");
+        (status, data) = abi.decode(result, (uint64, bytes));
+
+        (success, result) = SUBCALL.call(
+            abi.encode(
+                "rofl.OriginApp",
+                hex"f6" // null CBOR input
+            )
+        );
+        assertTrue(success, "Direct rofl.OriginApp subcall failed");
+        (status, data) = abi.decode(result, (uint64, bytes));
     }
 }

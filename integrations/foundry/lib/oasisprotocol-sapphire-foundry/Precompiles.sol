@@ -40,19 +40,4 @@ contract Precompiles {
 
     /// Address of the DECODE precompile
     address public constant DECODE = 0x0100000000000000000000000000000000000201;
-
-    // METHODS:
-    // Consensus
-    string public constant CONSENSUS_DELEGATE = "consensus.Delegate";
-    string public constant CONSENSUS_UNDELEGATE = "consensus.Undelegate";
-    string public constant CONSENSUS_WITHDRAW = "consensus.Withdraw";
-    string public constant CONSENSUS_TAKE_RECEIPT = "consensus.TakeReceipt";
-    // Accounts
-    string public constant ACCOUNTS_TRANSFER = "accounts.Transfer";
-    // Core
-    string public constant CORE_CALLDATAPUBLICKEY = "core.CallDataPublicKey";
-    string public constant CORE_CURRENT_EPOCH = "core.CurrentEpoch";
-    string public constant OASIS_CALLDATAPUBLICKEY = "oasis_callDataPublicKey";
-    // ROFL
-    string public constant ROFL_IS_AUTHORIZED_ORIGIN = "rofl.IsAuthorizedOrigin";
 }

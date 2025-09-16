@@ -205,55 +205,6 @@ contract SubcallPrecompile {
     }
 }
 
-// Core Calldata Public Key Precompile
-contract CoreCalldataPublicKeyPrecompile {
-    Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
-
-    fallback(bytes calldata) external returns (bytes memory) {
-        string[] memory inputs = new string[](2);
-        inputs[0] = "lib/oasisprotocol-sapphire-foundry/precompiles/target/release/core_calldata_public_key";
-        inputs[1] = vm.toString(abi.encodePacked(hex"f6"));
-        return vm.ffi(inputs);
-    }
-
-    receive() external payable {
-        revert("No ether accepted");
-    }
-}
-
-// Core Current Epoch Precompile
-contract CoreCurrentEpochPrecompile {
-    Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
-
-    fallback(bytes calldata) external returns (bytes memory) {
-        string[] memory inputs = new string[](2);
-        inputs[0] = "lib/oasisprotocol-sapphire-foundry/precompiles/target/release/core_current_epoch";
-        inputs[1] = vm.toString(abi.encodePacked(hex"f6"));
-        return vm.ffi(inputs);
-    }
-
-    receive() external payable {
-        revert("No ether accepted");
-    }
-}
-
-// ROFL Is Authorized Origin Precompile
-contract RoflIsAuthorizedOriginPrecompile {
-    Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
-
-    fallback(bytes calldata input) external returns (bytes memory) {
-        bytes21 appId = abi.decode(input, (bytes21));
-        string[] memory inputs = new string[](2);
-        inputs[0] = "lib/oasisprotocol-sapphire-foundry/precompiles/target/release/rofl_is_authorized_origin";
-        inputs[1] = vm.toString(abi.encodePacked(hex"55", appId));
-        return vm.ffi(inputs);
-    }
-
-    receive() external payable {
-        revert("No ether accepted");
-    }
-}
-
 contract DecodePrecompile {
     Vm constant vm = Vm(address(bytes20(uint160(uint256(keccak256("hevm cheat code"))))));
 
