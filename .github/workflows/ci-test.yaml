@@ -27,7 +27,7 @@ jobs:
         working-directory: ./runtime
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         run: rustup show
@@ -46,7 +46,7 @@ jobs:
         working-directory: ./runtime
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # gcc-multilib is required for bindgen to work for SGX.
       - name: Install dependencies
@@ -68,7 +68,7 @@ jobs:
         working-directory: ./clients/js
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -106,7 +106,7 @@ jobs:
         working-directory: ./clients/py
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -140,7 +140,7 @@ jobs:
         working-directory: ./examples/foundry
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install libclang-dev, cmake
         run: sudo apt-get update && sudo apt-get install -y libclang-dev cmake
@@ -168,7 +168,7 @@ jobs:
         working-directory: ./integrations/foundry
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install libclang-dev, cmake
         run: sudo apt-get update && sudo apt-get install -y libclang-dev cmake
