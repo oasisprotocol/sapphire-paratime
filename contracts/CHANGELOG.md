@@ -6,6 +6,13 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.15 (2025-09)
+
+### Added
+
+* `Subcall.getRoflAppId()` which returns the app identifier for the current
+  origin transaction.
+
 ## 0.2.14 (2025-03)
 
 ### Added
