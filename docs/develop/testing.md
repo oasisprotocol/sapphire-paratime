@@ -38,7 +38,7 @@ This is due to a bug in Rosetta 2's x86_64 emulation. The workaround is to
 disable Rosetta in Docker Desktop settings, which makes Docker use QEMU
 instead.
 
-Go to `Settings > Features in development` and disable
+Go to `Settings > Virtual Machine Options` and disable
 "Use Rosetta for x86/amd64 emulation on Apple Silicon".
 
 :::
