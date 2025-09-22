@@ -28,6 +28,21 @@ For details on setting up and running this local environment, check out the
 [Localnet] documentation from Oasis. It covers installation, configuration, and
 provides example commands to help you get started.
 
+:::info macOS Startup Issue on Apple Silicon
+
+On Apple Silicon Macs running macOS 26 (Tahoe) or later, the `sapphire-localnet` Docker
+image may hang on startup with peer authentication errors (e.g.,
+`chacha20poly1305: message authentication failed`).
+
+This is due to a bug in Rosetta 2's x86_64 emulation. The workaround is to
+disable Rosetta in Docker Desktop settings, which makes Docker use QEMU
+instead.
+
+Go to `Settings > Features in development` and disable
+"Use Rosetta for x86/amd64 emulation on Apple Silicon".
+
+:::
+
 ### Localnet Hardhat Config
 
 To use the Localnet with Hardhat, add the network as follows:
