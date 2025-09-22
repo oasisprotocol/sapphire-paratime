@@ -24,9 +24,7 @@ contract EncryptedEventsECDH {
     string private constant NONCE_PERS = "EncryptedEvents:nonce";
 
     // Keep secrets in encrypted contract state on Sapphire.
-    // aderyn-ignore-next-line(state-variable-could-be-immutable)
     Sapphire.Curve25519SecretKey private _contractSk;
-    // aderyn-ignore-next-line(state-variable-could-be-immutable)
     Sapphire.Curve25519PublicKey private _contractPk;
 
     constructor() {

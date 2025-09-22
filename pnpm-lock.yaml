@@ -199,9 +199,6 @@ importers:
       '@types/chai':
         specifier: ^4.3.14
         version: 4.3.20
-      '@types/minimatch':
-        specifier: ^5.1.2
-        version: 5.1.2
       chai:
         specifier: ^4.3.7
         version: 4.5.0

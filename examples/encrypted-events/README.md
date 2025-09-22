@@ -53,20 +53,20 @@ npx hardhat deploy --network sapphire-localnet
 # Emit (prints the symmetric key). Select AAD if desired:
 #   --aadmode none|sender|context
 # Tip: provide --key to reuse the same key across emit & listen.
-npx hardhat enc --network sapphire-localnet \
-  --action emit --mode key --contract $ADDR \
+npx hardhat emit --network sapphire-localnet \
+  --mode key --contract $ADDR \
   --message "secret" [--key <HEX32>] [--aadmode sender|context]
 
 # Decrypt a past tx by hash (add --aadmode if you used it when emitting)
 # (In key mode, --contract is optional; pass it to disambiguate if the tx
 # has multiple logs.)
-npx hardhat enc --network sapphire-localnet \
-  --action decrypt --mode key [--contract $ADDR] \
+npx hardhat decrypt --network sapphire-localnet \
+  --mode key [--contract $ADDR] \
   --tx <TX_HASH> --key <PRINTED_OR_PROVIDED_KEY> [--aadmode sender|context]
 
 # Live listen & decrypt (stays open until Ctrl‑C; add --aadmode if you used it)
-npx hardhat enc --network sapphire-localnet \
-  --action listen --mode key --contract $ADDR \
+npx hardhat listen --network sapphire-localnet \
+  --mode key --contract $ADDR \
   --key <PRINTED_OR_PROVIDED_KEY> [--aadmode sender|context]
 ```
 
@@ -77,13 +77,13 @@ Terminal A – listener
 ```bash
 export ADDR=... # Paste the deployed contract address
 export KEY=0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
-npx hardhat enc --network sapphire-localnet --action listen --mode key --contract $ADDR --key $KEY
+npx hardhat listen --network sapphire-localnet --mode key --contract $ADDR --key $KEY
 ```
 
 Terminal B – emitter
 
 ```bash
-npx hardhat enc --network sapphire-localnet --action emit --mode key --contract $ADDR --message "secret" --key $KEY
+npx hardhat emit --network sapphire-localnet --mode key --contract $ADDR --message "secret" --key $KEY
 ```
 
 **Expected:** Terminal A prints `Decrypted: secret`.
@@ -100,20 +100,20 @@ npx hardhat deploy-ecdh --network sapphire-localnet
 # Emit (generates an ephemeral caller keypair; DEMO prints the SECRET).
 # Select AAD if desired: --aadmode none|sender|context
 # Tip: provide --secret to reuse the same caller secret across emit & listen.
-npx hardhat enc --network sapphire-localnet \
-  --action emit --mode ecdh --contract $ADDR \
+npx hardhat emit --network sapphire-localnet \
+  --mode ecdh --contract $ADDR \
   --message "secret" [--secret <HEX32>] [--aadmode sender|context]
 
 # Live listen & decrypt using the provided/printed caller SECRET
 # (add --aadmode if you used it)
 # Optional: --hkdf for per-message keys (requires a matching on-chain variant).
-npx hardhat enc --network sapphire-localnet \
-  --action listen --mode ecdh --contract $ADDR \
+npx hardhat listen --network sapphire-localnet \
+  --mode ecdh --contract $ADDR \
   --secret <HEX32> [--aadmode sender|context] [--hkdf]
 
 # Decrypt a past tx (ECDH — needs the contract to fetch its public key)
-npx hardhat enc --network sapphire-localnet \
-  --action decrypt --mode ecdh --contract $ADDR \
+npx hardhat decrypt --network sapphire-localnet \
+  --mode ecdh --contract $ADDR \
   --tx <TX_HASH> --secret <HEX32> [--aadmode sender|context] [--hkdf]
 ```
 

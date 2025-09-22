@@ -26,7 +26,7 @@ describe('AAD behavior', function () {
     const message = 'AAD bound message';
 
     // Call AAD variant
-    const tx = await (contract as any).emitEncryptedWithAad(
+    const tx = await contract.emitEncryptedWithAad(
       keyHex,
       ethers.hexlify(ethers.toUtf8Bytes(message)),
     );
@@ -76,7 +76,7 @@ describe('AAD behavior', function () {
     const message = 'AAD bound ECDH message';
 
     // Emit using AAD variant
-    const tx = await (contract as any).emitEncryptedECDHWithAad(
+    const tx = await contract.emitEncryptedECDHWithAad(
       callerPkHex,
       ethers.hexlify(ethers.toUtf8Bytes(message)) as `0x${string}`,
     );

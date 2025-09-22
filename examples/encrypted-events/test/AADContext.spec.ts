@@ -26,7 +26,7 @@ describe('Context-bound AAD behavior', function () {
     const message = 'Context AAD bound message';
 
     // Call context AAD variant
-    const tx = await (contract as any).emitEncryptedWithContextAad(
+    const tx = await contract.emitEncryptedWithContextAad(
       keyHex,
       ethers.hexlify(ethers.toUtf8Bytes(message)),
     );
@@ -80,7 +80,7 @@ describe('Context-bound AAD behavior', function () {
     const message = 'Context AAD bound ECDH message';
 
     // Emit using context AAD variant
-    const tx = await (contract as any).emitEncryptedECDHWithContextAad(
+    const tx = await contract.emitEncryptedECDHWithContextAad(
       callerPkHex,
       ethers.hexlify(ethers.toUtf8Bytes(message)) as `0x${string}`,
     );
