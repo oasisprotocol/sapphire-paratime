@@ -131,7 +131,7 @@ jobs:
           soldeer push @oasisprotocol-sapphire-foundry~${{ steps.extract-tag-version.outputs.VERSION }}
         working-directory: integrations/foundry/lib/oasisprotocol-sapphire-foundry
   
-  publish-py:
+  publish-pypi:
     runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'clients/py/v')
     steps:
