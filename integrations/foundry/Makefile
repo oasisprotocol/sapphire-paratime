@@ -1,8 +1,9 @@
 
 all: build test
 
-build: lib/forge-std
-	cd lib/oasisprotocol-sapphire-foundry/precompiles && cargo +nightly build --release
+build:
+	forge install foundry-rs/forge-std --no-git
+	cd lib/oasisprotocol-sapphire-foundry/precompiles && cargo +nightly-2025-09-27 build --release
 
 lib/forge-std:
 	forge install foundry-rs/forge-std --no-git

@@ -3,7 +3,7 @@ all: build test
 
 build:
 	forge install foundry-rs/forge-std --no-git
-	cd lib/oasisprotocol-sapphire-foundry/precompiles && cargo +nightly build --release
+	cd lib/oasisprotocol-sapphire-foundry/precompiles && cargo +nightly-2025-09-27 build --release
 
 test:
 	forge test
