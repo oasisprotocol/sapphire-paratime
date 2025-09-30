@@ -148,10 +148,10 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install latest nightly
+      - name: Install pinned nightly
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: nightly-2025-09-27
           profile: minimal
 
       - name: Install dependencies
@@ -176,10 +176,10 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install latest nightly
+      - name: Install pinned nightly
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: nightly-2025-09-27
           profile: minimal
 
       - name: Install dependencies
