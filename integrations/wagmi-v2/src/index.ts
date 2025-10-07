@@ -8,8 +8,10 @@ import {
 	isWrappedEthereumProvider,
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
+import { sapphireLocalnet } from "@oasisprotocol/sapphire-viem-v2";
 import { type InjectedParameters, injected } from "@wagmi/core";
 import type { EIP1193Provider } from "viem";
+import { sapphire, sapphireTestnet } from "wagmi/chains";
 
 export * from "@oasisprotocol/sapphire-viem-v2";
 
@@ -76,6 +78,12 @@ interface BaseConnector {
 
 type ConnectorFactoryReturn<C extends BaseConnector = BaseConnector> = C;
 
+const SAPPHIRE_CHAIN_IDS = [
+	sapphire.id,
+	sapphireTestnet.id,
+	sapphireLocalnet.id,
+];
+
 /**
  * Wrap any Wagmi connector with the Sapphire encryption layer.
  * Used to provide encrypted transactions and calldata to any connector type (WalletConnect, MetaMask, etc.).
@@ -136,6 +144,15 @@ export function wrapConnectorWithSapphire<
 		if (originalGetProvider) {
 			baseConnector.getProvider = async () => {
 				const provider = await originalGetProvider();
+
+				const chainId = await (provider as EIP1193Provider)?.request({
+					method: "eth_chainId",
+				});
+				const currentChainId = Number.parseInt(chainId, 16);
+
+				if (!SAPPHIRE_CHAIN_IDS.includes(currentChainId)) {
+					return provider;
+				}
 
 				if (isWrappedEthereumProvider(provider as EIP2696_EthereumProvider)) {
 					return provider;
