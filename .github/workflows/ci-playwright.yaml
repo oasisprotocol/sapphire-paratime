@@ -21,6 +21,14 @@ jobs:
           --rm
           --health-cmd="test -f /CONTAINER_READY"
           --health-start-period=90s
+      # Anvil is used in wagmi-v2-example.
+      anvil-ci:
+        image: ghcr.io/foundry-rs/foundry:stable
+        ports:
+          - 9545:8545
+        options: --entrypoint anvil
+        env:
+          ANVIL_IP_ADDR: 0.0.0.0
     env:
       SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 3001
     steps:
