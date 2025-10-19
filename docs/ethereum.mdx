@@ -44,6 +44,11 @@ readable to support compatibility with standard tooling:
 
 [EIP-1967]: https://eips.ethereum.org/EIPS/eip-1967
 
+:::danger
+Do not use `immutable` for variables you want to keep private, since
+they are stored in the runtime bytecode, which is unencrypted on Sapphire.
+:::
+
 ## End-to-End Encrypted Transactions and Calls
 
 Transactions and calls are end-to-end encrypted into the contract. Only the
