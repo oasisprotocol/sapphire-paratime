@@ -301,8 +301,8 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
                     if not pk:
                         raise RuntimeError("Could not retrieve callDataPublicKey!")
                     do_fetch = False
-
-                    if method == "eth_call" and params[0]["from"] and self.sapphire_account:
+                    if method == "eth_call" and self.sapphire_account and "from" in params[0]:
+                        from_address = params[0]["from"]
                         # Get block number - use inline if to handle async vs sync
                         block_number = (
                             await self._w3.eth.block_number
@@ -318,11 +318,11 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
                         # Get transaction count - inline if
                         nonce = (
                             await self._w3.eth.get_transaction_count(
-                                self._w3.to_checksum_address(params[0]["from"])
+                                self._w3.to_checksum_address(from_address)
                             )
                             if isinstance(self._w3, AsyncWeb3)
                             else self._w3.eth.get_transaction_count(
-                                self._w3.to_checksum_address(params[0]["from"])
+                                self._w3.to_checksum_address(from_address)
                             )
                         )
                         # Get block and extract hash - inline if

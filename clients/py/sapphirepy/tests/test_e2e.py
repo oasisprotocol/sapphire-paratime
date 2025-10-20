@@ -59,6 +59,7 @@ class TestEndToEnd(unittest.TestCase):
             SignAndSendRawMiddlewareBuilder.build(account)  # pylint: disable=no-value-for-parameter
         )
         self.w3_no_signer = Web3(Web3.HTTPProvider("http://localhost:8545"))
+        self.w3_no_signer_wrapped = sapphire.wrap(Web3(Web3.HTTPProvider("http://localhost:8545")))
         self.w3 = sapphire.wrap(w3, account)
 
         self.w3.eth.default_account = account.address
@@ -73,6 +74,9 @@ class TestEndToEnd(unittest.TestCase):
             address=tx_receipt["contractAddress"], abi=iface["abi"]
         )
         self.greeter_no_signer = self.w3_no_signer.eth.contract(
+            address=tx_receipt["contractAddress"], abi=iface["abi"]
+        )
+        self.greeter_no_signer_wrapped = self.w3_no_signer_wrapped.eth.contract(
             address=tx_receipt["contractAddress"], abi=iface["abi"]
         )
 
@@ -114,6 +118,11 @@ class TestEndToEnd(unittest.TestCase):
         y = w3.eth.wait_for_transaction_receipt(x)
         z = greeter.events.Greeting().process_receipt(y)
         self.assertEqual(z[0].args["g"], "Hello")
+
+    def test_transaction_no_signer_wrapped(self):
+        greeter = self.greeter_no_signer_wrapped
+
+        self.assertEqual(greeter.functions.greet().call(), "Hello")
 
 
 if __name__ == "__main__":

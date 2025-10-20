@@ -42,12 +42,18 @@ w3.middleware_onion.add(SignAndSendRawMiddlewareBuilder.build(account))
 # Note: Account parameter in the wrap() function is used for signing view
 # calls and can be different from the account used for singing transactions.
 w3 = sapphire.wrap(w3, account) # Can provide custom "account" parameter
+w3.eth.default_account = account.address # Alternatively you can set "from" tx param each time for signed view calls
 # Wrapper middleware also works with AsyncWeb3
 async_w3 = sapphire.wrap(async_w3, account)
 
+# Account parameter is optional, to encrypt view calls without signing 
+# we can omit the account parameter
+w3 = sapphire.wrap(w3)
+async_w3 = sapphire.wrap(async_w3)
+
 # Optionally, query Oasis Web3 Gateway for the gas price.
-# from web3.gas_strategies.rpc import rpc_gas_price_strategy
-# w3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
+from web3.gas_strategies.rpc import rpc_gas_price_strategy
+w3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
 ```
 
 The Sapphire middleware for Web3.py ensures all transactions, gas estimates and
