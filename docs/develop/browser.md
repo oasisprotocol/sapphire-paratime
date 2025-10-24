@@ -239,7 +239,14 @@ encryption when connected to Sapphire networks.
 
 ### WalletConnect Integration
 
+Using `wrapConnectorWithSapphire()` with WalletConnect is similar to the
+MetaMask example above, just by wrapping the connector returned by
+`walletConnect()`.
+
 ```typescript
+import { walletConnect } from "@wagmi/connectors";
+import { wrapConnectorWithSapphire } from "@oasisprotocol/sapphire-wagmi-v2";
+
 // ...
 connectors: [
   wrapConnectorWithSapphire(
@@ -286,6 +293,10 @@ creation function.
 Here's a simplified example for RainbowKit:
 
 ```typescript
+import { connectorsForWallets, Wallet } from "@rainbow-me/rainbowkit";
+import { wrapConnectorWithSapphire } from "@oasisprotocol/sapphire-wagmi-v2";
+import { metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
+
 const wrapRainbowKitWalletWithSapphire =
   (
     walletFn: (options: { projectId: string }) => Wallet,
@@ -337,6 +348,10 @@ const connectors = connectorsForWallets(
 ### WalletConnect Integration
 
 ```typescript
+import { connectorsForWallets, Wallet } from "@rainbow-me/rainbowkit";
+import { wrapConnectorWithSapphire } from "@oasisprotocol/sapphire-wagmi-v2";
+import { walletConnectWallet } from "@rainbow-me/rainbowkit/wallets";
+
 const createWalletConnectWallet = (options: { projectId: string }): Wallet => {
   const walletOptions = {
     id: 'walletConnect-sapphire-rk',
