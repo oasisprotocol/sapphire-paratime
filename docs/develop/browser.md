@@ -197,13 +197,8 @@ Install the library with your favorite package manager
 npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
 ```
 
-
-After installing the library, you have two approaches depending on your needs:
-
-#### Multi Injected Provider Discovery (EIP-6963)
-
-The primary way to use this library is by wrapping existing Wagmi connectors
-with `wrapConnectorWithSapphire()`. This works with any connector type
+Use this library is by wrapping existing Wagmi connectors with
+`wrapConnectorWithSapphire()`. This works with any connector type
 (MetaMask, WalletConnect, Coinbase Wallet, etc.) and provides seamless
 integration with Sapphire networks:
 
@@ -242,33 +237,25 @@ For applications supporting both Sapphire and non-Sapphire networks,
 `wrapConnectorWithSapphire()` automatically detects the chain and only applies
 encryption when connected to Sapphire networks.
 
-#### EIP-1193 Injected Provider
-
-Alternatively, you can use the simpler `injectedWithSapphire()` connector
-if you only need basic injected provider support:
+### WalletConnect Integration
 
 ```typescript
-import { createConfig } from "wagmi";
-import { sapphire, sapphireTestnet } from "wagmi/chains";
-import {
-  injectedWithSapphire,
-  sapphireHttpTransport,
-  sapphireLocalnet
-} from "@oasisprotocol/sapphire-wagmi-v2";
-
-export const wagmiConfig = createConfig({
-  multiInjectedProviderDiscovery: false,
-  chains: [sapphire, sapphireTestnet, sapphireLocalnet],
-  connectors: [injectedWithSapphire()],
-  transports: {
-    [sapphire.id]: sapphireHttpTransport(),
-    [sapphireTestnet.id]: sapphireHttpTransport(),
-    [sapphireLocalnet.id]: sapphireHttpTransport()
-  },
-});
+// ...
+connectors: [
+  wrapConnectorWithSapphire(
+    walletConnect({
+      projectId: /*PROJECT_ID*/,
+    }),
+    {
+      id: "walletConnect-sapphire",
+      name: "WalletConnect (Sapphire)",
+    },
+  ),
+]
+// ...
 ```
 
-#### Integration With Third-Party Wallet Libraries
+### Integration With Third-Party Wallet Libraries
 
 When integrating with third-party wallet libraries like RainbowKit, you can wrap
 their wallet connectors with Sapphire support by applying
