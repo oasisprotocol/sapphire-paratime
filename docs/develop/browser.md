@@ -255,10 +255,31 @@ connectors: [
 // ...
 ```
 
-### Integration With Third-Party Wallet Libraries
+:::info
 
-When integrating with third-party wallet libraries like RainbowKit, you can wrap
-their wallet connectors with Sapphire support by applying
+For a complete example of how to use this library, please refer to our
+[Wagmi example][wagmi-example].
+
+:::
+
+[wagmi-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2
+[rainbowkit-config]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/wagmi-v2/src/rainbowkit.ts
+
+## RainbowKit
+
+This shows a quick way to use **RainbowKit** to encrypt transactions, for more info
+see [usage example][rainbowkit-example]. RainbowKit is a React library that depends on
+Wagmi and Viem.
+
+### Usage
+
+Install the library with your favorite package manager
+
+```shell npm2yarn
+npm install @rainbow-me/rainbowkit wagmi@2.x viem@2.x @tanstack/react-query @oasisprotocol/sapphire-wagmi-v2
+```
+
+Wrap wallet connectors with Sapphire support by applying
 `wrapConnectorWithSapphire()` to the connector returned by the library's wallet
 creation function.
 
@@ -313,16 +334,60 @@ const connectors = connectorsForWallets(
 );
 ```
 
-For a complete RainbowKit integration example including mobile wallet handling
-and multiple wallet types, see the [RainbowKit configuration][rainbowkit-config]
-in our Wagmi example repository.
+### WalletConnect Integration
 
-:::info
+```typescript
+const createWalletConnectWallet = (options: { projectId: string }): Wallet => {
+  const walletOptions = {
+    id: 'walletConnect-sapphire-rk',
+    name: 'WalletConnect (Sapphire)',
+  };
+  const baseWallet = walletConnectWallet(options);
 
-For a complete example of how to use this library, please refer to our
-[Wagmi example][wagmi-example].
+  return {
+    ...baseWallet,
+    ...walletOptions,
+    mobile: baseWallet.mobile || {
+      getUri: (uri: string) => uri,
+    },
+    desktop: baseWallet.desktop || {
+      getUri: (uri: string) => uri,
+    },
+    qrCode: baseWallet.qrCode || {
+      getUri: (uri: string) => uri,
+    },
+    createConnector: (walletDetails) => {
+      const originalConnector = baseWallet.createConnector(walletDetails);
+      return (config) => {
+        const baseConnector = originalConnector(config);
+        const wrappedConnector = wrapConnectorWithSapphire(
+          (_) => baseConnector,
+          walletOptions,
+        );
+        return wrappedConnector(config);
+      };
+    },
+  };
+};
+
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: "Recommended",
+      wallets: [createWalletConnectWallet],
+    },
+  ],
+  {
+    appName: 'Wagmi v2 Example',
+    projectId: /*PROJECT_ID*/,
+  },
+);
+```
+:::info Rainbowkit Example
+
+You can find more example code demonstrating how to use the library in our
+[RainbowKit example][rainbowkit-example].
 
 :::
 
-[wagmi-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2
-[rainbowkit-config]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/wagmi-v2/src/rainbowkit.ts
+[rainbowkit-example]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/wagmi-v2/src/rainbowkit.ts
