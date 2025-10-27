@@ -183,12 +183,15 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="result"><a class="header" href="#result">Result</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>The outcome of the message call.</p>
 <pre><code class="language-solidity">enum Result {
-    PermanentFailure,
-    TransientFailure,
-    Success
+// The message was rejected.
+PermanentFailure,
+// The message was rejected but may be accepted later.
+TransientFailure,
+// The message was accepted and processed.
+Success
 }
 </code></pre>
 

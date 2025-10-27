@@ -183,18 +183,18 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="function-encryptcalldata"><a class="header" href="#function-encryptcalldata">function encryptCallData</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
 <h3 id="encryptcalldatabytes"><a class="header" href="#encryptcalldatabytes">encryptCallData(bytes)</a></h3>
 <pre><code class="language-solidity">function encryptCallData(bytes memory in_data) view returns (bytes memory out_encrypted);
 </code></pre>
 <h3 id="encryptcalldatabytes-sapphirecurve25519publickey-sapphirecurve25519secretkey-bytes15-uint256-bytes32"><a class="header" href="#encryptcalldatabytes-sapphirecurve25519publickey-sapphirecurve25519secretkey-bytes15-uint256-bytes32">encryptCallData(bytes, Sapphire.Curve25519PublicKey, Sapphire.Curve25519SecretKey, bytes15, uint256, bytes32)</a></h3>
 <pre><code class="language-solidity">function encryptCallData(
-    bytes memory in_data,
-    Sapphire.Curve25519PublicKey myPublic,
-    Sapphire.Curve25519SecretKey mySecret,
-    bytes15 nonce,
-    uint256 epoch,
-    bytes32 peerPublicKey
+bytes memory in_data,
+Sapphire.Curve25519PublicKey myPublic,
+Sapphire.Curve25519SecretKey mySecret,
+bytes15 nonce,
+uint256 epoch,
+bytes32 peerPublicKey
 ) view returns (bytes memory out_encrypted);
 </code></pre>
 

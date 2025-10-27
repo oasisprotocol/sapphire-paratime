@@ -183,7 +183,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="sapphire"><a class="header" href="#sapphire">Sapphire</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/Sapphire.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/Sapphire.sol">Git Source</a></p>
 <p>This library provides a number of convenient wrappers for
 cryptographic operations such as the x25519 key derivation, Deoxys-II-based
 encryption and decryption, signing key generation, message digest signing and
@@ -202,43 +202,43 @@ which will transparently handle things like putting <code>bytes</code> lengths i
 correct position.</p>
 <h2 id="state-variables"><a class="header" href="#state-variables">State Variables</a></h2>
 <h3 id="random_bytes"><a class="header" href="#random_bytes">RANDOM_BYTES</a></h3>
-<pre><code class="language-solidity">address internal constant RANDOM_BYTES = 0x0100000000000000000000000000000000000001;
+<pre><code class="language-solidity">address internal constant RANDOM_BYTES = 0x0100000000000000000000000000000000000001
 </code></pre>
 <h3 id="derive_key"><a class="header" href="#derive_key">DERIVE_KEY</a></h3>
-<pre><code class="language-solidity">address internal constant DERIVE_KEY = 0x0100000000000000000000000000000000000002;
+<pre><code class="language-solidity">address internal constant DERIVE_KEY = 0x0100000000000000000000000000000000000002
 </code></pre>
 <h3 id="encrypt"><a class="header" href="#encrypt">ENCRYPT</a></h3>
-<pre><code class="language-solidity">address internal constant ENCRYPT = 0x0100000000000000000000000000000000000003;
+<pre><code class="language-solidity">address internal constant ENCRYPT = 0x0100000000000000000000000000000000000003
 </code></pre>
 <h3 id="decrypt"><a class="header" href="#decrypt">DECRYPT</a></h3>
-<pre><code class="language-solidity">address internal constant DECRYPT = 0x0100000000000000000000000000000000000004;
+<pre><code class="language-solidity">address internal constant DECRYPT = 0x0100000000000000000000000000000000000004
 </code></pre>
 <h3 id="generate_signing_keypair"><a class="header" href="#generate_signing_keypair">GENERATE_SIGNING_KEYPAIR</a></h3>
-<pre><code class="language-solidity">address internal constant GENERATE_SIGNING_KEYPAIR = 0x0100000000000000000000000000000000000005;
+<pre><code class="language-solidity">address internal constant GENERATE_SIGNING_KEYPAIR = 0x0100000000000000000000000000000000000005
 </code></pre>
 <h3 id="sign_digest"><a class="header" href="#sign_digest">SIGN_DIGEST</a></h3>
-<pre><code class="language-solidity">address internal constant SIGN_DIGEST = 0x0100000000000000000000000000000000000006;
+<pre><code class="language-solidity">address internal constant SIGN_DIGEST = 0x0100000000000000000000000000000000000006
 </code></pre>
 <h3 id="verify_digest"><a class="header" href="#verify_digest">VERIFY_DIGEST</a></h3>
-<pre><code class="language-solidity">address internal constant VERIFY_DIGEST = 0x0100000000000000000000000000000000000007;
+<pre><code class="language-solidity">address internal constant VERIFY_DIGEST = 0x0100000000000000000000000000000000000007
 </code></pre>
 <h3 id="curve25519_public_key"><a class="header" href="#curve25519_public_key">CURVE25519_PUBLIC_KEY</a></h3>
-<pre><code class="language-solidity">address internal constant CURVE25519_PUBLIC_KEY = 0x0100000000000000000000000000000000000008;
+<pre><code class="language-solidity">address internal constant CURVE25519_PUBLIC_KEY = 0x0100000000000000000000000000000000000008
 </code></pre>
 <h3 id="gas_used"><a class="header" href="#gas_used">GAS_USED</a></h3>
-<pre><code class="language-solidity">address internal constant GAS_USED = 0x0100000000000000000000000000000000000009;
+<pre><code class="language-solidity">address internal constant GAS_USED = 0x0100000000000000000000000000000000000009
 </code></pre>
 <h3 id="pad_gas"><a class="header" href="#pad_gas">PAD_GAS</a></h3>
-<pre><code class="language-solidity">address internal constant PAD_GAS = 0x010000000000000000000000000000000000000a;
+<pre><code class="language-solidity">address internal constant PAD_GAS = 0x010000000000000000000000000000000000000a
 </code></pre>
 <h3 id="sha512_256"><a class="header" href="#sha512_256">SHA512_256</a></h3>
-<pre><code class="language-solidity">address internal constant SHA512_256 = 0x0100000000000000000000000000000000000101;
+<pre><code class="language-solidity">address internal constant SHA512_256 = 0x0100000000000000000000000000000000000101
 </code></pre>
 <h3 id="sha512"><a class="header" href="#sha512">SHA512</a></h3>
-<pre><code class="language-solidity">address internal constant SHA512 = 0x0100000000000000000000000000000000000102;
+<pre><code class="language-solidity">address internal constant SHA512 = 0x0100000000000000000000000000000000000102
 </code></pre>
 <h3 id="sha384"><a class="header" href="#sha384">SHA384</a></h3>
-<pre><code class="language-solidity">address internal constant SHA384 = 0x0100000000000000000000000000000000000104;
+<pre><code class="language-solidity">address internal constant SHA384 = 0x0100000000000000000000000000000000000104
 </code></pre>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <h3 id="randombytes"><a class="header" href="#randombytes">randomBytes</a></h3>
@@ -608,7 +608,7 @@ see: @oasisprotocol/oasis-sdk :: precompile/confidential.rs :: call_verify</p>
 </div>
 <h3 id="padgas"><a class="header" href="#padgas">padGas</a></h3>
 <p>Set the current transactions gas usage to a specific amount</p>
-<p><em>Will cause a reversion if the current usage is more than the amount.</em></p>
+<p>Will cause a reversion if the current usage is more than the amount.</p>
 <p><strong>Note:</strong>
 see: @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_pad_gas</p>
 <pre><code class="language-solidity">function padGas(uint128 toAmount) internal view;
@@ -627,14 +627,26 @@ see: @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_gas_used</p>
 <h2 id="enums"><a class="header" href="#enums">Enums</a></h2>
 <h3 id="signingalg"><a class="header" href="#signingalg">SigningAlg</a></h3>
 <pre><code class="language-solidity">enum SigningAlg {
+    /// Ed25519 signature over the provided message using SHA-512/265 with a domain separator.
+    /// Can be used to sign transactions for the Oasis consensus layer and SDK paratimes.
     Ed25519Oasis,
+    /// Ed25519 signature over the provided message.
     Ed25519Pure,
+    /// Ed25519 signature over the provided prehashed SHA-512 digest.
     Ed25519PrehashedSha512,
+    /// Secp256k1 signature over the provided message using SHA-512/256 with a domain separator.
+    /// Can be used to sign transactions for the Oasis consensus layer and SDK paratimes.
     Secp256k1Oasis,
+    /// Secp256k1 over the provided Keccak256 digest.
+    /// Can be used to sign transactions for Ethereum-compatible networks.
     Secp256k1PrehashedKeccak256,
+    /// Secp256k1 signature over the provided SHA-256 digest.
     Secp256k1PrehashedSha256,
+    /// Sr25519 signature over the provided message.
     Sr25519,
+    /// Secp256r1 signature over the provided SHA-256 digest.
     Secp256r1PrehashedSha256,
+    /// Secp384r1 signature over the provided SHA-384 digest.
     Secp384r1PrehashedSha384
 }
 </code></pre>
@@ -647,7 +659,7 @@ see: @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_gas_used</p>
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../../contracts/Sapphire.sol/function.sha384.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../contracts/Sapphire.sol/function.sha512.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -661,7 +673,7 @@ see: @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_gas_used</p>
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../../contracts/Sapphire.sol/function.sha384.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../contracts/Sapphire.sol/function.sha512.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

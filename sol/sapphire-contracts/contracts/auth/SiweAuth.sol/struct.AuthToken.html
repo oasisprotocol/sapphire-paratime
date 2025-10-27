@@ -183,13 +183,13 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="authtoken"><a class="header" href="#authtoken">AuthToken</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
 <pre><code class="language-solidity">struct AuthToken {
-    string domain;
-    address userAddr;
-    uint256 validUntil;
-    string statement;
-    string[] resources;
+string domain; // [ scheme "://" ] domain.
+address userAddr;
+uint256 validUntil; // in Unix timestamp.
+string statement; // Human-readable statement from the SIWE message.
+string[] resources; // Resources this token grants access to.
 }
 </code></pre>
 

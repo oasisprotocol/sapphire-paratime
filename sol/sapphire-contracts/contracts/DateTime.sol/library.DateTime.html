@@ -183,13 +183,13 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="datetime"><a class="header" href="#datetime">DateTime</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/DateTime.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/DateTime.sol">Git Source</a></p>
 <p>Considers leap year, but not leap second.</p>
 <p><strong>Note:</strong>
 attribution: https://github.com/pipermerriam/ethereum-datetime/blob/master/contracts/contracts/DateTime.sol</p>
 <h2 id="state-variables"><a class="header" href="#state-variables">State Variables</a></h2>
 <h3 id="origin_year"><a class="header" href="#origin_year">ORIGIN_YEAR</a></h3>
-<pre><code class="language-solidity">uint16 private constant ORIGIN_YEAR = 1970;
+<pre><code class="language-solidity">uint16 private constant ORIGIN_YEAR = 1970
 </code></pre>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <h3 id="isleapyear"><a class="header" href="#isleapyear">isLeapYear</a></h3>
@@ -197,7 +197,7 @@ attribution: https://github.com/pipermerriam/ethereum-datetime/blob/master/contr
 </code></pre>
 <h3 id="totimestamp"><a class="header" href="#totimestamp">toTimestamp</a></h3>
 <p>Convert year, month, day, hour, minute, second to Unix timestamp.</p>
-<p><em>Leap second is not supported.</em></p>
+<p>Leap second is not supported.</p>
 <pre><code class="language-solidity">function toTimestamp(uint16 year, uint8 month, uint8 day, uint8 hour, uint8 minute, uint8 second)
     internal
     pure

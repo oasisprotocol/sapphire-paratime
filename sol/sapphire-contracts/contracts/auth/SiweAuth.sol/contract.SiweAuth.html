@@ -183,9 +183,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="siweauth"><a class="header" href="#siweauth">SiweAuth</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
-<a href="/contracts/auth/A13e.sol/abstract.A13e.html">A13e</a></p>
+<a href="/home/runner/work/sapphire-paratime/sapphire-paratime/contracts/sol/sapphire-contracts/contracts/auth/A13e.sol/abstract.A13e.html">A13e</a></p>
 <p>Inherit this contract if you wish to enable SIWE-based
 authentication in your contract functions that require authentication.
 The smart contract needs to be bound to a domain (passed in constructor).</p>
@@ -213,21 +213,21 @@ _message = message;
 <h2 id="state-variables"><a class="header" href="#state-variables">State Variables</a></h2>
 <h3 id="_domain"><a class="header" href="#_domain">_domain</a></h3>
 <p>Domain which the dApp is associated with</p>
-<pre><code class="language-solidity">string internal _domain;
+<pre><code class="language-solidity">string internal _domain
 </code></pre>
 <h3 id="_authtokenenckey"><a class="header" href="#_authtokenenckey">_authTokenEncKey</a></h3>
 <p>Encryption key which the authentication tokens are encrypted with</p>
-<pre><code class="language-solidity">bytes32 private _authTokenEncKey;
+<pre><code class="language-solidity">bytes32 private _authTokenEncKey
 </code></pre>
 <h3 id="default_validity"><a class="header" href="#default_validity">DEFAULT_VALIDITY</a></h3>
 <p>Default authentication token validity, if no expiration-time provided</p>
-<pre><code class="language-solidity">uint256 private constant DEFAULT_VALIDITY = 24 hours;
+<pre><code class="language-solidity">uint256 private constant DEFAULT_VALIDITY = 24 hours
 </code></pre>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <h3 id="constructor"><a class="header" href="#constructor">constructor</a></h3>
 <p>Instantiate the contract which uses SIWE for authentication and
 runs on the specified domain.</p>
-<pre><code class="language-solidity">constructor(string memory inDomain);
+<pre><code class="language-solidity">constructor(string memory inDomain) ;
 </code></pre>
 <p><strong>Parameters</strong></p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
@@ -302,7 +302,7 @@ runs on the specified domain.</p>
 </div>
 <h3 id="decodeandvalidatetoken"><a class="header" href="#decodeandvalidatetoken">decodeAndValidateToken</a></h3>
 <p>Helper function to decrypt, decode and validate a token</p>
-<p><em>Performs token decoding as well as domain and validation</em></p>
+<p>Performs token decoding as well as domain and validation</p>
 <pre><code class="language-solidity">function decodeAndValidateToken(bytes memory token) internal view virtual returns (AuthToken memory);
 </code></pre>
 <p><strong>Parameters</strong></p>

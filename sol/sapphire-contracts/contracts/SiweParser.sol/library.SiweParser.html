@@ -183,7 +183,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="siweparser"><a class="header" href="#siweparser">SiweParser</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/795c874f1e03b7254c4ab9bfe7a66d05a7a396a3/contracts/contracts/SiweParser.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/fd9f9c068d8010cc8bcd921d46b657fe1023ef99/contracts/contracts/SiweParser.sol">Git Source</a></p>
 <p>Call parseSiweMsg() and provide the EIP-4361 SIWE message. The parser
 will generate the ParsedSiweMessage struct which you can then use to
 extract the authentication information in your on-chain contract.</p>
@@ -205,7 +205,10 @@ extract the authentication information in your on-chain contract.</p>
 </code></pre>
 <h3 id="_parsefield"><a class="header" href="#_parsefield">_parseField</a></h3>
 <p>Parse "NAME: VALUE" in str starting at index i and ending at \n or end of bytes.</p>
-<pre><code class="language-solidity">function _parseField(bytes calldata str, string memory name, uint256 i) internal pure returns (bytes memory, uint256);
+<pre><code class="language-solidity">function _parseField(bytes calldata str, string memory name, uint256 i)
+    internal
+    pure
+    returns (bytes memory, uint256);
 </code></pre>
 <p><strong>Returns</strong></p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
