@@ -252,8 +252,8 @@ impl sdk::Runtime for Runtime {
         } else {
             // Mainnet.
             Some(TrustRoot {
-                height: 22327937,
-                hash: "01670e0af13fa4ceaeee8bd9672374d27a889b9304c44ab9acfd7f97663ee1b9".into(),
+                height: 25000000,
+                hash: "297a92fc0e0199dc964b52dbeda1b7202ee2f0fcf4e6ef7b9f54221f89a8684f".into(),
                 runtime_id: "000000000000000000000000000000000000000000000000f80306c9858e7279"
                     .into(),
                 chain_context: "bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55"
