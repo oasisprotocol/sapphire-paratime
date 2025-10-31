@@ -197,26 +197,69 @@ Install the library with your favorite package manager
 npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
 ```
 
-After installing the library, use the Sapphire specific connector and
-transports.
+Use this library is by wrapping existing Wagmi connectors with
+`wrapConnectorWithSapphire()`. This works with any connector type
+(MetaMask, WalletConnect, Coinbase Wallet, etc.) and provides seamless
+integration with Sapphire networks:
 
 ```typescript
 import { createConfig } from "wagmi";
-import { sapphire, sapphireTestnet } from "wagmi/chains";
+import { sapphire, mainnet } from "wagmi/chains";
+import { metaMask } from "@wagmi/connectors";
 import {
-	injectedWithSapphire,
-	sapphireHttpTransport,
+  wrapConnectorWithSapphire,
+  sapphireHttpTransport,
+  sapphireLocalnet
 } from "@oasisprotocol/sapphire-wagmi-v2";
+import { http } from "wagmi";
 
-export const config = createConfig({
-	multiInjectedProviderDiscovery: false,
-	chains: [sapphire, sapphireTestnet],
-	connectors: [injectedWithSapphire()],
-	transports: {
-		[sapphire.id]: sapphireHttpTransport(),
-		[sapphireTestnet.id]: sapphireHttpTransport()
-	},
+export const wagmiConfig = createConfig({
+  chains: [sapphire, sapphireLocalnet, mainnet],
+  connectors: [
+    // Sapphire-wrapped aware MetaMask for Sapphire chains, unwrapped for other chains
+    wrapConnectorWithSapphire(
+      metaMask(),
+      {
+        id: 'metamask-sapphire',
+        name: 'MetaMask (Sapphire)',
+      }
+    ),
+  ],
+  transports: {
+    [sapphire.id]: sapphireHttpTransport(),
+    [sapphireLocalnet.id]: sapphireHttpTransport(),
+    [mainnet.id]: http(),
+  },
 });
+```
+
+For applications supporting both Sapphire and non-Sapphire networks,
+`wrapConnectorWithSapphire()` automatically detects the chain and only applies
+encryption when connected to Sapphire networks.
+
+### WalletConnect Integration
+
+Using `wrapConnectorWithSapphire()` with WalletConnect is similar to the
+MetaMask example above, just by wrapping the connector returned by
+`walletConnect()`.
+
+```typescript
+import { walletConnect } from "@wagmi/connectors";
+import { wrapConnectorWithSapphire } from "@oasisprotocol/sapphire-wagmi-v2";
+
+// ...
+connectors: [
+  wrapConnectorWithSapphire(
+    walletConnect({
+      projectId: /*PROJECT_ID*/,
+    }),
+    {
+      id: "walletConnect-sapphire",
+      name: "WalletConnect (Sapphire)",
+    },
+  ),
+]
+// ...
 ```
 
 :::info
@@ -227,3 +270,139 @@ For a complete example of how to use this library, please refer to our
 :::
 
 [wagmi-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/wagmi-v2
+[rainbowkit-config]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/wagmi-v2/src/rainbowkit.ts
+
+## RainbowKit
+
+This shows a quick way to use **RainbowKit** to encrypt transactions, for more info
+see [usage example][rainbowkit-example]. RainbowKit is a React library that depends on
+Wagmi and Viem.
+
+### Usage
+
+Install the library with your favorite package manager
+
+```shell npm2yarn
+npm install @rainbow-me/rainbowkit wagmi@2.x viem@2.x @tanstack/react-query @oasisprotocol/sapphire-wagmi-v2
+```
+
+Wrap wallet connectors with Sapphire support by applying
+`wrapConnectorWithSapphire()` to the connector returned by the library's wallet
+creation function.
+
+Here's a simplified example for RainbowKit:
+
+```typescript
+import { connectorsForWallets, Wallet } from "@rainbow-me/rainbowkit";
+import { wrapConnectorWithSapphire } from "@oasisprotocol/sapphire-wagmi-v2";
+import { metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
+
+const wrapRainbowKitWalletWithSapphire =
+  (
+    walletFn: (options: { projectId: string }) => Wallet,
+    sapphireOptions: { id: string; name: string },
+  ) =>
+    (options: { projectId: string }): Wallet => {
+      const wallet = walletFn(options);
+
+      return {
+        ...wallet,
+        id: sapphireOptions.id,
+        name: sapphireOptions.name,
+        createConnector: (walletDetails) => {
+          const originalConnector = wallet.createConnector(walletDetails);
+          return (config) => {
+            const baseConnector = originalConnector(config);
+            const wrappedConnector = wrapConnectorWithSapphire(
+              (_) => baseConnector,
+              sapphireOptions,
+            );
+            return wrappedConnector(config);
+          };
+        },
+      };
+    };
+
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: "Recommended",
+      wallets: [
+        wrapRainbowKitWalletWithSapphire(
+          metaMaskWallet,
+          {
+            id: "metamask-sapphire-rk",
+            name: "MetaMask (Sapphire)",
+          },
+        )
+      ],
+    },
+  ],
+  {
+    appName: "Wagmi v2 Example",
+    projectId: /*PROJECT_ID*/,
+  },
+);
+```
+
+### WalletConnect Integration
+
+```typescript
+import { connectorsForWallets, Wallet } from "@rainbow-me/rainbowkit";
+import { wrapConnectorWithSapphire } from "@oasisprotocol/sapphire-wagmi-v2";
+import { walletConnectWallet } from "@rainbow-me/rainbowkit/wallets";
+
+const createWalletConnectWallet = (options: { projectId: string }): Wallet => {
+  const walletOptions = {
+    id: 'walletConnect-sapphire-rk',
+    name: 'WalletConnect (Sapphire)',
+  };
+  const baseWallet = walletConnectWallet(options);
+
+  return {
+    ...baseWallet,
+    ...walletOptions,
+    mobile: baseWallet.mobile || {
+      getUri: (uri: string) => uri,
+    },
+    desktop: baseWallet.desktop || {
+      getUri: (uri: string) => uri,
+    },
+    qrCode: baseWallet.qrCode || {
+      getUri: (uri: string) => uri,
+    },
+    createConnector: (walletDetails) => {
+      const originalConnector = baseWallet.createConnector(walletDetails);
+      return (config) => {
+        const baseConnector = originalConnector(config);
+        const wrappedConnector = wrapConnectorWithSapphire(
+          (_) => baseConnector,
+          walletOptions,
+        );
+        return wrappedConnector(config);
+      };
+    },
+  };
+};
+
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: "Recommended",
+      wallets: [createWalletConnectWallet],
+    },
+  ],
+  {
+    appName: 'Wagmi v2 Example',
+    projectId: /*PROJECT_ID*/,
+  },
+);
+```
+:::info Rainbowkit Example
+
+You can find more example code demonstrating how to use the library in our
+[RainbowKit example][rainbowkit-example].
+
+:::
+
+[rainbowkit-example]: https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/wagmi-v2/src/rainbowkit.ts
