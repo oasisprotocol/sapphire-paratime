@@ -202,6 +202,7 @@ const WriteSection: FC<{ contractAddress: TxHash }> = ({ contractAddress }) => {
 		writeContract,
 		data: writeTxHash,
 		isPending: isWriteTxPending,
+		reset: resetWriteContract,
 	} = useWriteContract();
 
 	const { data: writeTxReceipt } = useWaitForTransactionReceipt({
@@ -219,6 +220,15 @@ const WriteSection: FC<{ contractAddress: TxHash }> = ({ contractAddress }) => {
 		},
 	});
 
+	const [writeContractAddress, setWriteContractAddress] = useState<TxHash>();
+
+	useEffect(() => {
+		if (contractAddress !== writeContractAddress && writeTxHash) {
+			resetWriteContract();
+			setWriteContractAddress(undefined);
+		}
+	}, [contractAddress, writeContractAddress, writeTxHash, resetWriteContract]);
+
 	const handleWrite = (): void => {
 		if (!contractAddress) return;
 
@@ -226,6 +236,7 @@ const WriteSection: FC<{ contractAddress: TxHash }> = ({ contractAddress }) => {
 			const randomValue = BigInt(Math.round(Math.random() * 100000));
 			console.log("Writing value:", randomValue.toString());
 
+			setWriteContractAddress(contractAddress);
 			writeContract({
 				address: contractAddress,
 				abi: STORAGE_ABI,
