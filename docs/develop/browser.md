@@ -48,7 +48,7 @@ use our library-specific packages for [Ethers][ethers-quick],
 [viem-quick]: ./browser.md#viem
 [wagmi-quick]: ./browser.md#wagmi
 
-:::info Example: Starter project
+:::example Example: Starter project
 
 If your project includes both a smart contract backend and a web frontend, you
 can explore our **[demo-starter]** repository. It provides a working example using
@@ -111,7 +111,7 @@ import { wrapEthereumProvider } from '@oasisprotocol/sapphire-paratime';
 const provider = wrapEthereumProvider(window.ethereum);
 ```
 
-:::info Example: Hardhat boilerplate
+:::example Example: Hardhat boilerplate
 
 Our maintained Hardhat boilerplate uses the Sapphire TypeScript Wrapper to
 enable confidential transactions in development. Find the code in the
@@ -175,7 +175,7 @@ const walletClient = await wrapWalletClient(createWalletClient({
 }));
 ```
 
-:::info Viem Example
+:::example Viem Example
 
 You can find more example code demonstrating how to use the library in our
 [Hardhat-Viem example][viem-example].
@@ -197,7 +197,7 @@ Install the library with your favorite package manager
 npm install @oasisprotocol/sapphire-wagmi-v2 wagmi@2.x viem@2.x
 ```
 
-Use this library is by wrapping existing Wagmi connectors with
+Use this library by wrapping existing Wagmi connectors with
 `wrapConnectorWithSapphire()`. This works with any connector type
 (MetaMask, WalletConnect, Coinbase Wallet, etc.) and provides seamless
 integration with Sapphire networks:
@@ -262,7 +262,7 @@ connectors: [
 // ...
 ```
 
-:::info
+:::example
 
 For a complete example of how to use this library, please refer to our
 [Wagmi example][wagmi-example].
@@ -398,7 +398,7 @@ const connectors = connectorsForWallets(
   },
 );
 ```
-:::info Rainbowkit Example
+:::example Rainbowkit Example
 
 You can find more example code demonstrating how to use the library in our
 [RainbowKit example][rainbowkit-example].
