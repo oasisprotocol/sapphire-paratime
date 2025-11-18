@@ -31,7 +31,7 @@ jobs:
         working-directory: ./runtime
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         run: rustup show
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -79,7 +79,7 @@ jobs:
         working-directory: ./clients/py
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install dependencies
         run: python3 -mpip install --user -r requirements.txt
       - name: Install dev dependencies
@@ -97,7 +97,7 @@ jobs:
         working-directory: ./clients/go
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Fetch all history so gitlint can check the relevant commits.
           fetch-depth: '0'
