@@ -1,4 +1,4 @@
-import { mainnet, sapphire, sapphireTestnet } from "wagmi/chains";
+import { sapphire, sapphireTestnet } from "wagmi/chains";
 import {
 	wrapConnectorWithSapphire,
 	sapphireHttpTransport,
@@ -6,6 +6,15 @@ import {
 } from "@oasisprotocol/sapphire-wagmi-v2";
 import { createConfig, http } from "wagmi";
 import { metaMask } from "wagmi/connectors";
+
+const anvilLocalChain = {
+	id: 31337,
+	name: "Anvil",
+	nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
+	rpcUrls: {
+		default: { http: ["http://127.0.0.1:9545"] },
+	},
+} as const;
 
 const sapphireMetamask = () => {
 	return wrapConnectorWithSapphire(metaMask(), {
@@ -15,17 +24,15 @@ const sapphireMetamask = () => {
 };
 
 export const wagmiConfig = createConfig({
-	chains: [sapphire, sapphireTestnet, sapphireLocalnet, mainnet],
+	chains: [sapphire, sapphireTestnet, sapphireLocalnet, anvilLocalChain],
 	connectors: [
-		// Sapphire-wrapped MetaMask for Sapphire chains
+		// Sapphire-wrapped aware MetaMask for Sapphire chains, unwrapped for other chains
 		sapphireMetamask(),
-		// Regular MetaMask for non-Sapphire chains
-		metaMask(),
 	],
 	transports: {
 		[sapphire.id]: sapphireHttpTransport(),
 		[sapphireTestnet.id]: sapphireHttpTransport(),
 		[sapphireLocalnet.id]: sapphireHttpTransport(),
-		[mainnet.id]: http(),
+		[anvilLocalChain.id]: http(),
 	},
 });
