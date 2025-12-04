@@ -65,7 +65,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Install forge doc deps
-        run: cargo install mdbook-pagetoc
+        run: cargo install mdbook-pagetoc@0.2.2 # TODO: 0.3 fails with "Unable to parse the input" error
       - name: Build docs
         working-directory: contracts
         run: make clean && pnpm doc
