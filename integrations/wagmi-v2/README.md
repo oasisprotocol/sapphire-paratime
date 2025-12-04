@@ -75,9 +75,9 @@ export const wagmiConfig = createConfig({
 #### Multichain
 
 For applications supporting both Sapphire and non-Sapphire networks,
-create separate connectors for each network. It's essential to avoid using
-encrypted connectors for non-Sapphire chains, and conversely, to ensure Sapphire
-chains use the appropriate encrypted connectors.
+`wrapConnectorWithSapphire` automatically detects the chain and only applies
+encryption when connected to Sapphire networks. This allows you to use a single
+wrapped connector for both Sapphire and non-Sapphire chains:
 
 ```typescript
 import { createConfig } from "wagmi";
@@ -93,9 +93,7 @@ import { http } from "wagmi";
 export const wagmiConfig = createConfig({
   chains: [sapphire, sapphireLocalnet, mainnet],
   connectors: [
-    // Regular MetaMask for non-Sapphire chains
-    metaMask(),
-    // Sapphire-wrapped MetaMask for Sapphire chains
+    // Sapphire-wrapped aware MetaMask for Sapphire chains, unwrapped for other chains
     wrapConnectorWithSapphire(
       metaMask(),
       {

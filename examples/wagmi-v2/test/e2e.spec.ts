@@ -24,6 +24,14 @@ export const test = baseTest.extend<{
 			symbol: "ROSE",
 		});
 
+		// Add Anvil Localnet as a custom network
+		await wallet.addNetwork({
+			networkName: "Anvil Localnet",
+			rpc: "http://localhost:9545",
+			chainId: 31337,
+			symbol: "ETH",
+		});
+
 		await wallet.switchNetwork("Sapphire Localnet");
 
 		await use(context);
@@ -36,11 +44,37 @@ export const test = baseTest.extend<{
 });
 
 [
-	{ url: "/#/wagmi", rdns: "metamask-sapphire" },
-	{ url: "/#/wagmi-injected", rdns: "injected-sapphire" },
-	{ url: "/#/wagmi-multichain", rdns: "metamask-sapphire" },
-	{ url: "/#/rainbowkit", rdns: "metamask-sapphire-rk" },
-].forEach(({ url, rdns }) => {
+	{
+		url: "/#/wagmi",
+		rdns: "metamask-sapphire",
+		network: "23293",
+		encrypted: true,
+	},
+	{
+		url: "/#/wagmi-injected",
+		rdns: "injected-sapphire",
+		network: "23293",
+		encrypted: true,
+	},
+	{
+		url: "/#/wagmi-multichain",
+		rdns: "metamask-sapphire",
+		network: "23293",
+		encrypted: true,
+	},
+	{
+		url: "/#/wagmi-multichain?plain",
+		rdns: "metamask-sapphire",
+		network: "31337",
+		encrypted: false,
+	},
+	{
+		url: "/#/rainbowkit",
+		rdns: "metamask-sapphire-rk",
+		network: "23293",
+		encrypted: true,
+	},
+].forEach(({ url, rdns, network, encrypted }) => {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
 			wallet,
@@ -79,11 +113,8 @@ export const test = baseTest.extend<{
 				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
 
-			// TODO: Bug in multichain, where double click on metamask-sapphire is necessary to get the wallet to connect
-			await page.getByTestId(rdns).click();
-
 			const networkSelect = page.locator("#network-select");
-			await networkSelect.selectOption("23293");
+			await networkSelect.selectOption(network);
 
 			// Let network switch settle
 			await page.waitForTimeout(1000);
@@ -119,9 +150,16 @@ export const test = baseTest.extend<{
 			}
 
 			await expect(page.getByText("Contract Address:")).toBeVisible();
-			await expect(page.getByTestId("is-write-enveloped")).toHaveText(
-				"encrypted",
-			);
+
+			if (encrypted) {
+				await expect(page.getByTestId("is-write-enveloped")).toHaveText(
+					"encrypted",
+				);
+			} else {
+				await expect(page.getByTestId("is-write-enveloped")).toHaveText(
+					"plaintext",
+				);
+			}
 
 			await page.getByRole("button", { name: "Read from Contract" }).click();
 
