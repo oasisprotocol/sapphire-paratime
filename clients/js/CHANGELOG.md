@@ -6,6 +6,12 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 2.3.0 (2025-12)
+
+### Added
+
+- PontusX Devnet and Testnet chains to `NETWORKS`
+
 ## 2.2.0 (2025-05)
 
 ### Added
