@@ -72,11 +72,45 @@ const testnetParams = {
     '0x000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c',
 };
 
+const pontusXTestnetParams = {
+  chainName: 'Pontus-X Testnet',
+  chainId: 0x7ec9,
+  defaultGateway: 'https://provider.test.pontus-x.eu/',
+  rpcUrls: ['https://provider.test.pontus-x.eu/'],
+  nativeCurrency: {
+    name: 'EURAU',
+    symbol: 'EURAU',
+    decimals: 18,
+  },
+  blockExplorerUrls: ['https://explorer.pontus-x.eu/pontusx/test'],
+  runtimeId:
+    '0x00000000000000000000000000000000000000000000000004a6f9071c007069',
+};
+
+const pontusXDevnetParams = {
+  chainName: 'Pontus-X Devnet',
+  chainId: 0x7ec8,
+  defaultGateway: 'https://provider.dev.pontus-x.eu/',
+  rpcUrls: ['https://provider.dev.pontus-x.eu/'],
+  nativeCurrency: {
+    name: 'EURAU',
+    symbol: 'EURAU',
+    decimals: 18,
+  },
+  blockExplorerUrls: ['https://explorer.pontus-x.eu/pontusx/dev'],
+  runtimeId:
+    '0x0000000000000000000000000000000000000000000000004febe52eb412b421',
+};
+
 export const NETWORKS = {
   mainnet: mainnetParams,
   testnet: testnetParams,
   localnet: localnetParams,
+  pontusXTestnet: pontusXTestnetParams,
+  pontusXDevnet: pontusXDevnetParams,
   [mainnetParams.chainId]: mainnetParams,
   [testnetParams.chainId]: testnetParams,
   [localnetParams.chainId]: localnetParams,
+  [pontusXTestnetParams.chainId]: pontusXTestnetParams,
+  [pontusXDevnetParams.chainId]: pontusXDevnetParams,
 };
