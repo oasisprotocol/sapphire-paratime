@@ -4,14 +4,13 @@
 
 import {
 	type EIP2696_EthereumProvider,
+	NETWORKS,
 	type SapphireWrapConfig,
 	isWrappedEthereumProvider,
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
-import { sapphireLocalnet } from "@oasisprotocol/sapphire-viem-v2";
 import { type InjectedParameters, injected } from "@wagmi/core";
 import type { EIP1193Provider } from "viem";
-import { sapphire, sapphireTestnet } from "wagmi/chains";
 
 export * from "@oasisprotocol/sapphire-viem-v2";
 
@@ -79,9 +78,11 @@ interface BaseConnector {
 type ConnectorFactoryReturn<C extends BaseConnector = BaseConnector> = C;
 
 const SAPPHIRE_CHAIN_IDS = [
-	sapphire.id,
-	sapphireTestnet.id,
-	sapphireLocalnet.id,
+	NETWORKS.mainnet.chainId,
+	NETWORKS.testnet.chainId,
+	NETWORKS.localnet.chainId,
+	NETWORKS.pontusXTestnet.chainId,
+	NETWORKS.pontusXDevnet.chainId,
 ];
 
 /**
