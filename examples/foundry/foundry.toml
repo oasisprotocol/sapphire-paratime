@@ -4,6 +4,7 @@ out = 'out'
 libs = ['lib']
 ffi = true
 memory_limit = 1000000000
+evm_version = "paris"
 
 [soldeer]
 # whether soldeer manages remappings

@@ -29,6 +29,7 @@ const config: HardhatUserConfig = {
   solidity: {
     version: '0.8.20',
     settings: {
+      evmVersion: "paris",
       // XXX: Needs to match https://github.com/oasisprotocol/sapphire-paratime/blob/main/contracts/hardhat.config.ts
       optimizer: {
         enabled: true,
