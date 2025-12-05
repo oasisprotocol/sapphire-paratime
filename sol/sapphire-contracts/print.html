@@ -229,7 +229,7 @@ Check out the <a href="https://github.com/oasisprotocol/sapphire-paratime/blob/m
 <li><a href="contracts/auth/SiweAuth.sol/contract.SiweAuth.html">SiweAuth</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="a13e"><a class="header" href="#a13e">A13e</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/auth/A13e.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/auth/A13e.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Interface for authenticatable contracts</p>
 <p>This is the interface for universal authentication mechanism (e.g.
@@ -273,7 +273,7 @@ every logout.</p>
 <pre><code class="language-solidity">error A13e_RevokedAuthToken();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="authtoken"><a class="header" href="#authtoken">AuthToken</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 AuthToken structure for SIWE-based authentication</p>
 <pre><code class="language-solidity">struct AuthToken {
@@ -285,7 +285,7 @@ string[] resources; // Resources this token grants access to.
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="siweauth"><a class="header" href="#siweauth">SiweAuth</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/auth/SiweAuth.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 <a href="contracts/auth/SiweAuth.sol//contracts/auth/A13e.sol/abstract.A13e.html">A13e</a></p>
 <p><strong>Title:</strong>
@@ -452,15 +452,15 @@ runs on the specified domain.</p>
 <li><a href="contracts/opl/Endpoint.sol/interface.ICelerMessageBus.html">ICelerMessageBus</a></li>
 <li><a href="contracts/opl/Endpoint.sol/contract.BaseEndpoint.html">BaseEndpoint</a></li>
 <li><a href="contracts/opl/Endpoint.sol/contract.Endpoint.html">Endpoint</a></li>
-<li><a href="contracts/opl/Endpoint.sol/function._chainName2ChainId.html">_chainName2ChainId</a></li>
-<li><a href="contracts/opl/Endpoint.sol/function._getChainConfig.html">_getChainConfig</a></li>
-<li><a href="contracts/opl/Endpoint.sol/function.autoswitch.html">autoswitch</a></li>
 <li><a href="contracts/opl/Endpoint.sol/function._getBus.html">_getBus</a></li>
+<li><a href="contracts/opl/Endpoint.sol/function.autoswitch.html">autoswitch</a></li>
+<li><a href="contracts/opl/Endpoint.sol/function._chainName2ChainId.html">_chainName2ChainId</a></li>
 <li><a href="contracts/opl/Endpoint.sol/function._getRemoteChainId.html">_getRemoteChainId</a></li>
+<li><a href="contracts/opl/Endpoint.sol/function._getChainConfig.html">_getChainConfig</a></li>
 <li><a href="contracts/opl/Host.sol/contract.Host.html">Host</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="enclave"><a class="header" href="#enclave">Enclave</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Enclave.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Enclave.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 <a href="contracts/opl/Enclave.sol//contracts/opl/Endpoint.sol/contract.Endpoint.html">Endpoint</a></p>
 <p><strong>Title:</strong>
@@ -471,32 +471,32 @@ OPL Enclave</p>
 <pre><code class="language-solidity">constructor(address _host, bytes32 _hostChain) Endpoint(_host, _hostChain);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="autoconfigunavailable"><a class="header" href="#autoconfigunavailable">AutoConfigUnavailable</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>Unable to automatically configure OPL. Please use the manual version of the base contract.</p>
 <pre><code class="language-solidity">error AutoConfigUnavailable();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="missingremoteaddr"><a class="header" href="#missingremoteaddr">MissingRemoteAddr</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>The remote endpoint's contract address was missing.</p>
 <pre><code class="language-solidity">error MissingRemoteAddr();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="missingremotechainid"><a class="header" href="#missingremotechainid">MissingRemoteChainId</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>The remote endpoint's chain ID was missing.</p>
 <pre><code class="language-solidity">error MissingRemoteChainId();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="selfcalldisallowed"><a class="header" href="#selfcalldisallowed">SelfCallDisallowed</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>Calls to contracts on the same chain are not allowed unless on a local testnet.</p>
 <pre><code class="language-solidity">error SelfCallDisallowed();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unknownendpoint"><a class="header" href="#unknownendpoint">UnknownEndpoint</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>The requested endpoint does not exist.</p>
 <pre><code class="language-solidity">error UnknownEndpoint();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="result"><a class="header" href="#result">Result</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>The outcome of the message call.</p>
 <pre><code class="language-solidity">enum Result {
 // The message was rejected.
@@ -508,7 +508,7 @@ Success
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="icelermessagebus"><a class="header" href="#icelermessagebus">ICelerMessageBus</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
 <h3 id="feebase"><a class="header" href="#feebase">feeBase</a></h3>
 <pre><code class="language-solidity">function feeBase() external view returns (uint256);
@@ -520,7 +520,7 @@ Success
 <pre><code class="language-solidity">function sendMessage(address _host, uint256 _hostChainId, bytes calldata _message) external payable;
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="baseendpoint"><a class="header" href="#baseendpoint">BaseEndpoint</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <h2 id="state-variables-2"><a class="header" href="#state-variables-2">State Variables</a></h2>
 <h3 id="messagebus"><a class="header" href="#messagebus">messageBus</a></h3>
 <pre><code class="language-solidity">address internal immutable messageBus
@@ -576,7 +576,7 @@ Success
 <pre><code class="language-solidity">function _isLocalNetwork() internal view returns (bool);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="endpoint"><a class="header" href="#endpoint">Endpoint</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 <a href="contracts/opl/Endpoint.sol//contracts/opl/Endpoint.sol/contract.BaseEndpoint.html">BaseEndpoint</a></p>
 <p><strong>Title:</strong>
@@ -587,17 +587,12 @@ OPL Endpoint</p>
 <pre><code class="language-solidity">constructor(address _remote, bytes32 _remoteChainName)
     BaseEndpoint(_remote, _getRemoteChainId(_remoteChainName), _getBus(_remote, _remoteChainName), false);
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="_chainname2chainid"><a class="header" href="#_chainname2chainid">_chainName2ChainId</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
-<pre><code class="language-solidity">function _chainName2ChainId(bytes32 name) pure returns (uint256);
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="_getchainconfig"><a class="header" href="#_getchainconfig">_getChainConfig</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
-<p>Configs from https://im-docs.celer.network/developer/contract-addresses-and-rpc-info.</p>
-<pre><code class="language-solidity">function _getChainConfig(uint256 _chainId) pure returns (address _messageBus, bool _isTestnet);
+<div style="break-before: page; page-break-before: always;"></div><h1 id="_getbus"><a class="header" href="#_getbus">_getBus</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<pre><code class="language-solidity">function _getBus(address _remote, bytes32 _remoteChainName) view returns (address);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="autoswitch"><a class="header" href="#autoswitch">autoswitch</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <p>Autoswitch automatically picks the remote network based on the
 network the contract on which the contract has already been deployed. When on
 testnet, the remote chain will be the testnet version of the provided chain.
@@ -606,16 +601,21 @@ will call each other without going through a message bus. This is helpful for
 debugging logic but does not test gas fee payment and other moving parts.</p>
 <pre><code class="language-solidity">function autoswitch(bytes32 protocol) view returns (bytes32 networkName);
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="_getbus"><a class="header" href="#_getbus">_getBus</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
-<pre><code class="language-solidity">function _getBus(address _remote, bytes32 _remoteChainName) view returns (address);
+<div style="break-before: page; page-break-before: always;"></div><h1 id="_chainname2chainid"><a class="header" href="#_chainname2chainid">_chainName2ChainId</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<pre><code class="language-solidity">function _chainName2ChainId(bytes32 name) pure returns (uint256);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="_getremotechainid"><a class="header" href="#_getremotechainid">_getRemoteChainId</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
 <pre><code class="language-solidity">function _getRemoteChainId(bytes32 _remoteChainName) view returns (uint256);
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="_getchainconfig"><a class="header" href="#_getchainconfig">_getChainConfig</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Endpoint.sol">Git Source</a></p>
+<p>Configs from https://im-docs.celer.network/developer/contract-addresses-and-rpc-info.</p>
+<pre><code class="language-solidity">function _getChainConfig(uint256 _chainId) pure returns (address _messageBus, bool _isTestnet);
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="host"><a class="header" href="#host">Host</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/opl/Host.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/opl/Host.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 <a href="contracts/opl/Host.sol//contracts/opl/Endpoint.sol/contract.Endpoint.html">Endpoint</a></p>
 <p><strong>Title:</strong>
@@ -626,42 +626,42 @@ OPL Host</p>
 <pre><code class="language-solidity">constructor(address _enclave) Endpoint(_enclave, autoswitch("sapphire"));
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_invalidkey"><a class="header" href="#cbor_invalidkey">CBOR_InvalidKey</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>While parsing CBOR map, unexpected key</p>
 <pre><code class="language-solidity">error CBOR_InvalidKey();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_invalidmap"><a class="header" href="#cbor_invalidmap">CBOR_InvalidMap</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>While parsing CBOR map, length is invalid, or other parse error</p>
 <pre><code class="language-solidity">error CBOR_InvalidMap();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_invalidlength"><a class="header" href="#cbor_invalidlength">CBOR_InvalidLength</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>While parsing CBOR structure, data length was unexpected</p>
 <pre><code class="language-solidity">error CBOR_InvalidLength(uint256);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_invaliduintprefix"><a class="header" href="#cbor_invaliduintprefix">CBOR_InvalidUintPrefix</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>Value cannot be parsed as a uint</p>
 <pre><code class="language-solidity">error CBOR_InvalidUintPrefix(uint8);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_invaliduintsize"><a class="header" href="#cbor_invaliduintsize">CBOR_InvalidUintSize</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>CBOR spec supports, 1, 2, 4 &amp; 8 byte uints. Caused by parse error.</p>
 <pre><code class="language-solidity">error CBOR_InvalidUintSize(uint8);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_error_valueoutofrange"><a class="header" href="#cbor_error_valueoutofrange">CBOR_Error_ValueOutOfRange</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>CBOR parsed value is out of expected range</p>
 <pre><code class="language-solidity">error CBOR_Error_ValueOutOfRange(uint256 value, uint256 maxValue);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_error_bufferoverrun"><a class="header" href="#cbor_error_bufferoverrun">CBOR_Error_BufferOverrun</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>Buffer too short to parse expected value</p>
 <pre><code class="language-solidity">error CBOR_Error_BufferOverrun(uint256 len, uint256 offset, uint256 need);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cbor_error_bytestoolong"><a class="header" href="#cbor_error_bytestoolong">CBOR_Error_BytesTooLong</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>Byte array is too long</p>
 <p>Solidity has 256bit length prefixes for byte arrays. We decided for
 a reasonable cutoff point (64kb), so at most a 2-byte uint describing
@@ -669,41 +669,37 @@ the array length.</p>
 <pre><code class="language-solidity">error CBOR_Error_BytesTooLong(uint256 byteLength);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="encodebytes"><a class="header" href="#encodebytes">encodeBytes</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <pre><code class="language-solidity">function encodeBytes(bytes memory in_bytes) pure returns (bytes memory out_cbor);
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="parsekey"><a class="header" href="#parsekey">parseKey</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
-<pre><code class="language-solidity">function parseKey(bytes memory result, uint256 offset) pure returns (uint256 newOffset, bytes32 keyDigest);
+<div style="break-before: page; page-break-before: always;"></div><h1 id="parseuint128"><a class="header" href="#parseuint128">parseUint128</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
+<pre><code class="language-solidity">function parseUint128(bytes memory result, uint256 offset) pure returns (uint256 newOffset, uint128 value);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="parseuint64"><a class="header" href="#parseuint64">parseUint64</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
+<pre><code class="language-solidity">function parseUint64(bytes memory result, uint256 offset) pure returns (uint256 newOffset, uint64 value);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="encodeuint"><a class="header" href="#encodeuint">encodeUint</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <p>we don't follow bignum tagged encoding
 See: https://www.rfc-editor.org/rfc/rfc8949.html#section-3.4.3</p>
 <pre><code class="language-solidity">function encodeUint(uint256 value) pure returns (bytes memory);
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="parsekey"><a class="header" href="#parsekey">parseKey</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
+<pre><code class="language-solidity">function parseKey(bytes memory result, uint256 offset) pure returns (uint256 newOffset, bytes32 keyDigest);
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="parsemapstart"><a class="header" href="#parsemapstart">parseMapStart</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <pre><code class="language-solidity">function parseMapStart(bytes memory in_data, uint256 in_offset) pure returns (uint256 n_entries, uint256 out_offset);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="parseuint"><a class="header" href="#parseuint">parseUint</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CBOR.sol">Git Source</a></p>
 <pre><code class="language-solidity">function parseUint(bytes memory result, uint256 offset) pure returns (uint256 newOffset, uint256 value);
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="parseuint64"><a class="header" href="#parseuint64">parseUint64</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
-<pre><code class="language-solidity">function parseUint64(bytes memory result, uint256 offset) pure returns (uint256 newOffset, uint64 value);
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="parseuint128"><a class="header" href="#parseuint128">parseUint128</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CBOR.sol">Git Source</a></p>
-<pre><code class="language-solidity">function parseUint128(bytes memory result, uint256 offset) pure returns (uint256 newOffset, uint128 value);
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="_derivekey"><a class="header" href="#_derivekey">_deriveKey</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
-<pre><code class="language-solidity">function _deriveKey(bytes32 in_peerPublicKey, Sapphire.Curve25519SecretKey in_x25519_secret) view returns (bytes32);
-</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="_encryptinner"><a class="header" href="#_encryptinner">_encryptInner</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
 <pre><code class="language-solidity">function _encryptInner(
 bytes memory in_data,
 Sapphire.Curve25519SecretKey in_x25519_secret,
@@ -711,8 +707,12 @@ bytes15 nonce,
 bytes32 peerPublicKey
 ) view returns (bytes memory out_encrypted);
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="_derivekey"><a class="header" href="#_derivekey">_deriveKey</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
+<pre><code class="language-solidity">function _deriveKey(bytes32 in_peerPublicKey, Sapphire.Curve25519SecretKey in_x25519_secret) view returns (bytes32);
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="function-encryptcalldata"><a class="header" href="#function-encryptcalldata">function encryptCallData</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/CalldataEncryption.sol">Git Source</a></p>
 <h3 id="encryptcalldatabytes"><a class="header" href="#encryptcalldatabytes">encryptCallData(bytes)</a></h3>
 <pre><code class="language-solidity">function encryptCallData(bytes memory in_data) view returns (bytes memory out_encrypted);
 </code></pre>
@@ -727,17 +727,17 @@ bytes32 peerPublicKey
 ) view returns (bytes memory out_encrypted);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="stakingaddress"><a class="header" href="#stakingaddress">StakingAddress</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/ConsensusUtils.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/ConsensusUtils.sol">Git Source</a></p>
 <p>21 byte version-prefixed address (1 byte version, 20 bytes truncated digest).</p>
 <pre><code class="language-solidity">type StakingAddress is bytes21
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="stakingsecretkey"><a class="header" href="#stakingsecretkey">StakingSecretKey</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/ConsensusUtils.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/ConsensusUtils.sol">Git Source</a></p>
 <p>32 byte secret key.</p>
 <pre><code class="language-solidity">type StakingSecretKey is bytes32
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="consensusutils"><a class="header" href="#consensusutils">ConsensusUtils</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/ConsensusUtils.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/ConsensusUtils.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Consensus-level utilities</p>
 <p>Generate Oasis wallets for use with staking at the consensus level.</p>
@@ -794,7 +794,7 @@ staking.</p>
 <tr><td><code>data</code></td><td><code>bytes</code></td><td>Public point of the keypair.</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><h1 id="datetime"><a class="header" href="#datetime">DateTime</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/DateTime.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/DateTime.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Utility for converting date and time to timestamp</p>
 <p>Considers leap year, but not leap second.</p>
@@ -817,7 +817,7 @@ attribution: https://github.com/pipermerriam/ethereum-datetime/blob/master/contr
     returns (uint256 timestamp);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="eip1559signer"><a class="header" href="#eip1559signer">EIP1559Signer</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/EIP1559Signer.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/EIP1559Signer.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Ethereum EIP-1559 transaction signer &amp; encoder</p>
 <h2 id="functions-9"><a class="header" href="#functions-9">Functions</a></h2>
@@ -883,7 +883,7 @@ Ethereum EIP-1559 transaction signer &amp; encoder</p>
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="eip155signer"><a class="header" href="#eip155signer">EIP155Signer</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/EIP155Signer.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/EIP155Signer.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Ethereum EIP-155 compatible transaction signer &amp; encoder</p>
 <h2 id="functions-10"><a class="header" href="#functions-10">Functions</a></h2>
@@ -939,7 +939,7 @@ include the signature.</p>
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="eip2930signer"><a class="header" href="#eip2930signer">EIP2930Signer</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/EIP2930Signer.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/EIP2930Signer.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Ethereum EIP-2930 transaction signer &amp; encoder</p>
 <h2 id="functions-11"><a class="header" href="#functions-11">Functions</a></h2>
@@ -1004,7 +1004,7 @@ Ethereum EIP-2930 transaction signer &amp; encoder</p>
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="eiptypes"><a class="header" href="#eiptypes">EIPTypes</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/EIPTypes.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/EIPTypes.sol">Git Source</a></p>
 <h2 id="functions-12"><a class="header" href="#functions-12">Functions</a></h2>
 <h3 id="encodeaccesslist"><a class="header" href="#encodeaccesslist">encodeAccessList</a></h3>
 <p>Encode an access list for EIP-1559 and EIP-2930 transactions</p>
@@ -1023,7 +1023,7 @@ Ethereum EIP-2930 transaction signer &amp; encoder</p>
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="signaturersv"><a class="header" href="#signaturersv">SignatureRSV</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/EthereumUtils.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/EthereumUtils.sol">Git Source</a></p>
 <pre><code class="language-solidity">struct SignatureRSV {
 bytes32 r;
 bytes32 s;
@@ -1031,7 +1031,7 @@ uint256 v;
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="ethereumutils"><a class="header" href="#ethereumutils">EthereumUtils</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/EthereumUtils.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/EthereumUtils.sol">Git Source</a></p>
 <h2 id="state-variables-5"><a class="header" href="#state-variables-5">State Variables</a></h2>
 <h3 id="k256_p"><a class="header" href="#k256_p">K256_P</a></h3>
 <pre><code class="language-solidity">uint256 internal constant K256_P = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
@@ -1173,7 +1173,7 @@ corresponding public address.</p>
 <pre><code class="language-solidity">error recoverV_Error();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="rlpwriter"><a class="header" href="#rlpwriter">RLPWriter</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/RLPWriter.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/RLPWriter.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 RLPWriter</p>
 <p><strong>Author:</strong>
@@ -1347,7 +1347,7 @@ attribution: https://github.com/sammayo/solidity-rlp-encoder</p>
 <tr><td><code>&lt;none&gt;</code></td><td><code>bytes</code></td><td>The flattened byte string.</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><h1 id="sapphire"><a class="header" href="#sapphire">Sapphire</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/Sapphire.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/Sapphire.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 Sapphire</p>
 <p>This library provides a number of convenient wrappers for
@@ -1816,18 +1816,78 @@ see: @oasisprotocol/oasis-sdk :: precompile/gas.rs :: call_gas_used</p>
     Secp384r1PrehashedSha384
 }
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="sha512_256-1"><a class="header" href="#sha512_256-1">sha512_256</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/Sapphire.sol">Git Source</a></p>
-<p>Hash the input data with SHA-512/256, according to
-<a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">NIST.FIPS.180-4</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="sha512-1"><a class="header" href="#sha512-1">sha512</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/Sapphire.sol">Git Source</a></p>
+<p>Hash the input data with SHA-512, according to
+<a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">NIST.FIPS.180-4</a></p>
 <h4 id="precompile-address-7"><a class="header" href="#precompile-address-7">Precompile address</a></h4>
-<p><code>0x0100000000000000000000000000000000000102</code></p>
-<h4 id="gas-cost-7"><a class="header" href="#gas-cost-7">Gas cost</a></h4>
+<p><code>0x0100000000000000000000000000000000000101</code></p>
+<h4 id="warning-sha-512-vs-sha-512256-length-extension-attacks"><a class="header" href="#warning-sha-512-vs-sha-512256-length-extension-attacks">Warning: SHA-512 vs SHA-512/256 Length-Extension Attacks</a></h4>
+<p><a href="contracts/Sapphire.sol/function.sha512.html#sha512">SHA-512</a> is vulnerable to <a href="https://en.wikipedia.org/wiki/Length_extension_attack">length-extension
+attacks</a>, which are
+relevant if you are computing the hash of a secret message. The
+<a href="contracts/Sapphire.sol/function.sha512_256.html#sha512_256">SHA-512/256</a> variant is <strong>not</strong>
+vulnerable to length-extension attacks.</p>
+<h4 id="gas-cost-7"><a class="header" href="#gas-cost-7">Gas Cost</a></h4>
 <p>115 gas, then 13 gas per word</p>
 <h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
+<pre><code class="language-solidity">bytes memory result = sha512(abi.encodePacked("input data"));
+</code></pre>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>
+<p>standard: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf</p>
+</li>
+<li>
+<p>see: @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha512</p>
+</li>
+</ul>
+<pre><code class="language-solidity">function sha512(bytes memory input) view returns (bytes memory output);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>input</code></td><td><code>bytes</code></td><td>Bytes to hash.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>output</code></td><td><code>bytes</code></td><td>64 byte digest.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="sha384-1"><a class="header" href="#sha384-1">sha384</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/Sapphire.sol">Git Source</a></p>
+<p>Hash the input data with SHA-384.</p>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>
+<p>standard: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf</p>
+</li>
+<li>
+<p>see: @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha384</p>
+</li>
+</ul>
+<pre><code class="language-solidity">function sha384(bytes memory input) view returns (bytes memory output);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>input</code></td><td><code>bytes</code></td><td>Bytes to hash.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>output</code></td><td><code>bytes</code></td><td>48 byte digest.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="sha512_256-1"><a class="header" href="#sha512_256-1">sha512_256</a></h1>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/Sapphire.sol">Git Source</a></p>
+<p>Hash the input data with SHA-512/256, according to
+<a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">NIST.FIPS.180-4</a>.</p>
+<h4 id="precompile-address-8"><a class="header" href="#precompile-address-8">Precompile address</a></h4>
+<p><code>0x0100000000000000000000000000000000000102</code></p>
+<h4 id="gas-cost-8"><a class="header" href="#gas-cost-8">Gas cost</a></h4>
+<p>115 gas, then 13 gas per word</p>
+<h4 id="example-9"><a class="header" href="#example-9">Example</a></h4>
 <pre><code class="language-solidity">bytes32 result = sha512_256(abi.encodePacked("input data"));
 </code></pre>
-<h4 id="warning-sha-512-vs-sha-512256-length-extension-attacks"><a class="header" href="#warning-sha-512-vs-sha-512256-length-extension-attacks">Warning: SHA-512 vs SHA-512/256 Length-Extension Attacks</a></h4>
+<h4 id="warning-sha-512-vs-sha-512256-length-extension-attacks-1"><a class="header" href="#warning-sha-512-vs-sha-512256-length-extension-attacks-1">Warning: SHA-512 vs SHA-512/256 Length-Extension Attacks</a></h4>
 <p><a href="contracts/Sapphire.sol/function.sha512.html#sha512">SHA-512</a> is vulnerable to <a href="https://en.wikipedia.org/wiki/Length_extension_attack">length-extension
 attacks</a>, which are
 relevant if you are computing the hash of a secret message. The
@@ -1853,68 +1913,8 @@ vulnerable to length-extension attacks.</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>result</code></td><td><code>bytes32</code></td><td>32 byte digest.</td></tr>
 </tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="sha512-1"><a class="header" href="#sha512-1">sha512</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/Sapphire.sol">Git Source</a></p>
-<p>Hash the input data with SHA-512, according to
-<a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">NIST.FIPS.180-4</a></p>
-<h4 id="precompile-address-8"><a class="header" href="#precompile-address-8">Precompile address</a></h4>
-<p><code>0x0100000000000000000000000000000000000101</code></p>
-<h4 id="warning-sha-512-vs-sha-512256-length-extension-attacks-1"><a class="header" href="#warning-sha-512-vs-sha-512256-length-extension-attacks-1">Warning: SHA-512 vs SHA-512/256 Length-Extension Attacks</a></h4>
-<p><a href="contracts/Sapphire.sol/function.sha512.html#sha512">SHA-512</a> is vulnerable to <a href="https://en.wikipedia.org/wiki/Length_extension_attack">length-extension
-attacks</a>, which are
-relevant if you are computing the hash of a secret message. The
-<a href="contracts/Sapphire.sol/function.sha512_256.html#sha512_256">SHA-512/256</a> variant is <strong>not</strong>
-vulnerable to length-extension attacks.</p>
-<h4 id="gas-cost-8"><a class="header" href="#gas-cost-8">Gas Cost</a></h4>
-<p>115 gas, then 13 gas per word</p>
-<h4 id="example-9"><a class="header" href="#example-9">Example</a></h4>
-<pre><code class="language-solidity">bytes memory result = sha512(abi.encodePacked("input data"));
-</code></pre>
-<p><strong>Notes:</strong></p>
-<ul>
-<li>
-<p>standard: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf</p>
-</li>
-<li>
-<p>see: @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha512</p>
-</li>
-</ul>
-<pre><code class="language-solidity">function sha512(bytes memory input) view returns (bytes memory output);
-</code></pre>
-<p><strong>Parameters</strong></p>
-<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>input</code></td><td><code>bytes</code></td><td>Bytes to hash.</td></tr>
-</tbody></table>
-</div>
-<p><strong>Returns</strong></p>
-<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>output</code></td><td><code>bytes</code></td><td>64 byte digest.</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="sha384-1"><a class="header" href="#sha384-1">sha384</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/Sapphire.sol">Git Source</a></p>
-<p>Hash the input data with SHA-384.</p>
-<p><strong>Notes:</strong></p>
-<ul>
-<li>
-<p>standard: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf</p>
-</li>
-<li>
-<p>see: @oasisprotocol/oasis-sdk :: precompile/sha2.rs :: call_sha384</p>
-</li>
-</ul>
-<pre><code class="language-solidity">function sha384(bytes memory input) view returns (bytes memory output);
-</code></pre>
-<p><strong>Parameters</strong></p>
-<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>input</code></td><td><code>bytes</code></td><td>Bytes to hash.</td></tr>
-</tbody></table>
-</div>
-<p><strong>Returns</strong></p>
-<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>output</code></td><td><code>bytes</code></td><td>48 byte digest.</td></tr>
-</tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><h1 id="parsedsiwemessage"><a class="header" href="#parsedsiwemessage">ParsedSiweMessage</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/SiweParser.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/SiweParser.sol">Git Source</a></p>
 <pre><code class="language-solidity">struct ParsedSiweMessage {
 bytes schemeDomain;
 address addr;
@@ -1931,7 +1931,7 @@ bytes[] resources;
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="siweparser"><a class="header" href="#siweparser">SiweParser</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/SiweParser.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/SiweParser.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 On-chain parser for EIP-4361 SIWE message</p>
 <p>Call parseSiweMsg() and provide the EIP-4361 SIWE message. The parser
@@ -1999,7 +1999,7 @@ extract the authentication information in your on-chain contract.</p>
 <pre><code class="language-solidity">error SiweParser_InvalidNonce();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="subcallreceiptkind"><a class="header" href="#subcallreceiptkind">SubcallReceiptKind</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/Subcall.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/Subcall.sol">Git Source</a></p>
 <pre><code class="language-solidity">enum SubcallReceiptKind {
 Invalid,
 Delegate,
@@ -2008,7 +2008,7 @@ UndelegateDone
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="subcall"><a class="header" href="#subcall">Subcall</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/Subcall.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/Subcall.sol">Git Source</a></p>
 <p><strong>Title:</strong>
 SDK Subcall wrappers</p>
 <p>Interact with Oasis Runtime SDK modules from Sapphire.</p>
@@ -2329,7 +2329,7 @@ observations[Subcall.getRoflAppId()] = 25540;
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="wrappedrose"><a class="header" href="#wrappedrose">WrappedROSE</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/WrappedROSE.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/WrappedROSE.sol">Git Source</a></p>
 <p><strong>Inherits:</strong>
 ERC20, ERC20Burnable</p>
 <h2 id="functions-18"><a class="header" href="#functions-18">Functions</a></h2>
@@ -2356,12 +2356,12 @@ ERC20, ERC20Burnable</p>
 <pre><code class="language-solidity">event Withdrawal(address indexed src, uint256 wad);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="hmac_sha512_256_memcpy"><a class="header" href="#hmac_sha512_256_memcpy">hmac_sha512_256_memcpy</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/hmac_sha512_256.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/hmac_sha512_256.sol">Git Source</a></p>
 <p>Copying key buffer failed (identity precompile error?)</p>
 <pre><code class="language-solidity">error hmac_sha512_256_memcpy();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="hmac_sha512_256"><a class="header" href="#hmac_sha512_256">hmac_sha512_256</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/hmac_sha512_256.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/hmac_sha512_256.sol">Git Source</a></p>
 <p>Implements HMAC using SHA512-256.</p>
 <p>https://en.wikipedia.org/wiki/HMAC</p>
 <pre><code class="language-solidity">function hmac_sha512_256(bytes memory key, bytes memory message) view returns (bytes32);
@@ -2372,7 +2372,7 @@ ERC20, ERC20Burnable</p>
 <tr><td><code>message</code></td><td><code>bytes</code></td><td>the message to be authenticated. #### Example <code>solidity bytes memory key = "arbitrary length key"; bytes memory message = "arbitrary length message"; bytes32 hmac = hmac_sha512_256(key, message) </code></td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><h1 id="constants"><a class="header" href="#constants">Constants</a></h1>
-<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/83ff6e86790fc90f60b68ad171fc5fc4c23e9672/contracts/contracts/hmac_sha512_256.sol">Git Source</a></p>
+<p><a href="https://github.com/oasisprotocol/sapphire-paratime/blob/39855d31f760381c8ced0cdb91a7ad349f9f879f/contracts/contracts/hmac_sha512_256.sol">Git Source</a></p>
 <h3 id="sha512_256_block_size"><a class="header" href="#sha512_256_block_size">SHA512_256_BLOCK_SIZE</a></h3>
 <pre><code class="language-solidity">uint256 constant SHA512_256_BLOCK_SIZE = 128
 </code></pre>
