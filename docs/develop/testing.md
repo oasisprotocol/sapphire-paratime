@@ -47,7 +47,12 @@ const TEST_HDWALLET = {
 const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : TEST_HDWALLET;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: {
+    version: "0.8.19",
+    settings: {
+      evmVersion: "paris",
+    },
+  },
   // highlight-start
   networks: {
     "sapphire-localnet": {

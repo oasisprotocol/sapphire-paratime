@@ -1,3 +1,6 @@
+[profile.default]
+evm_version = "paris"
+
 [doc]
 out = "sol/sapphire-contracts"
 title = "Sapphire Contracts Lib"
