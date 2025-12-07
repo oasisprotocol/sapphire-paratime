@@ -66,6 +66,7 @@
 		"@types/node": "^18.19.31",
 		"ts-node": "^10.9.2",
 		"typedoc": "^0.25.13",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+        "@walletconnect/ethereum-provider": "^2.23.0"
 	}
 }
