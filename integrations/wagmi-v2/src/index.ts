@@ -10,7 +10,9 @@ import {
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
 import { type InjectedParameters, injected } from "@wagmi/core";
+import type { EthereumProvider as WCEthereumProvider } from "@walletconnect/ethereum-provider";
 import type { EIP1193Provider } from "viem";
+type WalletConnectProvider = typeof WCEthereumProvider.prototype;
 
 export * from "@oasisprotocol/sapphire-viem-v2";
 
@@ -146,12 +148,25 @@ export function wrapConnectorWithSapphire<
 			baseConnector.getProvider = async () => {
 				const provider = await originalGetProvider();
 
-				const chainId = await (provider as EIP1193Provider)?.request({
-					method: "eth_chainId",
-				});
-				const currentChainId = Number.parseInt(chainId, 16);
+				if (!provider) {
+					return provider;
+				}
 
-				if (!SAPPHIRE_CHAIN_IDS.includes(currentChainId)) {
+				let chainId = null;
+
+				if ((provider as WalletConnectProvider).isWalletConnect) {
+					if (!(provider as WalletConnectProvider).connected) {
+						return provider;
+					}
+					chainId = (provider as WalletConnectProvider).chainId;
+				} else {
+					const chainIdResponse = await (provider as EIP1193Provider)?.request({
+						method: "eth_chainId",
+					});
+					chainId = Number.parseInt(chainIdResponse, 16);
+				}
+
+				if (!SAPPHIRE_CHAIN_IDS.includes(chainId)) {
 					return provider;
 				}
 
