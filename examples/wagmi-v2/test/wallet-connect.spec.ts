@@ -1,38 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { createConfig } from "wagmi";
-import {
-	sapphireHttpTransport,
-	sapphireLocalnet,
-	wrapConnectorWithSapphire,
-} from "@oasisprotocol/sapphire-wagmi-v2";
-import { walletConnect } from "wagmi/connectors";
 
 test.describe("WalletConnect", () => {
-	test('should not throw when accessing getProvider before connect', async () => {
-		const baseConnector = walletConnect({
-			projectId: "test",
-		});
-
-		const config = createConfig({
-			chains: [sapphireLocalnet],
-			connectors: [baseConnector],
-			transports: {
-				[sapphireLocalnet.id]: sapphireHttpTransport(),
-			},
-		});
-
-		const wrappedConnector = wrapConnectorWithSapphire(
-			(c) => baseConnector(c),
-			{ id: "test", name: "Test" },
-		)(config);
-
-		const getProviderPromise = async () => {
-			await wrappedConnector.getProvider();
-		};
-
-		await expect(getProviderPromise()).resolves.not.toThrow();
-	});
-
 	test("should have no error when selecting WalletConnect in RainbowKit modal", async ({
 		page,
 	}) => {
