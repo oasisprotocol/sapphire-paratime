@@ -6,6 +6,13 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 3.0.1 (2025-12)
+
+### Fixed
+
+- Fix crash when requesting chain ID from the WalletConnect provider that is
+  not connected yet.
+
 ## 3.0.0 (2025-12)
 
 ### Changed
