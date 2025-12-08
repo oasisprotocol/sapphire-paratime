@@ -16,7 +16,12 @@ const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {
 
 // #region config-networks
 const config: HardhatUserConfig = {
-  solidity: "0.8.28",
+  solidity: {
+    version: "0.8.24",
+    settings: {
+      evmVersion: "paris",
+    },
+  },
   networks: {
     sapphire: {
       url: "https://sapphire.oasis.io",

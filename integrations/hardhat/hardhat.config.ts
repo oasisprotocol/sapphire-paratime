@@ -29,7 +29,12 @@ const config: HardhatUserConfig = {
       url: 'http://localhost:3001',
     },
   },
-  solidity: '0.8.24',
+  solidity: {
+    version: '0.8.24',
+    settings: {
+      evmVersion: 'paris',
+    },
+  },
   mocha: {
     timeout: 120_000_000, // Sapphire Mainnet/Testnet require more time.
   },
