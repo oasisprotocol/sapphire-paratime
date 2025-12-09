@@ -1,5 +1,5 @@
 import { BrowserContext, expect, test as baseTest } from "@playwright/test";
-import dappwright, { Dappwright, MetaMaskWallet } from "@tenkeylabs/dappwright";
+import dappwright, { Dappwright } from "@tenkeylabs/dappwright";
 
 baseTest.describe.configure({ mode: "serial" });
 
@@ -11,7 +11,7 @@ export const test = baseTest.extend<{
 		// Launch context with extension
 		const [wallet, _, context] = await dappwright.bootstrap("", {
 			wallet: "metamask",
-			version: MetaMaskWallet.recommendedVersion,
+			version: "12.23.1",
 			seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
 			headless: false,
 		});
