@@ -11,7 +11,7 @@ export const test = baseTest.extend<{
 		// Launch context with extension
 		const [wallet, _, context] = await dappwright.bootstrap("", {
 			wallet: "metamask",
-			version: "12.23.1",
+			version: "12.23.0",
 			seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
 			headless: false,
 		});
