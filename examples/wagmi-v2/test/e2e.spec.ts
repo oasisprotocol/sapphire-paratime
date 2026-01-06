@@ -1,5 +1,5 @@
 import { BrowserContext, expect, test as baseTest } from "@playwright/test";
-import dappwright, { Dappwright } from "@tenkeylabs/dappwright";
+import dappwright, { Dappwright, MetaMaskWallet } from "@tenkeylabs/dappwright";
 
 baseTest.describe.configure({ mode: "serial" });
 
@@ -11,9 +11,9 @@ export const test = baseTest.extend<{
 		// Launch context with extension
 		const [wallet, _, context] = await dappwright.bootstrap("", {
 			wallet: "metamask",
-			version: "12.23.0",
+			version: MetaMaskWallet.recommendedVersion,
 			seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
-			headless: false,
+			headless: !!process.env.CI,
 		});
 
 		// Add Sapphire Localnet as a custom network

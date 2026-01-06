@@ -19,7 +19,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.FRONTEND_URL || "http://localhost:3000/",
     trace: "on-first-retry",
-    headless: false,
+    headless: !!process.env.CI,
     screenshot: {
       mode: "only-on-failure",
       fullPage: true,
