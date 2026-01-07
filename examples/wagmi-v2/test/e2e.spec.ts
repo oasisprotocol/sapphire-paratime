@@ -113,14 +113,25 @@ export const test = base.extend<
 			const appUrl = page.url();
 
 			await page.getByTestId(rdns).click();
-			await wallet.approve();
+
+			// If the wallet is already connected from a previous test, approval might be optional.
+			try {
+				await expect(
+					page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
+				).toBeVisible({ timeout: 3000 });
+			} catch {
+				// If not visible, we assume we need to approve the connection.
+				await wallet.approve();
+			}
 
 			await expect(
 				page.getByText("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
 			).toBeVisible();
 
 			const networkSelect = page.locator("#network-select");
-			await networkSelect.selectOption(network);
+			if ((await networkSelect.inputValue()) !== network) {
+				await networkSelect.selectOption(network);
+			}
 
 			// Let network switch settle
 			await page.waitForTimeout(1000);
