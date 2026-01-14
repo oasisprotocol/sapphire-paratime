@@ -76,6 +76,20 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
+          name: playwright-test-results-wagmi-v2
           path: examples/wagmi-v2/test-results
+          retention-days: 5
+      # wagmi-v3 example tests
+      - name: Install Playwright dependencies (wagmi-v3)
+        run: pnpm test:setup
+        working-directory: examples/wagmi-v3
+      - name: Run playwright tests wagmi-v3 (with xvfb-run to support headed extension test)
+        working-directory: examples/wagmi-v3
+        run: xvfb-run pnpm test
+      - name: Upload playwright test-results (wagmi-v3)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-wagmi-v3
+          path: examples/wagmi-v3/test-results
           retention-days: 5
