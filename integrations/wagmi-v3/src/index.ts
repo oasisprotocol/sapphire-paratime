@@ -9,81 +9,14 @@ import {
 	isWrappedEthereumProvider,
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
-import { injected } from "wagmi/connectors";
 import type { EthereumProvider as WCEthereumProvider } from "@walletconnect/ethereum-provider";
 import type { EIP1193Provider } from "viem";
-import { defineChain } from "viem";
+import { type InjectedParameters, injected } from "wagmi/connectors";
 type WalletConnectProvider = typeof WCEthereumProvider.prototype;
 
+// Re-export chains and utilities from sapphire-viem-v2
+// Includes: sapphire, sapphireTestnet, sapphireLocalnet, sapphireHttpTransport, etc.
 export * from "@oasisprotocol/sapphire-viem-v2";
-
-/**
- * sapphire-mainnet chain
- */
-export const sapphire = defineChain({
-	id: NETWORKS.mainnet.chainId,
-	name: "Oasis Sapphire",
-	network: "sapphire",
-	nativeCurrency: {
-		name: "Rose",
-		symbol: "ROSE",
-		decimals: 18,
-	},
-	rpcUrls: {
-		default: {
-			http: [NETWORKS.mainnet.defaultGateway],
-		},
-	},
-	blockExplorers: {
-		default: {
-			name: "Oasis Explorer",
-			url: "https://explorer.oasis.io/mainnet/sapphire",
-		},
-	},
-});
-
-/**
- * sapphire-testnet chain
- */
-export const sapphireTestnet = defineChain({
-	id: NETWORKS.testnet.chainId,
-	name: "Oasis Sapphire Testnet",
-	network: "sapphire-testnet",
-	nativeCurrency: {
-		name: "Test Rose",
-		symbol: "TROSE",
-		decimals: 18,
-	},
-	rpcUrls: {
-		default: {
-			http: [NETWORKS.testnet.defaultGateway],
-		},
-	},
-	testnet: true,
-	blockExplorers: {
-		default: {
-			name: "Oasis Explorer",
-			url: "https://explorer.oasis.io/testnet/sapphire",
-		},
-	},
-});
-
-/**
- * sapphire-localnet chain, a local chain for local people
- */
-export const sapphireLocalnet = defineChain({
-	id: NETWORKS.localnet.chainId,
-	name: "Oasis Sapphire Localnet",
-	network: "sapphire-localnet",
-	nativeCurrency: { name: "Sapphire Local Rose", symbol: "TEST", decimals: 18 },
-	rpcUrls: {
-		default: {
-			http: [NETWORKS.localnet.defaultGateway],
-			//webSocket: ["ws://localhost:8546/ws"],
-		},
-	},
-	testnet: true,
-});
 
 type Window = {
 	ethereum?: EIP1193Provider;
@@ -134,7 +67,7 @@ export function injectedWithSapphire(
 				}
 				return undefined;
 			},
-		})) as any,
+		})) as unknown as InjectedParameters["target"],
 	});
 }
 

@@ -18,8 +18,12 @@ import type {
 
 import { http, defineChain, serializeTransaction } from "viem";
 
+// Re-export mainnet and testnet chains from viem/chains
+export { sapphire, sapphireTestnet } from "viem/chains";
+
 /**
  * sapphire-localnet chain, a local chain for local people
+ * Note: This is not included in viem/chains as it's for local development only
  */
 export const sapphireLocalnet = defineChain({
 	id: SapphireNETWORKS.localnet.chainId,
