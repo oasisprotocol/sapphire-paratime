@@ -204,7 +204,7 @@ const receipt = await ethers.provider.getTransactionReceipt(plainResp.hash);
 if (!receipt || receipt.status != 1) throw new Error('tx failed');
 ```
 
-:::info Example: On-Chain Signer
+:::example On-Chain Signer
 
 You can download a complete on-chain signer example based on the above snippets
 from the [Sapphire ParaTime examples] repository.
@@ -260,7 +260,7 @@ of the transactions is not deterministic and nonces could mismatch. To overcome
 this, relayer can randomly pick a signer from the **pool of signers**. When the
 transaction is relayed, don't forget to reimburse the signer of the transaction!
 
-:::info Example: Voting dApp
+:::example Voting dApp
 
 All the above points are considered in the [Demo Voting dApp][demo-voting].
 You can explore the code and also try out a deployed gasless version of the

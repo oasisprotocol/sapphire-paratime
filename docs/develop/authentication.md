@@ -246,7 +246,7 @@ with appropriate authentication mechanisms (e.g. `onlyOwner` modifier). For
 traceability, we also suggest to **emit an event** when the domain is
 changed as transactions may be encrypted.
 
-:::info Example: Starter project
+:::example Starter project
 
 To see a running example of the TypeScript SIWE code including the Hardhat
 tests, Node.js and the browser, check out the official Oasis [demo-starter]
@@ -353,7 +353,7 @@ func GetC10lMessage() (string, error) {
 }
 ```
 
-    :::info Example: Oasis starter in Go
+    :::example Oasis starter in Go
 
     To see a running example of the Go code including the end-to-end encryption
     and signed queries check out the official [Oasis starter project for Go].
@@ -386,7 +386,7 @@ def get_c10l_message(address: str, network_name: Optional[str] = "sapphire-local
     return message_box.functions.message().call()
 ```
 
-    :::info Example: Oasis starter in Python
+    :::example Oasis starter in Python
 
     To see a running example of the Python code including the end-to-end
     encryption and signed queries, check out the official [Oasis starter project

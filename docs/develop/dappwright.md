@@ -256,14 +256,14 @@ Finally, run the test and upload results on failure:
 [Localnet]: https://github.com/oasisprotocol/docs/blob/main/docs/build/tools/localnet.mdx
 [passing]: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/passing-information-between-jobs
 
-:::info Example: demo-starter
+:::example demo-starter
 
 If you are interested in seeing how dAppwright is integrated into an example
 application, check out the [demo-starter].
 
 :::
 
-:::info Example: wagmi
+:::example Wagmi
 
 If you are interested in seeing how dAppwright is integrated into a Sapphire
 dApp with Wagmi, check out the [Wagmi example].
