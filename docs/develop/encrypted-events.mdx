@@ -330,6 +330,27 @@ patterns above, plus tests and a step-by-step tutorial.
 
 :::
 
+## Related Standards
+
+Sapphire's encrypted events build on established cryptographic patterns. If
+you're researching on-chain encryption and messaging standards, these Ethereum
+proposals cover related concepts:
+
+- **[ERC-5630]**: Encryption and decryption using Ethereum wallet keys
+  (`secp256k1`). Defines `eth_getEncryptionPublicKey` and `eth_performECDH` RPC
+  methods for ECDH-based encryption. Sapphire's
+  [Pattern 2](#pattern-2-deriving-a-symmetric-key-ecdh) uses a similar ECDH
+  approach but with Curve25519 and on-chain key derivation via the Sapphire
+  precompile.
+
+- **[ERC-7627]**: Secure Messaging Protocol. Standardizes public key
+  registration and encrypted message transmission on-chain. Supports multiple
+  key types (ECDSA, ED25519, X25519). Sapphire's encrypted events offer a
+  complementary approach with TEE-backed confidential state and Deoxys-II AEAD
+  encryption.
+
 [`Sapphire.encrypt`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/Sapphire.sol/library.Sapphire.html#encrypt-1
 [`Sapphire.randomBytes`]: https://api.docs.oasis.io/sol/sapphire-contracts/contracts/Sapphire.sol/library.Sapphire.html#randombytes
 [encrypted-events-example]: https://github.com/oasisprotocol/sapphire-paratime/tree/main/examples/encrypted-events
+[ERC-5630]: https://eips.ethereum.org/EIPS/eip-5630
+[ERC-7627]: https://eips.ethereum.org/EIPS/eip-7627
