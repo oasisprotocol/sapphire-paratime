@@ -1,5 +1,5 @@
 {
-	"name": "sapphire-examples-wagmi-v2",
+	"name": "sapphire-examples-wagmi-v3",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -16,8 +16,7 @@
 	},
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
-		"@oasisprotocol/sapphire-wagmi-v2": "workspace:^",
-		"@rainbow-me/rainbowkit": "^2.2.8",
+		"@oasisprotocol/sapphire-wagmi-v3": "workspace:^",
 		"@tanstack/query-sync-storage-persister": "5.0.5",
 		"@tanstack/react-query": "5.0.5",
 		"@tanstack/react-query-persist-client": "5.0.5",
@@ -26,7 +25,7 @@
 		"react-dom": "^18.2.0",
 		"react-router-dom": "^7.5.3",
 		"viem": "^2.21.0",
-		"wagmi": "2.x"
+		"wagmi": "3.x"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
