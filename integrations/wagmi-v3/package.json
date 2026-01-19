@@ -29,7 +29,6 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"clean": "rm -rf dist",
-		"test": "vitest --run",
 		"build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
 		"build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./dist/_cjs/package.json && node scripts/rename-cjs.js",
 		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
