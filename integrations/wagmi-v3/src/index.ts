@@ -10,7 +10,7 @@ import {
 	wrapEthereumProvider,
 } from "@oasisprotocol/sapphire-paratime";
 import type { EthereumProvider as WCEthereumProvider } from "@walletconnect/ethereum-provider";
-import type { EIP1193Provider } from "viem";
+import { type EIP1193Provider, isHex } from "viem";
 import { type InjectedParameters, injected } from "wagmi/connectors";
 type WalletConnectProvider = typeof WCEthereumProvider.prototype;
 
@@ -152,7 +152,7 @@ export function wrapConnectorWithSapphire<
 					return provider;
 				}
 
-				let chainId = null;
+				let chainId: number | null = null;
 
 				if ((provider as WalletConnectProvider).isWalletConnect) {
 					if (!(provider as WalletConnectProvider).connected) {
@@ -160,13 +160,23 @@ export function wrapConnectorWithSapphire<
 					}
 					chainId = (provider as WalletConnectProvider).chainId;
 				} else {
-					const chainIdResponse = await (provider as EIP1193Provider)?.request({
-						method: "eth_chainId",
-					});
-					chainId = Number.parseInt(chainIdResponse as string, 16);
+					try {
+						const chainIdResponse = await (
+							provider as EIP1193Provider
+						)?.request({
+							method: "eth_chainId",
+						});
+						if (isHex(chainIdResponse)) {
+							chainId = Number.parseInt(chainIdResponse, 16);
+						} else if (typeof chainIdResponse === "number") {
+							chainId = chainIdResponse;
+						}
+					} catch {
+						// Ignore errors requesting chainId
+					}
 				}
 
-				if (!SAPPHIRE_CHAIN_IDS.includes(chainId)) {
+				if (chainId === null || !SAPPHIRE_CHAIN_IDS.includes(chainId)) {
 					return provider;
 				}
 
