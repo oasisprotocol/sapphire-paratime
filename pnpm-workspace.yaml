@@ -2,6 +2,7 @@ packages:
   - clients/js
   - integrations/viem-v2
   - integrations/wagmi-v2
+  - integrations/wagmi-v3
   - integrations/ethers-v6
   - integrations/hardhat
   - contracts/
@@ -11,5 +12,6 @@ packages:
   - examples/hardhat-viem
   - examples/onchain-signer
   - examples/wagmi-v2
+  - examples/wagmi-v3
   - examples/wagmi-v1
   - examples/encrypted-events

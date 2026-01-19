@@ -1,15 +1,15 @@
 {
 	"type": "module",
-	"name": "@oasisprotocol/sapphire-viem-v2",
+	"name": "@oasisprotocol/sapphire-wagmi-v3",
 	"license": "Apache-2.0",
-	"version": "2.1.0",
-	"description": "Viem support for the Oasis Sapphire ParaTime.",
-	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/viem-v2",
+	"version": "1.0.0",
+	"description": "Wagmi & Viem support for the Oasis Sapphire ParaTime.",
+	"homepage": "https://github.com/oasisprotocol/sapphire-paratime/tree/main/integrations/wagmi-v3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/oasisprotocol/sapphire-paratime.git"
 	},
-	"keywords": ["sapphire", "paratime", "oasis", "web3", "viem"],
+	"keywords": ["sapphire", "paratime", "oasis", "web3", "viem", "wagmi"],
 	"files": ["dist", "!dist/*.tsbuildinfo", "src"],
 	"sideEffects": false,
 	"main": "./dist/_cjs/index.js",
@@ -29,8 +29,7 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"clean": "rm -rf dist",
-		"test": "vitest --run && timeout -k 5s 2s pnpm ts-node ./scripts/test.js",
-		"build": "npm run build:cjs && npm run build:esm && npm run build:types",
+		"build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
 		"build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./dist/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./dist/_cjs/package.json && node scripts/rename-cjs.js",
 		"build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./dist/_esm && printf '{\"type\": \"module\",\"sideEffects\":false}' > ./dist/_esm/package.json",
 		"build:types": "tsc --project ./tsconfig.build.json --module esnext --declarationDir ./dist/_types --emitDeclarationOnly --declaration --declarationMap",
@@ -38,32 +37,38 @@
 	},
 	"dependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
+		"@wagmi/connectors": "3.x",
 		"viem": "^2.21.0"
 	},
 	"peerDependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
-		"@wagmi/core": "2.x",
-		"typescript": ">=5.0.4",
-		"viem": "^2.21.0"
+		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
+		"@wagmi/core": "3.x",
+		"typescript": ">=5.7.3",
+		"viem": "^2.21.0",
+		"wagmi": "3.x"
 	},
 	"peerDependenciesMeta": {
 		"typescript": {
 			"optional": true
 		},
+		"@wagmi/core": {
+			"optional": true
+		},
 		"@oasisprotocol/sapphire-paratime": {
 			"optional": true
 		},
-		"@wagmi/core": {
+		"@oasisprotocol/sapphire-viem-v2": {
 			"optional": true
 		}
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
 		"@types/node": "^18.19.31",
-		"rimraf": "^6.0.1",
+		"@walletconnect/ethereum-provider": "^2.23.0",
 		"ts-node": "^10.9.2",
 		"typedoc": "^0.25.13",
-		"typescript": "^5.4.5",
-		"vitest": "^1.6.0"
+		"typescript": "^5.4.5"
 	}
 }

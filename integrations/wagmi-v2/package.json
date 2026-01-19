@@ -37,14 +37,14 @@
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
 		"@wagmi/core": "2.x",
-		"viem": "2.x"
+		"viem": "^2.21.0"
 	},
 	"peerDependencies": {
 		"@oasisprotocol/sapphire-paratime": "workspace:^",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
 		"@wagmi/core": "2.x",
 		"typescript": ">=5.0.4",
-		"viem": "2.x",
+		"viem": "^2.21.0",
 		"wagmi": "2.x"
 	},
 	"peerDependenciesMeta": {

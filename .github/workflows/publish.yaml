@@ -11,6 +11,7 @@ on:
       - integrations/hardhat/v[0-9]+.[0-9]+.[0-9]+*
       - integrations/viem-v2/v[0-9]+.[0-9]+.[0-9]+*
       - integrations/wagmi-v2/v[0-9]+.[0-9]+.[0-9]+*
+      - integrations/wagmi-v3/v[0-9]+.[0-9]+.[0-9]+*
 
 # See: https://docs.npmjs.com/generating-provenance-statements
 # See: https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds
@@ -21,7 +22,7 @@ permissions:
 jobs:
   publish-npmjs:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref_name, 'clients/js/v') || startsWith(github.ref_name, 'contracts/v') || startsWith(github.ref_name, 'integrations/ethers-v6/v') || startsWith(github.ref_name, 'integrations/hardhat/v') || startsWith(github.ref_name, 'integrations/viem-v2/v') || startsWith(github.ref_name, 'integrations/wagmi-v2/v')
+    if: startsWith(github.ref_name, 'clients/js/v') || startsWith(github.ref_name, 'contracts/v') || startsWith(github.ref_name, 'integrations/ethers-v6/v') || startsWith(github.ref_name, 'integrations/hardhat/v') || startsWith(github.ref_name, 'integrations/viem-v2/v') || startsWith(github.ref_name, 'integrations/wagmi-v2/v') || startsWith(github.ref_name, 'integrations/wagmi-v3/v')
     steps:
       - uses: actions/checkout@v4
       - name: Setup pnpm
@@ -52,6 +53,9 @@ jobs:
       - name: Build Wagmi integration
         working-directory: integrations/wagmi-v2
         run: pnpm build
+      - name: Build Wagmi v3 integration
+        working-directory: integrations/wagmi-v3
+        run: pnpm build
       - name: Extract package from tag
         id: extract-tag
         env:
@@ -60,7 +64,7 @@ jobs:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           REF_NAME: ${{ github.ref_name }}
         run: |
-          echo "NPM_PACKAGE=$(echo $REF_NAME | grep -oE '(clients/js|contracts|integrations/(ethers-v6|hardhat|wagmi-v2|viem-v2))')" >> $GITHUB_OUTPUT
+          echo "NPM_PACKAGE=$(echo $REF_NAME | grep -oE '(clients/js|contracts|integrations/(ethers-v6|hardhat|wagmi-v2|wagmi-v3|viem-v2))')" >> $GITHUB_OUTPUT
           echo "NPM_TAG=$(echo $REF_NAME | grep -oP '(?<=\-)(rc|next|alpha|beta)' || echo 'latest')" >> $GITHUB_OUTPUT
       - name: Set publishing config
         run: pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
