@@ -284,12 +284,12 @@ export function makeTaggedProxyObject<T extends object>(
   return new Proxy(upstream, {
     has(target, p) {
       if (p === propname) return true;
-      return Reflect.has(target, p);
+      return p in target;
     },
     get(upstream, prop) {
       if (prop === propname) return options;
-      if (hooks && prop in hooks) return Reflect.get(hooks, prop);
-      const value = Reflect.get(upstream, prop);
+      if (hooks && prop in hooks) return (hooks as any)[prop];
+      const value = (upstream as any)[prop];
 
       // Brave wallet web3provider properties are read only and throw typeerror
       // https://github.com/brave/brave-core/blob/74bf470a0291ea3719f1a75af066ee10b7057dbd/components/brave_wallet/resources/ethereum_provider.js#L13-L27
