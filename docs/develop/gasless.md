@@ -264,14 +264,14 @@ transaction is relayed, don't forget to reimburse the signer of the transaction!
 
 All the above points are considered in the [Demo Voting dApp][demo-voting].
 You can explore the code and also try out a deployed gasless version of the
-voting dApp on the [Oasis Playground site][demo-voting-playground]. The access
+voting dApp on the [Oasis Demos site][demos-demo-voting]. The access
 control list is configured so that anyone can vote on any poll and only poll
 creators can close the poll.
 
 :::
 
 [demo-voting]: https://github.com/oasisprotocol/demo-voting
-[demo-voting-playground]: https://playground.oasis.io/demo-voting
+[demos-demo-voting]: https://demos.oasis.io/demo-voting
 [EIP-155]: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
 
 ## Gas Station Network
