@@ -35,7 +35,7 @@ jobs:
           run_install: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 18
           cache: 'pnpm'
@@ -99,7 +99,7 @@ jobs:
           run_install: false
       
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "18"
           cache: 'pnpm'
