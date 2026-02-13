@@ -94,7 +94,7 @@ export function sapphireHttpTransport<T extends Transport>(
 				http(url, httpConfig)(params),
 				sapphireConfig,
 			);
-			Reflect.set(x, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, true);
+			x[SAPPHIRE_WRAPPED_VIEM_TRANSPORT] = true;
 			cachedProviders[url] = x;
 		}
 		return cachedProviders[url];
@@ -130,7 +130,7 @@ export async function createSapphireSerializer<
 	// Don't double-wrap serializer
 	if (
 		originalSerializer &&
-		Reflect.has(originalSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER)
+		SAPPHIRE_WRAPPED_VIEM_SERIALIZER in originalSerializer
 	) {
 		return originalSerializer;
 	}
@@ -165,7 +165,7 @@ export async function createSapphireSerializer<
 		return serializeTransaction(tx, sig);
 	}) as S;
 
-	Reflect.set(wrappedSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER, true);
+	wrappedSerializer[SAPPHIRE_WRAPPED_VIEM_SERIALIZER] = true;
 
 	return wrappedSerializer;
 }
@@ -203,7 +203,7 @@ export async function wrapWalletClient<T extends WalletClient>(
 	// With one that auto-encrypts transactions before they're signed
 	if (
 		!originalSerializer ||
-		!Reflect.get(originalSerializer, SAPPHIRE_WRAPPED_VIEM_SERIALIZER)
+		!originalSerializer[SAPPHIRE_WRAPPED_VIEM_SERIALIZER]
 	) {
 		if (!client.chain.serializers) {
 			client.chain.serializers = {};
