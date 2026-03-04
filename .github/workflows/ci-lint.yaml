@@ -37,7 +37,7 @@ jobs:
         run: rustup show
 
       - name: Install protoc
-        run: sudo apt install -y protobuf-compiler
+        run: sudo apt update && sudo apt install -y protobuf-compiler
 
       - name: Clippy check
         run: cargo clippy --all-features --locked -- -D warnings -D clippy::dbg_macro
