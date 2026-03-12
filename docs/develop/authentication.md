@@ -140,11 +140,14 @@ is done only once per session—during login. A successful login generates a tok
 that is used for the remainder of the session.
 
 In contrast to transparent EVM chains, **Sapphire simplifies dApp design,
-improves trust, and increases the usability of SIWE messages through extending
-message parsing and verification to on-chain computation**. This feature (unique
+improves trust, and increases the usability of SIWE messages by moving
+message parsing and verification on-chain**. This feature (unique
 to Sapphire) removes the need to develop and maintain separate dApp backend
-services just for SIWE authentication. Let's take a look at an example
-authentication flow:
+services just for SIWE authentication. In addition, on-chain authentication
+code can be audited, the execution provably happens inside a TEE and the
+end-to-end encrypted channel between the client and Sapphire makes sure that
+even the node operator cannot obtain the authentication token. Let's take a
+look at an example authentication flow:
 
 ![SIWE authentication flow on Sapphire](../diagrams/siwe-sapphire-flow.mmd.svg)
 
@@ -196,8 +199,9 @@ the session token for making authenticated calls is valid. If not, the browser
 requests a wallet to sign a log-in message and fetch a fresh session token.
 
 ```typescript
-import {SiweMessage} from 'siwe';
-import { ethers } from 'hardhat'
+import { SiweMessage } from 'siwe';
+import { ethers } from 'hardhat';
+import "@oasisprotocol/sapphire-hardhat"; // Enables end-to-end encryption for calling messageBox.login().
 
 let token = '';
 
