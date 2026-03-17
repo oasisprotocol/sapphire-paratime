@@ -309,6 +309,7 @@ describe('Subcall', () => {
     await dockerSkipEpochs({ targetEpoch: result.epoch });
 
     // Retrieve UndelegateDone receipt
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // TODO: https://github.com/oasisprotocol/sapphire-paratime/issues/684
     tx = await contract.testTakeReceipt(3, result.receipt);
     receipt = await tx.wait();
     resultBytes = (receipt?.logs![0] as EventLog).args!.data;
