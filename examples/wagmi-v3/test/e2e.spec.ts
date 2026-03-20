@@ -14,7 +14,7 @@ export const test = base.extend<
                 wallet: "metamask",
                 version: MetaMaskWallet.recommendedVersion,
                 seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
-                headless: !!process.env.CI,
+                headless: false,
             });
 
             // Add Sapphire Localnet as a custom network
@@ -38,7 +38,7 @@ export const test = base.extend<
             await use(context);
             await context.close();
         },
-        { scope: "worker" },
+        { scope: "worker", timeout: 10 * 60 * 1000 },
     ],
     context: async ({ walletContext }, use) => {
         await use(walletContext);

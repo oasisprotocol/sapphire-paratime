@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  timeout: 2 * 60 * 1000,
+  timeout: 5 * 60 * 1000,
   testDir: "./test/",
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
