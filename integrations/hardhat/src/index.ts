@@ -7,6 +7,8 @@ import {
 import { extendEnvironment } from 'hardhat/config';
 import { HttpNetworkUserConfig } from 'hardhat/types';
 
+const LOCALNET_POLL_INTERVAL = 100; // in milliseconds
+
 export const sapphireLocalnet = {
   url: NETWORKS.localnet.defaultGateway,
   chainId: NETWORKS.localnet.chainId,
@@ -38,5 +40,22 @@ extendEnvironment((hre) => {
       'You can prevent this from happening by setting a non-Sapphire `chainId`.',
     );
   }
+  // A hack to reduce polling interval on Sapphire Localnet.
+  // Must be applied before wrapEthereumProvider so Sapphire captures the patched upstream.
+  if (chainId == NETWORKS.localnet.chainId) {
+    const origRequest = hre.network.provider.request.bind(hre.network.provider);
+    hre.network.provider.request = async ({ method, params }) => {
+      if (method !== 'eth_getTransactionByHash') {
+        return origRequest({ method, params });
+      }
+      for (let i = 0; i < 30; i++) {
+        const result = await origRequest({ method, params });
+        if (result !== null) return result;
+        await new Promise((r) => setTimeout(r, LOCALNET_POLL_INTERVAL));
+      }
+      return origRequest({ method, params });
+    };
+  }
+
   hre.network.provider = wrapEthereumProvider(hre.network.provider);
 });
