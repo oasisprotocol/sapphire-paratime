@@ -20,25 +20,39 @@ import { getRandomValues, randomInt } from 'crypto';
 
 import { execSync } from 'child_process';
 
+function getDockerCmd(): string {
+  try {
+    execSync('which docker', { stdio: 'pipe' });
+    return 'docker';
+  } catch {}
+  try {
+    execSync('which podman', { stdio: 'pipe' });
+    return 'podman';
+  } catch {}
+  throw new Error('Please install docker or podman to run this test');
+}
+
 async function getDockerName() {
-  const cmd =
-    "docker ps --format '{{.Names}}' --filter status=running --filter expose=8545";
+  const dockerCmd = getDockerCmd();
+  const cmd = `${dockerCmd} ps --format '{{.Names}}' --filter status=running --filter ${
+    dockerCmd == 'docker' ? 'expose=8545' : 'ancestor=sapphire-localnet'
+  }`;
   const name = new TextDecoder().decode(execSync(cmd));
   return name.replace(/\n|\r/g, '');
 }
 
 async function getDockerEpoch(dockerName: string) {
-  const cmd = `docker exec ${dockerName} /oasis-node control status -a unix:/serverdir/node/net-runner/network/client-0/internal.sock  | jq '.consensus.latest_epoch'`;
+  const cmd = `${getDockerCmd()} exec ${dockerName} /oasis-node control status -a unix:/serverdir/node/net-runner/network/client-0/internal.sock  | jq '.consensus.latest_epoch'`;
   return Number.parseInt(new TextDecoder().decode(execSync(cmd)));
 }
 
 async function getDockerDebondingInterval(dockerName: string) {
-  const cmd = `docker exec ${dockerName} cat /serverdir/node/fixture.json | jq .network.staking_genesis.params.debonding_interval`;
+  const cmd = `${getDockerCmd()} exec ${dockerName} cat /serverdir/node/fixture.json | jq .network.staking_genesis.params.debonding_interval`;
   return Number.parseInt(new TextDecoder().decode(execSync(cmd)));
 }
 
 async function setDockerEpoch(dockerName: string, epoch: number) {
-  const cmd = `docker exec ${dockerName} /oasis-node debug control set-epoch --epoch ${epoch} -a unix:/serverdir/node/net-runner/network/client-0/internal.sock`;
+  const cmd = `${getDockerCmd()} exec ${dockerName} /oasis-node debug control set-epoch --epoch ${epoch} -a unix:/serverdir/node/net-runner/network/client-0/internal.sock`;
   execSync(cmd);
 }
 
