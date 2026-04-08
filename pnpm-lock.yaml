@@ -533,8 +533,8 @@ importers:
         specifier: ^1.56.1
         version: 1.57.0
       '@tenkeylabs/dappwright':
-        specifier: ^2.13.1
-        version: 2.13.1(playwright-core@1.57.0)
+        specifier: ^2.13.5
+        version: 2.13.5(playwright-core@1.57.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.3.20
@@ -600,8 +600,8 @@ importers:
         specifier: ^1.56.1
         version: 1.57.0
       '@tenkeylabs/dappwright':
-        specifier: ^2.13.1
-        version: 2.13.1(playwright-core@1.57.0)
+        specifier: ^2.13.5
+        version: 2.13.5(playwright-core@1.57.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.3.20
@@ -3413,9 +3413,9 @@ packages:
       react-native:
         optional: true
 
-  '@tenkeylabs/dappwright@2.13.1':
-    resolution: {integrity: sha512-B2zCz2UP6DfoITqqnYB5dN6jNoDkaZH4DP21Z+7hK4YvWjCA3QBX6CYZ/B75/7vvoWmrASZ3gXzos7EqY83pvg==}
-    engines: {node: '>=20'}
+  '@tenkeylabs/dappwright@2.13.5':
+    resolution: {integrity: sha512-iuhtIoq1N0dQBfXI/FMuktkmsguDwxUOatrZBS4Yy1EYBHSZxwrniVogDVgX/VgCG1yrEBeIMBisA6Z1RQaUoA==}
+    engines: {node: '>=22'}
     peerDependencies:
       playwright-core: '>1.0'
 
@@ -15235,7 +15235,7 @@ snapshots:
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
 
-  '@tenkeylabs/dappwright@2.13.1(playwright-core@1.57.0)':
+  '@tenkeylabs/dappwright@2.13.5(playwright-core@1.57.0)':
     dependencies:
       node-stream-zip: 1.15.0
       playwright-core: 1.57.0
