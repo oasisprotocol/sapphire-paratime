@@ -56,7 +56,6 @@ export const test = base.extend<
         network: "23293",
         encrypted: true,
     },
-    /* // TODO: Uncomment when https://github.com/TenKeyLabs/dappwright/issues/550 is fixed upstream
     {
         url: "/#/wagmi-injected",
         rdns: "injected-sapphire",
@@ -75,7 +74,6 @@ export const test = base.extend<
         network: "31337",
         encrypted: false,
     },
-    */
     // RainbowKit route removed - @rainbow-me/rainbowkit is not yet compatible with wagmi 3.x
 ].forEach(({ url, rdns, network, encrypted }) => {
     test.describe(() => {
