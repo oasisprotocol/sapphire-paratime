@@ -19,7 +19,7 @@
   "devDependencies": {
     "@noble/curves": "^1.4.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@oasisprotocol/sapphire-hardhat": "^2.22.2",
+    "@oasisprotocol/sapphire-hardhat": "^2.22.3",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.14",
