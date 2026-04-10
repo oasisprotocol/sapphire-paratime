@@ -7,8 +7,43 @@ on:
     branches:
       - main
 jobs:
-  playwright-test:
+  build-client-integrations:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        id: pnpm-install
+        with:
+          version: 10
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build JS client
+        run: make -C clients/js build
+      - name: Build Integrations
+        run: make -C integrations build
+      - name: Upload built packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-packages
+          path: |
+            clients/js/lib
+            integrations/*/dist
+          retention-days: 1
+
+  examples-playwright-js-test:
+    runs-on: ubuntu-latest
+    needs: build-client-integrations
+    strategy:
+      matrix:
+        example: [wagmi-v2, wagmi-v3, encrypted-events]
     services:
       sapphire-localnet-ci:
         image: ghcr.io/oasisprotocol/sapphire-localnet:latest
@@ -21,7 +56,7 @@ jobs:
           --rm
           --health-cmd="test -f /CONTAINER_READY"
           --health-start-period=90s
-      # Anvil is used in wagmi-v2-example.
+      # Anvil is used in wagmi examples.
       anvil-ci:
         image: ghcr.io/foundry-rs/foundry:stable
         ports:
@@ -34,27 +69,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           version: 10
           run_install: false
-        
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Build JS client
-        run: make -C clients/js build
-      - name: Build Integrations
-        run: make -C integrations build
+      - name: Download built packages
+        uses: actions/download-artifact@v4
+        with:
+          name: built-packages
       - uses: JarvusInnovations/background-action@v1
         name: RPC proxy will error if non-encrypted calls are made
         with:
@@ -66,30 +97,17 @@ jobs:
           log-output: true
           log-output-if: true
           working-directory: clients/js
+
       - name: Install Playwright dependencies
-        run: pnpm test:setup
-        working-directory: examples/wagmi-v2
-      - name: Run playwright tests (with xvfb-run to support headed extension test)
-        working-directory: examples/wagmi-v2
+        run: pnpm --if-present test:setup
+        working-directory: examples/${{ matrix.example }}
+      - name: Run playwright tests ${{ matrix.example }} (with xvfb-run to support headed extension test)
+        working-directory: examples/${{ matrix.example }}
         run: xvfb-run pnpm test
       - name: Upload playwright test-results
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results-wagmi-v2
-          path: examples/wagmi-v2/test-results
-          retention-days: 5
-      # wagmi-v3 example tests
-      - name: Install Playwright dependencies (wagmi-v3)
-        run: pnpm test:setup
-        working-directory: examples/wagmi-v3
-      - name: Run playwright tests wagmi-v3 (with xvfb-run to support headed extension test)
-        working-directory: examples/wagmi-v3
-        run: xvfb-run pnpm test
-      - name: Upload playwright test-results (wagmi-v3)
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results-wagmi-v3
-          path: examples/wagmi-v3/test-results
+          name: playwright-test-results-${{ matrix.example }}
+          path: examples/${{ matrix.example }}/test-results
           retention-days: 5
