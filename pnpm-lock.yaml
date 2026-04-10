@@ -189,8 +189,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(c57650d770c281e6674bfc522685ca50)
       '@oasisprotocol/sapphire-hardhat':
-        specifier: ^2.22.2
-        version: 2.22.2(hardhat@2.26.3(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10))
+        specifier: ^2.22.3
+        version: 2.22.3(hardhat@2.26.3(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10))
       '@typechain/ethers-v6':
         specifier: ^0.5.1
         version: 0.5.1(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typechain@8.3.2(typescript@5.8.3))(typescript@5.8.3)
@@ -2857,13 +2857,13 @@ packages:
   '@oasisprotocol/sapphire-contracts@0.2.14':
     resolution: {integrity: sha512-FYdJnHsnIBBME1Ggxc3pC1+NBa9HCaI/x4pDxSF2yBYbWvcFsd9M5+TJqP1BlZq6Z4D08v1+ahIcTzKF4YaGiw==}
 
-  '@oasisprotocol/sapphire-hardhat@2.22.2':
-    resolution: {integrity: sha512-43YYfsySrK/arbkurMd/AVOHpGwsZVvOrvQIS+TV8b56T0izLJuwe99Vou8U9GGiShBwFRuKl+J7pQWwvGWzPg==}
+  '@oasisprotocol/sapphire-hardhat@2.22.3':
+    resolution: {integrity: sha512-9GqmHx9XC2mMSuejFjoS6PnRH2zPfWmbA9N/LBBd0uGkzVxVkMquqqhz5WDq0qpzJqoKHVn5PhM5gG8We3DWWQ==}
     peerDependencies:
       hardhat: 2.x
 
-  '@oasisprotocol/sapphire-paratime@2.2.0':
-    resolution: {integrity: sha512-P8feNe2ecUgyL118b35BlkCmvfx4b3/7vKupdQw2YBotbqeOV82LunwHkgChuTf5BFjosDB+ad2wSqcuG4pHDA==}
+  '@oasisprotocol/sapphire-paratime@2.3.0':
+    resolution: {integrity: sha512-TooQ+eGxz8kQJ4PavqkXxvjbRJw8V4TB/Nu5ptaMyclFFr+tCWXEpx01gpoRsUEEc9IRcEm4IfnBUqFnBcbt7w==}
 
   '@openzeppelin/contracts@5.3.0':
     resolution: {integrity: sha512-zj/KGoW7zxWUE8qOI++rUM18v+VeLTTzKs/DJFkSzHpQFPD/jKKF0TrMxBfGLl3kpdELCNccvB3zmofSzm4nlA==}
@@ -14406,12 +14406,12 @@ snapshots:
     dependencies:
       '@openzeppelin/contracts': 5.3.0
 
-  '@oasisprotocol/sapphire-hardhat@2.22.2(hardhat@2.26.3(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10))':
+  '@oasisprotocol/sapphire-hardhat@2.22.3(hardhat@2.26.3(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10))':
     dependencies:
-      '@oasisprotocol/sapphire-paratime': 2.2.0
+      '@oasisprotocol/sapphire-paratime': 2.3.0
       hardhat: 2.26.3(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10)
 
-  '@oasisprotocol/sapphire-paratime@2.2.0':
+  '@oasisprotocol/sapphire-paratime@2.3.0':
     dependencies:
       '@noble/hashes': 1.3.2
       '@oasisprotocol/deoxysii': 0.0.6
