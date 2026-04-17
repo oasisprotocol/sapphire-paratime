@@ -16,7 +16,8 @@
       "sha.js": "^2.4.12",
       "axios": "^1.15.0",
       "protobufjs": "^7.5.5",
-      "handlebars": "^4.7.9"
+      "handlebars": "^4.7.9",
+      "form-data": "^2.5.5"
     }
   }
 }
