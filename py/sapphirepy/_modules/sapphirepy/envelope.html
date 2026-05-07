@@ -376,7 +376,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_decode_inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">:</span><span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="n">inner_result</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ResultInner</span><span class="p">,</span> <span class="n">cbor2</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">plaintext</span><span class="p">))</span>
+        <span class="n">inner_result</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ResultInner</span><span class="p">,</span> <span class="n">cbor2</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)))</span>
         <span class="k">if</span> <span class="n">inner_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ok&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">inner_result</span><span class="p">[</span><span class="s1">&#39;ok&#39;</span><span class="p">]</span>
         <span class="k">raise</span> <span class="n">CallError</span><span class="p">(</span><span class="n">inner_result</span><span class="p">[</span><span class="s1">&#39;fail&#39;</span><span class="p">])</span>
@@ -390,7 +390,7 @@
             <span class="n">ciphertext</span><span class="o">=</span><span class="n">envelope</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">decrypt_ok</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">DecryptError</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_inner</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_inner</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">plaintext</span><span class="p">))</span>
 
 <div class="viewcode-block" id="TransactionCipher.decrypt">
 <a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.envelope.TransactionCipher.decrypt">[docs]</a>
