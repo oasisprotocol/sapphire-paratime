@@ -111,7 +111,7 @@ class TransactionCipher:
         return envelope
 
     def _decode_inner(self, plaintext:bytes) -> bytes:
-        inner_result = cast(ResultInner, cbor2.loads(plaintext))
+        inner_result = cast(ResultInner, cbor2.loads(bytes(plaintext)))
         if inner_result.get('ok', None) is not None:
             return inner_result['ok']
         raise CallError(inner_result['fail'])
@@ -125,7 +125,7 @@ class TransactionCipher:
             ciphertext=envelope['data'])
         if not decrypt_ok:
             raise DecryptError()
-        return self._decode_inner(plaintext)
+        return self._decode_inner(bytes(plaintext))
 
     def decrypt(self, response: bytes):
         call_result = cast(ResultOuter, cbor2.loads(response))
