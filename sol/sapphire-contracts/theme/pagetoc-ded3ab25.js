@@ -18,7 +18,7 @@ const listenActive = () => {
 const getPagetoc = () => document.querySelector(".pagetoc") || autoCreatePagetoc();
 
 const autoCreatePagetoc = () => {
-  const main = document.querySelector("#content > main");
+  const main = document.querySelector("#mdbook-content > main");
   const content = Object.assign(document.createElement("div"), {
     className: "content-wrap"
   });
@@ -30,7 +30,8 @@ const autoCreatePagetoc = () => {
 const updateFunction = () => {
   if (scrollTimeout) return; // Skip updates if within the cooldown period from a click
   const headers = [...document.getElementsByClassName("header")];
-  const scrolledY = window.scrollY;
+  const menuBarHeight = document.getElementById('mdbook-menu-bar')?.offsetHeight || 0;
+  const scrolledY = window.scrollY + menuBarHeight + 10;
   let lastHeader = null;
 
   // Find the last header that is above the current scroll position
@@ -41,11 +42,13 @@ const updateFunction = () => {
     }
   }
 
-  const pagetocLinks = [...document.querySelector(".pagetoc").children];
+  const pagetoc = document.querySelector(".pagetoc");
+  if (!pagetoc) return;
+  const pagetocLinks = [...pagetoc.children];
   pagetocLinks.forEach(link => link.classList.remove("active"));
 
   if (lastHeader) {
-    const activeLink = pagetocLinks.find(link => lastHeader.href === link.href);
+    const activeLink = pagetocLinks.find(link => lastHeader.hash === link.hash);
     if (activeLink) activeLink.classList.add("active");
   }
 };
