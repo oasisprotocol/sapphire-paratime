@@ -125,7 +125,7 @@ class TransactionCipher:
             ciphertext=envelope['data'])
         if not decrypt_ok:
             raise DecryptError()
-        return self._decode_inner(plaintext)
+        return self._decode_inner(bytes(plaintext))
 
     def decrypt(self, response: bytes):
         call_result = cast(ResultOuter, cbor2.loads(response))

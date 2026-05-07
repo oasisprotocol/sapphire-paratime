@@ -450,7 +450,7 @@ class DeoxysII:
             j = 0
             while msg_len >= BLOCK_SIZE:
                 # 24. Cj <- Mj ^ Ek(1||tag^j, 00000000||N)
-                encode_enc_tweak(tweak, tag, j)
+                encode_enc_tweak(tweak, bytes(tag), j)
                 bc_encrypt(enc_blk, self.derived_k, tweak, enc_nonce)
                 for k in range(16):
                     dst[(j*16)+k] = msg[(j*16)+k] ^ enc_blk[k]
@@ -458,7 +458,7 @@ class DeoxysII:
                 j += 1
             if msg_len > 0:
                 # 24. C* <- M* ^ Ek(1||tag^l, 00000000||N)
-                encode_enc_tweak(tweak, tag, j)
+                encode_enc_tweak(tweak, bytes(tag), j)
                 bc_encrypt(enc_blk, self.derived_k, tweak, enc_nonce)
                 for k in range(msg_len):
                     dst[(j*16)+k] = msg[(j*16)+k] ^ enc_blk[k]
@@ -480,7 +480,7 @@ class DeoxysII:
         j = 0
         while ct_len >= BLOCK_SIZE:
             # 4. Mj <- Cj ^ Ek(1||tag^j, 00000000||N)
-            encode_enc_tweak(dec_tweak, tag, j)
+            encode_enc_tweak(dec_tweak, bytes(tag), j)
             bc_encrypt(dec_blk, self.derived_k, dec_tweak, dec_nonce)
             for k in range(16):
                 dst[(j*16)+k] = ciphertext[(j*16)+k] ^ dec_blk[k]
@@ -488,7 +488,7 @@ class DeoxysII:
             j += 1
         if ct_len > 0:
             # 7. M* <- C* ^ Ek(1||tag^l, 00000000||N)
-            encode_enc_tweak(dec_tweak, tag, j)
+            encode_enc_tweak(dec_tweak, bytes(tag), j)
             bc_encrypt(dec_blk, self.derived_k, dec_tweak, dec_nonce)
             for k in range(ct_len):
                 dst[(j*16)+k] = ciphertext[(j*16)+k] ^ dec_blk[k]
