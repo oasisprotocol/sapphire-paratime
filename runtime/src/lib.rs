@@ -65,6 +65,8 @@ impl modules::core::Config for Config {
     /// Estimated gas amount to be added to failed transaction simulations for selected methods.
     const ESTIMATE_GAS_EXTRA_FAIL: Lazy<BTreeMap<&'static str, u64>> =
         Lazy::new(|| [("evm.Create", 2_000_000), ("evm.Call", 2_000_000)].into());
+
+    const DEFAULT_LOCAL_ESTIMATE_GAS_SEARCH_MAX_ITERS: u64 = 25;
 }
 
 impl module_evm::Config for Config {
