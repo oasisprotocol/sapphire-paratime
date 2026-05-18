@@ -1,6 +1,6 @@
 NPM ?= pnpm
 
-SUBDIRS := $(filter-out foundry/.,$(wildcard */.) )  # all dirs except foundry
+SUBDIRS := $(filter-out foundry/. wagmi-test-utils/.,$(wildcard */.) )
 TARGETS := all clean lint test build distclean  # whatever else, but must not contain '/'
 
 # foo/.all bar/.all foo/.clean bar/.clean
