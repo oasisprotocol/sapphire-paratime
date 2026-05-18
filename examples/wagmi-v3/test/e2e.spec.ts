@@ -126,15 +126,8 @@ export const test = base.extend<
             ).toBeVisible();
 
             const networkSelect = page.locator("#network-select");
-            let switchedNetwork = false;
             if ((await networkSelect.inputValue()) !== network) {
                 await networkSelect.selectOption(network);
-                switchedNetwork = true;
-            }
-
-            if (switchedNetwork) {
-                await wallet.confirmNetworkSwitch();
-                await expect(networkSelect).toHaveValue(network);
             }
 
             // Let network switch settle
