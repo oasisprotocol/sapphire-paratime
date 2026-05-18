@@ -126,8 +126,35 @@ export const test = base.extend<
             ).toBeVisible();
 
             const networkSelect = page.locator("#network-select");
+            const chainIdText = page.getByText(new RegExp(`Chain ID:\\s*${network}\\b`));
+            let switchedNetwork = false;
             if ((await networkSelect.inputValue()) !== network) {
                 await networkSelect.selectOption(network);
+                switchedNetwork = true;
+            }
+
+            if (switchedNetwork) {
+                // MetaMask may or may not show a network switch approval prompt.
+                // Confirm only when the sidepanel prompt is actually visible.
+                const switchedInDapp = await chainIdText
+                    .isVisible({ timeout: 5000 })
+                    .catch(() => false);
+                if (!switchedInDapp) {
+                    const sidepanel = context
+                        .pages()
+                        .find((p) => p.url().includes("sidepanel.html"));
+                    const hasSwitchPrompt = sidepanel
+                        ? await sidepanel
+                            .getByTestId("page-container-footer-next")
+                            .isVisible({ timeout: 3000 })
+                            .catch(() => false)
+                        : false;
+                    if (hasSwitchPrompt) {
+                        await wallet.confirmNetworkSwitch();
+                    }
+                }
+                await expect(networkSelect).toHaveValue(network);
+                await expect(chainIdText).toBeVisible({ timeout: 15_000 });
             }
 
             // Let network switch settle
