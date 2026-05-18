@@ -132,10 +132,6 @@ jobs:
           echo "Hardhat net_version response: $response"
           node -e 'const r=JSON.parse(process.argv[1]); if (r.result !== "31337") { console.error("Unexpected net_version response", r); process.exit(1); }' "$response"
 
-      - name: Prewarm MetaMask
-        run: node ../wagmi-test-utils/prewarm-metamask.mjs
-        working-directory: examples/${{ matrix.example }}
-
       - name: Run playwright tests ${{ matrix.example }}
         working-directory: examples/${{ matrix.example }}
         run: xvfb-run pnpm test
