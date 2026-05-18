@@ -112,16 +112,25 @@ jobs:
           log-output-if: true
           working-directory: clients/js
 
-      - name: Start Hardhat node
-        working-directory: contracts
-        run: |
-          echo 'module.exports = {};' > /tmp/hardhat.config.cjs
-          npx hardhat node --port 9545 --hostname 0.0.0.0 --config /tmp/hardhat.config.cjs &
+      - uses: JarvusInnovations/background-action@v1
+        name: Hardhat RPC node
+        with:
+          run: |
+            echo 'module.exports = {};' > /tmp/hardhat.config.cjs
+            npx hardhat node --port 9545 --hostname 0.0.0.0 --config /tmp/hardhat.config.cjs &
+          wait-on: http://127.0.0.1:9545
+          tail: true
+          log-output-resume: true
+          wait-for: 31sec
+          log-output: true
+          log-output-if: true
+          working-directory: contracts
 
-      - name: Wait for Hardhat node readiness
+      - name: Verify Hardhat RPC net_version
         run: |
-          timeout 30s bash -c 'until curl -s -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"net_version\",\"params\":[],\"id\":1}" http://127.0.0.1:9545 > /dev/null; do sleep 1; done'
-          echo "Hardhat node is ready"
+          response="$(curl -sS -X POST --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' http://127.0.0.1:9545)"
+          echo "Hardhat net_version response: $response"
+          node -e 'const r=JSON.parse(process.argv[1]); if (r.result !== "31337") { console.error("Unexpected net_version response", r); process.exit(1); }' "$response"
 
       - name: Prewarm MetaMask
         run: node ../wagmi-test-utils/prewarm-metamask.mjs
