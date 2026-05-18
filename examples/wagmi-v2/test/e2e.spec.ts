@@ -3,7 +3,7 @@ import dappwright, {
 	type Dappwright,
 	MetaMaskWallet,
 } from "@tenkeylabs/dappwright";
-import { addCustomNetwork } from "../../wagmi-test-utils/metamask";
+import { addCustomNetwork } from "./metamask";
 
 base.describe.configure({ mode: "serial" });
 
