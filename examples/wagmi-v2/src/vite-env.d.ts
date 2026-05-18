@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
 	VITE_WALLET_CONNECT_PROJECT_ID: string;
 	VITE_WALLET_CONNECT_RAINBOWKIT_PROJECT_ID: string;
+	VITE_ANVIL_RPC_URL?: string;
 }
 
 interface ImportMeta {

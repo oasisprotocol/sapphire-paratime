@@ -1,39 +1,44 @@
-import { BrowserContext, expect, test as base } from "@playwright/test";
-import dappwright, { Dappwright, MetaMaskWallet } from "@tenkeylabs/dappwright";
+import { type BrowserContext, test as base, expect } from "@playwright/test";
+import dappwright, {
+	type Dappwright,
+	MetaMaskWallet,
+} from "@tenkeylabs/dappwright";
+import { addCustomNetwork } from "../../wagmi-test-utils/metamask";
 
 base.describe.configure({ mode: "serial" });
+
+const TX_TIMEOUT = 30_000;
+const ANVIL_RPC_URL = process.env.VITE_ANVIL_RPC_URL ?? "http://localhost:9545";
 
 export const test = base.extend<
 	{ wallet: Dappwright },
 	{ walletContext: BrowserContext }
 >({
 	walletContext: [
+		// biome-ignore lint/correctness/noEmptyPattern: Playwright fixtures must use object destructuring.
 		async ({}, use) => {
 			// Launch context with extension
-			const [wallet, _, context] = await dappwright.bootstrap("", {
+			const [wallet, _app, context] = await dappwright.bootstrap("", {
 				wallet: "metamask",
 				version: MetaMaskWallet.recommendedVersion,
 				seed: "test test test test test test test test test test test junk", // Hardhat's default https://hardhat.org/hardhat-network/docs/reference#accounts
 				headless: !!process.env.CI,
 			});
 
-			// Add Sapphire Localnet as a custom network
-			await wallet.addNetwork({
+			// MetaMask selects newly added custom networks. Add Sapphire last so tests start there.
+			await addCustomNetwork(wallet, {
+				networkName: "Anvil Localnet",
+				rpc: ANVIL_RPC_URL,
+				chainId: 31337,
+				symbol: "ETH",
+			});
+
+			await addCustomNetwork(wallet, {
 				networkName: "Sapphire Localnet",
 				rpc: "http://localhost:8545",
 				chainId: 23293,
 				symbol: "ROSE",
 			});
-
-			// Add Anvil Localnet as a custom network
-			await wallet.addNetwork({
-				networkName: "Anvil Localnet",
-				rpc: "http://localhost:9545",
-				chainId: 31337,
-				symbol: "ETH",
-			});
-
-			await wallet.switchNetwork("Sapphire Localnet");
 
 			await use(context);
 			await context.close();
@@ -49,7 +54,7 @@ export const test = base.extend<
 	},
 });
 
-[
+for (const { url, rdns, network, encrypted } of [
 	{
 		url: "/#/wagmi",
 		rdns: "metamask-sapphire",
@@ -80,7 +85,7 @@ export const test = base.extend<
 		network: "23293",
 		encrypted: true,
 	},
-].forEach(({ url, rdns, network, encrypted }) => {
+]) {
 	test.describe(() => {
 		test(`deploy contract and send encrypted transaction ${url}`, async ({
 			wallet,
@@ -153,7 +158,9 @@ export const test = base.extend<
 				await page.goto(appUrl);
 			}
 
-			await expect(page.getByText("Contract Address:")).toBeVisible();
+			await expect(page.getByText("Contract Address:")).toBeVisible({
+				timeout: TX_TIMEOUT,
+			});
 
 			await page.getByRole("button", { name: "Write to Contract" }).click();
 			await wallet.confirmTransaction();
@@ -166,21 +173,27 @@ export const test = base.extend<
 				await page.goto(appUrl);
 			}
 
-			await expect(page.getByText("Contract Address:")).toBeVisible();
+			await expect(page.getByText("Contract Address:")).toBeVisible({
+				timeout: TX_TIMEOUT,
+			});
 
 			if (encrypted) {
 				await expect(page.getByTestId("is-write-enveloped")).toHaveText(
 					"encrypted",
+					{ timeout: TX_TIMEOUT },
 				);
 			} else {
 				await expect(page.getByTestId("is-write-enveloped")).toHaveText(
 					"plaintext",
+					{ timeout: TX_TIMEOUT },
 				);
 			}
 
 			await page.getByRole("button", { name: "Read from Contract" }).click();
 
-			await expect(page.getByTestId("read-result")).not.toBeEmpty();
+			await expect(page.getByTestId("read-result")).not.toBeEmpty({
+				timeout: TX_TIMEOUT,
+			});
 		});
 	});
-});
+}

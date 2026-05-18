@@ -12,7 +12,9 @@ const anvilLocalChain = {
 	name: "Anvil",
 	nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
 	rpcUrls: {
-		default: { http: ["http://127.0.0.1:9545"] },
+		default: {
+			http: [import.meta.env.VITE_ANVIL_RPC_URL ?? "http://127.0.0.1:9545"],
+		},
 	},
 } as const;
 
@@ -35,4 +37,5 @@ export const wagmiConfig = createConfig({
 		[sapphireLocalnet.id]: sapphireHttpTransport(),
 		[anvilLocalChain.id]: http(),
 	},
+	multiInjectedProviderDiscovery: false,
 });
