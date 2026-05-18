@@ -5,7 +5,7 @@ import { addCustomNetwork } from "../../wagmi-test-utils/metamask";
 base.describe.configure({ mode: "serial" });
 
 const TX_TIMEOUT = 30_000;
-const ANVIL_RPC_URL = process.env.VITE_ANVIL_RPC_URL ?? "http://localhost:9545";
+const HARDHAT_RPC_URL = process.env.VITE_HARDHAT_RPC_URL ?? "http://localhost:9545";
 
 export const test = base.extend<
     { wallet: Dappwright },
@@ -24,8 +24,8 @@ export const test = base.extend<
 
             // MetaMask selects newly added custom networks. Add Sapphire last so tests start there.
             await addCustomNetwork(wallet, {
-                networkName: "Anvil Localnet",
-                rpc: ANVIL_RPC_URL,
+                networkName: "Hardhat Localnet",
+                rpc: HARDHAT_RPC_URL,
                 chainId: 31337,
                 symbol: "ETH",
             });
@@ -126,8 +126,15 @@ export const test = base.extend<
             ).toBeVisible();
 
             const networkSelect = page.locator("#network-select");
+            let switchedNetwork = false;
             if ((await networkSelect.inputValue()) !== network) {
                 await networkSelect.selectOption(network);
+                switchedNetwork = true;
+            }
+
+            if (switchedNetwork) {
+                await wallet.confirmNetworkSwitch();
+                await expect(networkSelect).toHaveValue(network);
             }
 
             // Let network switch settle

@@ -54,17 +54,10 @@ jobs:
           --rm
           --health-cmd="test -f /CONTAINER_READY"
           --health-start-period=90s
-      anvil-ci:
-        image: ghcr.io/foundry-rs/foundry:stable
-        ports:
-          - 9545:8545
-        options: --entrypoint anvil
-        env:
-          ANVIL_IP_ADDR: 0.0.0.0
     env:
       SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 8545
       SAPPHIRE_LOCALNET_HTTP_PROXY_UPSTREAM: http://sapphire-localnet-ci:8545
-      VITE_ANVIL_RPC_URL: http://anvil-ci:8545
+      VITE_HARDHAT_RPC_URL: http://127.0.0.1:9545
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -118,6 +111,17 @@ jobs:
           log-output: true
           log-output-if: true
           working-directory: clients/js
+
+      - name: Start Hardhat node
+        working-directory: contracts
+        run: |
+          echo 'module.exports = {};' > /tmp/hardhat.config.cjs
+          npx hardhat node --port 9545 --hostname 0.0.0.0 --config /tmp/hardhat.config.cjs &
+
+      - name: Wait for Hardhat node readiness
+        run: |
+          timeout 30s bash -c 'until curl -s -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"net_version\",\"params\":[],\"id\":1}" http://127.0.0.1:9545 > /dev/null; do sleep 1; done'
+          echo "Hardhat node is ready"
 
       - name: Prewarm MetaMask
         run: node ../wagmi-test-utils/prewarm-metamask.mjs

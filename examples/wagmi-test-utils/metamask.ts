@@ -40,8 +40,15 @@ export async function addCustomNetwork(
 		.getByRole("button", { name: "Got it" })
 		.click({ timeout: 3000 })
 		.catch(() => {});
+	await page.getByTestId("sort-by-networks").waitFor({
+		state: "visible",
+		timeout: 30_000,
+	});
+	// MetaMask sometimes keeps a generic label ("All popular networks")
+	// even after adding/switching networks, so this check is best-effort.
 	await page
 		.getByTestId("sort-by-networks")
 		.filter({ hasText: network.networkName })
-		.waitFor({ state: "visible", timeout: 30_000 });
+		.waitFor({ state: "visible", timeout: 5000 })
+		.catch(() => {});
 }

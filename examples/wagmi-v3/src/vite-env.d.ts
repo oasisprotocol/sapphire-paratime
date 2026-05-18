@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
     readonly VITE_WALLET_CONNECT_PROJECT_ID: string;
-    readonly VITE_ANVIL_RPC_URL?: string;
+    readonly VITE_HARDHAT_RPC_URL?: string;
 }
 
 interface ImportMeta {
