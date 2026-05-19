@@ -1,4 +1,4 @@
-name: ci-e2e
+name: ci-test-examples
 
 on:
   push:
@@ -31,8 +31,8 @@ jobs:
             echo "${example}=${version}" >> "$GITHUB_OUTPUT"
           done
 
-  e2e:
-    name: e2e (${{ matrix.example }})
+  test-examples-playwright:
+    name: test-examples-playwright (${{ matrix.example }})
     runs-on: ubuntu-latest
     needs: resolve-playwright-version
     timeout-minutes: 15
