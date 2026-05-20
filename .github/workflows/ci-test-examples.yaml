@@ -1,0 +1,145 @@
+name: ci-test-examples
+
+on:
+  push:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+  pull_request:
+    branches:
+      - main
+      - stable/*
+      - rc/*
+
+jobs:
+  resolve-playwright-version:
+    runs-on: ubuntu-latest
+    outputs:
+      wagmi-v2: ${{ steps.resolve.outputs['wagmi-v2'] }}
+      wagmi-v3: ${{ steps.resolve.outputs['wagmi-v3'] }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve playwright version from lockfile
+        id: resolve
+        run: |
+          for example in wagmi-v2 wagmi-v3; do
+            version="$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"] // ""' "examples/${example}/package.json")"
+            test -n "$version" || { echo "No @playwright/test version found in examples/${example}/package.json"; exit 1; }
+            echo "${example}=${version}" >> "$GITHUB_OUTPUT"
+          done
+
+  test-examples-playwright:
+    name: test-examples-playwright (${{ matrix.example }})
+    runs-on: ubuntu-latest
+    needs: resolve-playwright-version
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [wagmi-v2, wagmi-v3]
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.resolve-playwright-version.outputs[matrix.example] }}-noble
+    services:
+      sapphire-localnet-ci:
+        image: ghcr.io/oasisprotocol/sapphire-localnet:latest
+        ports:
+          - 8545:8545
+          - 8546:8546
+        env:
+          OASIS_DOCKER_START_EXPLORER: no
+        options: >-
+          --rm
+          --health-cmd="test -f /CONTAINER_READY"
+          --health-start-period=90s
+    env:
+      SAPPHIRE_LOCALNET_HTTP_PROXY_PORT: 8545
+      SAPPHIRE_LOCALNET_HTTP_PROXY_UPSTREAM: http://sapphire-localnet-ci:8545
+      VITE_HARDHAT_RPC_URL: http://127.0.0.1:9545
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            examples/*/node_modules
+            clients/js/node_modules
+            integrations/*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build JS client
+        run: cd clients/js && pnpm build
+
+      - name: Build viem-v2 integration
+        run: cd integrations/viem-v2 && pnpm build
+
+      - name: Build ${{ matrix.example }} integration
+        run: cd integrations/${{ matrix.example }} && pnpm build
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - uses: JarvusInnovations/background-action@v1
+        name: Sapphire RPC proxy
+        with:
+          run: pnpm run proxy &
+          wait-on: http://127.0.0.1:${{ env.SAPPHIRE_LOCALNET_HTTP_PROXY_PORT }}
+          tail: true
+          log-output-resume: true
+          wait-for: 31sec
+          log-output: true
+          log-output-if: true
+          working-directory: clients/js
+
+      - uses: JarvusInnovations/background-action@v1
+        name: Hardhat RPC node
+        with:
+          run: |
+            echo 'module.exports = {};' > /tmp/hardhat.config.cjs
+            npx hardhat node --port 9545 --hostname 0.0.0.0 --config /tmp/hardhat.config.cjs &
+          wait-on: http://127.0.0.1:9545
+          tail: true
+          log-output-resume: true
+          wait-for: 31sec
+          log-output: true
+          log-output-if: true
+          working-directory: contracts
+
+      - name: Verify Hardhat RPC net_version
+        run: |
+          response="$(curl -sS -X POST --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' http://127.0.0.1:9545)"
+          echo "Hardhat net_version response: $response"
+          node -e 'const r=JSON.parse(process.argv[1]); if (r.result !== "31337") { console.error("Unexpected net_version response", r); process.exit(1); }' "$response"
+
+      - name: Run playwright tests ${{ matrix.example }}
+        working-directory: examples/${{ matrix.example }}
+        run: xvfb-run pnpm test
+
+      - name: Upload playwright test-results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ matrix.example }}
+          path: examples/${{ matrix.example }}/test-results
+          retention-days: 5

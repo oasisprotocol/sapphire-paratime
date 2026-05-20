@@ -535,10 +535,10 @@ importers:
         specifier: ^1.7.0
         version: 1.9.4
       '@playwright/test':
-        specifier: ^1.56.1
+        specifier: 1.57.0
         version: 1.57.0
       '@tenkeylabs/dappwright':
-        specifier: ^2.13.1
+        specifier: 2.13.1
         version: 2.13.1(playwright-core@1.57.0)
       '@types/react':
         specifier: ^18.2.79
@@ -602,10 +602,10 @@ importers:
         specifier: ^1.7.0
         version: 1.9.4
       '@playwright/test':
-        specifier: ^1.56.1
+        specifier: 1.57.0
         version: 1.57.0
       '@tenkeylabs/dappwright':
-        specifier: ^2.13.1
+        specifier: 2.13.1
         version: 2.13.1(playwright-core@1.57.0)
       '@types/react':
         specifier: ^18.2.79
@@ -16114,7 +16114,7 @@ snapshots:
       eventemitter3: 5.0.1
       mipd: 0.0.7(typescript@5.8.3)
       viem: 2.44.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)
-      zustand: 5.0.0(@types/react@18.3.20)(immer@10.0.2)(react@18.3.1)(use-sync-external-store@1.4.0(react@18.3.1))
+      zustand: 5.0.0(@types/react@18.3.20)(immer@10.0.2)(react@18.3.1)(use-sync-external-store@1.5.0(react@18.3.1))
     optionalDependencies:
       '@tanstack/query-core': 5.83.1
       typescript: 5.8.3
@@ -16161,7 +16161,7 @@ snapshots:
       eventemitter3: 5.0.1
       mipd: 0.0.7(typescript@5.8.3)
       viem: 2.44.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)
-      zustand: 5.0.0(@types/react@18.3.20)(immer@10.0.2)(react@18.3.1)(use-sync-external-store@1.4.0(react@18.3.1))
+      zustand: 5.0.0(@types/react@18.3.20)(immer@10.0.2)(react@18.3.1)(use-sync-external-store@1.5.0(react@18.3.1))
     optionalDependencies:
       '@tanstack/query-core': 5.83.1
       ox: 0.11.3(typescript@5.8.3)(zod@3.22.4)

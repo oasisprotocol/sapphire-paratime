@@ -8,12 +8,14 @@ import {
 import { createConfig, http } from "wagmi";
 import { metaMask } from "wagmi/connectors";
 
-const anvilLocalChain = {
+const hardhatLocalChain = {
     id: 31337,
-    name: "Anvil",
+    name: "Hardhat",
     nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
     rpcUrls: {
-        default: { http: ["http://127.0.0.1:9545"] },
+        default: {
+            http: [import.meta.env.VITE_HARDHAT_RPC_URL ?? "http://127.0.0.1:9545"],
+        },
     },
 } as const;
 
@@ -25,7 +27,7 @@ const sapphireMetamask = () => {
 };
 
 export const wagmiConfig = createConfig({
-    chains: [sapphire, sapphireTestnet, sapphireLocalnet, anvilLocalChain],
+    chains: [sapphire, sapphireTestnet, sapphireLocalnet, hardhatLocalChain],
     connectors: [
         // Sapphire-wrapped aware MetaMask for Sapphire chains, unwrapped for other chains
         sapphireMetamask(),
@@ -34,6 +36,7 @@ export const wagmiConfig = createConfig({
         [sapphire.id]: sapphireHttpTransport(),
         [sapphireTestnet.id]: sapphireHttpTransport(),
         [sapphireLocalnet.id]: sapphireHttpTransport(),
-        [anvilLocalChain.id]: http(),
+        [hardhatLocalChain.id]: http(),
     },
+    multiInjectedProviderDiscovery: false,
 });

@@ -19,6 +19,7 @@ task("create-secret")
       30 /* seconds */,
       Buffer.from("brussels sprouts"),
     );
+    await tx.wait();
     console.log("Storing a secret in", tx.hash);
   });
 
