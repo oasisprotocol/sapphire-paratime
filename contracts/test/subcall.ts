@@ -169,7 +169,9 @@ describe('Subcall', () => {
   it('accounts.Transfer', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     // transfer balance-1 back to owner, then wait for transaction to be mined.
     let balance = await provider.getBalance(await contract.getAddress());
@@ -192,14 +194,16 @@ describe('Subcall', () => {
     expect(balance).eq(1);
   });
 
-  it('Subcall.accounts_Transfer', async () => {
+  it('Subcall.accountsTransfer', async () => {
     const transferAmount = 1n;
 
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
-    // Transfer using the Subcall.accounts_Transfer method.
+    // Transfer using the Subcall.accountsTransfer method.
     const tx = await contract.testAccountsTransfer(ownerAddr, transferAmount);
     const receipt = await tx.wait();
     if (!receipt) throw new Error('tx failed');
@@ -212,7 +216,9 @@ describe('Subcall', () => {
   it('consensus.Undelegate', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     let tx = await contract.testConsensusUndelegate(kp.publicKey, 0);
     await tx.wait();
@@ -226,9 +232,7 @@ describe('Subcall', () => {
   it('consensus.Withdraw', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
-
-    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
       initialBalance,
     );
 
@@ -243,7 +247,9 @@ describe('Subcall', () => {
   it('consensus.Delegate (without receipt)', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('100');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     let tx = await contract.testConsensusDelegate(
       kp.publicKey,
@@ -264,7 +270,10 @@ describe('Subcall', () => {
     );
 
     // Ensure contract has an initial balance, above minimum delegation amount
-    await ensureBalance(contract, parseEther('100'), owner);
+    const initialBalance = parseEther('100');
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     // Perform delegation, and request a receipt
     let receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
