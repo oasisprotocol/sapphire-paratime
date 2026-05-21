@@ -68,7 +68,7 @@ contract SubcallTests {
         return Subcall._decodeReceiptUndelegateDone(receipt);
     }
 
-    function testAccountsTransfer(address to, uint128 value) external {
+    function testAccountsTransfer(StakingAddress to, uint128 value) external {
         Subcall.accountsTransfer(to, value);
     }
 
