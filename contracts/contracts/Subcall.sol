@@ -500,15 +500,14 @@ library Subcall {
     }
 
     /**
-     * @notice Perform a transfer to another account. This is equivalent of
-     * `payable(to).transfer(value);`.
-     * @param to Destination account.
-     * @param value native token amount (in wei).
+     * @notice Perform a transfer to a consensus staking account.
+     * @param to Consensus address which gets the tokens.
+     * @param value Token amount (in wei).
      */
-    function accountsTransfer(address to, uint128 value) internal {
+    function accountsTransfer(StakingAddress to, uint128 value) internal {
         (uint64 status, bytes memory data) = _subcallWithToAndAmount(
             ACCOUNTS_TRANSFER,
-            StakingAddress.wrap(bytes21(abi.encodePacked(uint8(0x00), to))),
+            to,
             value,
             ""
         );

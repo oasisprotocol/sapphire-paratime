@@ -116,7 +116,6 @@ describe('Subcall', () => {
   let contract: SubcallTests;
   let owner: SignerWithAddress;
   let ownerAddr: string;
-  let ownerNativeAddr: Uint8Array;
   let kp: { publicKey: Uint8Array; secretKey: Uint8Array };
   let provider: Provider;
 
@@ -134,10 +133,6 @@ describe('Subcall', () => {
     const signers = await ethers.getSigners();
     owner = signers[0];
     ownerAddr = await owner.getAddress();
-
-    // Convert Ethereum address to native bytes with version prefix (V1=0x00)
-    ownerNativeAddr = getBytes(zeroPadValue(ownerAddr, 21));
-    expect(ownerNativeAddr.length).eq(21);
 
     // Skip random address generation when running in hardhat
     if ((await provider.getNetwork()).chainId != 31337n) {
@@ -165,18 +160,24 @@ describe('Subcall', () => {
   });
 
   /// Verify that the 'accounts.Transfer' subcall operates similarly to
-  /// native EVM transfers
+  /// native EVM transfers.
   it('accounts.Transfer', async () => {
+    const transferAmount = 1n;
+
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
-    // transfer balance-1 back to owner, then wait for transaction to be mined.
-    let balance = await provider.getBalance(await contract.getAddress());
+    // Transfer balance to a random address, then wait for transaction to be mined.
+    const randomTransfer = getBytes(
+      (await contract.generateRandomAddress()).publicKey,
+    );
 
     const msg = cborg.encode({
-      to: ownerNativeAddr,
-      amount: [toBeArray(balance - 1n), new Uint8Array()],
+      to: randomTransfer,
+      amount: [toBeArray(transferAmount), new Uint8Array()],
     });
     let tx = await contract.testSubcall('accounts.Transfer', msg);
     let receipt = await tx.wait();
@@ -187,24 +188,32 @@ describe('Subcall', () => {
     expect(event.status).eq(0n); // accounts.Transfer response status, 0 = success
     expect(event.data).is.null; // No data
 
-    // Ensure contract only has 1 wei left.
-    balance = await provider.getBalance(await contract.getAddress());
-    expect(balance).eq(1);
+    // Ensure transfer has occurred.
+    const balance = await provider.getBalance(await contract.getAddress());
+    expect(balance).eq(initialBalance - transferAmount);
   });
 
-  it('Subcall.accounts_Transfer', async () => {
+  it('Subcall.accountsTransfer', async () => {
     const transferAmount = 1n;
 
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
-    // Transfer using the Subcall.accounts_Transfer method.
-    const tx = await contract.testAccountsTransfer(ownerAddr, transferAmount);
+    // Transfer using the Subcall.accountsTransfer method.
+    const randomTransfer = getBytes(
+      (await contract.generateRandomAddress()).publicKey,
+    );
+    const tx = await contract.testAccountsTransfer(
+      randomTransfer,
+      transferAmount,
+    );
     const receipt = await tx.wait();
     if (!receipt) throw new Error('tx failed');
 
-    // Ensure transfer has occurred
+    // Ensure transfer has occurred.
     const balance = await provider.getBalance(await contract.getAddress());
     expect(balance).eq(initialBalance - transferAmount);
   });
@@ -212,7 +221,9 @@ describe('Subcall', () => {
   it('consensus.Undelegate', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     let tx = await contract.testConsensusUndelegate(kp.publicKey, 0);
     await tx.wait();
@@ -222,13 +233,11 @@ describe('Subcall', () => {
   });
 
   /// Verifies that the 'consensus.Withdraw' operation can be parsed
-  /// Currently it is not possble to withdraw anything
+  /// Currently it is not possible to withdraw anything
   it('consensus.Withdraw', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('1.0');
-    await ensureBalance(contract, initialBalance, owner);
-
-    expect(await ethers.provider.getBalance(await contract.getAddress())).eq(
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
       initialBalance,
     );
 
@@ -243,7 +252,9 @@ describe('Subcall', () => {
   it('consensus.Delegate (without receipt)', async () => {
     // Ensure contract has an initial balance.
     const initialBalance = parseEther('100');
-    await ensureBalance(contract, initialBalance, owner);
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     let tx = await contract.testConsensusDelegate(
       kp.publicKey,
@@ -264,7 +275,10 @@ describe('Subcall', () => {
     );
 
     // Ensure contract has an initial balance, above minimum delegation amount
-    await ensureBalance(contract, parseEther('100'), owner);
+    const initialBalance = parseEther('100');
+    expect(await ensureBalance(contract, initialBalance, owner)).eq(
+      initialBalance,
+    );
 
     // Perform delegation, and request a receipt
     let receiptId = randomInt(2 ** 32, 2 ** 32 * 2);
