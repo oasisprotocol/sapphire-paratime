@@ -6,6 +6,13 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.16 (2026-05)
+
+### Changed
+
+* `Subcall.accountsTransfer()` `to` parameter type changed from `address` to
+  correct `StakingAddress`.
+
 ## 0.2.15 (2025-09)
 
 ### Added
