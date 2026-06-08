@@ -137,6 +137,7 @@ contract BaseEndpoint {
         assembly {
             epMissing := iszero(ep)
         }
+        if (epMissing) return 0;
         Result result = endpoints[epSel](message);
         // Convert the Result to a Celer ExecutionStatus.
         if (result == Result.TransientFailure) return 2; // ExecutionStatus.Retry
