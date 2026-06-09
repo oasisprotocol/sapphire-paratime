@@ -1705,11 +1705,11 @@ dependencies = [
 
 [[package]]
 name = "keymanager"
-version = "0.6.0"
-source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.6.0#8ba936fa04bb573398fa4e43750eb390eb28c01d"
+version = "0.7.0-testnet"
+source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.7.0-testnet#cd66a7d56b873e6abf8959cea06f379bab4a6590"
 dependencies = [
- "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v25.2)",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v25.2)",
+ "oasis-core-keymanager",
+ "oasis-core-runtime",
 ]
 
 [[package]]
@@ -1804,25 +1804,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
 dependencies = [
  "hashbrown 0.15.5",
-]
-
-[[package]]
-name = "mbedtls"
-version = "0.12.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85518d7740ddc73c8d4d07b1be49a73ab2f4b7658f05ee266bf1827c2b8e801a"
-dependencies = [
- "bitflags 1.3.2",
- "byteorder",
- "cc",
- "cfg-if",
- "mbedtls-platform-support",
- "mbedtls-sys-auto",
- "rs-libc",
- "rustc_version",
- "serde",
- "serde_derive",
- "yasna 0.2.2",
 ]
 
 [[package]]
@@ -2090,34 +2071,6 @@ checksum = "5fe0d7f5a7c55eba7e8e845046c6c81332f4fa4997f0ed497b9f44db1d7f2050"
 [[package]]
 name = "oasis-core-keymanager"
 version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v25.2#f777f5f63a4125e2eeb2e5240666df7bc08f68b1"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64",
- "futures",
- "group",
- "lazy_static",
- "lru",
- "oasis-cbor",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v25.2)",
- "p256",
- "p384",
- "rand 0.8.6",
- "rustc-hex",
- "secret-sharing 0.1.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v25.2)",
- "sgx-isa",
- "sp800-185",
- "thiserror",
- "tiny-keccak 2.0.2",
- "tokio",
- "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "oasis-core-keymanager"
-version = "0.0.0"
 source = "git+https://github.com/oasisprotocol/oasis-core?tag=v26.1#d2bf1620e9793345045a10a0391db9bde1bb20b9"
 dependencies = [
  "anyhow",
@@ -2128,80 +2081,18 @@ dependencies = [
  "lazy_static",
  "lru",
  "oasis-cbor",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v26.1)",
+ "oasis-core-runtime",
  "p256",
  "p384",
  "rand 0.8.6",
  "rustc-hex",
- "secret-sharing 0.1.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v26.1)",
+ "secret-sharing",
  "sgx-isa",
  "sp800-185",
  "thiserror",
  "tiny-keccak 2.0.2",
  "tokio",
  "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "oasis-core-runtime"
-version = "0.0.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v25.2#f777f5f63a4125e2eeb2e5240666df7bc08f68b1"
-dependencies = [
- "anyhow",
- "arbitrary",
- "async-trait",
- "base64",
- "base64-serde",
- "bech32",
- "bincode",
- "bitflags 2.13.0",
- "byteorder",
- "cfg-if",
- "chrono",
- "crossbeam",
- "curve25519-dalek",
- "deoxysii",
- "ed25519-dalek",
- "futures",
- "hmac",
- "honggfuzz",
- "impl-trait-for-tuples",
- "intrusive-collections",
- "lazy_static",
- "log",
- "lru",
- "mbedtls 0.12.5",
- "num-bigint 0.4.6",
- "num-derive",
- "num-traits",
- "oasis-cbor",
- "oid-registry",
- "percent-encoding",
- "rand 0.8.6",
- "rsa",
- "rustc-hex",
- "serde",
- "serde_json",
- "sgx-isa",
- "sha2 0.10.9",
- "slog",
- "slog-json",
- "slog-scope",
- "slog-stdlog",
- "snow",
- "sp800-185",
- "tendermint",
- "tendermint-light-client",
- "tendermint-proto",
- "tendermint-rpc",
- "thiserror",
- "tiny-keccak 2.0.2",
- "tokio",
- "tokio-retry",
- "x25519-dalek",
- "x509-parser",
- "yasna 0.5.2",
  "zeroize",
 ]
 
@@ -2233,7 +2124,7 @@ dependencies = [
  "lazy_static",
  "log",
  "lru",
- "mbedtls 0.13.5",
+ "mbedtls",
  "num-bigint 0.4.6",
  "num-derive",
  "num-traits",
@@ -2288,8 +2179,8 @@ dependencies = [
  "merlin",
  "num-traits",
  "oasis-cbor",
- "oasis-core-keymanager 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v26.1)",
- "oasis-core-runtime 0.0.0 (git+https://github.com/oasisprotocol/oasis-core?tag=v26.1)",
+ "oasis-core-keymanager",
+ "oasis-core-runtime",
  "oasis-runtime-sdk-macros",
  "once_cell",
  "p256",
@@ -3007,23 +2898,6 @@ dependencies = [
  "generic-array",
  "pkcs8",
  "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "secret-sharing"
-version = "0.1.0"
-source = "git+https://github.com/oasisprotocol/oasis-core?tag=v25.2#f777f5f63a4125e2eeb2e5240666df7bc08f68b1"
-dependencies = [
- "anyhow",
- "group",
- "honggfuzz",
- "p384",
- "rand 0.8.6",
- "rand_core 0.6.4",
- "sha3",
- "subtle",
- "thiserror",
  "zeroize",
 ]
 
