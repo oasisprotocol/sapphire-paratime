@@ -1705,8 +1705,8 @@ dependencies = [
 
 [[package]]
 name = "keymanager"
-version = "0.7.0-testnet"
-source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.7.0-testnet#cd66a7d56b873e6abf8959cea06f379bab4a6590"
+version = "0.7.0"
+source = "git+https://github.com/oasisprotocol/keymanager-paratime?tag=v0.7.0#e50a540952f071cd28d32da27105357f87aad2f6"
 dependencies = [
  "oasis-core-keymanager",
  "oasis-core-runtime",
