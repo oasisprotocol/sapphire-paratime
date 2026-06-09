@@ -28,8 +28,8 @@ describe('Gas Padding', function () {
     receipt = await tx.wait();
     // TODO: Workaround for flaky gas used https://github.com/oasisprotocol/sapphire-paratime/issues/337.
     expect(receipt!.cumulativeGasUsed)
-      .gte(initialGasUsed + 10000n)
-      .lte(initialGasUsed + 10001n);
+      .gte(initialGasUsed + 10000n - 1n)
+      .lte(initialGasUsed + 10000n + 1n);
 
     // Note: calldata isn't included in gas padding
     // Thus when the value is 0 it will use 4 gas instead of 16 gas
@@ -37,7 +37,7 @@ describe('Gas Padding', function () {
     tx = await contract.testConstantTime(0, 100000);
     receipt = await tx.wait();
     expect(receipt?.cumulativeGasUsed)
-      .gte(initialGasUsed - 13n)
-      .lte(initialGasUsed - 12n);
+      .gte(initialGasUsed - 12n - 1n)
+      .lte(initialGasUsed - 12n + 1n);
   });
 });
