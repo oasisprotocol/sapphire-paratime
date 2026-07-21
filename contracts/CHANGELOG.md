@@ -6,6 +6,16 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.17 (2026-07)
+
+### Added
+
+* `ROFLable` abstract contract with the `onlyROFL` modifier. This standardizes
+  the way how contracts should gate methods only callable from ROFL.
+* `ROFLableUpgradeable` abstract contract with the same functionality, but with
+  predefined storage slot for ROFL app ID used in upgradable contracts.
+* Add `@openzeppelin/contracts-upgradeable` 5.3.0 dependency.
+
 ## 0.2.16 (2026-05)
 
 ### Changed
