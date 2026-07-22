@@ -38,7 +38,14 @@ task("check-secret")
     }
     console.log("Waiting...");
 
-    await new Promise((resolve) => setTimeout(resolve, 30_000));
+    // Wait until a block timestamp passes 30 seconds.
+    const startBlock = await hre.ethers.provider.getBlock("latest");
+    let currentBlock = startBlock;
+    while (currentBlock!.timestamp <= startBlock!.timestamp + 30) {
+      await new Promise((resolve) => setTimeout(resolve, 1_000));
+      currentBlock = await hre.ethers.provider.getBlock("latest");
+    }
+
     console.log("Checking the secret again");
     const secret = await vigil.revealSecret.staticCallResult(0); // Get the value.
     console.log(
