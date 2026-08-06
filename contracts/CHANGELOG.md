@@ -6,6 +6,18 @@ The format is inspired by [Keep a Changelog].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 
+## 0.2.18 (2026-08)
+
+### Added
+
+* `UPUPSUpgradeable` abstract contract that extends `UUPSUpgradeable` and
+  prevents simulated upgrade attack.
+
+### Security
+
+* Bump `@openzeppelin/contracts` and `@openzeppelin/contracts-upgradeable`
+  from 5.3.0 to 5.4.0.
+
 ## 0.2.17 (2026-07)
 
 ### Added
