@@ -1,56 +1,60 @@
+version: "2"
 run:
   timeout: 5m
-
-linters-settings:
-  gosec:
-    excludes:
-      # https://github.com/securego/gosec#available-rules
-      - G402
-      - G404
-  govet:
-    check-shadowing: true
-    # Enable once suggested fixes are shown: https://github.com/golangci/golangci-lint/issues/2134
-    #enable:
-    #  - fieldalignment
-  depguard:
-    rules:
-      main:
-        files:
-          - $all
-        allow:
-          - $gostd
-          - github.com/oasisprotocol
-          - github.com/ethereum/go-ethereum
-
 linters:
-  disable-all: true
+  # Disable all linters except the ones explicitly listed below.
+  default: none
   enable:
+    - asciicheck
     - bodyclose
     - depguard
+    - dogsled
+    - dupl
     - errcheck
-    - exportloopref
-    - gas
+    - exhaustive
     - goconst
+    - gocritic
     - gocyclo
-    - gofumpt
+    - godot
+    - goheader
+    - revive
+    - gomodguard_v2
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
-    - megacheck
     - misspell
-    - revive
+    - nakedret
+    - nestif
+    - noctx
+    - prealloc
     - rowserrcheck
     - staticcheck
-    - typecheck
+    - sqlclosecheck
     - unconvert
+    - unparam
     - unused
-
-exclude-use-default: false
-
-issues:
-  include:
-    - EXC0014 # un-exclude revive `exported` which warns about incorrect comments on exported items.
-  exclude:
-    - context-as-argument # revive
+    - whitespace
+  settings:
+    exhaustive:
+      # Switch statements are to be considered exhaustive if a 'default' case is
+      # present, even if all enum members aren't listed in the switch.
+      default-signifies-exhaustive: true
+    gosec:
+      excludes:
+        # https://github.com/securego/gosec#available-rules
+        - G402
+        - G404
+    depguard:
+      rules:
+        main:
+          files:
+            - $all
+          allow:
+            - $gostd
+            - github.com/oasisprotocol
+            - github.com/ethereum/go-ethereum
+formatters:
+  enable:
+    - gofumpt
+    - goimports

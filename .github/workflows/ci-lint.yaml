@@ -109,7 +109,7 @@ jobs:
       - name: Lint Go
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.56.2
+          version: v2.14
           working-directory: ./clients/go
         # Always run this step so that all linting errors can be seen at once.
         if: always()
