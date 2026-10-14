@@ -7,7 +7,7 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/oasis-core/go v0.2603.0
-	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.8.2
+	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.17.0
 )
 
 replace github.com/cometbft/cometbft => github.com/oasisprotocol/cometbft v0.37.2-oasis1
@@ -18,7 +18,7 @@ require (
 	github.com/a8m/envsubst v1.4.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.3 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
