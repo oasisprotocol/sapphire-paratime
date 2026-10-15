@@ -228,14 +228,14 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for sapphirepy.deoxysii</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">This work is derived from: https://github.com/oasisprotocol/deoxysii</span>
 
 <span class="sd">Copyright (c) 2019 Oasis Labs Inc. &lt;info@oasislabs.com&gt;</span>
 
 <span class="sd">Permission is hereby granted, free of charge, to any person obtaining</span>
 <span class="sd">a copy of this software and associated documentation files (the</span>
-<span class="sd">&quot;Software&quot;), to deal in the Software without restriction, including</span>
+<span class="sd">"Software"), to deal in the Software without restriction, including</span>
 <span class="sd">without limitation the rights to use, copy, modify, merge, publish,</span>
 <span class="sd">distribute, sublicense, and/or sell copies of the Software, and to</span>
 <span class="sd">permit persons to whom the Software is furnished to do so, subject to</span>
@@ -244,7 +244,7 @@
 <span class="sd">The above copyright notice and this permission notice shall be</span>
 <span class="sd">included in all copies or substantial portions of the Software.</span>
 
-<span class="sd">THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,</span>
+<span class="sd">THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,</span>
 <span class="sd">EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF</span>
 <span class="sd">MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND</span>
 <span class="sd">NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS</span>
@@ -252,7 +252,7 @@
 <span class="sd">ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN</span>
 <span class="sd">CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
 <span class="sd">SOFTWARE.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">array</span>
@@ -294,7 +294,7 @@
     <span class="k">assert</span> <span class="n">prefix</span> <span class="o">&lt;=</span> <span class="mh">0xFF</span>
     <span class="k">assert</span> <span class="n">block_nr</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">64</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">TWEAK_SIZE</span>
-    <span class="n">out</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;Q&#39;</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">'&gt;Q'</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">)</span>
     <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">&lt;&lt;</span> <span class="n">PREFIX_SHIFT</span></div>
 
 
@@ -302,7 +302,7 @@
 <a class="viewcode-back" href="../../sapphirepy.html#sapphirepy.deoxysii.encode_enc_tweak">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">encode_enc_tweak</span><span class="p">(</span><span class="n">out</span><span class="p">:</span><span class="nb">bytearray</span><span class="p">,</span> <span class="n">tag</span><span class="p">:</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">==</span> <span class="n">TWEAK_SIZE</span>
-    <span class="n">tmp</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;Q&#39;</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">))</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">'&gt;Q'</span><span class="p">,</span> <span class="n">block_nr</span><span class="p">))</span>
     <span class="n">out</span><span class="p">[:</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">),</span><span class="n">TWEAK_SIZE</span><span class="p">)]</span> <span class="o">=</span> <span class="n">tag</span>
     <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">|=</span> <span class="mh">0x80</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
@@ -387,7 +387,7 @@
 
 <span class="c1"># Errytime make Te/Td table AES, angel lose wing ;_;</span>
 
-<span class="n">TE0</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+<span class="n">TE0</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">'I'</span><span class="p">,</span> <span class="p">[</span>
     <span class="mh">0xc66363a5</span><span class="p">,</span> <span class="mh">0xf87c7c84</span><span class="p">,</span> <span class="mh">0xee777799</span><span class="p">,</span> <span class="mh">0xf67b7b8d</span><span class="p">,</span> <span class="mh">0xfff2f20d</span><span class="p">,</span> <span class="mh">0xd66b6bbd</span><span class="p">,</span>
     <span class="mh">0xde6f6fb1</span><span class="p">,</span> <span class="mh">0x91c5c554</span><span class="p">,</span> <span class="mh">0x60303050</span><span class="p">,</span> <span class="mh">0x02010103</span><span class="p">,</span> <span class="mh">0xce6767a9</span><span class="p">,</span> <span class="mh">0x562b2b7d</span><span class="p">,</span>
     <span class="mh">0xe7fefe19</span><span class="p">,</span> <span class="mh">0xb5d7d762</span><span class="p">,</span> <span class="mh">0x4dababe6</span><span class="p">,</span> <span class="mh">0xec76769a</span><span class="p">,</span> <span class="mh">0x8fcaca45</span><span class="p">,</span> <span class="mh">0x1f82829d</span><span class="p">,</span>
@@ -433,7 +433,7 @@
     <span class="mh">0x7bb0b0cb</span><span class="p">,</span> <span class="mh">0xa85454fc</span><span class="p">,</span> <span class="mh">0x6dbbbbd6</span><span class="p">,</span> <span class="mh">0x2c16163a</span><span class="p">,</span>
 <span class="p">])</span>
 
-<span class="n">TE1</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+<span class="n">TE1</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">'I'</span><span class="p">,</span> <span class="p">[</span>
     <span class="mh">0xa5c66363</span><span class="p">,</span> <span class="mh">0x84f87c7c</span><span class="p">,</span> <span class="mh">0x99ee7777</span><span class="p">,</span> <span class="mh">0x8df67b7b</span><span class="p">,</span> <span class="mh">0x0dfff2f2</span><span class="p">,</span> <span class="mh">0xbdd66b6b</span><span class="p">,</span>
     <span class="mh">0xb1de6f6f</span><span class="p">,</span> <span class="mh">0x5491c5c5</span><span class="p">,</span> <span class="mh">0x50603030</span><span class="p">,</span> <span class="mh">0x03020101</span><span class="p">,</span> <span class="mh">0xa9ce6767</span><span class="p">,</span> <span class="mh">0x7d562b2b</span><span class="p">,</span>
     <span class="mh">0x19e7fefe</span><span class="p">,</span> <span class="mh">0x62b5d7d7</span><span class="p">,</span> <span class="mh">0xe64dabab</span><span class="p">,</span> <span class="mh">0x9aec7676</span><span class="p">,</span> <span class="mh">0x458fcaca</span><span class="p">,</span> <span class="mh">0x9d1f8282</span><span class="p">,</span>
@@ -479,7 +479,7 @@
     <span class="mh">0xcb7bb0b0</span><span class="p">,</span> <span class="mh">0xfca85454</span><span class="p">,</span> <span class="mh">0xd66dbbbb</span><span class="p">,</span> <span class="mh">0x3a2c1616</span><span class="p">,</span>
 <span class="p">])</span>
 
-<span class="n">TE2</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+<span class="n">TE2</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">'I'</span><span class="p">,</span> <span class="p">[</span>
     <span class="mh">0x63a5c663</span><span class="p">,</span> <span class="mh">0x7c84f87c</span><span class="p">,</span> <span class="mh">0x7799ee77</span><span class="p">,</span> <span class="mh">0x7b8df67b</span><span class="p">,</span> <span class="mh">0xf20dfff2</span><span class="p">,</span> <span class="mh">0x6bbdd66b</span><span class="p">,</span>
     <span class="mh">0x6fb1de6f</span><span class="p">,</span> <span class="mh">0xc55491c5</span><span class="p">,</span> <span class="mh">0x30506030</span><span class="p">,</span> <span class="mh">0x01030201</span><span class="p">,</span> <span class="mh">0x67a9ce67</span><span class="p">,</span> <span class="mh">0x2b7d562b</span><span class="p">,</span>
     <span class="mh">0xfe19e7fe</span><span class="p">,</span> <span class="mh">0xd762b5d7</span><span class="p">,</span> <span class="mh">0xabe64dab</span><span class="p">,</span> <span class="mh">0x769aec76</span><span class="p">,</span> <span class="mh">0xca458fca</span><span class="p">,</span> <span class="mh">0x829d1f82</span><span class="p">,</span>
@@ -525,7 +525,7 @@
     <span class="mh">0xb0cb7bb0</span><span class="p">,</span> <span class="mh">0x54fca854</span><span class="p">,</span> <span class="mh">0xbbd66dbb</span><span class="p">,</span> <span class="mh">0x163a2c16</span><span class="p">,</span>
 <span class="p">])</span>
 
-<span class="n">TE3</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="p">[</span>
+<span class="n">TE3</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">'I'</span><span class="p">,</span> <span class="p">[</span>
     <span class="mh">0x6363a5c6</span><span class="p">,</span> <span class="mh">0x7c7c84f8</span><span class="p">,</span> <span class="mh">0x777799ee</span><span class="p">,</span> <span class="mh">0x7b7b8df6</span><span class="p">,</span> <span class="mh">0xf2f20dff</span><span class="p">,</span> <span class="mh">0x6b6bbdd6</span><span class="p">,</span>
     <span class="mh">0x6f6fb1de</span><span class="p">,</span> <span class="mh">0xc5c55491</span><span class="p">,</span> <span class="mh">0x30305060</span><span class="p">,</span> <span class="mh">0x01010302</span><span class="p">,</span> <span class="mh">0x6767a9ce</span><span class="p">,</span> <span class="mh">0x2b2b7d56</span><span class="p">,</span>
     <span class="mh">0xfefe19e7</span><span class="p">,</span> <span class="mh">0xd7d762b5</span><span class="p">,</span> <span class="mh">0xababe64d</span><span class="p">,</span> <span class="mh">0x76769aec</span><span class="p">,</span> <span class="mh">0xcaca458f</span><span class="p">,</span> <span class="mh">0x82829d1f</span><span class="p">,</span>
@@ -589,7 +589,7 @@
     <span class="n">stks</span> <span class="o">=</span> <span class="n">derive_sub_tweak_keys</span><span class="p">(</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">)</span>
 
     <span class="c1"># AddRoundTweakKey (AES -&gt; AddRoundKey)</span>
-    <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;LLLL&#39;</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">[:</span><span class="mi">16</span><span class="p">])</span>
+    <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">'&gt;LLLL'</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">[:</span><span class="mi">16</span><span class="p">])</span>
     <span class="n">s0</span> <span class="o">=</span> <span class="n">s0</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">s1</span> <span class="o">=</span> <span class="n">s1</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">s2</span> <span class="o">=</span> <span class="n">s2</span> <span class="o">^</span> <span class="n">stks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
@@ -601,7 +601,7 @@
         <span class="c1"># AddRoundTweakKey (AES -&gt; AddRoundKey).</span>
         <span class="c1">#</span>
         <span class="c1"># In AES-NI terms, this is *exactly* equivalent to AESENC (though</span>
-        <span class="c1"># Intel&#39;s notation transposes ShiftRows, and SubBytes).</span>
+        <span class="c1"># Intel's notation transposes ShiftRows, and SubBytes).</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">TE0</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s0</span><span class="o">&gt;&gt;</span><span class="mi">24</span><span class="p">)]</span> <span class="o">^</span>
               <span class="n">TE1</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s1</span><span class="o">&gt;&gt;</span><span class="mi">16</span><span class="p">)]</span> <span class="o">^</span>
               <span class="n">TE2</span><span class="p">[</span><span class="n">uint8</span><span class="p">(</span><span class="n">s2</span><span class="o">&gt;&gt;</span><span class="mi">8</span><span class="p">)]</span> <span class="o">^</span>
@@ -632,7 +632,7 @@
         <span class="n">s3</span> <span class="o">=</span> <span class="n">t3</span>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="n">ciphertext</span><span class="p">[:</span><span class="mi">16</span><span class="p">]</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;LLLL&#39;</span><span class="p">,</span> <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span></div>
+    <span class="n">ciphertext</span><span class="p">[:</span><span class="mi">16</span><span class="p">]</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">'&gt;LLLL'</span><span class="p">,</span> <span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DeoxysII">
@@ -644,7 +644,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">implementation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;vartime&quot;</span>
+        <span class="k">return</span> <span class="s2">"vartime"</span>
 
     <span class="c1"># pylint: disable=too-many-locals,too-many-branches,too-many-statements</span>
 <div class="viewcode-block" id="DeoxysII.encrypt">
@@ -792,7 +792,7 @@
         <span class="n">tag_p</span> <span class="o">=</span> <span class="n">auth</span><span class="p">[:]</span>
         <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">while</span> <span class="n">msg_len</span> <span class="o">&gt;=</span> <span class="n">BLOCK_SIZE</span><span class="p">:</span>
-            <span class="c1"># 24. tag&#39; &lt;- tag&#39; ^ Ek(0000||j, Mj+1)</span>
+            <span class="c1"># 24. tag' &lt;- tag' ^ Ek(0000||j, Mj+1)</span>
             <span class="n">encode_tag_tweak</span><span class="p">(</span><span class="n">tweak</span><span class="p">,</span> <span class="n">PREFIX_MSG_BLOCK</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
             <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">dst</span><span class="p">[</span><span class="n">j</span><span class="o">*</span><span class="n">BLOCK_SIZE</span><span class="p">:])</span>
             <span class="n">xor_bytes</span><span class="p">(</span><span class="n">tag_p</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">)</span>
@@ -810,7 +810,7 @@
             <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">tweak</span><span class="p">,</span> <span class="n">m_star</span><span class="p">)</span>
             <span class="n">xor_bytes</span><span class="p">(</span><span class="n">tag_p</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">TAG_SIZE</span><span class="p">)</span>
 
-        <span class="c1"># 29. tag&#39; &lt;- Ek(0001||0000||N, tag&#39;)</span>
+        <span class="c1"># 29. tag' &lt;- Ek(0001||0000||N, tag')</span>
         <span class="n">dec_nonce</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">PREFIX_TAG</span> <span class="o">&lt;&lt;</span> <span class="n">PREFIX_SHIFT</span>
         <span class="n">bc_encrypt</span><span class="p">(</span><span class="n">tag_p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived_k</span><span class="p">,</span> <span class="n">dec_nonce</span><span class="p">,</span> <span class="n">tag_p</span><span class="p">)</span>
 
@@ -835,7 +835,7 @@
         <span class="c1">#</span>
         <span class="c1"># Note: Other implementations can just return each</span>
         <span class="c1"># Sub-Tweak Key as a 16 byte value.</span>
-        <span class="n">stks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;LLLL&#39;</span><span class="p">,</span> <span class="n">stk</span><span class="p">[:</span><span class="mi">16</span><span class="p">]))</span>
+        <span class="n">stks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">'&gt;LLLL'</span><span class="p">,</span> <span class="n">stk</span><span class="p">[:</span><span class="mi">16</span><span class="p">]))</span>
 
     <span class="n">tk1</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:</span><span class="n">TWEAK_SIZE</span><span class="p">]</span> <span class="c1"># Tk1 = W1</span>
 

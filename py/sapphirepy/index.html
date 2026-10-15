@@ -259,10 +259,10 @@ make
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sapphirepy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sapphire</span>
 
-<span class="n">w3</span> <span class="o">=</span> <span class="n">Web3</span><span class="p">(</span><span class="n">Web3</span><span class="o">.</span><span class="n">HTTPProvider</span><span class="p">(</span><span class="n">sapphire</span><span class="o">.</span><span class="n">NETWORKS</span><span class="p">[</span><span class="s1">&#39;sapphire-localnet&#39;</span><span class="p">]))</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="n">Web3</span><span class="p">(</span><span class="n">Web3</span><span class="o">.</span><span class="n">HTTPProvider</span><span class="p">(</span><span class="n">sapphire</span><span class="o">.</span><span class="n">NETWORKS</span><span class="p">[</span><span class="s1">'sapphire-localnet'</span><span class="p">]))</span>
 <span class="n">async_w3</span> <span class="o">=</span> <span class="n">AsyncWeb3</span><span class="p">(</span>
     <span class="n">AsyncWeb3</span><span class="o">.</span><span class="n">AsyncHTTPProvider</span><span class="p">(</span>
-        <span class="n">sapphire</span><span class="o">.</span><span class="n">NETWORKS</span><span class="p">[</span><span class="s1">&#39;sapphire-localnet&#39;</span><span class="p">]</span>
+        <span class="n">sapphire</span><span class="o">.</span><span class="n">NETWORKS</span><span class="p">[</span><span class="s1">'sapphire-localnet'</span><span class="p">]</span>
     <span class="p">)</span>
 <span class="p">)</span>
 
@@ -270,7 +270,7 @@ make
 <span class="c1"># This account is used for signing transactions.</span>
 <span class="n">account</span><span class="p">:</span> <span class="n">LocalAccount</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">Account</span><span class="o">.</span><span class="n">from_key</span><span class="p">(</span>  <span class="c1"># pylint: disable=no-value-for-parameter</span>
-        <span class="n">private_key</span><span class="o">=</span><span class="s2">&quot;&lt;your_private_key_here&gt;&quot;</span>
+        <span class="n">private_key</span><span class="o">=</span><span class="s2">"&lt;your_private_key_here&gt;"</span>
     <span class="p">)</span>
 <span class="p">)</span>
 <span class="n">w3</span><span class="o">.</span><span class="n">middleware_onion</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">SignAndSendRawMiddlewareBuilder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">account</span><span class="p">))</span>
@@ -278,8 +278,8 @@ make
 <span class="c1"># Finally, wrap the provider to add Sapphire end-to-end encryption.</span>
 <span class="c1"># Note: Account parameter in the wrap() function is used for signing view</span>
 <span class="c1"># calls and can be different from the account used for singing transactions.</span>
-<span class="n">w3</span> <span class="o">=</span> <span class="n">sapphire</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">w3</span><span class="p">,</span> <span class="n">account</span><span class="p">)</span> <span class="c1"># Can provide custom &quot;account&quot; parameter</span>
-<span class="n">w3</span><span class="o">.</span><span class="n">eth</span><span class="o">.</span><span class="n">default_account</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">address</span> <span class="c1"># Alternatively you can set &quot;from&quot; tx param each time for signed view calls</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="n">sapphire</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">w3</span><span class="p">,</span> <span class="n">account</span><span class="p">)</span> <span class="c1"># Can provide custom "account" parameter</span>
+<span class="n">w3</span><span class="o">.</span><span class="n">eth</span><span class="o">.</span><span class="n">default_account</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">address</span> <span class="c1"># Alternatively you can set "from" tx param each time for signed view calls</span>
 <span class="c1"># Wrapper middleware also works with AsyncWeb3</span>
 <span class="n">async_w3</span> <span class="o">=</span> <span class="n">sapphire</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">async_w3</span><span class="p">,</span> <span class="n">account</span><span class="p">)</span>
 
