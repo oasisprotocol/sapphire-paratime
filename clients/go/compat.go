@@ -234,6 +234,11 @@ func (b WrappedBackend) PendingNonceAt(ctx context.Context, account common.Addre
 	return b.backend.PendingNonceAt(ctx, account)
 }
 
+// TransactionByHash implements ContractTransactor.
+func (b WrappedBackend) TransactionByHash(ctx context.Context, hash common.Hash) (*types.Transaction, bool, error) {
+	return b.backend.TransactionByHash(ctx, hash)
+}
+
 // SuggestGasPrice implements ContractTransactor.
 func (b WrappedBackend) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return b.backend.SuggestGasPrice(ctx)
