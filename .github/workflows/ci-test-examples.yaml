@@ -20,7 +20,7 @@ jobs:
       wagmi-v3: ${{ steps.resolve.outputs['wagmi-v3'] }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Resolve playwright version from lockfile
         id: resolve
@@ -60,7 +60,7 @@ jobs:
       VITE_HARDHAT_RPC_URL: http://127.0.0.1:9545
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
