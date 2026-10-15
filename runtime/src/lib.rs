@@ -272,7 +272,7 @@ impl sdk::Runtime for Runtime {
                         target_block_gas_usage_percentage: 50,
                         min_price_max_change_denominator: 8,
                     },
-                    max_batch_gas: 15_000_000,
+                    max_batch_gas: 20_000_000,
                     max_tx_size: 128 * 1024,
                     max_tx_signers: 3,
                     max_multisig_signers: 8,
