@@ -195,7 +195,7 @@ impl sdk::Runtime for Runtime {
 
     /// Maximum delta that the transaction nonce can be in the future from the current nonce
     /// to still be accepted during transaction checks.
-    const MAX_CHECK_NONCE_FUTURE_DELTA: u64 = 9;
+    const MAX_CHECK_NONCE_FUTURE_DELTA: u64 = 31;
 
     type Core = modules::core::Module<Config>;
     type Accounts = modules::accounts::Module;

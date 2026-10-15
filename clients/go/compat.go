@@ -17,22 +17,22 @@ import (
 )
 
 const (
-	DefaultGasPrice   = 100_000_000_000
-	DefaultGasLimit   = 30_000_000
-	DefaultBlockRange = 15
+	defaultGasPrice   = 100_000_000_000
+	defaultGasLimit   = 30_000_000
+	defaultBlockRange = 15
 )
 
 // SignerFn is a function that produces secp256k1 signatures in RSV format.
 type SignerFn = func(digest [32]byte) ([]byte, error)
 
-type NetworkParams struct {
+type networkParams struct {
 	Name           string
 	ChainID        big.Int
 	DefaultGateway string
 	RuntimeID      string
 }
 
-var Networks = map[uint64]NetworkParams{
+var networks = map[uint64]networkParams{
 	0x5aff: {
 		Name:           "testnet",
 		ChainID:        *big.NewInt(0x5aff),
@@ -89,10 +89,10 @@ func (s rsvSigner) SignRSV(digest [32]byte) ([]byte, error) {
 // PackSignedCall prepares `msg` in-place for being sent to Sapphire. The call will be end-to-end encrypted and a signature will be used to authenticate the `from` address.
 func PackSignedCall(msg ethereum.CallMsg, cipher Cipher, sign SignerFn, chainID big.Int, leash *evm.Leash) (*ethereum.CallMsg, error) {
 	if msg.Gas == 0 {
-		msg.Gas = DefaultGasLimit // Must be non-zero for signed calls.
+		msg.Gas = defaultGasLimit // Must be non-zero for signed calls.
 	}
 	if msg.GasPrice == nil {
-		msg.GasPrice = big.NewInt(DefaultGasPrice) // Must be non-zero for signed calls.
+		msg.GasPrice = big.NewInt(defaultGasPrice) // Must be non-zero for signed calls.
 	}
 	// msg.To is nil when deploying.
 	var to []byte
@@ -185,7 +185,7 @@ func (b WrappedBackend) Transactor(from common.Address) *bind.TransactOpts {
 	return &bind.TransactOpts{
 		From:     from,
 		Signer:   signFn,
-		GasPrice: big.NewInt(DefaultGasPrice),
+		GasPrice: big.NewInt(defaultGasPrice),
 		GasLimit: 0,
 	}
 }
@@ -284,7 +284,7 @@ func (b WrappedBackend) makeLeash(ctx context.Context, from common.Address, bloc
 		Nonce:       nonce,
 		BlockNumber: leashBlockNumber.Uint64(),
 		BlockHash:   blockHash[:],
-		BlockRange:  DefaultBlockRange,
+		BlockRange:  defaultBlockRange,
 	}, nil
 }
 

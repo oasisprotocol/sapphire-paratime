@@ -1,9 +1,9 @@
+// Package sapphire provides a compatibility library for the Sapphire ParaTime.
 package sapphire
 
 import (
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -18,23 +18,36 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
-type Kind uint64
-
 var (
-	ErrCallFailed       = errors.New("call failed in module")
-	ErrCallResultDecode = errors.New("could not decode call result")
+	errCallFailed       = errors.New("call failed in module")
+	errCallResultDecode = errors.New("could not decode call result")
 )
 
+// Cipher defines methods for encrypting and decrypting Sapphire calls and results.
 type Cipher interface {
+	// CallFormat returns the call format used for encoding the call (and output) information
 	CallFormat() types.CallFormat
+
+	// Encrypt encrypts plaintext.
 	Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte)
+
+	// Decrypt decrypts ciphertext using the given nonce.
 	Decrypt(nonce []byte, ciphertext []byte) (plaintext []byte, err error)
+
+	// EncryptEncode encrypts and encodes plaintext.
 	EncryptEncode(plaintext []byte) []byte
+
+	// EncryptEnvelope encrypts plaintext and wraps it in a call envelope.
 	EncryptEnvelope(plaintext []byte) *types.Call
+
+	// DecryptEncoded decodes and decrypts an encoded result.
 	DecryptEncoded(result []byte) ([]byte, error)
+
+	// DecryptCallResult decrypts a call result.
 	DecryptCallResult(result []byte) ([]byte, error)
 }
 
+// PlainCipher implements Cipher without encryption.
 type PlainCipher struct{}
 
 // NewPlainCipher creates a cipher instance without encryption support.
@@ -42,19 +55,23 @@ func NewPlainCipher() PlainCipher {
 	return PlainCipher{}
 }
 
+// CallFormat implements Cipher.
 func (c PlainCipher) CallFormat() types.CallFormat {
 	return types.CallFormatPlain
 }
 
+// Encrypt implements Cipher.
 func (c PlainCipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
 	nonce = make([]byte, 0)
 	return plaintext, nonce
 }
 
+// Decrypt implements Cipher.
 func (c PlainCipher) Decrypt(_ []byte, ciphertext []byte) (plaintext []byte, err error) {
 	return ciphertext, nil
 }
 
+// DecryptCallResult implements Cipher.
 func (c PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
 	var callResult types.CallResult
 	if err := cbor.Unmarshal(response, &callResult); err != nil {
@@ -63,7 +80,7 @@ func (c PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
 
 	// TODO: actually decode and return failure
 	if callResult.Failed != nil {
-		return nil, ErrCallFailed
+		return nil, errCallFailed
 	}
 
 	if callResult.Unknown != nil {
@@ -82,13 +99,15 @@ func (c PlainCipher) DecryptCallResult(response []byte) ([]byte, error) {
 		return ok, nil
 	}
 
-	return nil, ErrCallResultDecode
+	return nil, errCallResultDecode
 }
 
+// DecryptEncoded implements Cipher.
 func (c PlainCipher) DecryptEncoded(response []byte) ([]byte, error) {
 	return c.DecryptCallResult(response)
 }
 
+// EncryptEnvelope implements Cipher.
 func (c PlainCipher) EncryptEnvelope(plaintext []byte) *types.Call {
 	// Txs without data are just balance transfers, and all data in those is public.
 	if len(plaintext) == 0 {
@@ -100,6 +119,7 @@ func (c PlainCipher) EncryptEnvelope(plaintext []byte) *types.Call {
 	}
 }
 
+// EncryptEncode implements Cipher.
 func (c PlainCipher) EncryptEncode(plaintext []byte) []byte {
 	envelope := c.EncryptEnvelope(plaintext)
 	return cbor.Marshal(envelope)
@@ -112,6 +132,7 @@ type X25519DeoxysIICipher struct {
 	epoch   uint64
 }
 
+// Curve25519KeyPair holds a Curve25519 public and private key pair.
 type Curve25519KeyPair struct {
 	PublicKey x25519.PublicKey
 	SecretKey x25519.PrivateKey
@@ -145,10 +166,12 @@ func NewX25519DeoxysIICipher(keypair *Curve25519KeyPair, peerPublicKey *x25519.P
 	}, nil
 }
 
+// CallFormat implements Cipher.
 func (c X25519DeoxysIICipher) CallFormat() types.CallFormat {
 	return types.CallFormatEncryptedX25519DeoxysII
 }
 
+// Encrypt implements Cipher.
 func (c X25519DeoxysIICipher) Encrypt(plaintext []byte) (ciphertext []byte, nonce []byte) {
 	nonce = make([]byte, deoxysii.NonceSize)
 	if _, err := rand.Reader.Read(nonce); err != nil {
@@ -158,6 +181,7 @@ func (c X25519DeoxysIICipher) Encrypt(plaintext []byte) (ciphertext []byte, nonc
 	return res, nonce
 }
 
+// Decrypt implements Cipher.
 func (c X25519DeoxysIICipher) Decrypt(nonce []byte, ciphertext []byte) ([]byte, error) {
 	meta := make([]byte, 0)
 	return c.cipher.Open(ciphertext[:0], nonce, ciphertext, meta)
@@ -169,6 +193,7 @@ func (c X25519DeoxysIICipher) encryptCallData(plaintext []byte) (ciphertext []by
 	}))
 }
 
+// EncryptEnvelope implements Cipher.
 func (c X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *types.Call {
 	// Txs without data are just balance transfers, and all data in those is public.
 	if len(plaintext) == 0 {
@@ -187,11 +212,13 @@ func (c X25519DeoxysIICipher) EncryptEnvelope(plaintext []byte) *types.Call {
 	}
 }
 
+// EncryptEncode implements Cipher.
 func (c X25519DeoxysIICipher) EncryptEncode(plaintext []byte) []byte {
 	envelope := c.EncryptEnvelope(plaintext)
 	return cbor.Marshal(envelope)
 }
 
+// DecryptCallResult implements Cipher.
 func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error) {
 	var callResult types.CallResult
 	if err := cbor.Unmarshal(response, &callResult); err != nil {
@@ -200,22 +227,23 @@ func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error)
 
 	// TODO: actually decode and return failure
 	if callResult.Failed != nil {
-		return nil, ErrCallFailed
+		return nil, errCallFailed
 	}
 
 	var aeadEnvelope types.ResultEnvelopeX25519DeoxysII
-	if callResult.Ok != nil {
+	switch {
+	case callResult.Ok != nil:
 		if err := cbor.Unmarshal(callResult.Ok, &aeadEnvelope); err != nil {
 			// If Ok is not CBOR, return raw value.
 			return callResult.Ok, nil
 		}
-	} else if callResult.Unknown != nil {
+	case callResult.Unknown != nil:
 		if err := cbor.Unmarshal(callResult.Unknown, &aeadEnvelope); err != nil {
 			// If Unknown is not CBOR, return raw value.
 			return callResult.Unknown, nil
 		}
-	} else {
-		return nil, ErrCallResultDecode
+	default:
+		return nil, errCallResultDecode
 	}
 
 	decrypted, err := c.Decrypt(aeadEnvelope.Nonce[:], aeadEnvelope.Data)
@@ -255,6 +283,7 @@ func (c X25519DeoxysIICipher) DecryptCallResult(response []byte) ([]byte, error)
 	return nil, fmt.Errorf("unexpected inner call result: %x", callResult.Unknown)
 }
 
+// DecryptEncoded implements Cipher.
 func (c X25519DeoxysIICipher) DecryptEncoded(response []byte) ([]byte, error) {
 	return c.DecryptCallResult(response)
 }
@@ -272,25 +301,6 @@ func GetRuntimePublicKey(c *ethclient.Client) (*x25519.PublicKey, uint64, error)
 	}
 
 	return (*x25519.PublicKey)(pubKey.PublicKey), pubKey.Epoch, nil
-}
-
-type Request struct {
-	Version string      `json:"jsonrpc"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params"`
-	ID      int         `json:"id"`
-}
-
-type Error struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
-type Response struct {
-	Error  *Error          `json:"error"`
-	ID     int             `json:"id"`
-	Result json.RawMessage `json:"result,omitempty"`
 }
 
 // CallDataPublicKey is the public key alongside the key manager's signature.

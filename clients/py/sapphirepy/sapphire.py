@@ -216,7 +216,13 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
     :return: A Sapphire middleware function.
     """
 
-    sapphire_account = None
+    def __init__(
+        self,
+        w3: Union[Web3, AsyncWeb3],
+        account: LocalAccount,
+    ) -> None:
+        super().__init__(w3)
+        self.sapphire_account = account
 
     @staticmethod
     @curry
@@ -224,10 +230,8 @@ class ConstructSapphireMiddlewareBuilder(Web3MiddlewareBuilder):
         account: LocalAccount,
         w3: Union[Web3, AsyncWeb3],
     ) -> "ConstructSapphireMiddlewareBuilder":
-        # pylint: disable=no-value-for-parameter,arguments-differ
-        middleware = ConstructSapphireMiddlewareBuilder(w3)
-        middleware.sapphire_account = account
-        return middleware
+        # pylint: disable=arguments-differ
+        return ConstructSapphireMiddlewareBuilder(w3, account)
 
     def wrap_make_request(self, make_request: MakeRequestFn) -> MakeRequestFn:
         """

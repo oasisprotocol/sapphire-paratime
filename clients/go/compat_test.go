@@ -110,7 +110,7 @@ func TestDial(t *testing.T) {
 	addr2 := crypto.PubkeyToAddress(key2.PublicKey)
 
 	SapphireChainID := uint64(0x5afd)
-	client, _ := ethclient.Dial(Networks[SapphireChainID].DefaultGateway)
+	client, _ := ethclient.Dial(networks[SapphireChainID].DefaultGateway)
 	backend, err := WrapClient(client, func(digest [32]byte) ([]byte, error) {
 		// Pass in a custom signing function to interact with the signer
 		return crypto.Sign(digest[:], key)
