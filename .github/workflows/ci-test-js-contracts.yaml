@@ -75,7 +75,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-packages
-      - uses: JarvusInnovations/background-action@v1
+      - uses: JarvusInnovations/background-action@v2
         name: RPC proxy will error if non-encrypted calls are made
         with:
           run: pnpm run proxy &
@@ -128,7 +128,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-packages
-      - uses: JarvusInnovations/background-action@v1
+      - uses: JarvusInnovations/background-action@v2
         name: RPC proxy will error if non-encrypted calls are made
         with:
           run: pnpm run proxy &
@@ -188,7 +188,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-packages
-      - uses: JarvusInnovations/background-action@v1
+      - uses: JarvusInnovations/background-action@v2
         name: RPC proxy will error if non-encrypted calls are made
         with:
           run: pnpm run proxy &
