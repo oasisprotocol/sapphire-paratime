@@ -100,7 +100,7 @@ jobs:
       - name: Configure git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - uses: JarvusInnovations/background-action@v1
+      - uses: JarvusInnovations/background-action@v2
         name: Sapphire RPC proxy
         with:
           run: pnpm run proxy &
@@ -112,7 +112,7 @@ jobs:
           log-output-if: true
           working-directory: clients/js
 
-      - uses: JarvusInnovations/background-action@v1
+      - uses: JarvusInnovations/background-action@v2
         name: Hardhat RPC node
         with:
           run: |
