@@ -72,7 +72,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download built packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: built-packages
       - uses: JarvusInnovations/background-action@v2
@@ -125,7 +125,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download built packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: built-packages
       - uses: JarvusInnovations/background-action@v2
@@ -185,7 +185,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download built packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: built-packages
       - uses: JarvusInnovations/background-action@v2
