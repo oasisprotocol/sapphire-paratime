@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   hexlify,
   fetchRuntimePublicKey,
@@ -11,7 +12,7 @@ import { MockEIP1193Provider, MockNonRuntimePublicKeyProvider } from './utils';
 
 describe('fetchRuntimePublicKey', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   /// Verifies call data public key fetching works

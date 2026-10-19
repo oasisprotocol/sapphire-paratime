@@ -31,14 +31,14 @@
     "default": "./lib/esm/index.js"
   },
   "scripts": {
-    "lint": "prettier --cache --check . && eslint --ignore-path .gitignore .",
+    "lint": "prettier --cache --check . && eslint --ignore-path .gitignore . && tsc -p test --noEmit",
     "format": "prettier --cache --write . && eslint --ignore-path .gitignore --fix .",
     "build": "npm run build:esm && npm run build:cjs",
     "clean": "rm -rf lib",
     "build:esm": "tsc -p ./tsconfig.esm.json",
     "build:cjs": "tsc -p ./tsconfig.cjs.json && node scripts/rename-cjs",
-    "test": "jest --coverage",
-    "test:unit": "jest --coverage --testPathIgnorePatterns '(calldatapublickey|provider).spec.ts'",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude test/provider.spec.ts",
     "prepublishOnly": "npm run build",
     "proxy": "node --loader ts-node/esm scripts/proxy.ts"
   },
@@ -48,19 +48,17 @@
     "cborg": "1.10.2"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.11",
     "@types/node": "^18.7.18",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "eslint": "^8.23.1",
     "eslint-config-prettier": "^8.5.0",
     "ethers": "6.x",
-    "jest": "^29.7.0",
     "prettier": "^2.7.1",
-    "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "tweetnacl": "^1.0.3",
     "typedoc": "^0.25.13",
-    "typescript": "^4.8.3"
+    "typescript": "^4.8.3",
+    "vitest": "^3.2.6"
   }
 }

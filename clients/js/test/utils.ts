@@ -7,13 +7,11 @@ import {
 } from '@oasisprotocol/sapphire-paratime';
 import { encode as cborEncode } from 'cborg';
 import nacl from 'tweetnacl';
+import { vi, type Mock } from 'vitest';
 import { AbiCoder } from 'ethers';
 
 export class MockEIP1193Provider {
-  public readonly request: jest.Mock<
-    Promise<unknown>,
-    Parameters<EIP2696_EthereumProvider['request']>
-  >;
+  public readonly request: Mock<EIP2696_EthereumProvider['request']>;
 
   private calldatakeypair: nacl.BoxKeyPair;
 
@@ -27,7 +25,7 @@ export class MockEIP1193Provider {
 
   public constructor(public chainId: number) {
     this.calldatakeypair = nacl.sign.keyPair();
-    this.request = jest.fn(async ({ method, params }) => {
+    this.request = vi.fn(async ({ method, params }) => {
       // Intercept calls to the `core.CallDataPublicKey` subcall
       if (method === 'eth_call' && isCallDataPublicKeyQuery(params)) {
         const signature = nacl.sign(
@@ -60,10 +58,7 @@ export class MockEIP1193Provider {
  * This is similar to MetaMask, which doesn't allow arbitrary JSON-RPC calls
  */
 export class MockNonRuntimePublicKeyProvider {
-  public readonly request: jest.Mock<
-    Promise<unknown>,
-    Parameters<EIP2696_EthereumProvider['request']>
-  >;
+  public readonly request: Mock<EIP2696_EthereumProvider['request']>;
 
   public readonly upstream: MockEIP1193Provider;
 
@@ -73,7 +68,7 @@ export class MockNonRuntimePublicKeyProvider {
 
   public constructor(public chainId: number) {
     this.upstream = new MockEIP1193Provider(chainId);
-    this.request = jest.fn((args) => {
+    this.request = vi.fn((args) => {
       return this.upstream.request(args);
     });
   }
