@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { describe, expect, it } from 'vitest';
 import nacl from 'tweetnacl';
 import { hexlify, getBytes } from 'ethers';
 import {

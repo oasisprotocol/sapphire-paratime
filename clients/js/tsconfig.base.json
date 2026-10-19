@@ -16,7 +16,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "es6",
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
   "ts-node": {
     "esm": true,

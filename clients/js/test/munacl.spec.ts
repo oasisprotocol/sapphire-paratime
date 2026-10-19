@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import {
   MuNaclError,
   crypto_scalarmult_SCALARBYTES,
