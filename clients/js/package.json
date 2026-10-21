@@ -30,6 +30,9 @@
     },
     "default": "./lib/esm/index.js"
   },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "lint": "prettier --cache --check . && eslint --ignore-path .gitignore . && tsc -p test --noEmit",
     "format": "prettier --cache --write . && eslint --ignore-path .gitignore --fix .",
@@ -43,7 +46,7 @@
     "proxy": "node --loader ts-node/esm scripts/proxy.ts"
   },
   "dependencies": {
-    "@noble/hashes": "1.3.2",
+    "@noble/hashes": "2.4.0",
     "@oasisprotocol/deoxysii": "0.0.6",
     "cborg": "1.10.2"
   },
