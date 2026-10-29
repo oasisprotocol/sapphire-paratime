@@ -22,6 +22,9 @@ jobs:
   test-rust:
     name: test-rust
     runs-on: ubuntu-latest
+    env:
+      # Use clang-21 to avoid mbedtls bindgen issues.
+      LIBCLANG_PATH: /usr/lib/llvm-21/lib
     defaults:
       run:
         working-directory: ./runtime
@@ -40,7 +43,7 @@ jobs:
 
   test-rust-sgx:
     name: test-rust-sgx
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ./runtime
@@ -80,7 +83,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Build sapphirepy .whl file
         run: |
@@ -100,10 +103,13 @@ jobs:
           python3 -mpip install --user -r requirements.dev.txt
           python3 -munittest discover
           python3 -m pytest sapphirepy/tests/
-  
+
   test-examples-foundry:
     name: test-examples-foundry
     runs-on: ubuntu-latest
+    env:
+      # Use clang-21 to avoid mbedtls bindgen issues.
+      LIBCLANG_PATH: /usr/lib/llvm-21/lib
     defaults:
       run:
         working-directory: ./examples/foundry
@@ -132,6 +138,9 @@ jobs:
   test-integrations-foundry:
     name: test-integrations-foundry
     runs-on: ubuntu-latest
+    env:
+      # Use clang-21 to avoid mbedtls bindgen issues.
+      LIBCLANG_PATH: /usr/lib/llvm-21/lib
     defaults:
       run:
         working-directory: ./integrations/foundry
@@ -153,6 +162,6 @@ jobs:
 
       - name: Install dependencies
         run: make build
-        
+
       - name: Run tests
         run: forge test
