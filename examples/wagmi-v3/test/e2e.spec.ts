@@ -1,3 +1,4 @@
+import type { Locator } from "@playwright/test";
 import { BrowserContext, expect, test as base } from "@playwright/test";
 import dappwright, { Dappwright, MetaMaskWallet } from "@tenkeylabs/dappwright";
 import { addCustomNetwork } from "./metamask";
@@ -7,13 +8,20 @@ base.describe.configure({ mode: "serial" });
 const TX_TIMEOUT = 30_000;
 const HARDHAT_RPC_URL = process.env.VITE_HARDHAT_RPC_URL ?? "http://localhost:9545";
 
+async function isVisibleWithin(locator: Locator, timeout = 5000) {
+    return locator
+        .waitFor({ state: "visible", timeout })
+        .then(() => true)
+        .catch(() => false);
+}
+
 export const test = base.extend<
     { wallet: Dappwright },
     { walletContext: BrowserContext }
 >({
     walletContext: [
         // biome-ignore lint/correctness/noEmptyPattern: Playwright fixtures must use object destructuring.
-        async ({}, use) => {
+        async ({ }, use) => {
             // Launch context with extension
             const [wallet, _app, context] = await dappwright.bootstrap("", {
                 wallet: "metamask",
@@ -97,7 +105,7 @@ export const test = base.extend<
                 const disconnectButton = page.getByRole("button", {
                     name: "Disconnect",
                 });
-                const isVisible = await disconnectButton.isVisible({ timeout: 5000 });
+                const isVisible = await isVisibleWithin(disconnectButton, 5000);
 
                 if (isVisible) {
                     await disconnectButton.click();
@@ -136,18 +144,16 @@ export const test = base.extend<
             if (switchedNetwork) {
                 // MetaMask may or may not show a network switch approval prompt.
                 // Confirm only when the sidepanel prompt is actually visible.
-                const switchedInDapp = await chainIdText
-                    .isVisible({ timeout: 5000 })
-                    .catch(() => false);
+                const switchedInDapp = await isVisibleWithin(chainIdText);
                 if (!switchedInDapp) {
                     const sidepanel = context
                         .pages()
                         .find((p) => p.url().includes("sidepanel.html"));
                     const hasSwitchPrompt = sidepanel
-                        ? await sidepanel
-                            .getByTestId("page-container-footer-next")
-                            .isVisible({ timeout: 3000 })
-                            .catch(() => false)
+                        ? await isVisibleWithin(
+                            sidepanel.getByTestId("page-container-footer-next"),
+                            3000,
+                        )
                         : false;
                     if (hasSwitchPrompt) {
                         await wallet.confirmNetworkSwitch();
