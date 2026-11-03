@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { BytesLike, hexlify } from './ethersutils.js';
+import { BytesLike } from './ethersutils.js';
 import { KeyFetcher } from './calldatapublickey.js';
 import { SUBCALL_ADDR, CALLDATAPUBLICKEY_CALLDATA } from './constants.js';
-import { Cipher } from './cipher.js';
 
 // -----------------------------------------------------------------------------
 // https://eips.ethereum.org/EIPS/eip-2696#interface
@@ -44,7 +43,6 @@ export function isLegacyProvider<T extends object>(
 
 export interface SapphireWrapOptions {
   fetcher: KeyFetcher;
-  enableSapphireSnap?: boolean;
 }
 
 export interface SapphireWrapConfig
@@ -130,59 +128,6 @@ export function wrapEthereumProvider<P extends EIP2696_EthereumProvider>(
 }
 
 // -----------------------------------------------------------------------------
-// Interact with the Sapphire MetaMask Snap to provide transaction insights
-// This sends the encryption key on a per-transaction basis
-
-interface SnapInfoT {
-  version: string;
-  id: string;
-  enabled: boolean;
-  blocked: boolean;
-}
-
-const SAPPHIRE_SNAP_ID = 'npm:@oasisprotocol/sapphire-snap';
-
-export async function detectSapphireSnap(provider: EIP2696_EthereumProvider) {
-  try {
-    const installedSnaps = (await provider.request({
-      method: 'wallet_getSnaps',
-    })) as Record<string, SnapInfoT>;
-    for (const snap of Object.values(installedSnaps)) {
-      if (snap.id === SAPPHIRE_SNAP_ID) {
-        return snap.id;
-      }
-    }
-  } catch (e: any) {
-    return undefined;
-  }
-}
-
-export async function notifySapphireSnap(
-  snapId: string,
-  cipher: Cipher,
-  transactionData: BytesLike,
-  options: SapphireWrapOptions,
-  provider: EIP2696_EthereumProvider,
-) {
-  if (cipher.ephemeralKey) {
-    const peerPublicKey = await options.fetcher.fetch(provider);
-    await provider.request({
-      method: 'wallet_invokeSnap',
-      params: {
-        snapId: snapId,
-        request: {
-          method: 'setTransactionDecryptKeys',
-          params: {
-            id: transactionData,
-            ephemeralSecretKey: hexlify(cipher.ephemeralKey),
-            peerPublicKey: hexlify(peerPublicKey.key),
-            peerPublicKeyEpoch: peerPublicKey.epoch,
-          },
-        },
-      },
-    });
-  }
-}
 
 const SAPPHIRE_EIP1193_REQUESTFN = '#SAPPHIRE_EIP1193_REQUESTFN' as const;
 
@@ -219,12 +164,8 @@ export function makeSapphireRequestFn(
   const filled_options = fillOptions(options);
 
   const f = async (args: EIP1193_RequestArguments) => {
-    const snapId = filled_options.enableSapphireSnap
-      ? await detectSapphireSnap(provider)
-      : undefined;
     const { method, params } = args;
 
-    let transactionData: BytesLike | undefined = undefined;
     // Encrypt requests which can be encrypted
     if (
       params &&
@@ -235,18 +176,7 @@ export function makeSapphireRequestFn(
       // TODO: should we attempt to detect `if (not sapphire) throw` instead of
       // failing to fetch public key in the next line?
       const cipher = await filled_options.fetcher.cipher(provider);
-      transactionData = params[0].data = cipher.encryptCall(params[0].data);
-
-      if (snapId !== undefined && transactionData !== undefined) {
-        // Run in background so as to not delay results
-        notifySapphireSnap(
-          snapId,
-          cipher,
-          transactionData,
-          filled_options,
-          provider,
-        );
-      }
+      params[0].data = cipher.encryptCall(params[0].data);
 
       const res = await provider.request({
         method,

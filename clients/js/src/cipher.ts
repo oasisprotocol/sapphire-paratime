@@ -81,8 +81,6 @@ export abstract class Cipher {
   public abstract kind: CipherKind;
   // The Sapphire's public key rotated each epoch
   public abstract publicKey: Uint8Array;
-  // The client's keypair for encrypting/decrypting transactions and queries using the X25519-DeoxysII, rotated on-demand.
-  public abstract ephemeralKey: Uint8Array;
   public abstract epoch?: number;
 
   public abstract encrypt(
@@ -216,7 +214,6 @@ export abstract class Cipher {
 export class X25519DeoxysII extends Cipher {
   public override readonly kind = CipherKind.X25519DeoxysII;
   public override readonly publicKey: Uint8Array;
-  public override readonly ephemeralKey: Uint8Array;
   public override readonly epoch: number | undefined;
 
   private cipher: deoxysii.AEAD;
@@ -247,7 +244,6 @@ export class X25519DeoxysII extends Cipher {
     super();
 
     this.publicKey = keypair.publicKey;
-    this.ephemeralKey = keypair.secretKey;
     this.epoch = epoch;
 
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
