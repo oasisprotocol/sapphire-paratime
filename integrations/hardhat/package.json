@@ -31,7 +31,7 @@
     "test": "hardhat --network sapphire-localnet test"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "workspace:^"
+    "@oasisprotocol/sapphire-paratime": "workspace:^2.3.0 || ^3.0.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.5",

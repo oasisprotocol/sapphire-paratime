@@ -40,11 +40,11 @@
 		"test": "c8 --reporter=text --reporter=html mocha"
 	},
 	"dependencies": {
-		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-paratime": "workspace:^2.3.0 || ^3.0.0",
 		"ethers": "6.x"
 	},
 	"peerDependencies": {
-		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-paratime": "workspace:^2.3.0 || ^3.0.0",
 		"ethers": "6.x",
 		"typescript": ">=5.0.4"
 	},

@@ -629,7 +629,7 @@ importers:
   integrations/ethers-v6:
     dependencies:
       '@oasisprotocol/sapphire-paratime':
-        specifier: workspace:^
+        specifier: workspace:^2.3.0 || ^3.0.0
         version: link:../../clients/js
       ethers:
         specifier: 6.x
@@ -669,7 +669,7 @@ importers:
   integrations/hardhat:
     dependencies:
       '@oasisprotocol/sapphire-paratime':
-        specifier: workspace:^
+        specifier: workspace:^2.3.0 || ^3.0.0
         version: link:../../clients/js
     devDependencies:
       '@nomicfoundation/hardhat-ethers':
@@ -730,7 +730,7 @@ importers:
   integrations/viem-v2:
     dependencies:
       '@oasisprotocol/sapphire-paratime':
-        specifier: workspace:^
+        specifier: workspace:^2.3.0 || ^3.0.0
         version: link:../../clients/js
       '@wagmi/core':
         specifier: 2.x
@@ -764,7 +764,7 @@ importers:
   integrations/wagmi-v2:
     dependencies:
       '@oasisprotocol/sapphire-paratime':
-        specifier: workspace:^
+        specifier: workspace:^2.3.0 || ^3.0.0
         version: link:../../clients/js
       '@oasisprotocol/sapphire-viem-v2':
         specifier: workspace:^
@@ -801,7 +801,7 @@ importers:
   integrations/wagmi-v3:
     dependencies:
       '@oasisprotocol/sapphire-paratime':
-        specifier: workspace:^
+        specifier: workspace:^2.3.0 || ^3.0.0
         version: link:../../clients/js
       '@oasisprotocol/sapphire-viem-v2':
         specifier: workspace:^
