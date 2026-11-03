@@ -24,6 +24,9 @@
 		"types": "./dist/_types/index.d.ts",
 		"default": "./dist/_esm/index.js"
 	},
+	"engines": {
+		"node": ">=24.0.0"
+	},
 	"scripts": {
 		"lint": "biome check .",
 		"format": "biome format --write .",

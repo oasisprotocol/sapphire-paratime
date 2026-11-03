@@ -19,6 +19,9 @@
     "dist/",
     "src/"
   ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "lint": "prettier --cache --ignore-path .gitignore --check .",
     "format": "prettier --cache --ignore-path .gitignore --write .",

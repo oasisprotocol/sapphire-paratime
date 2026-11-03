@@ -30,6 +30,9 @@
     },
     "default": "./lib/esm/index.js"
   },
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "lint": "prettier --cache --check . && eslint --ignore-path .gitignore . && tsc -p test --noEmit",
     "format": "prettier --cache --write . && eslint --ignore-path .gitignore --fix .",
