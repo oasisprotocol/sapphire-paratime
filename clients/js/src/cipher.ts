@@ -247,15 +247,11 @@ export class X25519DeoxysII extends Cipher {
     this.epoch = epoch;
 
     // Derive a shared secret using X25519 (followed by hashing to remove ECDH bias).
-    const keyBytes = hmac
-      .create(
-        sha512_256,
-        new TextEncoder().encode('MRAE_Box_Deoxys-II-256-128'),
-      )
-      .update(naclScalarMult(keypair.secretKey, peerPublicKey))
-      .digest().buffer;
-
-    this.secretKey = new Uint8Array(keyBytes);
+    this.secretKey = hmac(
+      sha512_256,
+      new TextEncoder().encode('MRAE_Box_Deoxys-II-256-128'),
+      naclScalarMult(keypair.secretKey, peerPublicKey),
+    );
     this.cipher = new deoxysii.AEAD(new Uint8Array(this.secretKey)); // deoxysii owns the input
   }
 
