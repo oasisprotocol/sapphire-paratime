@@ -2,9 +2,9 @@
 
 import { decode as cborDecode, encode as cborEncode } from 'cborg';
 import deoxysii from '@oasisprotocol/deoxysii';
-import { sha512_256 } from '@noble/hashes/sha512';
-import { hmac } from '@noble/hashes/hmac';
-import { randomBytes } from '@noble/hashes/utils';
+import { sha512_256 } from '@noble/hashes/sha2.js';
+import { hmac } from '@noble/hashes/hmac.js';
+import { randomBytes } from '@noble/hashes/utils.js';
 
 import {
   BoxKeyPair,
