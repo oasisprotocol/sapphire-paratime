@@ -35,7 +35,7 @@
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^18.7.18",
+    "@types/node": "^24.19.2",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
     "@typescript-eslint/parser": "^5.37.0",
     "cborg": "^1.9.5",
