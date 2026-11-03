@@ -19,6 +19,9 @@
     "dist/",
     "src/"
   ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "lint": "prettier --cache --ignore-path .gitignore --check .",
     "format": "prettier --cache --ignore-path .gitignore --write .",
@@ -28,7 +31,7 @@
     "test": "hardhat --network sapphire-localnet test"
   },
   "dependencies": {
-    "@oasisprotocol/sapphire-paratime": "workspace:^"
+    "@oasisprotocol/sapphire-paratime": "workspace:^2.3.0 || ^3.0.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
@@ -39,7 +42,7 @@
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "~4.3.14",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^18.19.31",
+    "@types/node": "^24.19.2",
     "chai": "~4.3.7",
     "ethers": "6.x",
     "hardhat": "2.x",

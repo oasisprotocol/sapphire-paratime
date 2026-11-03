@@ -17,6 +17,10 @@ _If your dapp doesn't port in under 10 minutes, it's a bug!_<br />
 If you have more than a little trouble, please file an issue.<br />
 There should be _no_ reason _not_ to use the Sapphire ParaTime!
 
+## Requirements
+
+- Node.js 24 or newer
+
 ## Usage
 
 After installing this library, find your Ethereum provider and wrap it using

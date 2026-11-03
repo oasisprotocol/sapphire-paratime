@@ -25,6 +25,9 @@
 		"types": "./dist/_types/index.d.ts",
 		"default": "./dist/_esm/index.js"
 	},
+	"engines": {
+		"node": ">=24.0.0"
+	},
 	"scripts": {
 		"lint": "biome check .",
 		"format": "biome format --write .",
@@ -36,13 +39,13 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-paratime": "workspace:^2.3.0 || ^3.0.0",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
 		"@wagmi/connectors": "3.x",
 		"viem": "^2.21.0"
 	},
 	"peerDependencies": {
-		"@oasisprotocol/sapphire-paratime": "workspace:^",
+		"@oasisprotocol/sapphire-paratime": "workspace:^2.3.0 || ^3.0.0",
 		"@oasisprotocol/sapphire-viem-v2": "workspace:^",
 		"@wagmi/core": "3.x",
 		"typescript": ">=5.7.3",
@@ -65,7 +68,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.7.0",
-		"@types/node": "^18.19.31",
+		"@types/node": "^24.19.2",
 		"@walletconnect/ethereum-provider": "^2.23.0",
 		"ts-node": "^10.9.2",
 		"typedoc": "^0.25.13",
