@@ -32,7 +32,7 @@ Wallet) will need to use this Ethers v6 integration package.
 
 ## Prerequisites
 
-- Node.js (version 18.x or higher)
+- Node.js (version 24.x or higher)
 - An active internet connection, or the `sapphire-localnet` docker container.
 - Optionally, an [EIP-1193] compatible Ethereum wallet provider (e.g. [MetaMask], [Rabby])
 

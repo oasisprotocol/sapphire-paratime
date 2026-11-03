@@ -14,7 +14,7 @@ Sapphire and decrypting them off‑chain.
 
 ## Requirements
 
-- Node 18+
+- Node 24+
 - Docker (for Localnet)
 - Git
 
