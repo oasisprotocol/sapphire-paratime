@@ -68,7 +68,7 @@
 		"@biomejs/biome": "^1.7.0",
 		"@types/node": "^24.19.2",
 		"ts-node": "^10.9.2",
-		"typedoc": "^0.25.13",
+		"typedoc": "^0.28.20",
 		"typescript": "^5.8.3",
 		"@walletconnect/ethereum-provider": "^2.23.0"
 	}
