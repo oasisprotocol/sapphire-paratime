@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-report.html
+stats.html
 src/contracts
 
 # dependencies
@@ -12,7 +12,7 @@ src/contracts
 /coverage
 
 # production
-/build
+/dist
 
 # misc
 .DS_Store
