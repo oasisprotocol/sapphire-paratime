@@ -43,14 +43,14 @@
     "@types/chai": "~4.3.14",
     "@types/mocha": "^9.1.1",
     "@types/node": "^24.19.2",
-    "chai": "~4.3.7",
+    "chai": "^4.5.0",
     "ethers": "6.x",
     "hardhat": "2.x",
     "mocha": "^10.4.0",
     "prettier": "^2.8.8",
-    "ts-node": "^8.10.2",
+    "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
-    "typedoc": "^0.25.13",
+    "typedoc": "^0.28.20",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
